@@ -178,6 +178,29 @@ def login(session: requests.Session) -> bool:
                 allow_redirects=True,
             )
             print(f"   SSO próba 5 (form id_token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
+            print(f"   SSO próba 5 headers: {dict(resp.headers)}")
+
+            # Jeśli status 200, spróbuj GET na stronę główną — może cookies się pojawią
+            if resp.status_code == 200 and "error" not in resp.text:
+                resp2 = session.get(BASE_URL, timeout=15)
+                print(f"   Po GET /: cookies={dict(session.cookies)}")
+                resp3 = session.get(f"{BASE_URL}/user-team/view/poluna-sroda-wlkp", timeout=15)
+                has_squad = "squad" in resp3.text
+                print(f"   Test drużyny: squad w HTML={has_squad}, cookies={dict(session.cookies)}")
+
+        # Próba 6: form-urlencoded z pełnym zestawem tokenów
+        if not dict(session.cookies).get("PHPSESSID"):
+            resp = session.post(
+                LOGIN_SSO_URL,
+                data={
+                    "id_token": id_token,
+                    "token": access_token,
+                    "refresh_token": refresh_token,
+                },
+                timeout=30,
+                allow_redirects=True,
+            )
+            print(f"   SSO próba 6 (form all tokens): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
 
         if dict(session.cookies):
             print(f"   ✅ Zalogowano z cookies: {dict(session.cookies)}")
