@@ -1,0 +1,56 @@
+name: Fantasy Ekstraklasa Scraper
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_players:
+        description: 'Maksymalna liczba zawodników'
+        required: false
+        default: '100'
+      target_round:
+        description: 'Numer kolejki (puste = ostatnia)'
+        required: false
+        default: ''
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        env:
+          FANTASY_EMAIL: ${{ secrets.FANTASY_EMAIL }}
+          FANTASY_PASSWORD: ${{ secrets.FANTASY_PASSWORD }}
+          MAX_PLAYER_ID: ${{ github.event.inputs.max_players || '100' }}
+          TARGET_ROUND: ${{ github.event.inputs.target_round || '' }}
+        run: python scraper.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: fantasy-data-${{ github.run_number }}
+          path: output/
+          retention-days: 90
+
+      - name: Commit results to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add output/ || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "📊 Dane Fantasy Ekstraklasa - $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
