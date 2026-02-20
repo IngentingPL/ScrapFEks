@@ -707,6 +707,19 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
 
         if debug:
             print(f"      DEBUG {slug}: znaleziono {len(matches)} zawodników w $squad.push")
+            if not matches:
+                # Sprawdź czy HTML zawiera cokolwiek o squad
+                squad_refs = re.findall(r'squad|Pitch|player', html, re.IGNORECASE)
+                print(f"      DEBUG słowa kluczowe w HTML: {squad_refs[:10]}")
+                print(f"      DEBUG długość HTML: {len(html)}")
+                print(f"      DEBUG cookies: {dict(session.cookies)}")
+                # Szukaj fragmentu z app.Pitch
+                pitch_match = re.search(r'app\.Pitch.*', html)
+                if pitch_match:
+                    print(f"      DEBUG app.Pitch fragment: {pitch_match.group()[:300]}")
+                # Szukaj jakichkolwiek push()
+                push_matches = re.findall(r'\.push\(\{.*?\}\)', html[:5000], re.DOTALL)
+                print(f"      DEBUG push() w HTML: {len(push_matches)}")
 
         for match in matches:
             # Parsuj pola z JS obiektu
