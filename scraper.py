@@ -39,6 +39,9 @@ TARGET_ROUND = int(os.environ["TARGET_ROUND"]) if os.environ.get("TARGET_ROUND")
 # Maksymalne ID zawodnika do sprawdzenia (zmień na ~3000 dla pełnego scrapingu)
 MAX_PLAYER_ID = int(os.environ.get("MAX_PLAYER_ID", "100"))
 
+# Ile drużyn z rankingu scrapować (dla statystyk kapitanów itp.)
+TEAMS_TO_SCRAPE = int(os.environ.get("TEAMS_TO_SCRAPE", "100"))
+
 # Opóźnienie między requestami (w sekundach) - bądź miły dla serwera
 REQUEST_DELAY = 0.3
 
@@ -632,6 +635,231 @@ def scrape_stats_page(session: requests.Session) -> list[dict]:
 
 
 # ============================================================
+# SCRAPOWANIE DRUŻYN - KAPITANOWIE I SKŁADY
+# ============================================================
+
+def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
+    """
+    Pobiera listę drużyn z rankingu generalnego.
+    Używa endpointu DataTables POST /ranking-list.
+    """
+    print(f"\n🏆 Pobieram ranking ({count} najlepszych drużyn)...")
+    teams = []
+    batch_size = 100  # max per request
+
+    for start in range(0, count, batch_size):
+        length = min(batch_size, count - start)
+        try:
+            resp = session.post(
+                f"{BASE_URL}/ranking-list",
+                data=f"start={start}&length={length}",
+                headers={
+                    **HEADERS,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                timeout=30,
+            )
+            if resp.status_code != 200:
+                print(f"   ⚠️  Błąd HTTP {resp.status_code} przy start={start}")
+                continue
+
+            data = resp.json()
+            for team in data.get("data", []):
+                slug = team.get("slug", "")
+                if slug:
+                    teams.append({
+                        "team_id": team.get("id"),
+                        "slug": slug,
+                        "total_points": _safe_int(str(team.get("total_points", "0"))),
+                        "last_points": _safe_int(str(team.get("last_points", "0"))),
+                        "position": team.get("pos"),
+                    })
+
+            print(f"   Pobrano {len(teams)}/{count} drużyn...")
+            time.sleep(REQUEST_DELAY)
+
+        except Exception as e:
+            print(f"   ⚠️  Błąd: {e}")
+
+    print(f"   ✅ Pobrano {len(teams)} drużyn z rankingu")
+    return teams
+
+
+def scrape_team_squad(session: requests.Session, slug: str) -> dict:
+    """
+    Scrapuje skład drużyny ze strony /user-team/view/{slug}.
+    Zwraca listę zawodników i oznaczenie kapitana.
+    """
+    try:
+        resp = session.get(f"{BASE_URL}/user-team/view/{slug}", timeout=15)
+        if resp.status_code != 200:
+            return {"slug": slug, "players": [], "captain_id": None}
+
+        soup = BeautifulSoup(resp.text, "lxml")
+        players = []
+        captain_id = None
+
+        for el in soup.select("[data-player-id]"):
+            player_id = el.get("data-player-id")
+            name_el = el.select_one(".name")
+            name = name_el.text.strip() if name_el else ""
+            is_reserve = "reserve" in el.get("class", [])
+
+            # Kapitan ma <span class="capt"> w divie z punktami
+            is_captain = bool(el.select_one(".capt"))
+            if is_captain:
+                captain_id = player_id
+
+            # Punkty
+            points_el = el.select_one(".points")
+            points_text = ""
+            if points_el:
+                # Usuń tekst z <span class="capt"> żeby dostać czyste punkty
+                capt_span = points_el.select_one(".capt")
+                if capt_span:
+                    points_text = capt_span.text.strip()
+                else:
+                    points_text = points_el.text.strip()
+
+            players.append({
+                "player_id": player_id,
+                "name": name,
+                "position_id": el.get("data-player-pos", ""),
+                "price": _safe_float(el.get("data-player-price", "0")),
+                "points": _safe_int(points_text) if points_text and points_text != "-" else 0,
+                "is_captain": is_captain,
+                "is_reserve": is_reserve,
+            })
+
+        return {
+            "slug": slug,
+            "players": players,
+            "captain_id": captain_id,
+        }
+
+    except Exception as e:
+        return {"slug": slug, "players": [], "captain_id": None, "error": str(e)}
+
+
+def scrape_teams_captains(session: requests.Session, teams: list[dict]) -> list[dict]:
+    """Scrapuje składy drużyn i zbiera dane o kapitanach."""
+    total = len(teams)
+    results = []
+
+    print(f"\n👑 Scrapuję składy {total} drużyn (kapitanowie, składy)...")
+
+    for i, team in enumerate(teams, 1):
+        slug = team["slug"]
+        squad = scrape_team_squad(session, slug)
+
+        captain_id = squad.get("captain_id")
+        captain_name = ""
+        for p in squad.get("players", []):
+            if p["player_id"] == captain_id:
+                captain_name = p["name"]
+                break
+
+        results.append({
+            "ranking_position": team.get("position"),
+            "team_slug": slug,
+            "team_points": team.get("total_points"),
+            "captain_id": captain_id,
+            "captain_name": captain_name,
+            "squad": squad.get("players", []),
+        })
+
+        if i % 20 == 0 or i == total:
+            print(f"   [{i}/{total}] Scrapowanie drużyn...")
+
+        time.sleep(REQUEST_DELAY)
+
+    print(f"   ✅ Pobrano składy {len(results)} drużyn")
+    return results
+
+
+def generate_captain_stats(team_results: list[dict], filename: str):
+    """
+    Generuje statystyki kapitanów — ile razy dany zawodnik został wybrany kapitanem.
+    Zapisuje do CSV.
+    """
+    captain_counts = {}
+    total_teams = len(team_results)
+
+    for team in team_results:
+        cid = team.get("captain_id")
+        cname = team.get("captain_name", "")
+        if cid:
+            if cid not in captain_counts:
+                captain_counts[cid] = {"player_id": cid, "name": cname, "captain_count": 0}
+            captain_counts[cid]["captain_count"] += 1
+
+    # Sortuj po liczbie wyborów
+    stats = sorted(captain_counts.values(), key=lambda x: x["captain_count"], reverse=True)
+
+    # Dodaj procent
+    for s in stats:
+        s["captain_pct"] = f"{round(s['captain_count'] / total_teams * 100, 1)}%"
+
+    save_to_csv(stats, filename)
+
+    # Wydrukuj podsumowanie
+    print(f"\n{'='*60}")
+    print(f"  👑 STATYSTYKI KAPITANÓW (z {total_teams} drużyn)")
+    print(f"{'='*60}")
+    print(f"  {'Zawodnik':<25} {'Wyborów':>8} {'%':>8}")
+    print(f"  {'-'*45}")
+    for s in stats[:15]:
+        print(f"  {s['name']:<25} {s['captain_count']:>8} {s['captain_pct']:>8}")
+
+    return stats
+
+
+def generate_squad_stats(team_results: list[dict], filename: str):
+    """
+    Generuje statystyki ownership — ile drużyn ma danego zawodnika w składzie.
+    Zapisuje do CSV.
+    """
+    player_counts = {}
+    total_teams = len(team_results)
+
+    for team in team_results:
+        for p in team.get("squad", []):
+            pid = p["player_id"]
+            if pid not in player_counts:
+                player_counts[pid] = {
+                    "player_id": pid,
+                    "name": p["name"],
+                    "in_squad_count": 0,
+                    "in_starting_count": 0,
+                    "captain_count": 0,
+                }
+            player_counts[pid]["in_squad_count"] += 1
+            if not p.get("is_reserve"):
+                player_counts[pid]["in_starting_count"] += 1
+            if p.get("is_captain"):
+                player_counts[pid]["captain_count"] += 1
+
+    stats = sorted(player_counts.values(), key=lambda x: x["in_squad_count"], reverse=True)
+
+    for s in stats:
+        s["squad_pct"] = f"{round(s['in_squad_count'] / total_teams * 100, 1)}%"
+        s["starting_pct"] = f"{round(s['in_starting_count'] / total_teams * 100, 1)}%"
+        s["captain_pct"] = f"{round(s['captain_count'] / total_teams * 100, 1)}%"
+
+    save_to_csv(stats, filename)
+
+    print(f"\n{'='*70}")
+    print(f"  👥 OWNERSHIP W DRUŻYNACH (z {total_teams} drużyn)")
+    print(f"{'='*70}")
+    print(f"  {'Zawodnik':<25} {'W składzie':>10} {'Start XI':>10} {'Kapitan':>10}")
+    print(f"  {'-'*60}")
+    for s in stats[:15]:
+        print(f"  {s['name']:<25} {s['squad_pct']:>10} {s['starting_pct']:>10} {s['captain_pct']:>10}")
+
+    return stats
+
+
+# ============================================================
 # GŁÓWNA LOGIKA
 # ============================================================
 
@@ -723,11 +951,29 @@ def main():
         if max_round:
             print_round_summary(players, max_round)
 
+    # 6. Scrapowanie drużyn (kapitanowie, ownership)
+    if TEAMS_TO_SCRAPE > 0:
+        ranking_teams = fetch_ranking_teams(session, TEAMS_TO_SCRAPE)
+
+        if ranking_teams:
+            team_results = scrape_teams_captains(session, ranking_teams)
+
+            # CSV - statystyki kapitanów
+            captains_file = os.path.join(OUTPUT_DIR, f"fantasy_captains_{timestamp}.csv")
+            generate_captain_stats(team_results, captains_file)
+
+            # CSV - ownership w drużynach
+            ownership_file = os.path.join(OUTPUT_DIR, f"fantasy_ownership_{timestamp}.csv")
+            generate_squad_stats(team_results, ownership_file)
+
     print(f"\n{'='*50}")
     print(f"✅ Gotowe! Pliki zapisane w katalogu: {OUTPUT_DIR}/")
     print(f"   - {os.path.basename(json_file)} (pełne dane JSON)")
     print(f"   - {os.path.basename(csv_file)} (podsumowanie CSV)")
     print(f"   - {os.path.basename(rounds_file)} (statystyki per kolejka CSV)")
+    if TEAMS_TO_SCRAPE > 0:
+        print(f"   - {os.path.basename(captains_file)} (statystyki kapitanów CSV)")
+        print(f"   - {os.path.basename(ownership_file)} (ownership w drużynach CSV)")
     print(f"🕐 Koniec: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
