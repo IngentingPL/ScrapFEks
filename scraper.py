@@ -688,7 +688,7 @@ def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
 def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False) -> dict:
     """
     Scrapuje skład drużyny ze strony /user-team/view/{slug}.
-    Zwraca listę zawodników i oznaczenie kapitana.
+    Dane są osadzone w HTML jako wywołania app.Pitch.$squad.push({...}).
     """
     try:
         resp = session.get(f"{BASE_URL}/user-team/view/{slug}", timeout=15)
@@ -697,54 +697,59 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
                 print(f"      ⚠️  HTTP {resp.status_code} dla {slug}")
             return {"slug": slug, "players": [], "captain_id": None}
 
-        soup = BeautifulSoup(resp.text, "lxml")
-        
-        # Debug: pokaż fragment HTML przy pierwszej drużynie
-        if debug:
-            player_els = soup.select("[data-player-id]")
-            print(f"      DEBUG {slug}: znaleziono {len(player_els)} elementów [data-player-id]")
-            if not player_els:
-                # Może strona przekierowuje na login?
-                title = soup.select_one("title")
-                print(f"      DEBUG title: {title.text.strip() if title else 'brak'}")
-                print(f"      DEBUG HTML (500 znaków): {resp.text[:500]}")
-            else:
-                print(f"      DEBUG pierwszy element: {str(player_els[0])[:200]}")
-
+        html = resp.text
         players = []
         captain_id = None
 
-        for el in soup.select("[data-player-id]"):
-            player_id = el.get("data-player-id")
-            name_el = el.select_one(".name")
-            name = name_el.text.strip() if name_el else ""
-            is_reserve = "reserve" in el.get("class", [])
+        # Szukamy wzorca: app.Pitch.$squad.push({ ... });
+        pattern = r'squad\.push\(\{(.*?)\}\);'
+        matches = re.findall(pattern, html, re.DOTALL)
 
-            # Kapitan ma <span class="capt"> w divie z punktami
-            is_captain = bool(el.select_one(".capt"))
-            if is_captain:
+        if debug:
+            print(f"      DEBUG {slug}: znaleziono {len(matches)} zawodników w $squad.push")
+
+        for match in matches:
+            # Parsuj pola z JS obiektu
+            pid = re.search(r'"id"\s*:\s*(\d+)', match)
+            name = re.search(r'"name"\s*:\s*"([^"]*)"', match)
+            pos = re.search(r'"pos"\s*:\s*(\d+)', match)
+            price = re.search(r'"price"\s*:\s*([\d.]+)', match)
+            captain = re.search(r'"captain"\s*:\s*(true|false)', match)
+            subcaptain = re.search(r'"subcaptain"\s*:\s*(true|false)', match)
+            points_match = re.search(r'"points"\s*:\s*"([^"]*)"', match)
+            status = re.search(r'"status"\s*:\s*"([^"]*)"', match)
+
+            player_id = pid.group(1) if pid else None
+            is_captain = captain.group(1) == "true" if captain else False
+            is_subcaptain = subcaptain.group(1) == "true" if subcaptain else False
+
+            if is_captain and player_id:
                 captain_id = player_id
 
-            # Punkty
-            points_el = el.select_one(".points")
-            points_text = ""
-            if points_el:
-                # Usuń tekst z <span class="capt"> żeby dostać czyste punkty
-                capt_span = points_el.select_one(".capt")
-                if capt_span:
-                    points_text = capt_span.text.strip()
-                else:
-                    points_text = points_el.text.strip()
+            points_text = points_match.group(1).strip() if points_match else ""
 
             players.append({
                 "player_id": player_id,
-                "name": name,
-                "position_id": el.get("data-player-pos", ""),
-                "price": _safe_float(el.get("data-player-price", "0")),
+                "name": name.group(1) if name else "",
+                "position_id": pos.group(1) if pos else "",
+                "price": float(price.group(1)) if price else 0,
                 "points": _safe_int(points_text) if points_text and points_text != "-" else 0,
                 "is_captain": is_captain,
-                "is_reserve": is_reserve,
+                "is_subcaptain": is_subcaptain,
+                "is_reserve": False,  # Zostanie ustawione poniżej
+                "status": status.group(1) if status else "",
             })
+
+        # Pierwsi 11 zawodników to skład startowy, reszta to rezerwa
+        # (serwer zwraca w kolejności: 11 startowych + rezerwowi)
+        starting_count = 11
+        for i, p in enumerate(players):
+            if i >= starting_count:
+                p["is_reserve"] = True
+
+        if debug and players:
+            cap_name = next((p["name"] for p in players if p["is_captain"]), "brak")
+            print(f"      DEBUG kapitan: {cap_name}")
 
         return {
             "slug": slug,
@@ -753,6 +758,8 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
         }
 
     except Exception as e:
+        if debug:
+            print(f"      ⚠️  Błąd: {e}")
         return {"slug": slug, "players": [], "captain_id": None, "error": str(e)}
 
 
