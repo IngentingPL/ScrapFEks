@@ -766,7 +766,27 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
     Dane są osadzone w HTML jako wywołania app.Pitch.$squad.push({...}).
     """
     try:
-        resp = session.get(f"{BASE_URL}/user-team/view/{slug}", timeout=15)
+        # Użyj czystych headerów przeglądarki — bez X-Requested-With
+        # (ten header powoduje że serwer zwraca Angular shell zamiast PHP)
+        browser_headers = {
+            "User-Agent": HEADERS["User-Agent"],
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
+            "Referer": f"{BASE_URL}/",
+        }
+        # Tymczasowo nadpisz session headers
+        old_headers = dict(session.headers)
+        session.headers.clear()
+        session.headers.update(browser_headers)
+
+        resp = session.get(
+            f"{BASE_URL}/user-team/view/{slug}",
+            timeout=15,
+        )
+
+        # Przywróć oryginalne headers
+        session.headers.clear()
+        session.headers.update(old_headers)
         if resp.status_code != 200:
             if debug:
                 print(f"      ⚠️  HTTP {resp.status_code} dla {slug}")
