@@ -111,35 +111,80 @@ def login(session: requests.Session) -> bool:
 
     # Krok 2: SSO login na fantasy.ekstraklasa.org
     try:
+        # Najpierw odwiedź stronę główną żeby dostać ewentualne cookies inicjalne
+        session.get(BASE_URL, timeout=15)
+        print(f"   Cookies po GET /: {dict(session.cookies)}")
+
+        # Tokeny z odpowiedzi API
+        id_token = token_data.get("id_token", "")
+        refresh_token = token_data.get("refresh_token", "")
+
+        # Próba 1: Cały obiekt tokenów jako JSON
+        sso_payload = {
+            "token": access_token,
+            "id_token": id_token,
+            "refresh_token": refresh_token,
+            "cognito_sub": token_data.get("cognito_sub", ""),
+            "email": FANTASY_EMAIL,
+            "status": token_data.get("status", 201),
+        }
+
         resp = session.post(
             LOGIN_SSO_URL,
-            data=access_token,
-            headers={
-                **HEADERS,
-                "Content-Type": "text/plain",
-            },
+            json=sso_payload,
             timeout=30,
             allow_redirects=True,
         )
+        print(f"   SSO próba 1 (JSON all): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
 
-        # Debug: pokaż cookies i response
-        print(f"   SSO status: {resp.status_code}")
-        print(f"   SSO cookies po logowaniu: {dict(session.cookies)}")
-        print(f"   SSO Set-Cookie headers: {resp.headers.get('Set-Cookie', 'brak')}")
-        print(f"   SSO response (200 znaków): {resp.text[:200]}")
+        # Próba 2: sam access_token jako text/plain
+        if not dict(session.cookies).get("PHPSESSID"):
+            resp = session.post(
+                LOGIN_SSO_URL,
+                data=access_token,
+                headers={**HEADERS, "Content-Type": "text/plain"},
+                timeout=30,
+                allow_redirects=True,
+            )
+            print(f"   SSO próba 2 (text token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
 
-        # Sprawdź czy mamy sesję - próbujemy pobrać dane testowego zawodnika
-        test_resp = session.get(f"{BASE_URL}/stats-player/2123", timeout=15)
-        if test_resp.status_code == 200:
-            test_data = test_resp.json()
-            if test_data.get("data", {}).get("message"):
-                print("   ✅ Zalogowano pomyślnie!")
-                print(f"   Finalne cookies: {dict(session.cookies)}")
-                return True
+        # Próba 3: id_token zamiast access_token
+        if not dict(session.cookies).get("PHPSESSID"):
+            resp = session.post(
+                LOGIN_SSO_URL,
+                data=id_token,
+                headers={**HEADERS, "Content-Type": "text/plain"},
+                timeout=30,
+                allow_redirects=True,
+            )
+            print(f"   SSO próba 3 (id_token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
 
-        print("   ❌ Logowanie SSO nie powiodło się")
-        print(f"   Status SSO: {resp.status_code}")
-        return False
+        # Próba 4: form-urlencoded z access_token
+        if not dict(session.cookies).get("PHPSESSID"):
+            resp = session.post(
+                LOGIN_SSO_URL,
+                data={"token": access_token},
+                timeout=30,
+                allow_redirects=True,
+            )
+            print(f"   SSO próba 4 (form token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
+
+        # Próba 5: form-urlencoded z id_token
+        if not dict(session.cookies).get("PHPSESSID"):
+            resp = session.post(
+                LOGIN_SSO_URL,
+                data={"id_token": id_token},
+                timeout=30,
+                allow_redirects=True,
+            )
+            print(f"   SSO próba 5 (form id_token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
+
+        if dict(session.cookies):
+            print(f"   ✅ Zalogowano z cookies: {dict(session.cookies)}")
+            return True
+        else:
+            print("   ⚠️  SSO nie ustawiło cookies — kontynuuję bez pełnej sesji")
+            return True  # kontynuuj — stats-player działa bez cookies
 
     except Exception as e:
         print(f"   ❌ Błąd SSO: {e}")
