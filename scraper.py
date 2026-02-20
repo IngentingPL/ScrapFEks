@@ -685,7 +685,7 @@ def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
     return teams
 
 
-def scrape_team_squad(session: requests.Session, slug: str) -> dict:
+def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False) -> dict:
     """
     Scrapuje skład drużyny ze strony /user-team/view/{slug}.
     Zwraca listę zawodników i oznaczenie kapitana.
@@ -693,9 +693,24 @@ def scrape_team_squad(session: requests.Session, slug: str) -> dict:
     try:
         resp = session.get(f"{BASE_URL}/user-team/view/{slug}", timeout=15)
         if resp.status_code != 200:
+            if debug:
+                print(f"      ⚠️  HTTP {resp.status_code} dla {slug}")
             return {"slug": slug, "players": [], "captain_id": None}
 
         soup = BeautifulSoup(resp.text, "lxml")
+        
+        # Debug: pokaż fragment HTML przy pierwszej drużynie
+        if debug:
+            player_els = soup.select("[data-player-id]")
+            print(f"      DEBUG {slug}: znaleziono {len(player_els)} elementów [data-player-id]")
+            if not player_els:
+                # Może strona przekierowuje na login?
+                title = soup.select_one("title")
+                print(f"      DEBUG title: {title.text.strip() if title else 'brak'}")
+                print(f"      DEBUG HTML (500 znaków): {resp.text[:500]}")
+            else:
+                print(f"      DEBUG pierwszy element: {str(player_els[0])[:200]}")
+
         players = []
         captain_id = None
 
@@ -750,7 +765,7 @@ def scrape_teams_captains(session: requests.Session, teams: list[dict]) -> list[
 
     for i, team in enumerate(teams, 1):
         slug = team["slug"]
-        squad = scrape_team_squad(session, slug)
+        squad = scrape_team_squad(session, slug, debug=(i <= 2))
 
         captain_id = squad.get("captain_id")
         captain_name = ""
