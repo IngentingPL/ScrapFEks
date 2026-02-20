@@ -122,12 +122,19 @@ def login(session: requests.Session) -> bool:
             allow_redirects=True,
         )
 
+        # Debug: pokaż cookies i response
+        print(f"   SSO status: {resp.status_code}")
+        print(f"   SSO cookies po logowaniu: {dict(session.cookies)}")
+        print(f"   SSO Set-Cookie headers: {resp.headers.get('Set-Cookie', 'brak')}")
+        print(f"   SSO response (200 znaków): {resp.text[:200]}")
+
         # Sprawdź czy mamy sesję - próbujemy pobrać dane testowego zawodnika
         test_resp = session.get(f"{BASE_URL}/stats-player/2123", timeout=15)
         if test_resp.status_code == 200:
             test_data = test_resp.json()
             if test_data.get("data", {}).get("message"):
                 print("   ✅ Zalogowano pomyślnie!")
+                print(f"   Finalne cookies: {dict(session.cookies)}")
                 return True
 
         print("   ❌ Logowanie SSO nie powiodło się")
@@ -707,6 +714,17 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
 
         if debug:
             print(f"      DEBUG {slug}: znaleziono {len(matches)} zawodników w $squad.push")
+            if not matches:
+                has_squad = "squad" in html
+                has_player = "player" in html.lower()
+                print(f"      DEBUG 'squad' w HTML: {has_squad}, 'player' w HTML: {has_player}")
+                print(f"      DEBUG HTML length: {len(html)}")
+                # Pokaż fragment wokół "squad" jeśli istnieje
+                idx = html.find("squad")
+                if idx >= 0:
+                    print(f"      DEBUG kontekst squad: ...{html[max(0,idx-50):idx+200]}...")
+                else:
+                    print(f"      DEBUG HTML (500 znaków): {html[:500]}")
             if not matches:
                 # Sprawdź czy HTML zawiera cokolwiek o squad
                 squad_refs = re.findall(r'squad|Pitch|player', html, re.IGNORECASE)
