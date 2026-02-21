@@ -199,11 +199,13 @@ def login(session: requests.Session) -> bool:
         }
         session.headers.update(browser_hdrs)
 
-        # Najpierw GET na stronę główną żeby PHP wystartowało sesję
+        # Najpierw GET na stronę z fałszywym PHPSESSID — wymusza PHP backend
+        session.cookies.set("PHPSESSID", "init_session_000", domain="fantasy.ekstraklasa.org")
         init_resp = session.get(BASE_URL, timeout=15)
         print(f"   Init GET / status: {init_resp.status_code}, cookies: {dict(session.cookies)}")
         print(f"   Init Set-Cookie: {init_resp.headers.get('Set-Cookie', 'brak')}")
 
+        # Teraz GET /connect z hashem
         resp = session.get(
             f"{BASE_URL}/connect",
             params={"g4t7hjq3rcyb0s2m": connect_hash},
