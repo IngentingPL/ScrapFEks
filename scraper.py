@@ -898,6 +898,17 @@ def fetch_league_teams(session: requests.Session, league_slug: str) -> list[dict
             print(f"   ⚠️  Brak linków /user-team/view/ w HTML")
             print(f"   DEBUG 'league' w HTML: {'league' in html}")
             print(f"   DEBUG 'user-team' w HTML: {'user-team' in html}")
+            # Pokaż kontekst wokół "user-team"
+            for m in re.finditer(r'user-team', html):
+                start = max(0, m.start() - 30)
+                end = min(len(html), m.end() + 80)
+                print(f"   DEBUG user-team context: ...{html[start:end]}...")
+            # Sprawdź wszystkie linki href
+            hrefs = re.findall(r'href=["\']([^"\']*user-team[^"\']*)', html)
+            print(f"   DEBUG href z user-team: {hrefs[:5]}")
+            # Sprawdź inne wzorce slug
+            slugs = re.findall(r'/user-team/(?:view/)?([^\s"\'<>]+)', html)
+            print(f"   DEBUG slugi: {slugs[:10]}")
             # Sprawdź czy to Angular shell
             if "ng-app" in html or "angular" in html.lower():
                 print(f"   DEBUG: Strona to Angular shell — potrzebny PHPSESSID")
