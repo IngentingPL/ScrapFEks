@@ -21,8 +21,39 @@ import time
 import re
 import os
 import sys
+import hashlib
 from datetime import datetime
 from typing import Optional
+from urllib.parse import quote
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from Crypto.Random import get_random_bytes
+
+
+def cryptojs_aes_encrypt(plaintext: str, passphrase: str) -> str:
+    """
+    Szyfruje tekst kompatybilnie z CryptoJS.AES.encrypt(text, passphrase).
+    Używa OpenSSL EVP_BytesToKey (MD5) do wyprowadzenia klucza i IV.
+    Zwraca base64 string w formacie: "Salted__" + salt + ciphertext.
+    """
+    salt = get_random_bytes(8)
+
+    # EVP_BytesToKey z MD5 — kompatybilne z CryptoJS
+    key_iv = b""
+    prev = b""
+    while len(key_iv) < 48:  # 32 bytes key + 16 bytes IV
+        prev = hashlib.md5(prev + passphrase.encode("utf-8") + salt).digest()
+        key_iv += prev
+
+    key = key_iv[:32]
+    iv = key_iv[32:48]
+
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    ciphertext = cipher.encrypt(pad(plaintext.encode("utf-8"), AES.block_size))
+
+    import base64
+    result = base64.b64encode(b"Salted__" + salt + ciphertext).decode("utf-8")
+    return result
 
 
 # ============================================================
@@ -52,6 +83,7 @@ OUTPUT_DIR = "output"
 
 BASE_URL = "https://fantasy.ekstraklasa.org"
 LOGIN_API_URL = "https://wicket-api.ekstraklasa-prod.tisagroup.ch/p/user/login/"
+TOKEN_CREATE_URL = "https://wicket-api.ekstraklasa-prod.tisagroup.ch/p/anonymous/token/create"
 LOGIN_SSO_URL = f"{BASE_URL}/login-sso"
 APPLICATION_ID = "sHCKWvfuCwRdu7s0vWwlPgBBjtHahTCvVgzTVZ8osyBGYKpikt"
 
@@ -109,105 +141,92 @@ def login(session: requests.Session) -> bool:
         print(f"   ❌ Błąd połączenia z API logowania: {e}")
         return False
 
-    # Krok 2: SSO login na fantasy.ekstraklasa.org
+    # Krok 2: Szyfrowanie tokenu (CryptoJS.AES.encrypt kompatybilne)
+    id_token = token_data.get("id_token", "")
+    encrypted = cryptojs_aes_encrypt(access_token, "secret")
+    encrypted_urlencoded = quote(encrypted, safe="")
+    print("   ✅ Token zaszyfrowany")
+
+    # Krok 3: Tworzenie tokenu connect — POST /p/anonymous/token/create
     try:
-        # Najpierw odwiedź stronę główną żeby dostać ewentualne cookies inicjalne
-        session.get(BASE_URL, timeout=15)
-        print(f"   Cookies po GET /: {dict(session.cookies)}")
-
-        # Tokeny z odpowiedzi API
-        id_token = token_data.get("id_token", "")
-        refresh_token = token_data.get("refresh_token", "")
-
-        # Próba 1: Cały obiekt tokenów jako JSON
-        sso_payload = {
-            "token": access_token,
-            "id_token": id_token,
-            "refresh_token": refresh_token,
-            "cognito_sub": token_data.get("cognito_sub", ""),
-            "email": FANTASY_EMAIL,
-            "status": token_data.get("status", 201),
+        create_payload = {
+            "token_text": encrypted_urlencoded,
+            "fan_application_sub": APPLICATION_ID,
         }
-
         resp = session.post(
-            LOGIN_SSO_URL,
-            json=sso_payload,
+            TOKEN_CREATE_URL,
+            json=create_payload,
+            headers={
+                "Authorization": id_token,
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/plain, */*",
+                "Origin": "https://konto.ekstraklasa.org",
+                "Referer": "https://konto.ekstraklasa.org/",
+            },
+            timeout=30,
+        )
+        print(f"   Token create status: {resp.status_code}")
+        print(f"   Token create response: {resp.text[:300]}")
+
+        if resp.status_code != 200:
+            print(f"   ❌ Błąd tworzenia tokenu connect")
+            return True  # kontynuuj bez cookies
+
+        create_data = resp.json()
+        connect_hash = create_data.get("token") or create_data.get("hash") or create_data.get("code")
+
+        if not connect_hash:
+            # Może cała odpowiedź to hash?
+            print(f"   DEBUG create_data keys: {list(create_data.keys()) if isinstance(create_data, dict) else type(create_data)}")
+            print(f"   DEBUG create_data: {json.dumps(create_data)[:500]}")
+            return True
+
+        print(f"   ✅ Connect hash: {str(connect_hash)[:50]}...")
+
+    except Exception as e:
+        print(f"   ❌ Błąd token/create: {e}")
+        return True
+
+    # Krok 4: GET /connect?g4t7hjq3rcyb0s2m={hash} — ustawia PHPSESSID
+    try:
+        resp = session.get(
+            f"{BASE_URL}/connect",
+            params={"g4t7hjq3rcyb0s2m": connect_hash},
+            headers={
+                "User-Agent": HEADERS["User-Agent"],
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            },
             timeout=30,
             allow_redirects=True,
         )
-        print(f"   SSO próba 1 (JSON all): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
+        print(f"   Connect status: {resp.status_code}, cookies: {dict(session.cookies)}")
 
-        # Próba 2: sam access_token jako text/plain
         if not dict(session.cookies).get("PHPSESSID"):
-            resp = session.post(
-                LOGIN_SSO_URL,
-                data=access_token,
-                headers={**HEADERS, "Content-Type": "text/plain"},
-                timeout=30,
-                allow_redirects=True,
-            )
-            print(f"   SSO próba 2 (text token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
-
-        # Próba 3: id_token zamiast access_token
-        if not dict(session.cookies).get("PHPSESSID"):
-            resp = session.post(
-                LOGIN_SSO_URL,
-                data=id_token,
-                headers={**HEADERS, "Content-Type": "text/plain"},
-                timeout=30,
-                allow_redirects=True,
-            )
-            print(f"   SSO próba 3 (id_token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
-
-        # Próba 4: form-urlencoded z access_token
-        if not dict(session.cookies).get("PHPSESSID"):
-            resp = session.post(
-                LOGIN_SSO_URL,
-                data={"token": access_token},
-                timeout=30,
-                allow_redirects=True,
-            )
-            print(f"   SSO próba 4 (form token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
-
-        # Próba 5: form-urlencoded z id_token
-        if not dict(session.cookies).get("PHPSESSID"):
-            resp = session.post(
-                LOGIN_SSO_URL,
-                data={"id_token": id_token},
-                timeout=30,
-                allow_redirects=True,
-            )
-            print(f"   SSO próba 5 (form id_token): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
-            print(f"   SSO próba 5 headers: {dict(resp.headers)}")
-
-            # Jeśli status 200, spróbuj GET na stronę główną — może cookies się pojawią
-            if resp.status_code == 200 and "error" not in resp.text:
-                resp2 = session.get(BASE_URL, timeout=15)
-                print(f"   Po GET /: cookies={dict(session.cookies)}")
-                resp3 = session.get(f"{BASE_URL}/user-team/view/poluna-sroda-wlkp", timeout=15)
-                has_squad = "squad" in resp3.text
-                print(f"   Test drużyny: squad w HTML={has_squad}, cookies={dict(session.cookies)}")
-
-        # Próba 6: form-urlencoded z pełnym zestawem tokenów
-        if not dict(session.cookies).get("PHPSESSID"):
-            resp = session.post(
-                LOGIN_SSO_URL,
-                data={
-                    "id_token": id_token,
-                    "token": access_token,
-                    "refresh_token": refresh_token,
-                },
-                timeout=30,
-                allow_redirects=True,
-            )
-            print(f"   SSO próba 6 (form all tokens): status={resp.status_code}, cookies={dict(session.cookies)}, resp={resp.text[:150]}")
-
-        if dict(session.cookies):
-            print(f"   ✅ Zalogowano z cookies: {dict(session.cookies)}")
+            print("   ⚠️  /connect nie ustawiło PHPSESSID")
             return True
-        else:
-            print("   ⚠️  SSO nie ustawiło cookies — kontynuuję bez pełnej sesji")
-            return True  # kontynuuj — stats-player działa bez cookies
+
+    except Exception as e:
+        print(f"   ❌ Błąd /connect: {e}")
+        return True
+
+    # Krok 5: POST /login-sso — autoryzuje sesję
+    try:
+        resp = session.post(
+            LOGIN_SSO_URL,
+            data={"id_token": id_token},
+            headers={
+                "User-Agent": HEADERS["User-Agent"],
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-Requested-With": "XMLHttpRequest",
+                "Origin": BASE_URL,
+                "Referer": f"{BASE_URL}/connect",
+            },
+            timeout=30,
+            allow_redirects=True,
+        )
+        print(f"   Login SSO status: {resp.status_code}, resp: {resp.text[:150]}")
+        print(f"   ✅ Zalogowano! Cookies: {dict(session.cookies)}")
+        return True
 
     except Exception as e:
         print(f"   ❌ Błąd SSO: {e}")
