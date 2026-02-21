@@ -73,6 +73,9 @@ MAX_PLAYER_ID = int(os.environ.get("MAX_PLAYER_ID", "100"))
 # Ile drużyn z rankingu scrapować (dla statystyk kapitanów itp.)
 TEAMS_TO_SCRAPE = int(os.environ.get("TEAMS_TO_SCRAPE", "100"))
 
+# Slug ligi prywatnej (puste = pomiń)
+LEAGUE_SLUG = os.environ.get("LEAGUE_SLUG", "discord-fmforumcmf")
+
 # Opóźnienie między requestami (w sekundach) - bądź miły dla serwera
 REQUEST_DELAY = 0.3
 
@@ -812,6 +815,103 @@ def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
     return teams
 
 
+def fetch_league_teams(session: requests.Session, league_slug: str) -> list[dict]:
+    """
+    Pobiera listę drużyn z ligi prywatnej.
+    Próbuje kilka endpointów — DataTables POST i GET z parsowaniem HTML.
+    """
+    print(f"\n🏅 Pobieram drużyny z ligi: {league_slug}...")
+    teams = []
+
+    # Próba 1: POST DataTables do /league/{slug} (analogicznie do /ranking-list)
+    try:
+        resp = session.post(
+            f"{BASE_URL}/league/{league_slug}",
+            data="start=0&length=100",
+            headers={
+                **HEADERS,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            try:
+                data = resp.json()
+                for team in data.get("data", []):
+                    slug = team.get("slug", "")
+                    if slug:
+                        teams.append({
+                            "team_id": team.get("id"),
+                            "slug": slug,
+                            "total_points": _safe_int(str(team.get("total_points", "0"))),
+                            "last_points": _safe_int(str(team.get("last_points", "0"))),
+                            "position": team.get("pos"),
+                        })
+                if teams:
+                    print(f"   ✅ Pobrano {len(teams)} drużyn z ligi (DataTables POST)")
+                    return teams
+                print(f"   POST /league/{league_slug} zwrócił JSON ale brak danych, próbuję GET...")
+            except (json.JSONDecodeError, ValueError):
+                print(f"   POST nie zwrócił JSON, próbuję GET...")
+    except Exception as e:
+        print(f"   ⚠️  Błąd POST: {e}")
+
+    # Próba 2: GET strony ligi i parsowanie HTML
+    try:
+        # Użyj czystych headerów przeglądarki (bez X-Requested-With)
+        browser_headers = {
+            "User-Agent": HEADERS["User-Agent"],
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "pl-PL,pl;q=0.9",
+        }
+        old_headers = dict(session.headers)
+        session.headers.clear()
+        session.headers.update(browser_headers)
+
+        resp = session.get(f"{BASE_URL}/league/{league_slug}", timeout=30)
+        session.headers.clear()
+        session.headers.update(old_headers)
+
+        if resp.status_code != 200:
+            print(f"   ⚠️  GET /league/{league_slug}: HTTP {resp.status_code}")
+            return teams
+
+        html = resp.text
+        print(f"   GET HTML length: {len(html)}")
+
+        # Szukaj linków do drużyn: /user-team/view/{slug}
+        team_links = re.findall(r'/user-team/view/([\w-]+)', html)
+        unique_slugs = list(dict.fromkeys(team_links))  # zachowaj kolejność, usuń duplikaty
+
+        if unique_slugs:
+            for i, slug in enumerate(unique_slugs):
+                teams.append({
+                    "team_id": None,
+                    "slug": slug,
+                    "total_points": 0,
+                    "last_points": 0,
+                    "position": i + 1,
+                })
+            print(f"   ✅ Znaleziono {len(teams)} drużyn w lidze (GET HTML)")
+        else:
+            # Debug — pokaż co jest w HTML
+            print(f"   ⚠️  Brak linków /user-team/view/ w HTML")
+            print(f"   DEBUG 'league' w HTML: {'league' in html}")
+            print(f"   DEBUG 'user-team' w HTML: {'user-team' in html}")
+            # Sprawdź czy to Angular shell
+            if "ng-app" in html or "angular" in html.lower():
+                print(f"   DEBUG: Strona to Angular shell — potrzebny PHPSESSID")
+            # Szukaj DataTables AJAX URL
+            ajax_match = re.search(r'ajax["\']?\s*:\s*["\']([^"\']+)', html)
+            if ajax_match:
+                print(f"   DEBUG: Znaleziono AJAX URL: {ajax_match.group(1)}")
+
+    except Exception as e:
+        print(f"   ⚠️  Błąd GET: {e}")
+
+    return teams
+
+
 def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False) -> dict:
     """
     Scrapuje skład drużyny ze strony /user-team/view/{slug}.
@@ -1062,21 +1162,27 @@ def generate_dashboard_html(
     captain_stats: list[dict],
     ownership_stats: list[dict],
     teams_count: int,
+    league_captain_stats: list[dict],
+    league_ownership_stats: list[dict],
+    league_name: str,
+    league_teams_count: int,
     timestamp: str,
     filename: str,
 ):
     """Generuje interaktywny dashboard HTML z danymi Fantasy Ekstraklasa."""
 
-    captains_json = json.dumps(captain_stats[:30], ensure_ascii=False)
-    ownership_json = json.dumps(ownership_stats[:50], ensure_ascii=False)
-    players_json = json.dumps(summary_data[:100], ensure_ascii=False)
+    captains_json = json.dumps(captain_stats[:50], ensure_ascii=False)
+    ownership_json = json.dumps(ownership_stats[:80], ensure_ascii=False)
+    players_json = json.dumps(summary_data[:200], ensure_ascii=False)
+    league_captains_json = json.dumps(league_captain_stats[:50], ensure_ascii=False)
+    league_ownership_json = json.dumps(league_ownership_stats[:80], ensure_ascii=False)
 
     top_captain = captain_stats[0] if captain_stats else {}
     top_owned = ownership_stats[0] if ownership_stats else {}
     best_ppp = max(summary_data, key=lambda x: x.get("points_per_price", 0)) if summary_data else {}
 
-    # Znajdź ostatnią kolejkę
-    round_num = "?"
+    has_league = league_teams_count > 0
+    league_label = league_name.replace("-", " ").title() if league_name else ""
 
     html = f'''<!DOCTYPE html>
 <html lang="pl">
@@ -1094,9 +1200,7 @@ body {{
   font-family: 'DM Sans', -apple-system, sans-serif;
   padding: 24px 16px;
 }}
-.container {{ max-width: 960px; margin: 0 auto; }}
-
-/* Header */
+.container {{ max-width: 1060px; margin: 0 auto; }}
 .header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }}
 .logo {{
   width: 40px; height: 40px; border-radius: 10px;
@@ -1105,14 +1209,12 @@ body {{
 }}
 .header h1 {{ font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }}
 .header .sub {{ font-size: 12px; color: #64748b; margin: 0; }}
-
-/* Stat cards */
-.stats-row {{ display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; padding-bottom: 4px; }}
+.stats-row {{ display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; padding-bottom: 4px; flex-wrap: wrap; }}
 .stat-card {{
   background: #1e293b; border-radius: 10px; padding: 16px 20px;
-  min-width: 140; flex-shrink: 0;
+  min-width: 140px; flex-shrink: 0;
 }}
-.stat-card .val {{ font-size: 26px; font-weight: 800; }}
+.stat-card .val {{ font-size: 24px; font-weight: 800; }}
 .stat-card .label {{ font-size: 11px; color: #94a3b8; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }}
 .stat-card .sub {{ font-size: 11px; color: #64748b; margin-top: 4px; }}
 .accent-cyan {{ border-left: 3px solid #22d3ee; }}
@@ -1123,9 +1225,7 @@ body {{
 .accent-green .val {{ color: #10b981; }}
 .accent-purple {{ border-left: 3px solid #a78bfa; }}
 .accent-purple .val {{ color: #a78bfa; }}
-
-/* Tabs */
-.tabs {{ display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #1e293b; }}
+.tabs {{ display: flex; gap: 4px; border-bottom: 1px solid #1e293b; flex-wrap: wrap; }}
 .tab {{
   background: transparent; border: none; border-bottom: 2px solid transparent;
   color: #64748b; padding: 10px 18px; font-size: 13px; font-weight: 600;
@@ -1134,9 +1234,8 @@ body {{
 }}
 .tab.active {{ background: #1e293b; border-bottom-color: #22d3ee; color: #e2e8f0; }}
 .tab:hover {{ color: #e2e8f0; }}
-
-/* Position filters */
-.pos-filters {{ display: flex; gap: 4px; margin-left: auto; align-items: center; }}
+.filters-row {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }}
+.pos-filters {{ display: flex; gap: 4px; align-items: center; }}
 .pos-btn {{
   background: transparent; border: 1px solid #334155; color: #64748b;
   padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
@@ -1148,34 +1247,27 @@ body {{
 .pos-btn.active[data-pos="OBR"] {{ background: #3b82f6; }}
 .pos-btn.active[data-pos="POM"] {{ background: #10b981; }}
 .pos-btn.active[data-pos="NAP"] {{ background: #ef4444; }}
-
-/* Section title */
-.section-title {{
-  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+.scope-toggle {{ display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }}
+.scope-btn {{
+  background: transparent; border: none; color: #64748b;
+  padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
 }}
-.section-title h2 {{
-  font-size: 16px; font-weight: 700; letter-spacing: 1.2px;
-  text-transform: uppercase; color: #e2e8f0;
-}}
+.scope-btn.active {{ background: #22d3ee; color: #0f172a; }}
+.section-title {{ display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }}
+.section-title h2 {{ font-size: 16px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #e2e8f0; }}
 .section-title .line {{ flex: 1; height: 1px; background: linear-gradient(90deg, #334155, transparent); }}
-
-/* Table */
-.data-table {{
-  background: #1e293b; border-radius: 12px; overflow: hidden;
-  width: 100%; overflow-x: auto;
-}}
+.data-table {{ background: #1e293b; border-radius: 12px; overflow: hidden; width: 100%; overflow-x: auto; }}
 table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
 thead tr {{ background: #0f172a; }}
 th {{
-  padding: 10px 16px; color: #64748b; font-weight: 600; font-size: 11px;
+  padding: 10px 14px; color: #64748b; font-weight: 600; font-size: 11px;
   text-transform: uppercase; white-space: nowrap;
 }}
 th.sortable {{ cursor: pointer; user-select: none; }}
 th.sortable:hover {{ color: #94a3b8; }}
-td {{ padding: 10px 16px; border-top: 1px solid #0f172a; white-space: nowrap; }}
+td {{ padding: 10px 14px; border-top: 1px solid #0f172a; white-space: nowrap; }}
 tr.highlight {{ background: rgba(251,191,36,0.06); }}
-
-/* Badges */
 .pos-badge {{
   display: inline-block; padding: 2px 8px; border-radius: 4px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #0f172a;
@@ -1190,46 +1282,36 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   color: #0f172a; font-size: 11px; font-weight: 800;
 }}
-
-/* Bar */
 .bar-wrap {{ display: flex; align-items: center; gap: 8px; }}
 .bar-bg {{ width: 80px; height: 6px; background: #0f172a; border-radius: 3px; overflow: hidden; }}
 .bar-fill {{ height: 100%; border-radius: 3px; transition: width 0.6s ease; }}
 .bar-val {{ font-size: 13px; color: #94a3b8; min-width: 38px; text-align: right; }}
-
 .tab-content {{ display: none; }}
 .tab-content.active {{ display: block; }}
-
 .footer {{ text-align: center; margin-top: 32px; color: #334155; font-size: 12px; }}
-
 .text-right {{ text-align: right; }}
 .text-center {{ text-align: center; }}
 .text-left {{ text-align: left; }}
 .fw-700 {{ font-weight: 700; }}
 .fw-600 {{ font-weight: 600; }}
 .c-muted {{ color: #94a3b8; }}
-.c-gold {{ color: #fbbf24; }}
-.c-cyan {{ color: #22d3ee; }}
+.c-dim {{ color: #64748b; }}
+.empty-msg {{ padding: 40px; text-align: center; color: #64748b; }}
 </style>
 </head>
 <body>
 <div class="container">
-
-  <!-- Header -->
   <div class="header">
     <div class="logo">⚽</div>
     <div>
       <h1>Fantasy Ekstraklasa</h1>
-      <p class="sub">Dashboard · Top {teams_count} drużyn · {timestamp}</p>
+      <p class="sub">Dashboard · {timestamp}</p>
     </div>
   </div>
-
-  <!-- Stats -->
   <div class="stats-row">
     <div class="stat-card accent-cyan">
       <div class="val">{teams_count}</div>
-      <div class="label">Drużyn</div>
-      <div class="sub">z rankingu</div>
+      <div class="label">Top drużyn</div>
     </div>
     <div class="stat-card accent-gold">
       <div class="val">{top_captain.get('name', '—')}</div>
@@ -1246,15 +1328,18 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       <div class="label">Najlepszy PPP</div>
       <div class="sub">{best_ppp.get('name', '—')} · {best_ppp.get('price', 0):.1f}M</div>
     </div>
+    {"<div class='stat-card accent-cyan'><div class='val'>" + str(league_teams_count) + "</div><div class='label'>Liga</div><div class='sub'>" + league_label + "</div></div>" if has_league else ""}
   </div>
 
-  <!-- Tabs -->
   <div style="margin-top: 24px;">
     <div class="tabs">
       <button class="tab active" data-tab="captains">👑 Kapitanowie</button>
       <button class="tab" data-tab="ownership">👥 Ownership</button>
       <button class="tab" data-tab="players">⚽ Zawodnicy</button>
-      <div class="pos-filters">
+    </div>
+    <div class="filters-row" style="margin-top: 12px;">
+      {"<div class='scope-toggle'><button class='scope-btn active' data-scope='global'>🏆 Top " + str(teams_count) + "</button><button class='scope-btn' data-scope='league'>🏅 " + league_label + "</button></div>" if has_league else ""}
+      <div class="pos-filters" style="margin-left:auto;">
         <button class="pos-btn active" data-pos="ALL">ALL</button>
         <button class="pos-btn" data-pos="BR">GK</button>
         <button class="pos-btn" data-pos="OBR">DEF</button>
@@ -1262,177 +1347,183 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
         <button class="pos-btn" data-pos="NAP">FWD</button>
       </div>
     </div>
-
     <div id="tab-captains" class="tab-content active"></div>
     <div id="tab-ownership" class="tab-content"></div>
     <div id="tab-players" class="tab-content"></div>
   </div>
-
-  <div class="footer">
-    Fantasy Ekstraklasa Dashboard · Dane z Top {teams_count} drużyn · Wygenerowano: {timestamp}
-  </div>
+  <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
 
 <script>
-const CAPTAINS = {captains_json};
-const OWNERSHIP = {ownership_json};
+const DATA = {{
+  global: {{
+    captains: {captains_json},
+    ownership: {ownership_json},
+  }},
+  league: {{
+    captains: {league_captains_json},
+    ownership: {league_ownership_json},
+  }},
+}};
 const PLAYERS = {players_json};
 
-const POS_MAP = {{BR:'GK', OBR:'DEF', POM:'MID', NAP:'FWD', '1':'GK', '2':'DEF', '3':'MID', '4':'FWD'}};
-const POS_COLORS = {{BR:'#f59e0b', OBR:'#3b82f6', POM:'#10b981', NAP:'#ef4444'}};
-const POS_ID_TO_KEY = {{'1':'BR', '2':'OBR', '3':'POM', '4':'NAP', 'BR':'BR', 'OBR':'OBR', 'POM':'POM', 'NAP':'NAP'}};
+const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
+const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
+  Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
 
-let currentTab = 'captains';
-let currentPos = 'ALL';
-let sortCol = 'total_points';
-let sortDir = 'desc';
+let tab = 'captains', pos = 'ALL', scope = 'global';
+let sorts = {{
+  captains: {{col:'captain_count', dir:'desc'}},
+  ownership: {{col:'in_squad_count', dir:'desc'}},
+  players: {{col:'total_points', dir:'desc'}},
+}};
 
+function num(v) {{ return typeof v === 'string' ? parseFloat(v) || 0 : v || 0; }}
 function bar(val, max, color) {{
   const w = Math.min(val / max * 100, 100);
-  return `<div class="bar-wrap">
-    <div class="bar-bg"><div class="bar-fill" style="width:${{w}}%;background:${{color}}"></div></div>
-    <span class="bar-val">${{val.toFixed(1)}}%</span>
-  </div>`;
+  return '<div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:'+w+'%;background:'+color+'"></div></div><span class="bar-val">'+val.toFixed(1)+'%</span></div>';
 }}
-
-function posBadge(pos) {{
-  const normalized = POS_ID_TO_KEY[pos] || pos;
-  return `<span class="pos-badge pos-${{normalized}}">${{POS_MAP[normalized] || POS_MAP[pos] || pos}}</span>`;
+function posBadge(p) {{
+  const k = POS_ID[p] || p;
+  return '<span class="pos-badge pos-'+k+'">'+(POS_MAP[k]||POS_MAP[p]||p)+'</span>';
+}}
+function arrow(tab, col) {{
+  const s = sorts[tab];
+  return s.col === col ? (s.dir === 'desc' ? ' ▼' : ' ▲') : '';
+}}
+function filterPos(data) {{
+  if (pos === 'ALL') return data;
+  return data.filter(p => {{
+    const pk = POS_ID[p.position] || POS_ID[p.position_id] || p.position;
+    return pk === pos;
+  }});
+}}
+function sortData(data, tab) {{
+  const s = sorts[tab];
+  return [...data].sort((a, b) => {{
+    let av = a[s.col], bv = b[s.col];
+    if (s.col === 'position' || s.col === 'position_id') {{
+      const order = {{BR:1,OBR:2,POM:3,NAP:4,'1':1,'2':2,'3':3,'4':4,Bramkarz:1,'Obrońca':2,Pomocnik:3,Napastnik:4}};
+      av = order[av] || 5; bv = order[bv] || 5;
+    }} else if (s.col === 'name' || s.col === 'team') {{
+      av = (av || '').toLowerCase(); bv = (bv || '').toLowerCase();
+      if (av < bv) return s.dir === 'desc' ? 1 : -1;
+      if (av > bv) return s.dir === 'desc' ? -1 : 1;
+      return 0;
+    }} else {{
+      av = num(av); bv = num(bv);
+    }}
+    return s.dir === 'desc' ? bv - av : av - bv;
+  }});
 }}
 
 function renderCaptains() {{
-  let data = CAPTAINS;
-  if (currentPos !== 'ALL') return '<div style="padding:40px;text-align:center;color:#64748b">Filtr pozycji niedostępny dla kapitanów</div>';
-  if (!data.length) return '<div style="padding:40px;text-align:center;color:#64748b">Brak danych</div>';
+  let data = DATA[scope].captains;
+  data = sortData(data, 'captains');
+  if (!data.length) return '<div class="empty-msg">Brak danych o kapitanach</div>';
   const maxPct = Math.max(...data.map(c => c.captain_count));
-  let html = `<div class="section-title"><span style="font-size:22px">👑</span><h2>Popularność kapitanów</h2><div class="line"></div></div>`;
-  html += '<div class="data-table"><table><thead><tr>';
-  html += '<th class="text-left">#</th><th class="text-left">Zawodnik</th>';
-  html += '<th class="text-right">Wyborów</th><th class="text-left" style="min-width:160px">Popularność</th>';
-  html += '</tr></thead><tbody>';
+  let h = '<div class="section-title"><span style="font-size:22px">👑</span><h2>Popularność kapitanów — '+(scope==='league'?'Liga':'Top {teams_count}')+'</h2><div class="line"></div></div>';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left sortable" data-tab="captains" data-col="index">#'+arrow('captains','index')+'</th>';
+  h += '<th class="text-left sortable" data-tab="captains" data-col="name">Zawodnik'+arrow('captains','name')+'</th>';
+  h += '<th class="text-right sortable" data-tab="captains" data-col="captain_count">Wyborów'+arrow('captains','captain_count')+'</th>';
+  h += '<th class="text-left" style="min-width:160px">Popularność</th>';
+  h += '</tr></thead><tbody>';
   data.forEach((c, i) => {{
     const hl = i === 0 ? ' class="highlight"' : '';
-    const nameStyle = i === 0 ? 'color:#fbbf24;font-weight:700' : i < 3 ? 'font-weight:700' : 'font-weight:500';
+    const ns = i === 0 ? 'color:#fbbf24;font-weight:700' : i < 3 ? 'font-weight:700' : 'font-weight:500';
     const badge = i === 0 ? '<span class="captain-badge">C</span> ' : '';
-    const barColor = i === 0 ? '#fbbf24' : '#22d3ee';
-    html += `<tr${{hl}}>
-      <td class="c-muted fw-600">${{i+1}}</td>
-      <td><span style="${{nameStyle}}">${{badge}}${{c.name}}</span></td>
-      <td class="text-right fw-700">${{c.captain_count}}</td>
-      <td>${{bar(parseFloat(c.captain_pct), maxPct * 1.2, barColor)}}</td>
-    </tr>`;
+    const bc = i === 0 ? '#fbbf24' : '#22d3ee';
+    h += '<tr'+hl+'><td class="c-muted fw-600">'+(i+1)+'</td><td><span style="'+ns+'">'+badge+c.name+'</span></td>';
+    h += '<td class="text-right fw-700">'+c.captain_count+'</td>';
+    h += '<td>'+bar(parseFloat(c.captain_pct), maxPct*1.2, bc)+'</td></tr>';
   }});
-  html += '</tbody></table></div>';
-  return html;
+  h += '</tbody></table></div>';
+  return h;
 }}
 
 function renderOwnership() {{
-  let data = OWNERSHIP;
-  if (currentPos !== 'ALL') data = data.filter(p => (POS_ID_TO_KEY[p.position] || p.position) === currentPos);
-  if (!data.length) return '<div style="padding:40px;text-align:center;color:#64748b">Brak danych dla wybranej pozycji</div>';
-  let html = `<div class="section-title"><span style="font-size:22px">👥</span><h2>Ownership w Top drużynach</h2><div class="line"></div></div>`;
-  html += '<div class="data-table"><table><thead><tr>';
-  html += '<th class="text-left">#</th><th class="text-left">Zawodnik</th><th class="text-center">Poz</th>';
-  html += '<th class="text-left" style="min-width:130px">W składzie</th>';
-  html += '<th class="text-left" style="min-width:130px">Start XI</th>';
-  html += '<th class="text-left" style="min-width:130px">Kapitan</th>';
-  html += '</tr></thead><tbody>';
+  let data = filterPos(DATA[scope].ownership);
+  data = sortData(data, 'ownership');
+  if (!data.length) return '<div class="empty-msg">Brak danych ownership</div>';
+  let h = '<div class="section-title"><span style="font-size:22px">👥</span><h2>Ownership — '+(scope==='league'?'Liga':'Top {teams_count}')+'</h2><div class="line"></div></div>';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left">#</th>';
+  h += '<th class="text-left sortable" data-tab="ownership" data-col="name">Zawodnik'+arrow('ownership','name')+'</th>';
+  h += '<th class="text-center sortable" data-tab="ownership" data-col="position">Poz'+arrow('ownership','position')+'</th>';
+  h += '<th class="text-left sortable" data-tab="ownership" data-col="in_squad_count" style="min-width:130px">W składzie'+arrow('ownership','in_squad_count')+'</th>';
+  h += '<th class="text-left sortable" data-tab="ownership" data-col="in_starting_count" style="min-width:130px">Start XI'+arrow('ownership','in_starting_count')+'</th>';
+  h += '<th class="text-left sortable" data-tab="ownership" data-col="captain_count" style="min-width:130px">Kapitan'+arrow('ownership','captain_count')+'</th>';
+  h += '</tr></thead><tbody>';
   data.forEach((p, i) => {{
-    const sq = parseFloat(p.squad_pct) || 0;
-    const st = parseFloat(p.starting_pct) || 0;
-    const cp = parseFloat(p.captain_pct) || 0;
-    html += `<tr>
-      <td class="c-muted fw-600">${{i+1}}</td>
-      <td class="fw-600">${{p.name}}</td>
-      <td class="text-center">${{posBadge(POS_ID_TO_KEY[p.position] || p.position || '')}}</td>
-      <td>${{bar(sq, 100, '#10b981')}}</td>
-      <td>${{bar(st, 100, '#3b82f6')}}</td>
-      <td>${{bar(cp, 40, '#fbbf24')}}</td>
-    </tr>`;
+    const sq = num(p.squad_pct), st = num(p.starting_pct), cp = num(p.captain_pct);
+    const pk = POS_ID[p.position] || p.position || '';
+    h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td><td class="fw-600">'+p.name+'</td>';
+    h += '<td class="text-center">'+posBadge(pk)+'</td>';
+    h += '<td>'+bar(sq, 100, '#10b981')+'</td>';
+    h += '<td>'+bar(st, 100, '#3b82f6')+'</td>';
+    h += '<td>'+bar(cp, 40, '#fbbf24')+'</td></tr>';
   }});
-  html += '</tbody></table></div>';
-  return html;
+  h += '</tbody></table></div>';
+  return h;
 }}
 
 function renderPlayers() {{
   let data = [...PLAYERS];
-  if (currentPos !== 'ALL') {{
-    const posMap = {{'BR':'Bramkarz','OBR':'Obrońca','POM':'Pomocnik','NAP':'Napastnik'}};
-    data = data.filter(p => {{
-      const pPos = POS_ID_TO_KEY[p.position] || p.position;
-      return pPos === currentPos || p.position === posMap[currentPos] || p.position === currentPos;
-    }});
-  }}
-  data.sort((a, b) => {{
-    let av = a[sortCol] ?? 0, bv = b[sortCol] ?? 0;
-    if (typeof av === 'string') av = parseFloat(av) || 0;
-    if (typeof bv === 'string') bv = parseFloat(bv) || 0;
-    return sortDir === 'desc' ? bv - av : av - bv;
-  }});
-  if (!data.length) return '<div style="padding:40px;text-align:center;color:#64748b">Brak danych dla wybranej pozycji</div>';
-  const arrow = (col) => sortCol === col ? (sortDir === 'desc' ? ' ▼' : ' ▲') : '';
-  let html = `<div class="section-title"><span style="font-size:22px">⚽</span><h2>Statystyki zawodników</h2><div class="line"></div></div>`;
-  html += '<div class="data-table"><table><thead><tr>';
-  html += '<th class="text-left">#</th><th class="text-left">Zawodnik</th><th class="text-left">Drużyna</th><th class="text-center">Poz</th>';
-  html += `<th class="text-right sortable" data-sort="price">Cena${{arrow('price')}}</th>`;
-  html += `<th class="text-right sortable" data-sort="total_points">Punkty${{arrow('total_points')}}</th>`;
-  html += `<th class="text-right sortable" data-sort="points_per_price">Pkt/Cena${{arrow('points_per_price')}}</th>`;
-  html += '<th class="text-right">Pop.</th>';
-  html += '</tr></thead><tbody>';
+  if (pos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === pos);
+  data = sortData(data, 'players');
+  if (!data.length) return '<div class="empty-msg">Brak danych</div>';
+  let h = '<div class="section-title"><span style="font-size:22px">⚽</span><h2>Statystyki zawodników</h2><div class="line"></div></div>';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left">#</th>';
+  h += '<th class="text-left sortable" data-tab="players" data-col="name">Zawodnik'+arrow('players','name')+'</th>';
+  h += '<th class="text-left sortable" data-tab="players" data-col="team">Drużyna'+arrow('players','team')+'</th>';
+  h += '<th class="text-center sortable" data-tab="players" data-col="position">Poz'+arrow('players','position')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="price">Cena'+arrow('players','price')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="total_points">Punkty'+arrow('players','total_points')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct">Pop.'+arrow('players','popularity_pct')+'</th>';
+  h += '</tr></thead><tbody>';
   data.forEach((p, i) => {{
-    const pts = p.total_points || 0;
-    const price = p.price || 0;
-    const ppp = p.points_per_price || 0;
-    const ptsColor = pts >= 35 ? '#22d3ee' : pts >= 25 ? '#e2e8f0' : '#94a3b8';
-    const pppColor = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
-    const posKey = {{'Bramkarz':'BR','Obrońca':'OBR','Pomocnik':'POM','Napastnik':'NAP'}}[p.position] || POS_ID_TO_KEY[p.position] || p.position || '';
-    html += `<tr>
-      <td class="c-muted fw-600">${{i+1}}</td>
-      <td class="fw-600">${{p.name}}</td>
-      <td class="c-muted" style="font-size:13px">${{p.team}}</td>
-      <td class="text-center">${{posBadge(posKey)}}</td>
-      <td class="text-right c-muted">${{price.toFixed(1)}}M</td>
-      <td class="text-right fw-700" style="color:${{ptsColor}}">${{pts}}</td>
-      <td class="text-right fw-600" style="color:${{pppColor}}">${{ppp.toFixed(1)}}</td>
-      <td class="text-right c-muted" style="font-size:13px">${{p.popularity_pct}}</td>
-    </tr>`;
+    const pts = p.total_points || 0, price = p.price || 0, ppp = p.points_per_price || 0;
+    const ptsC = pts >= 35 ? '#22d3ee' : pts >= 25 ? '#e2e8f0' : '#94a3b8';
+    const pppC = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
+    const pk = POS_ID[p.position] || p.position || '';
+    h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td>';
+    h += '<td class="fw-600">'+p.name+'</td>';
+    h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
+    h += '<td class="text-center">'+posBadge(pk)+'</td>';
+    h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
+    h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
+    h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
+    h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td></tr>';
   }});
-  html += '</tbody></table></div>';
-  return html;
+  h += '</tbody></table></div>';
+  return h;
 }}
 
 function render() {{
-  document.getElementById('tab-captains').innerHTML = currentTab === 'captains' ? renderCaptains() : '';
-  document.getElementById('tab-ownership').innerHTML = currentTab === 'ownership' ? renderOwnership() : '';
-  document.getElementById('tab-players').innerHTML = currentTab === 'players' ? renderPlayers() : '';
-
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-' + currentTab).classList.add('active');
-
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
-  document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === currentPos));
-
-  // Re-attach sort listeners
+  document.getElementById('tab-captains').innerHTML = tab === 'captains' ? renderCaptains() : '';
+  document.getElementById('tab-ownership').innerHTML = tab === 'ownership' ? renderOwnership() : '';
+  document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
+  document.querySelectorAll('.scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
+  // Sortable click handlers
   document.querySelectorAll('.sortable').forEach(th => {{
     th.onclick = () => {{
-      const col = th.dataset.sort;
-      if (sortCol === col) sortDir = sortDir === 'desc' ? 'asc' : 'desc';
-      else {{ sortCol = col; sortDir = 'desc'; }}
+      const t = th.dataset.tab, col = th.dataset.col;
+      if (sorts[t].col === col) sorts[t].dir = sorts[t].dir === 'desc' ? 'asc' : 'desc';
+      else {{ sorts[t].col = col; sorts[t].dir = 'desc'; }}
       render();
     }};
   }});
 }}
 
-// Tab clicks
-document.querySelectorAll('.tab').forEach(t => {{
-  t.addEventListener('click', () => {{ currentTab = t.dataset.tab; render(); }});
-}});
-
-// Position filter clicks
-document.querySelectorAll('.pos-btn').forEach(b => {{
-  b.addEventListener('click', () => {{ currentPos = b.dataset.pos; render(); }});
-}});
-
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {{ tab = t.dataset.tab; render(); }}));
+document.querySelectorAll('.pos-btn').forEach(b => b.addEventListener('click', () => {{ pos = b.dataset.pos; render(); }}));
+document.querySelectorAll('.scope-btn').forEach(b => b.addEventListener('click', () => {{ scope = b.dataset.scope; render(); }}));
 render();
 </script>
 </body>
@@ -1552,13 +1643,35 @@ def main():
             ownership_file = os.path.join(OUTPUT_DIR, f"fantasy_ownership_{timestamp}.csv")
             ownership_stats = generate_squad_stats(team_results, ownership_file)
 
-    # 7. Dashboard HTML
+    # 7. Scrapowanie ligi prywatnej
+    league_captain_stats = []
+    league_ownership_stats = []
+    league_teams = []
+    if LEAGUE_SLUG:
+        league_teams = fetch_league_teams(session, LEAGUE_SLUG)
+
+        if league_teams:
+            league_results = scrape_teams_captains(session, league_teams)
+
+            # CSV - statystyki kapitanów ligi
+            league_captains_file = os.path.join(OUTPUT_DIR, f"fantasy_league_captains_{timestamp}.csv")
+            league_captain_stats = generate_captain_stats(league_results, league_captains_file)
+
+            # CSV - ownership w lidze
+            league_ownership_file = os.path.join(OUTPUT_DIR, f"fantasy_league_ownership_{timestamp}.csv")
+            league_ownership_stats = generate_squad_stats(league_results, league_ownership_file)
+
+    # 8. Dashboard HTML
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
         captain_stats=captain_stats,
         ownership_stats=ownership_stats,
         teams_count=TEAMS_TO_SCRAPE,
+        league_captain_stats=league_captain_stats,
+        league_ownership_stats=league_ownership_stats,
+        league_name=LEAGUE_SLUG or "",
+        league_teams_count=len(league_teams) if LEAGUE_SLUG and league_teams else 0,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
@@ -1571,6 +1684,9 @@ def main():
     if TEAMS_TO_SCRAPE > 0:
         print(f"   - {os.path.basename(captains_file)} (statystyki kapitanów CSV)")
         print(f"   - {os.path.basename(ownership_file)} (ownership w drużynach CSV)")
+    if LEAGUE_SLUG and league_teams:
+        print(f"   - {os.path.basename(league_captains_file)} (kapitanowie ligi)")
+        print(f"   - {os.path.basename(league_ownership_file)} (ownership ligi)")
     print(f"   - dashboard.html (interaktywny dashboard)")
     print(f"🕐 Koniec: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
