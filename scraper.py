@@ -818,47 +818,15 @@ def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
 def fetch_league_teams(session: requests.Session, league_slug: str) -> list[dict]:
     """
     Pobiera listę drużyn z ligi prywatnej.
-    Próbuje kilka endpointów — DataTables POST i GET z parsowaniem HTML.
+    1. GET /league/{slug} → parsuje league ID z HTML
+    2. POST /ranking-list z parametrem league={id}
     """
     print(f"\n🏅 Pobieram drużyny z ligi: {league_slug}...")
     teams = []
 
-    # Próba 1: POST DataTables do /league/{slug} (analogicznie do /ranking-list)
+    # Krok 1: Pobierz ID ligi ze strony HTML
+    league_id = None
     try:
-        resp = session.post(
-            f"{BASE_URL}/league/{league_slug}",
-            data="start=0&length=100",
-            headers={
-                **HEADERS,
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            timeout=30,
-        )
-        if resp.status_code == 200:
-            try:
-                data = resp.json()
-                for team in data.get("data", []):
-                    slug = team.get("slug", "")
-                    if slug:
-                        teams.append({
-                            "team_id": team.get("id"),
-                            "slug": slug,
-                            "total_points": _safe_int(str(team.get("total_points", "0"))),
-                            "last_points": _safe_int(str(team.get("last_points", "0"))),
-                            "position": team.get("pos"),
-                        })
-                if teams:
-                    print(f"   ✅ Pobrano {len(teams)} drużyn z ligi (DataTables POST)")
-                    return teams
-                print(f"   POST /league/{league_slug} zwrócił JSON ale brak danych, próbuję GET...")
-            except (json.JSONDecodeError, ValueError):
-                print(f"   POST nie zwrócił JSON, próbuję GET...")
-    except Exception as e:
-        print(f"   ⚠️  Błąd POST: {e}")
-
-    # Próba 2: GET strony ligi i parsowanie HTML
-    try:
-        # Użyj czystych headerów przeglądarki (bez X-Requested-With)
         browser_headers = {
             "User-Agent": HEADERS["User-Agent"],
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -877,48 +845,65 @@ def fetch_league_teams(session: requests.Session, league_slug: str) -> list[dict
             return teams
 
         html = resp.text
-        print(f"   GET HTML length: {len(html)}")
-
-        # Szukaj linków do drużyn: /user-team/view/{slug}
-        team_links = re.findall(r'/user-team/view/([\w-]+)', html)
-        unique_slugs = list(dict.fromkeys(team_links))  # zachowaj kolejność, usuń duplikaty
-
-        if unique_slugs:
-            for i, slug in enumerate(unique_slugs):
-                teams.append({
-                    "team_id": None,
-                    "slug": slug,
-                    "total_points": 0,
-                    "last_points": 0,
-                    "position": i + 1,
-                })
-            print(f"   ✅ Znaleziono {len(teams)} drużyn w lidze (GET HTML)")
+        # Szukaj league ID — może być w formie: league: 304, "league":"304", data-league="304"
+        league_match = (
+            re.search(r'league["\s:]+(\d+)', html)
+            or re.search(r'league_id["\s:]+(\d+)', html)
+            or re.search(r'data-league[="\s]+(\d+)', html)
+        )
+        if league_match:
+            league_id = league_match.group(1)
+            print(f"   ✅ League ID: {league_id}")
         else:
-            # Debug — pokaż co jest w HTML
-            print(f"   ⚠️  Brak linków /user-team/view/ w HTML")
-            print(f"   DEBUG 'league' w HTML: {'league' in html}")
-            print(f"   DEBUG 'user-team' w HTML: {'user-team' in html}")
-            # Pokaż kontekst wokół "user-team"
-            for m in re.finditer(r'user-team', html):
-                start = max(0, m.start() - 30)
-                end = min(len(html), m.end() + 80)
-                print(f"   DEBUG user-team context: ...{html[start:end]}...")
-            # Sprawdź wszystkie linki href
-            hrefs = re.findall(r'href=["\']([^"\']*user-team[^"\']*)', html)
-            print(f"   DEBUG href z user-team: {hrefs[:5]}")
-            # Sprawdź inne wzorce slug
-            slugs = re.findall(r'/user-team/(?:view/)?([^\s"\'<>]+)', html)
-            print(f"   DEBUG slugi: {slugs[:10]}")
-            # Sprawdź czy to Angular shell
-            if "ng-app" in html or "angular" in html.lower():
-                print(f"   DEBUG: Strona to Angular shell — potrzebny PHPSESSID")
-            # Szukaj DataTables AJAX URL
-            ajax_match = re.search(r'ajax["\']?\s*:\s*["\']([^"\']+)', html)
-            if ajax_match:
-                print(f"   DEBUG: Znaleziono AJAX URL: {ajax_match.group(1)}")
+            # Szukaj w JS
+            js_match = re.search(r'"league"\s*:\s*"?(\d+)"?', html)
+            if js_match:
+                league_id = js_match.group(1)
+                print(f"   ✅ League ID (z JS): {league_id}")
+            else:
+                print(f"   ⚠️  Nie znaleziono league ID w HTML")
+                # Debug
+                league_refs = re.findall(r'league.{0,30}', html)
+                print(f"   DEBUG league konteksty: {league_refs[:5]}")
+                return teams
 
     except Exception as e:
-        print(f"   ⚠️  Błąd GET: {e}")
+        print(f"   ⚠️  Błąd GET league: {e}")
+        return teams
+
+    # Krok 2: POST /ranking-list z parametrem league
+    try:
+        payload = f"start=0&length=100&league={league_id}&round=0"
+        resp = session.post(
+            f"{BASE_URL}/ranking-list",
+            data=payload,
+            headers={
+                **HEADERS,
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "Referer": f"{BASE_URL}/league/{league_slug}",
+            },
+            timeout=30,
+        )
+        if resp.status_code != 200:
+            print(f"   ⚠️  POST /ranking-list (league): HTTP {resp.status_code}")
+            return teams
+
+        data = resp.json()
+        for team in data.get("data", []):
+            slug = team.get("slug", "")
+            if slug:
+                teams.append({
+                    "team_id": team.get("id"),
+                    "slug": slug,
+                    "total_points": _safe_int(str(team.get("total_points", "0"))),
+                    "last_points": _safe_int(str(team.get("last_points", "0"))),
+                    "position": team.get("pos"),
+                })
+
+        print(f"   ✅ Pobrano {len(teams)} drużyn z ligi")
+
+    except Exception as e:
+        print(f"   ⚠️  Błąd POST ranking-list (league): {e}")
 
     return teams
 
