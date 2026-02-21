@@ -14,9 +14,7 @@ body {
   font-family: 'DM Sans', -apple-system, sans-serif;
   padding: 24px 16px;
 }
-.container { max-width: 960px; margin: 0 auto; }
-
-/* Header */
+.container { max-width: 1060px; margin: 0 auto; }
 .header { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
 .logo {
   width: 40px; height: 40px; border-radius: 10px;
@@ -25,14 +23,12 @@ body {
 }
 .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
 .header .sub { font-size: 12px; color: #64748b; margin: 0; }
-
-/* Stat cards */
-.stats-row { display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; padding-bottom: 4px; }
+.stats-row { display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; padding-bottom: 4px; flex-wrap: wrap; }
 .stat-card {
   background: #1e293b; border-radius: 10px; padding: 16px 20px;
-  min-width: 140; flex-shrink: 0;
+  min-width: 140px; flex-shrink: 0;
 }
-.stat-card .val { font-size: 26px; font-weight: 800; }
+.stat-card .val { font-size: 24px; font-weight: 800; }
 .stat-card .label { font-size: 11px; color: #94a3b8; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }
 .stat-card .sub { font-size: 11px; color: #64748b; margin-top: 4px; }
 .accent-cyan { border-left: 3px solid #22d3ee; }
@@ -43,9 +39,7 @@ body {
 .accent-green .val { color: #10b981; }
 .accent-purple { border-left: 3px solid #a78bfa; }
 .accent-purple .val { color: #a78bfa; }
-
-/* Tabs */
-.tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #1e293b; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid #1e293b; flex-wrap: wrap; }
 .tab {
   background: transparent; border: none; border-bottom: 2px solid transparent;
   color: #64748b; padding: 10px 18px; font-size: 13px; font-weight: 600;
@@ -54,9 +48,8 @@ body {
 }
 .tab.active { background: #1e293b; border-bottom-color: #22d3ee; color: #e2e8f0; }
 .tab:hover { color: #e2e8f0; }
-
-/* Position filters */
-.pos-filters { display: flex; gap: 4px; margin-left: auto; align-items: center; }
+.filters-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.pos-filters { display: flex; gap: 4px; align-items: center; }
 .pos-btn {
   background: transparent; border: 1px solid #334155; color: #64748b;
   padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
@@ -68,34 +61,27 @@ body {
 .pos-btn.active[data-pos="OBR"] { background: #3b82f6; }
 .pos-btn.active[data-pos="POM"] { background: #10b981; }
 .pos-btn.active[data-pos="NAP"] { background: #ef4444; }
-
-/* Section title */
-.section-title {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+.scope-toggle { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
+.scope-btn {
+  background: transparent; border: none; color: #64748b;
+  padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
 }
-.section-title h2 {
-  font-size: 16px; font-weight: 700; letter-spacing: 1.2px;
-  text-transform: uppercase; color: #e2e8f0;
-}
+.scope-btn.active { background: #22d3ee; color: #0f172a; }
+.section-title { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.section-title h2 { font-size: 16px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #e2e8f0; }
 .section-title .line { flex: 1; height: 1px; background: linear-gradient(90deg, #334155, transparent); }
-
-/* Table */
-.data-table {
-  background: #1e293b; border-radius: 12px; overflow: hidden;
-  width: 100%; overflow-x: auto;
-}
+.data-table { background: #1e293b; border-radius: 12px; overflow: hidden; width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 thead tr { background: #0f172a; }
 th {
-  padding: 10px 16px; color: #64748b; font-weight: 600; font-size: 11px;
+  padding: 10px 14px; color: #64748b; font-weight: 600; font-size: 11px;
   text-transform: uppercase; white-space: nowrap;
 }
 th.sortable { cursor: pointer; user-select: none; }
 th.sortable:hover { color: #94a3b8; }
-td { padding: 10px 16px; border-top: 1px solid #0f172a; white-space: nowrap; }
+td { padding: 10px 14px; border-top: 1px solid #0f172a; white-space: nowrap; }
 tr.highlight { background: rgba(251,191,36,0.06); }
-
-/* Badges */
 .pos-badge {
   display: inline-block; padding: 2px 8px; border-radius: 4px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #0f172a;
@@ -110,54 +96,44 @@ tr.highlight { background: rgba(251,191,36,0.06); }
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   color: #0f172a; font-size: 11px; font-weight: 800;
 }
-
-/* Bar */
 .bar-wrap { display: flex; align-items: center; gap: 8px; }
 .bar-bg { width: 80px; height: 6px; background: #0f172a; border-radius: 3px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
 .bar-val { font-size: 13px; color: #94a3b8; min-width: 38px; text-align: right; }
-
 .tab-content { display: none; }
 .tab-content.active { display: block; }
-
 .footer { text-align: center; margin-top: 32px; color: #334155; font-size: 12px; }
-
 .text-right { text-align: right; }
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .fw-700 { font-weight: 700; }
 .fw-600 { font-weight: 600; }
 .c-muted { color: #94a3b8; }
-.c-gold { color: #fbbf24; }
-.c-cyan { color: #22d3ee; }
+.c-dim { color: #64748b; }
+.empty-msg { padding: 40px; text-align: center; color: #64748b; }
 </style>
 </head>
 <body>
 <div class="container">
-
-  <!-- Header -->
   <div class="header">
     <div class="logo">⚽</div>
     <div>
       <h1>Fantasy Ekstraklasa</h1>
-      <p class="sub">Dashboard · Top 100 drużyn · 2026-02-21 13:12</p>
+      <p class="sub">Dashboard · 2026-02-21 16:13</p>
     </div>
   </div>
-
-  <!-- Stats -->
   <div class="stats-row">
     <div class="stat-card accent-cyan">
       <div class="val">100</div>
-      <div class="label">Drużyn</div>
-      <div class="sub">z rankingu</div>
+      <div class="label">Top drużyn</div>
     </div>
     <div class="stat-card accent-gold">
       <div class="val">Braut Brunes</div>
       <div class="label">Top kapitan</div>
-      <div class="sub">21.0% drużyn</div>
+      <div class="sub">31.0% drużyn</div>
     </div>
     <div class="stat-card accent-green">
-      <div class="val">94.0%</div>
+      <div class="val">89.0%</div>
       <div class="label">Top owned</div>
       <div class="sub">Nowak</div>
     </div>
@@ -166,15 +142,18 @@ tr.highlight { background: rgba(251,191,36,0.06); }
       <div class="label">Najlepszy PPP</div>
       <div class="sub">Taras Romanczuk · 1.8M</div>
     </div>
+    
   </div>
 
-  <!-- Tabs -->
   <div style="margin-top: 24px;">
     <div class="tabs">
       <button class="tab active" data-tab="captains">👑 Kapitanowie</button>
       <button class="tab" data-tab="ownership">👥 Ownership</button>
       <button class="tab" data-tab="players">⚽ Zawodnicy</button>
-      <div class="pos-filters">
+    </div>
+    <div class="filters-row" style="margin-top: 12px;">
+      
+      <div class="pos-filters" style="margin-left:auto;">
         <button class="pos-btn active" data-pos="ALL">ALL</button>
         <button class="pos-btn" data-pos="BR">GK</button>
         <button class="pos-btn" data-pos="OBR">DEF</button>
@@ -182,177 +161,183 @@ tr.highlight { background: rgba(251,191,36,0.06); }
         <button class="pos-btn" data-pos="NAP">FWD</button>
       </div>
     </div>
-
     <div id="tab-captains" class="tab-content active"></div>
     <div id="tab-ownership" class="tab-content"></div>
     <div id="tab-players" class="tab-content"></div>
   </div>
-
-  <div class="footer">
-    Fantasy Ekstraklasa Dashboard · Dane z Top 100 drużyn · Wygenerowano: 2026-02-21 13:12
-  </div>
+  <div class="footer">Fantasy Ekstraklasa Dashboard · 2026-02-21 16:13</div>
 </div>
 
 <script>
-const CAPTAINS = [{"player_id": "2476", "name": "Braut Brunes", "captain_count": 21, "captain_pct": "21.0%"}, {"player_id": "2411", "name": "Bobček", "captain_count": 19, "captain_pct": "19.0%"}, {"player_id": "2205", "name": "Pululu", "captain_count": 16, "captain_pct": "16.0%"}, {"player_id": "480", "name": "Nowak", "captain_count": 13, "captain_pct": "13.0%"}, {"player_id": "2110", "name": "Mena", "captain_count": 8, "captain_pct": "8.0%"}, {"player_id": "765", "name": "Imaz", "captain_count": 7, "captain_pct": "7.0%"}, {"player_id": "1475", "name": "Ishak", "captain_count": 4, "captain_pct": "4.0%"}, {"player_id": "2671", "name": "Czubak", "captain_count": 2, "captain_pct": "2.0%"}, {"player_id": "1299", "name": "Carlos", "captain_count": 2, "captain_pct": "2.0%"}, {"player_id": "2775", "name": "Ronaldo", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "1126", "name": "Piątkowski", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "1529", "name": "Fornalczyk", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "2389", "name": "Diaby-Fadiga", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "2423", "name": "N&#039;Diaye", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "2234", "name": "Gholizadeh", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "1794", "name": "Grosicki", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "2817", "name": "Kornvig", "captain_count": 1, "captain_pct": "1.0%"}];
-const OWNERSHIP = [{"player_id": "480", "name": "Nowak", "position": "3", "in_squad_count": 94, "in_starting_count": 94, "captain_count": 13, "squad_pct": "94.0%", "starting_pct": "94.0%", "captain_pct": "13.0%"}, {"player_id": "2205", "name": "Pululu", "position": "4", "in_squad_count": 85, "in_starting_count": 85, "captain_count": 16, "squad_pct": "85.0%", "starting_pct": "85.0%", "captain_pct": "16.0%"}, {"player_id": "2110", "name": "Mena", "position": "3", "in_squad_count": 67, "in_starting_count": 67, "captain_count": 8, "squad_pct": "67.0%", "starting_pct": "67.0%", "captain_pct": "8.0%"}, {"player_id": "2234", "name": "Gholizadeh", "position": "3", "in_squad_count": 56, "in_starting_count": 56, "captain_count": 1, "squad_pct": "56.0%", "starting_pct": "56.0%", "captain_pct": "1.0%"}, {"player_id": "1540", "name": "Wojtuszek", "position": "2", "in_squad_count": 43, "in_starting_count": 43, "captain_count": 0, "squad_pct": "43.0%", "starting_pct": "43.0%", "captain_pct": "0.0%"}, {"player_id": "1299", "name": "Carlos", "position": "2", "in_squad_count": 41, "in_starting_count": 41, "captain_count": 2, "squad_pct": "41.0%", "starting_pct": "41.0%", "captain_pct": "2.0%"}, {"player_id": "2476", "name": "Braut Brunes", "position": "4", "in_squad_count": 41, "in_starting_count": 41, "captain_count": 21, "squad_pct": "41.0%", "starting_pct": "41.0%", "captain_pct": "21.0%"}, {"player_id": "790", "name": "Plach", "position": "1", "in_squad_count": 40, "in_starting_count": 40, "captain_count": 0, "squad_pct": "40.0%", "starting_pct": "40.0%", "captain_pct": "0.0%"}, {"player_id": "951", "name": "Jędrych", "position": "2", "in_squad_count": 40, "in_starting_count": 40, "captain_count": 0, "squad_pct": "40.0%", "starting_pct": "40.0%", "captain_pct": "0.0%"}, {"player_id": "860", "name": "Długosz", "position": "2", "in_squad_count": 37, "in_starting_count": 37, "captain_count": 0, "squad_pct": "37.0%", "starting_pct": "37.0%", "captain_pct": "0.0%"}, {"player_id": "1363", "name": "Wdowik", "position": "2", "in_squad_count": 36, "in_starting_count": 36, "captain_count": 0, "squad_pct": "36.0%", "starting_pct": "36.0%", "captain_pct": "0.0%"}, {"player_id": "2671", "name": "Czubak", "position": "4", "in_squad_count": 35, "in_starting_count": 35, "captain_count": 2, "squad_pct": "35.0%", "starting_pct": "35.0%", "captain_pct": "2.0%"}, {"player_id": "2423", "name": "N&#039;Diaye", "position": "3", "in_squad_count": 32, "in_starting_count": 32, "captain_count": 1, "squad_pct": "32.0%", "starting_pct": "32.0%", "captain_pct": "1.0%"}, {"player_id": "2411", "name": "Bobček", "position": "4", "in_squad_count": 31, "in_starting_count": 31, "captain_count": 19, "squad_pct": "31.0%", "starting_pct": "31.0%", "captain_pct": "19.0%"}, {"player_id": "1757", "name": "Mrozek", "position": "1", "in_squad_count": 30, "in_starting_count": 30, "captain_count": 0, "squad_pct": "30.0%", "starting_pct": "30.0%", "captain_pct": "0.0%"}, {"player_id": "563", "name": "Wasielewski", "position": "2", "in_squad_count": 29, "in_starting_count": 29, "captain_count": 0, "squad_pct": "29.0%", "starting_pct": "29.0%", "captain_pct": "0.0%"}, {"player_id": "765", "name": "Imaz", "position": "3", "in_squad_count": 24, "in_starting_count": 24, "captain_count": 7, "squad_pct": "24.0%", "starting_pct": "24.0%", "captain_pct": "7.0%"}, {"player_id": "1010", "name": "Félix Garcia", "position": "3", "in_squad_count": 23, "in_starting_count": 23, "captain_count": 0, "squad_pct": "23.0%", "starting_pct": "23.0%", "captain_pct": "0.0%"}, {"player_id": "303", "name": "Stępiński", "position": "4", "in_squad_count": 22, "in_starting_count": 22, "captain_count": 0, "squad_pct": "22.0%", "starting_pct": "22.0%", "captain_pct": "0.0%"}, {"player_id": "2123", "name": "Gurgul", "position": "2", "in_squad_count": 20, "in_starting_count": 20, "captain_count": 0, "squad_pct": "20.0%", "starting_pct": "20.0%", "captain_pct": "0.0%"}, {"player_id": "1794", "name": "Grosicki", "position": "3", "in_squad_count": 18, "in_starting_count": 18, "captain_count": 1, "squad_pct": "18.0%", "starting_pct": "18.0%", "captain_pct": "1.0%"}, {"player_id": "1192", "name": "Janža", "position": "2", "in_squad_count": 15, "in_starting_count": 15, "captain_count": 0, "squad_pct": "15.0%", "starting_pct": "15.0%", "captain_pct": "0.0%"}, {"player_id": "2817", "name": "Kornvig", "position": "3", "in_squad_count": 12, "in_starting_count": 12, "captain_count": 1, "squad_pct": "12.0%", "starting_pct": "12.0%", "captain_pct": "1.0%"}, {"player_id": "2389", "name": "Diaby-Fadiga", "position": "3", "in_squad_count": 12, "in_starting_count": 12, "captain_count": 1, "squad_pct": "12.0%", "starting_pct": "12.0%", "captain_pct": "1.0%"}, {"player_id": "2367", "name": "Mońka", "position": "2", "in_squad_count": 11, "in_starting_count": 11, "captain_count": 0, "squad_pct": "11.0%", "starting_pct": "11.0%", "captain_pct": "0.0%"}, {"player_id": "1795", "name": "Abramowicz", "position": "1", "in_squad_count": 11, "in_starting_count": 11, "captain_count": 0, "squad_pct": "11.0%", "starting_pct": "11.0%", "captain_pct": "0.0%"}, {"player_id": "2562", "name": "Mazurek", "position": "3", "in_squad_count": 10, "in_starting_count": 10, "captain_count": 0, "squad_pct": "10.0%", "starting_pct": "10.0%", "captain_pct": "0.0%"}, {"player_id": "1475", "name": "Ishak", "position": "4", "in_squad_count": 10, "in_starting_count": 10, "captain_count": 4, "squad_pct": "10.0%", "starting_pct": "10.0%", "captain_pct": "4.0%"}, {"player_id": "1928", "name": "Svarnas", "position": "2", "in_squad_count": 8, "in_starting_count": 8, "captain_count": 0, "squad_pct": "8.0%", "starting_pct": "8.0%", "captain_pct": "0.0%"}, {"player_id": "2406", "name": "Chłań", "position": "3", "in_squad_count": 8, "in_starting_count": 8, "captain_count": 0, "squad_pct": "8.0%", "starting_pct": "8.0%", "captain_pct": "0.0%"}, {"player_id": "2717", "name": "Rodríguez", "position": "3", "in_squad_count": 8, "in_starting_count": 8, "captain_count": 0, "squad_pct": "8.0%", "starting_pct": "8.0%", "captain_pct": "0.0%"}, {"player_id": "1341", "name": "Tudor", "position": "2", "in_squad_count": 7, "in_starting_count": 7, "captain_count": 0, "squad_pct": "7.0%", "starting_pct": "7.0%", "captain_pct": "0.0%"}, {"player_id": "86", "name": "Romanczuk", "position": "3", "in_squad_count": 7, "in_starting_count": 7, "captain_count": 0, "squad_pct": "7.0%", "starting_pct": "7.0%", "captain_pct": "0.0%"}, {"player_id": "2775", "name": "Ronaldo", "position": "3", "in_squad_count": 7, "in_starting_count": 7, "captain_count": 1, "squad_pct": "7.0%", "starting_pct": "7.0%", "captain_pct": "1.0%"}, {"player_id": "2287", "name": "Zych", "position": "1", "in_squad_count": 7, "in_starting_count": 7, "captain_count": 0, "squad_pct": "7.0%", "starting_pct": "7.0%", "captain_pct": "0.0%"}, {"player_id": "2384", "name": "Galán", "position": "2", "in_squad_count": 7, "in_starting_count": 7, "captain_count": 0, "squad_pct": "7.0%", "starting_pct": "7.0%", "captain_pct": "0.0%"}, {"player_id": "2783", "name": "Zeqiri", "position": "4", "in_squad_count": 6, "in_starting_count": 6, "captain_count": 0, "squad_pct": "6.0%", "starting_pct": "6.0%", "captain_pct": "0.0%"}, {"player_id": "2073", "name": "Wahlqvist", "position": "2", "in_squad_count": 5, "in_starting_count": 5, "captain_count": 0, "squad_pct": "5.0%", "starting_pct": "5.0%", "captain_pct": "0.0%"}, {"player_id": "991", "name": "Neugebauer", "position": "3", "in_squad_count": 5, "in_starting_count": 5, "captain_count": 0, "squad_pct": "5.0%", "starting_pct": "5.0%", "captain_pct": "0.0%"}, {"player_id": "2016", "name": "Lewicki", "position": "2", "in_squad_count": 5, "in_starting_count": 5, "captain_count": 0, "squad_pct": "5.0%", "starting_pct": "5.0%", "captain_pct": "0.0%"}, {"player_id": "1435", "name": "Strączek", "position": "1", "in_squad_count": 4, "in_starting_count": 4, "captain_count": 0, "squad_pct": "4.0%", "starting_pct": "4.0%", "captain_pct": "0.0%"}, {"player_id": "2768", "name": "Čolak", "position": "4", "in_squad_count": 4, "in_starting_count": 4, "captain_count": 0, "squad_pct": "4.0%", "starting_pct": "4.0%", "captain_pct": "0.0%"}, {"player_id": "128", "name": "Sekulski", "position": "4", "in_squad_count": 4, "in_starting_count": 4, "captain_count": 0, "squad_pct": "4.0%", "starting_pct": "4.0%", "captain_pct": "0.0%"}, {"player_id": "2799", "name": "Bukari", "position": "3", "in_squad_count": 4, "in_starting_count": 4, "captain_count": 0, "squad_pct": "4.0%", "starting_pct": "4.0%", "captain_pct": "0.0%"}, {"player_id": "701", "name": "Kun", "position": "2", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "1853", "name": "Racovițan", "position": "2", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "1225", "name": "Grzesik", "position": "2", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "994", "name": "Klemenz", "position": "2", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "1529", "name": "Fornalczyk", "position": "3", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 1, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "1.0%"}, {"player_id": "1719", "name": "Ameyaw", "position": "3", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}];
+const DATA = {
+  global: {
+    captains: [{"player_id": "2476", "name": "Braut Brunes", "captain_count": 31, "captain_pct": "31.0%"}, {"player_id": "2411", "name": "Bobček", "captain_count": 15, "captain_pct": "15.0%"}, {"player_id": "480", "name": "Nowak", "captain_count": 10, "captain_pct": "10.0%"}, {"player_id": "2205", "name": "Pululu", "captain_count": 10, "captain_pct": "10.0%"}, {"player_id": "2110", "name": "Mena", "captain_count": 8, "captain_pct": "8.0%"}, {"player_id": "1299", "name": "Carlos", "captain_count": 6, "captain_pct": "6.0%"}, {"player_id": "765", "name": "Imaz", "captain_count": 6, "captain_pct": "6.0%"}, {"player_id": "2389", "name": "Diaby-Fadiga", "captain_count": 4, "captain_pct": "4.0%"}, {"player_id": "1475", "name": "Ishak", "captain_count": 2, "captain_pct": "2.0%"}, {"player_id": "2775", "name": "Ronaldo", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "1126", "name": "Piątkowski", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "2423", "name": "N&#039;Diaye", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "1529", "name": "Fornalczyk", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "2671", "name": "Czubak", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "1794", "name": "Grosicki", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "1719", "name": "Ameyaw", "captain_count": 1, "captain_pct": "1.0%"}, {"player_id": "2817", "name": "Kornvig", "captain_count": 1, "captain_pct": "1.0%"}],
+    ownership: [{"player_id": "480", "name": "Nowak", "position": "3", "in_squad_count": 89, "in_starting_count": 89, "captain_count": 10, "squad_pct": "89.0%", "starting_pct": "89.0%", "captain_pct": "10.0%"}, {"player_id": "2205", "name": "Pululu", "position": "4", "in_squad_count": 87, "in_starting_count": 87, "captain_count": 10, "squad_pct": "87.0%", "starting_pct": "87.0%", "captain_pct": "10.0%"}, {"player_id": "2110", "name": "Mena", "position": "3", "in_squad_count": 69, "in_starting_count": 69, "captain_count": 8, "squad_pct": "69.0%", "starting_pct": "69.0%", "captain_pct": "8.0%"}, {"player_id": "1299", "name": "Carlos", "position": "2", "in_squad_count": 58, "in_starting_count": 58, "captain_count": 6, "squad_pct": "58.0%", "starting_pct": "58.0%", "captain_pct": "6.0%"}, {"player_id": "2476", "name": "Braut Brunes", "position": "4", "in_squad_count": 53, "in_starting_count": 53, "captain_count": 31, "squad_pct": "53.0%", "starting_pct": "53.0%", "captain_pct": "31.0%"}, {"player_id": "2234", "name": "Gholizadeh", "position": "3", "in_squad_count": 48, "in_starting_count": 48, "captain_count": 0, "squad_pct": "48.0%", "starting_pct": "48.0%", "captain_pct": "0.0%"}, {"player_id": "951", "name": "Jędrych", "position": "2", "in_squad_count": 40, "in_starting_count": 40, "captain_count": 0, "squad_pct": "40.0%", "starting_pct": "40.0%", "captain_pct": "0.0%"}, {"player_id": "860", "name": "Długosz", "position": "2", "in_squad_count": 38, "in_starting_count": 38, "captain_count": 0, "squad_pct": "38.0%", "starting_pct": "38.0%", "captain_pct": "0.0%"}, {"player_id": "1540", "name": "Wojtuszek", "position": "2", "in_squad_count": 38, "in_starting_count": 38, "captain_count": 0, "squad_pct": "38.0%", "starting_pct": "38.0%", "captain_pct": "0.0%"}, {"player_id": "1363", "name": "Wdowik", "position": "2", "in_squad_count": 36, "in_starting_count": 36, "captain_count": 0, "squad_pct": "36.0%", "starting_pct": "36.0%", "captain_pct": "0.0%"}, {"player_id": "790", "name": "Plach", "position": "1", "in_squad_count": 35, "in_starting_count": 35, "captain_count": 0, "squad_pct": "35.0%", "starting_pct": "35.0%", "captain_pct": "0.0%"}, {"player_id": "2671", "name": "Czubak", "position": "4", "in_squad_count": 30, "in_starting_count": 30, "captain_count": 1, "squad_pct": "30.0%", "starting_pct": "30.0%", "captain_pct": "1.0%"}, {"player_id": "2423", "name": "N&#039;Diaye", "position": "3", "in_squad_count": 29, "in_starting_count": 29, "captain_count": 1, "squad_pct": "29.0%", "starting_pct": "29.0%", "captain_pct": "1.0%"}, {"player_id": "2411", "name": "Bobček", "position": "4", "in_squad_count": 28, "in_starting_count": 28, "captain_count": 15, "squad_pct": "28.0%", "starting_pct": "28.0%", "captain_pct": "15.0%"}, {"player_id": "1757", "name": "Mrozek", "position": "1", "in_squad_count": 25, "in_starting_count": 25, "captain_count": 0, "squad_pct": "25.0%", "starting_pct": "25.0%", "captain_pct": "0.0%"}, {"player_id": "765", "name": "Imaz", "position": "3", "in_squad_count": 25, "in_starting_count": 25, "captain_count": 6, "squad_pct": "25.0%", "starting_pct": "25.0%", "captain_pct": "6.0%"}, {"player_id": "1010", "name": "Félix Garcia", "position": "3", "in_squad_count": 25, "in_starting_count": 25, "captain_count": 0, "squad_pct": "25.0%", "starting_pct": "25.0%", "captain_pct": "0.0%"}, {"player_id": "2389", "name": "Diaby-Fadiga", "position": "3", "in_squad_count": 23, "in_starting_count": 23, "captain_count": 4, "squad_pct": "23.0%", "starting_pct": "23.0%", "captain_pct": "4.0%"}, {"player_id": "563", "name": "Wasielewski", "position": "2", "in_squad_count": 23, "in_starting_count": 23, "captain_count": 0, "squad_pct": "23.0%", "starting_pct": "23.0%", "captain_pct": "0.0%"}, {"player_id": "2123", "name": "Gurgul", "position": "2", "in_squad_count": 21, "in_starting_count": 21, "captain_count": 0, "squad_pct": "21.0%", "starting_pct": "21.0%", "captain_pct": "0.0%"}, {"player_id": "303", "name": "Stępiński", "position": "4", "in_squad_count": 18, "in_starting_count": 18, "captain_count": 0, "squad_pct": "18.0%", "starting_pct": "18.0%", "captain_pct": "0.0%"}, {"player_id": "2287", "name": "Zych", "position": "1", "in_squad_count": 16, "in_starting_count": 16, "captain_count": 0, "squad_pct": "16.0%", "starting_pct": "16.0%", "captain_pct": "0.0%"}, {"player_id": "1794", "name": "Grosicki", "position": "3", "in_squad_count": 16, "in_starting_count": 16, "captain_count": 1, "squad_pct": "16.0%", "starting_pct": "16.0%", "captain_pct": "1.0%"}, {"player_id": "1192", "name": "Janža", "position": "2", "in_squad_count": 15, "in_starting_count": 15, "captain_count": 0, "squad_pct": "15.0%", "starting_pct": "15.0%", "captain_pct": "0.0%"}, {"player_id": "2367", "name": "Mońka", "position": "2", "in_squad_count": 10, "in_starting_count": 10, "captain_count": 0, "squad_pct": "10.0%", "starting_pct": "10.0%", "captain_pct": "0.0%"}, {"player_id": "2384", "name": "Galán", "position": "2", "in_squad_count": 10, "in_starting_count": 10, "captain_count": 0, "squad_pct": "10.0%", "starting_pct": "10.0%", "captain_pct": "0.0%"}, {"player_id": "2406", "name": "Chłań", "position": "3", "in_squad_count": 10, "in_starting_count": 10, "captain_count": 0, "squad_pct": "10.0%", "starting_pct": "10.0%", "captain_pct": "0.0%"}, {"player_id": "2562", "name": "Mazurek", "position": "3", "in_squad_count": 9, "in_starting_count": 9, "captain_count": 0, "squad_pct": "9.0%", "starting_pct": "9.0%", "captain_pct": "0.0%"}, {"player_id": "2817", "name": "Kornvig", "position": "3", "in_squad_count": 8, "in_starting_count": 8, "captain_count": 1, "squad_pct": "8.0%", "starting_pct": "8.0%", "captain_pct": "1.0%"}, {"player_id": "2717", "name": "Rodríguez", "position": "3", "in_squad_count": 8, "in_starting_count": 8, "captain_count": 0, "squad_pct": "8.0%", "starting_pct": "8.0%", "captain_pct": "0.0%"}, {"player_id": "1341", "name": "Tudor", "position": "2", "in_squad_count": 7, "in_starting_count": 7, "captain_count": 0, "squad_pct": "7.0%", "starting_pct": "7.0%", "captain_pct": "0.0%"}, {"player_id": "1928", "name": "Svarnas", "position": "2", "in_squad_count": 7, "in_starting_count": 7, "captain_count": 0, "squad_pct": "7.0%", "starting_pct": "7.0%", "captain_pct": "0.0%"}, {"player_id": "1475", "name": "Ishak", "position": "4", "in_squad_count": 7, "in_starting_count": 7, "captain_count": 2, "squad_pct": "7.0%", "starting_pct": "7.0%", "captain_pct": "2.0%"}, {"player_id": "86", "name": "Romanczuk", "position": "3", "in_squad_count": 6, "in_starting_count": 6, "captain_count": 0, "squad_pct": "6.0%", "starting_pct": "6.0%", "captain_pct": "0.0%"}, {"player_id": "2775", "name": "Ronaldo", "position": "3", "in_squad_count": 6, "in_starting_count": 6, "captain_count": 1, "squad_pct": "6.0%", "starting_pct": "6.0%", "captain_pct": "1.0%"}, {"player_id": "2783", "name": "Zeqiri", "position": "4", "in_squad_count": 6, "in_starting_count": 6, "captain_count": 0, "squad_pct": "6.0%", "starting_pct": "6.0%", "captain_pct": "0.0%"}, {"player_id": "1795", "name": "Abramowicz", "position": "1", "in_squad_count": 6, "in_starting_count": 6, "captain_count": 0, "squad_pct": "6.0%", "starting_pct": "6.0%", "captain_pct": "0.0%"}, {"player_id": "2800", "name": "Cheng", "position": "2", "in_squad_count": 6, "in_starting_count": 6, "captain_count": 0, "squad_pct": "6.0%", "starting_pct": "6.0%", "captain_pct": "0.0%"}, {"player_id": "2768", "name": "Čolak", "position": "4", "in_squad_count": 5, "in_starting_count": 5, "captain_count": 0, "squad_pct": "5.0%", "starting_pct": "5.0%", "captain_pct": "0.0%"}, {"player_id": "1719", "name": "Ameyaw", "position": "3", "in_squad_count": 5, "in_starting_count": 5, "captain_count": 1, "squad_pct": "5.0%", "starting_pct": "5.0%", "captain_pct": "1.0%"}, {"player_id": "1835", "name": "Biczachczjan", "position": "3", "in_squad_count": 5, "in_starting_count": 5, "captain_count": 0, "squad_pct": "5.0%", "starting_pct": "5.0%", "captain_pct": "0.0%"}, {"player_id": "2073", "name": "Wahlqvist", "position": "2", "in_squad_count": 4, "in_starting_count": 4, "captain_count": 0, "squad_pct": "4.0%", "starting_pct": "4.0%", "captain_pct": "0.0%"}, {"player_id": "2286", "name": "Cojocaru", "position": "1", "in_squad_count": 4, "in_starting_count": 4, "captain_count": 0, "squad_pct": "4.0%", "starting_pct": "4.0%", "captain_pct": "0.0%"}, {"player_id": "1435", "name": "Strączek", "position": "1", "in_squad_count": 4, "in_starting_count": 4, "captain_count": 0, "squad_pct": "4.0%", "starting_pct": "4.0%", "captain_pct": "0.0%"}, {"player_id": "2801", "name": "Drągowski", "position": "1", "in_squad_count": 4, "in_starting_count": 4, "captain_count": 0, "squad_pct": "4.0%", "starting_pct": "4.0%", "captain_pct": "0.0%"}, {"player_id": "701", "name": "Kun", "position": "2", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "1853", "name": "Racovițan", "position": "2", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "1573", "name": "Milić", "position": "2", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "991", "name": "Neugebauer", "position": "3", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "2016", "name": "Lewicki", "position": "2", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "2483", "name": "Capita", "position": "3", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "1675", "name": "Majchrowicz", "position": "1", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "2799", "name": "Bukari", "position": "3", "in_squad_count": 3, "in_starting_count": 3, "captain_count": 0, "squad_pct": "3.0%", "starting_pct": "3.0%", "captain_pct": "0.0%"}, {"player_id": "1126", "name": "Piątkowski", "position": "2", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 1, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "1.0%"}, {"player_id": "994", "name": "Klemenz", "position": "2", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "2707", "name": "Pozo", "position": "3", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "633", "name": "Wdowiak", "position": "3", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "1225", "name": "Grzesik", "position": "2", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "1529", "name": "Fornalczyk", "position": "3", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 1, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "1.0%"}, {"player_id": "171", "name": "Chrapek", "position": "3", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "2728", "name": "Rivas", "position": "2", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "2473", "name": "Kosidis", "position": "4", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "138", "name": "Gumny", "position": "2", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "1616", "name": "Zreľák", "position": "4", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "1747", "name": "Drapiński", "position": "2", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "128", "name": "Sekulski", "position": "4", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "2758", "name": "Greenwood", "position": "3", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "2698", "name": "Bengtsson", "position": "3", "in_squad_count": 2, "in_starting_count": 2, "captain_count": 0, "squad_pct": "2.0%", "starting_pct": "2.0%", "captain_pct": "0.0%"}, {"player_id": "2001", "name": "Leiva", "position": "3", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "2756", "name": "Paulsen", "position": "1", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "2424", "name": "Wolski", "position": "3", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "2780", "name": "Ćirković", "position": "3", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "2053", "name": "Madejski", "position": "1", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "587", "name": "Dziczek", "position": "3", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "2293", "name": "Turek", "position": "2", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "395", "name": "Kubicki", "position": "3", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "2700", "name": "Meyer", "position": "2", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "2679", "name": "Mukairu", "position": "3", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "2498", "name": "Wålemark", "position": "3", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}, {"player_id": "130", "name": "Burić", "position": "1", "in_squad_count": 1, "in_starting_count": 1, "captain_count": 0, "squad_pct": "1.0%", "starting_pct": "1.0%", "captain_pct": "0.0%"}],
+  },
+  league: {
+    captains: [],
+    ownership: [],
+  },
+};
 const PLAYERS = [{"player_id": 86, "name": "Taras Romanczuk", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 15, "price": 1.8, "points_per_price": 8.33, "popularity_pct": "6%", "stats_url": "https://fantasy.ekstraklasa.org/player/86"}, {"player_id": 57, "name": "Damian Węglarz", "team": "Arka Gdynia", "position": "Bramkarz", "total_points": 5, "price": 1.8, "points_per_price": 2.78, "popularity_pct": "1%", "stats_url": "https://fantasy.ekstraklasa.org/player/57"}, {"player_id": 87, "name": "Damian Szymański", "team": "Legia Warszawa", "position": "Pomocnik", "total_points": 4, "price": 1.8, "points_per_price": 2.22, "popularity_pct": "1%", "stats_url": "https://fantasy.ekstraklasa.org/player/87"}, {"player_id": 20, "name": "Damian Dąbrowski", "team": "Zagłębie Lubin", "position": "Pomocnik", "total_points": 3, "price": 1.7, "points_per_price": 1.76, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/20"}, {"player_id": 1, "name": "Rafał Dobroliński", "team": "Cracovia", "position": "Bramkarz", "total_points": 0, "price": 1.0, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/1"}, {"player_id": 2, "name": "Damian Drzewiecki", "team": "Cracovia", "position": "Bramkarz", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/2"}, {"player_id": 3, "name": "Grzegorz Sandomierski", "team": "Górnik Zabrze", "position": "Bramkarz", "total_points": 0, "price": 1.8, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/3"}, {"player_id": 4, "name": "Jakub Grzywaczewski", "team": "Cracovia", "position": "Bramkarz", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/4"}, {"player_id": 5, "name": "Adam Wilk", "team": "Cracovia", "position": "Bramkarz", "total_points": 0, "price": 0.8, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/5"}, {"player_id": 6, "name": "Florin Bejan", "team": "Cracovia", "position": "Obrońca", "total_points": 0, "price": 1.0, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/6"}, {"player_id": 7, "name": "Deleu", "team": "Cracovia", "position": "Obrońca", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/7"}, {"player_id": 8, "name": "Paweł Jaroszyński", "team": "Cracovia", "position": "Obrońca", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/8"}, {"player_id": 9, "name": "Róbert Litauszki", "team": "Cracovia", "position": "Obrońca", "total_points": 0, "price": 0.9, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/9"}, {"player_id": 10, "name": "Kamil Pestka", "team": "Radomiak Radom", "position": "Obrońca", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/10"}, {"player_id": 11, "name": "Piotr Polczak", "team": "Zagłębie Sosnowiec", "position": "Obrońca", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/11"}, {"player_id": 12, "name": "Łukasz Sosnowski", "team": "Cracovia", "position": "Obrońca", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/12"}, {"player_id": 13, "name": "Hubert Wołąkiewicz", "team": "Cracovia", "position": "Obrońca", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/13"}, {"player_id": 14, "name": "Jakub Wójcicki", "team": "Zagłębie Lubin", "position": "Obrońca", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/14"}, {"player_id": 15, "name": "Hubert Adamczyk", "team": "Zagłębie Lubin", "position": "Pomocnik", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "1%", "stats_url": "https://fantasy.ekstraklasa.org/player/15"}, {"player_id": 16, "name": "Mateusz Argasiński", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 0.9, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/16"}, {"player_id": 17, "name": "Marcin Budziński", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 1.2, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/17"}, {"player_id": 18, "name": "Mateusz Cetnarski", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/18"}, {"player_id": 19, "name": "Miroslav Čovilo", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 2.0, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/19"}, {"player_id": 21, "name": "Milan Dimun", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/21"}, {"player_id": 22, "name": "Radosław Kanach", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 0.9, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/22"}, {"player_id": 23, "name": "Karol Niemczycki", "team": "Cracovia", "position": "Bramkarz", "total_points": 0, "price": 1.9, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/23"}, {"player_id": 24, "name": "Anton Karaczanakow", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 1.8, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/24"}, {"player_id": 25, "name": "Szymon Kiebzak", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/25"}, {"player_id": 26, "name": "Przemysław Pyrdek", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/26"}, {"player_id": 27, "name": "Sebastian Steblecki", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 1.3, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/27"}, {"player_id": 28, "name": "Mateusz Szczepaniak", "team": "Warta Poznań", "position": "Napastnik", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/28"}, {"player_id": 29, "name": "Erik Jendrišek", "team": "Cracovia", "position": "Napastnik", "total_points": 0, "price": 1.9, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/29"}, {"player_id": 30, "name": "Krzysztof Szewczyk", "team": "Cracovia", "position": "Napastnik", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/30"}, {"player_id": 31, "name": "Tomáš Vestenický", "team": "Cracovia", "position": "Pomocnik", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/31"}, {"player_id": 32, "name": "Karol Jaksik", "team": "Górnik Zabrze", "position": "Obrońca", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/32"}, {"player_id": 33, "name": "Wojciech Małecki", "team": "Górnik Łęczna", "position": "Bramkarz", "total_points": 0, "price": 1.2, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/33"}, {"player_id": 34, "name": "Dominik Mucha", "team": "Górnik Łęczna", "position": "Bramkarz", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/34"}, {"player_id": 35, "name": "Sergiusz Prusak", "team": "Górnik Łęczna", "position": "Bramkarz", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/35"}, {"player_id": 36, "name": "Łukasz Bogusławski", "team": "Górnik Łęczna", "position": "Obrońca", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/36"}, {"player_id": 37, "name": "Damian Jakubik", "team": "Radomiak Radom", "position": "Obrońca", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/37"}, {"player_id": 38, "name": "Dariusz Jarecki", "team": "Górnik Łęczna", "position": "Obrońca", "total_points": 0, "price": 1.0, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/38"}, {"player_id": 39, "name": "Messias Leândro", "team": "Stal Mielec", "position": "Obrońca", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/39"}, {"player_id": 40, "name": "Łukasz Mierzejewski", "team": "Górnik Łęczna", "position": "Obrońca", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/40"}, {"player_id": 41, "name": "Paweł Sasin", "team": "Górnik Łęczna", "position": "Obrońca", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/41"}, {"player_id": 42, "name": "Maciej Szmatiuk", "team": "Górnik Łęczna", "position": "Obrońca", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/42"}, {"player_id": 43, "name": "Grzegorz Bonin", "team": "Górnik Łęczna", "position": "Pomocnik", "total_points": 0, "price": 2.2, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/43"}, {"player_id": 44, "name": "Krzysztof Danielewicz", "team": "Górnik Łęczna", "position": "Pomocnik", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/44"}, {"player_id": 45, "name": "Szymon Drewniak", "team": "Górnik Łęczna", "position": "Pomocnik", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/45"}, {"player_id": 47, "name": "Grzegorz Piesio", "team": "Arka Gdynia", "position": "Pomocnik", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/47"}, {"player_id": 48, "name": "Radosław Pruchnik", "team": "Górnik Łęczna", "position": "Pomocnik", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/48"}, {"player_id": 49, "name": "Łukasz Tymiński", "team": "Górnik Łęczna", "position": "Pomocnik", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/49"}, {"player_id": 50, "name": "Piotr Grzelczak", "team": "Górnik Łęczna", "position": "Napastnik", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/50"}, {"player_id": 51, "name": "Przemysław Pitry", "team": "Górnik Łęczna", "position": "Napastnik", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/51"}, {"player_id": 53, "name": "Bartosz Śpiączka", "team": "Wisła Płock", "position": "Napastnik", "total_points": 0, "price": 1.9, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/53"}, {"player_id": 55, "name": "Krševan Santini", "team": "Jagiellonia Białystok", "position": "Bramkarz", "total_points": 0, "price": 2.0, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/55"}, {"player_id": 56, "name": "Marián Kelemen", "team": "Jagiellonia Białystok", "position": "Bramkarz", "total_points": 0, "price": 2.1, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/56"}, {"player_id": 58, "name": "Łukasz Burliga", "team": "Wisła Kraków", "position": "Obrońca", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/58"}, {"player_id": 59, "name": "Guti", "team": "Jagiellonia Białystok", "position": "Obrońca", "total_points": 0, "price": 2.1, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/59"}, {"player_id": 60, "name": "Michał Koźlik", "team": "Jagiellonia Białystok", "position": "Obrońca", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/60"}, {"player_id": 61, "name": "Emil Łupiński", "team": "Jagiellonia Białystok", "position": "Obrońca", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/61"}, {"player_id": 62, "name": "Mateusz Maliszewski", "team": "Jagiellonia Białystok", "position": "Obrońca", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/62"}, {"player_id": 63, "name": "Paweł Olszewski", "team": "Jagiellonia Białystok", "position": "Obrońca", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/63"}, {"player_id": 64, "name": "Kamil Pajnowski", "team": "Stal Mielec", "position": "Obrońca", "total_points": 0, "price": 1.2, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/64"}, {"player_id": 65, "name": "Ivan Runje", "team": "Jagiellonia Białystok", "position": "Obrońca", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/65"}, {"player_id": 66, "name": "Łukasz Sołowiej", "team": "Puszcza Niepołomice", "position": "Obrońca", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/66"}, {"player_id": 67, "name": "Jonatan Straus", "team": "Sandecja Nowy Sącz", "position": "Obrońca", "total_points": 0, "price": 1.2, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/67"}, {"player_id": 68, "name": "Igors Tarasovs", "team": "Śląsk Wrocław", "position": "Obrońca", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/68"}, {"player_id": 69, "name": "Piotr Tomasik", "team": "Wisła Płock", "position": "Obrońca", "total_points": 0, "price": 1.8, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/69"}, {"player_id": 70, "name": "Marek Wasiluk", "team": "Jagiellonia Białystok", "position": "Obrońca", "total_points": 0, "price": 1.2, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/70"}, {"player_id": 71, "name": "Fedor Černych", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 1.9, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/71"}, {"player_id": 72, "name": "Dmytro Chomczenowśkyj", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 1.9, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/72"}, {"player_id": 73, "name": "Michał Domański", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/73"}, {"player_id": 74, "name": "Kacper Falon", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/74"}, {"player_id": 75, "name": "Przemysław Frankowski", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 2.4, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/75"}, {"player_id": 76, "name": "Jacek Góralski", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 2.0, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/76"}, {"player_id": 77, "name": "Rafał Grzyb", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/77"}, {"player_id": 78, "name": "Paweł Kaczmarczyk", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/78"}, {"player_id": 79, "name": "Paweł Koncewicz-Żyłka", "team": "Wisła Kraków", "position": "Obrońca", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/79"}, {"player_id": 80, "name": "Karol Mackiewicz", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/80"}, {"player_id": 81, "name": "Przemysław Mystkowski", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/81"}, {"player_id": 82, "name": "Patryk Niemczynowicz", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/82"}, {"player_id": 83, "name": "Mateusz Ostaszewski", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/83"}, {"player_id": 84, "name": "Dawid Polkowski", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/84"}, {"player_id": 85, "name": "Dominik Prusaczyk", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/85"}, {"player_id": 88, "name": "Dawid Szymonowicz", "team": "Puszcza Niepołomice", "position": "Obrońca", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/88"}, {"player_id": 89, "name": "Jakub Tabor", "team": "Jagiellonia Białystok", "position": "Pomocnik", "total_points": 0, "price": 0.8, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/89"}, {"player_id": 90, "name": "Konstantin Vassiljev", "team": "Piast Gliwice", "position": "Pomocnik", "total_points": 0, "price": 1.5, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/90"}, {"player_id": 91, "name": "Emil Gajko", "team": "Jagiellonia Białystok", "position": "Napastnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/91"}, {"player_id": 92, "name": "Bartosz Giełażyn", "team": "Jagiellonia Białystok", "position": "Napastnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/92"}, {"player_id": 93, "name": "Maciej Górski", "team": "Korona Kielce", "position": "Napastnik", "total_points": 0, "price": 1.6, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/93"}, {"player_id": 94, "name": "Kacper Piechniak", "team": "Jagiellonia Białystok", "position": "Napastnik", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/94"}, {"player_id": 95, "name": "Karol Świderski", "team": "Jagiellonia Białystok", "position": "Napastnik", "total_points": 0, "price": 2.1, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/95"}, {"player_id": 96, "name": "Maciej Gostomski", "team": "Górnik Łęczna", "position": "Bramkarz", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/96"}, {"player_id": 97, "name": "Zbigniew Małkowski", "team": "Zagłębie Lubin", "position": "Bramkarz", "total_points": 0, "price": 1.2, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/97"}, {"player_id": 98, "name": "Artur Marzec", "team": "Korona Kielce", "position": "Bramkarz", "total_points": 0, "price": 0.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/98"}, {"player_id": 99, "name": "Leonid Otczenaszenko", "team": "Korona Kielce", "position": "Bramkarz", "total_points": 0, "price": 1.3, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/99"}, {"player_id": 100, "name": "Michal Peškovič", "team": "Podbeskidzie Bielsko-Biała", "position": "Bramkarz", "total_points": 0, "price": 1.7, "points_per_price": 0.0, "popularity_pct": "0%", "stats_url": "https://fantasy.ekstraklasa.org/player/100"}];
 
-const POS_MAP = {BR:'GK', OBR:'DEF', POM:'MID', NAP:'FWD', '1':'GK', '2':'DEF', '3':'MID', '4':'FWD'};
-const POS_COLORS = {BR:'#f59e0b', OBR:'#3b82f6', POM:'#10b981', NAP:'#ef4444'};
-const POS_ID_TO_KEY = {'1':'BR', '2':'OBR', '3':'POM', '4':'NAP', 'BR':'BR', 'OBR':'OBR', 'POM':'POM', 'NAP':'NAP'};
+const POS_MAP = {BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'};
+const POS_ID = {'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
+  Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'};
 
-let currentTab = 'captains';
-let currentPos = 'ALL';
-let sortCol = 'total_points';
-let sortDir = 'desc';
+let tab = 'captains', pos = 'ALL', scope = 'global';
+let sorts = {
+  captains: {col:'captain_count', dir:'desc'},
+  ownership: {col:'in_squad_count', dir:'desc'},
+  players: {col:'total_points', dir:'desc'},
+};
 
+function num(v) { return typeof v === 'string' ? parseFloat(v) || 0 : v || 0; }
 function bar(val, max, color) {
   const w = Math.min(val / max * 100, 100);
-  return `<div class="bar-wrap">
-    <div class="bar-bg"><div class="bar-fill" style="width:${w}%;background:${color}"></div></div>
-    <span class="bar-val">${val.toFixed(1)}%</span>
-  </div>`;
+  return '<div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:'+w+'%;background:'+color+'"></div></div><span class="bar-val">'+val.toFixed(1)+'%</span></div>';
 }
-
-function posBadge(pos) {
-  const normalized = POS_ID_TO_KEY[pos] || pos;
-  return `<span class="pos-badge pos-${normalized}">${POS_MAP[normalized] || POS_MAP[pos] || pos}</span>`;
+function posBadge(p) {
+  const k = POS_ID[p] || p;
+  return '<span class="pos-badge pos-'+k+'">'+(POS_MAP[k]||POS_MAP[p]||p)+'</span>';
+}
+function arrow(tab, col) {
+  const s = sorts[tab];
+  return s.col === col ? (s.dir === 'desc' ? ' ▼' : ' ▲') : '';
+}
+function filterPos(data) {
+  if (pos === 'ALL') return data;
+  return data.filter(p => {
+    const pk = POS_ID[p.position] || POS_ID[p.position_id] || p.position;
+    return pk === pos;
+  });
+}
+function sortData(data, tab) {
+  const s = sorts[tab];
+  return [...data].sort((a, b) => {
+    let av = a[s.col], bv = b[s.col];
+    if (s.col === 'position' || s.col === 'position_id') {
+      const order = {BR:1,OBR:2,POM:3,NAP:4,'1':1,'2':2,'3':3,'4':4,Bramkarz:1,'Obrońca':2,Pomocnik:3,Napastnik:4};
+      av = order[av] || 5; bv = order[bv] || 5;
+    } else if (s.col === 'name' || s.col === 'team') {
+      av = (av || '').toLowerCase(); bv = (bv || '').toLowerCase();
+      if (av < bv) return s.dir === 'desc' ? 1 : -1;
+      if (av > bv) return s.dir === 'desc' ? -1 : 1;
+      return 0;
+    } else {
+      av = num(av); bv = num(bv);
+    }
+    return s.dir === 'desc' ? bv - av : av - bv;
+  });
 }
 
 function renderCaptains() {
-  let data = CAPTAINS;
-  if (currentPos !== 'ALL') return '<div style="padding:40px;text-align:center;color:#64748b">Filtr pozycji niedostępny dla kapitanów</div>';
-  if (!data.length) return '<div style="padding:40px;text-align:center;color:#64748b">Brak danych</div>';
+  let data = DATA[scope].captains;
+  data = sortData(data, 'captains');
+  if (!data.length) return '<div class="empty-msg">Brak danych o kapitanach</div>';
   const maxPct = Math.max(...data.map(c => c.captain_count));
-  let html = `<div class="section-title"><span style="font-size:22px">👑</span><h2>Popularność kapitanów</h2><div class="line"></div></div>`;
-  html += '<div class="data-table"><table><thead><tr>';
-  html += '<th class="text-left">#</th><th class="text-left">Zawodnik</th>';
-  html += '<th class="text-right">Wyborów</th><th class="text-left" style="min-width:160px">Popularność</th>';
-  html += '</tr></thead><tbody>';
+  let h = '<div class="section-title"><span style="font-size:22px">👑</span><h2>Popularność kapitanów — '+(scope==='league'?'Liga':'Top 100')+'</h2><div class="line"></div></div>';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left sortable" data-tab="captains" data-col="index">#'+arrow('captains','index')+'</th>';
+  h += '<th class="text-left sortable" data-tab="captains" data-col="name">Zawodnik'+arrow('captains','name')+'</th>';
+  h += '<th class="text-right sortable" data-tab="captains" data-col="captain_count">Wyborów'+arrow('captains','captain_count')+'</th>';
+  h += '<th class="text-left" style="min-width:160px">Popularność</th>';
+  h += '</tr></thead><tbody>';
   data.forEach((c, i) => {
     const hl = i === 0 ? ' class="highlight"' : '';
-    const nameStyle = i === 0 ? 'color:#fbbf24;font-weight:700' : i < 3 ? 'font-weight:700' : 'font-weight:500';
+    const ns = i === 0 ? 'color:#fbbf24;font-weight:700' : i < 3 ? 'font-weight:700' : 'font-weight:500';
     const badge = i === 0 ? '<span class="captain-badge">C</span> ' : '';
-    const barColor = i === 0 ? '#fbbf24' : '#22d3ee';
-    html += `<tr${hl}>
-      <td class="c-muted fw-600">${i+1}</td>
-      <td><span style="${nameStyle}">${badge}${c.name}</span></td>
-      <td class="text-right fw-700">${c.captain_count}</td>
-      <td>${bar(parseFloat(c.captain_pct), maxPct * 1.2, barColor)}</td>
-    </tr>`;
+    const bc = i === 0 ? '#fbbf24' : '#22d3ee';
+    h += '<tr'+hl+'><td class="c-muted fw-600">'+(i+1)+'</td><td><span style="'+ns+'">'+badge+c.name+'</span></td>';
+    h += '<td class="text-right fw-700">'+c.captain_count+'</td>';
+    h += '<td>'+bar(parseFloat(c.captain_pct), maxPct*1.2, bc)+'</td></tr>';
   });
-  html += '</tbody></table></div>';
-  return html;
+  h += '</tbody></table></div>';
+  return h;
 }
 
 function renderOwnership() {
-  let data = OWNERSHIP;
-  if (currentPos !== 'ALL') data = data.filter(p => (POS_ID_TO_KEY[p.position] || p.position) === currentPos);
-  if (!data.length) return '<div style="padding:40px;text-align:center;color:#64748b">Brak danych dla wybranej pozycji</div>';
-  let html = `<div class="section-title"><span style="font-size:22px">👥</span><h2>Ownership w Top drużynach</h2><div class="line"></div></div>`;
-  html += '<div class="data-table"><table><thead><tr>';
-  html += '<th class="text-left">#</th><th class="text-left">Zawodnik</th><th class="text-center">Poz</th>';
-  html += '<th class="text-left" style="min-width:130px">W składzie</th>';
-  html += '<th class="text-left" style="min-width:130px">Start XI</th>';
-  html += '<th class="text-left" style="min-width:130px">Kapitan</th>';
-  html += '</tr></thead><tbody>';
+  let data = filterPos(DATA[scope].ownership);
+  data = sortData(data, 'ownership');
+  if (!data.length) return '<div class="empty-msg">Brak danych ownership</div>';
+  let h = '<div class="section-title"><span style="font-size:22px">👥</span><h2>Ownership — '+(scope==='league'?'Liga':'Top 100')+'</h2><div class="line"></div></div>';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left">#</th>';
+  h += '<th class="text-left sortable" data-tab="ownership" data-col="name">Zawodnik'+arrow('ownership','name')+'</th>';
+  h += '<th class="text-center sortable" data-tab="ownership" data-col="position">Poz'+arrow('ownership','position')+'</th>';
+  h += '<th class="text-left sortable" data-tab="ownership" data-col="in_squad_count" style="min-width:130px">W składzie'+arrow('ownership','in_squad_count')+'</th>';
+  h += '<th class="text-left sortable" data-tab="ownership" data-col="in_starting_count" style="min-width:130px">Start XI'+arrow('ownership','in_starting_count')+'</th>';
+  h += '<th class="text-left sortable" data-tab="ownership" data-col="captain_count" style="min-width:130px">Kapitan'+arrow('ownership','captain_count')+'</th>';
+  h += '</tr></thead><tbody>';
   data.forEach((p, i) => {
-    const sq = parseFloat(p.squad_pct) || 0;
-    const st = parseFloat(p.starting_pct) || 0;
-    const cp = parseFloat(p.captain_pct) || 0;
-    html += `<tr>
-      <td class="c-muted fw-600">${i+1}</td>
-      <td class="fw-600">${p.name}</td>
-      <td class="text-center">${posBadge(POS_ID_TO_KEY[p.position] || p.position || '')}</td>
-      <td>${bar(sq, 100, '#10b981')}</td>
-      <td>${bar(st, 100, '#3b82f6')}</td>
-      <td>${bar(cp, 40, '#fbbf24')}</td>
-    </tr>`;
+    const sq = num(p.squad_pct), st = num(p.starting_pct), cp = num(p.captain_pct);
+    const pk = POS_ID[p.position] || p.position || '';
+    h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td><td class="fw-600">'+p.name+'</td>';
+    h += '<td class="text-center">'+posBadge(pk)+'</td>';
+    h += '<td>'+bar(sq, 100, '#10b981')+'</td>';
+    h += '<td>'+bar(st, 100, '#3b82f6')+'</td>';
+    h += '<td>'+bar(cp, 40, '#fbbf24')+'</td></tr>';
   });
-  html += '</tbody></table></div>';
-  return html;
+  h += '</tbody></table></div>';
+  return h;
 }
 
 function renderPlayers() {
   let data = [...PLAYERS];
-  if (currentPos !== 'ALL') {
-    const posMap = {'BR':'Bramkarz','OBR':'Obrońca','POM':'Pomocnik','NAP':'Napastnik'};
-    data = data.filter(p => {
-      const pPos = POS_ID_TO_KEY[p.position] || p.position;
-      return pPos === currentPos || p.position === posMap[currentPos] || p.position === currentPos;
-    });
-  }
-  data.sort((a, b) => {
-    let av = a[sortCol] ?? 0, bv = b[sortCol] ?? 0;
-    if (typeof av === 'string') av = parseFloat(av) || 0;
-    if (typeof bv === 'string') bv = parseFloat(bv) || 0;
-    return sortDir === 'desc' ? bv - av : av - bv;
-  });
-  if (!data.length) return '<div style="padding:40px;text-align:center;color:#64748b">Brak danych dla wybranej pozycji</div>';
-  const arrow = (col) => sortCol === col ? (sortDir === 'desc' ? ' ▼' : ' ▲') : '';
-  let html = `<div class="section-title"><span style="font-size:22px">⚽</span><h2>Statystyki zawodników</h2><div class="line"></div></div>`;
-  html += '<div class="data-table"><table><thead><tr>';
-  html += '<th class="text-left">#</th><th class="text-left">Zawodnik</th><th class="text-left">Drużyna</th><th class="text-center">Poz</th>';
-  html += `<th class="text-right sortable" data-sort="price">Cena${arrow('price')}</th>`;
-  html += `<th class="text-right sortable" data-sort="total_points">Punkty${arrow('total_points')}</th>`;
-  html += `<th class="text-right sortable" data-sort="points_per_price">Pkt/Cena${arrow('points_per_price')}</th>`;
-  html += '<th class="text-right">Pop.</th>';
-  html += '</tr></thead><tbody>';
+  if (pos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === pos);
+  data = sortData(data, 'players');
+  if (!data.length) return '<div class="empty-msg">Brak danych</div>';
+  let h = '<div class="section-title"><span style="font-size:22px">⚽</span><h2>Statystyki zawodników</h2><div class="line"></div></div>';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left">#</th>';
+  h += '<th class="text-left sortable" data-tab="players" data-col="name">Zawodnik'+arrow('players','name')+'</th>';
+  h += '<th class="text-left sortable" data-tab="players" data-col="team">Drużyna'+arrow('players','team')+'</th>';
+  h += '<th class="text-center sortable" data-tab="players" data-col="position">Poz'+arrow('players','position')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="price">Cena'+arrow('players','price')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="total_points">Punkty'+arrow('players','total_points')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct">Pop.'+arrow('players','popularity_pct')+'</th>';
+  h += '</tr></thead><tbody>';
   data.forEach((p, i) => {
-    const pts = p.total_points || 0;
-    const price = p.price || 0;
-    const ppp = p.points_per_price || 0;
-    const ptsColor = pts >= 35 ? '#22d3ee' : pts >= 25 ? '#e2e8f0' : '#94a3b8';
-    const pppColor = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
-    const posKey = {'Bramkarz':'BR','Obrońca':'OBR','Pomocnik':'POM','Napastnik':'NAP'}[p.position] || POS_ID_TO_KEY[p.position] || p.position || '';
-    html += `<tr>
-      <td class="c-muted fw-600">${i+1}</td>
-      <td class="fw-600">${p.name}</td>
-      <td class="c-muted" style="font-size:13px">${p.team}</td>
-      <td class="text-center">${posBadge(posKey)}</td>
-      <td class="text-right c-muted">${price.toFixed(1)}M</td>
-      <td class="text-right fw-700" style="color:${ptsColor}">${pts}</td>
-      <td class="text-right fw-600" style="color:${pppColor}">${ppp.toFixed(1)}</td>
-      <td class="text-right c-muted" style="font-size:13px">${p.popularity_pct}</td>
-    </tr>`;
+    const pts = p.total_points || 0, price = p.price || 0, ppp = p.points_per_price || 0;
+    const ptsC = pts >= 35 ? '#22d3ee' : pts >= 25 ? '#e2e8f0' : '#94a3b8';
+    const pppC = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
+    const pk = POS_ID[p.position] || p.position || '';
+    h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td>';
+    h += '<td class="fw-600">'+p.name+'</td>';
+    h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
+    h += '<td class="text-center">'+posBadge(pk)+'</td>';
+    h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
+    h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
+    h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
+    h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td></tr>';
   });
-  html += '</tbody></table></div>';
-  return html;
+  h += '</tbody></table></div>';
+  return h;
 }
 
 function render() {
-  document.getElementById('tab-captains').innerHTML = currentTab === 'captains' ? renderCaptains() : '';
-  document.getElementById('tab-ownership').innerHTML = currentTab === 'ownership' ? renderOwnership() : '';
-  document.getElementById('tab-players').innerHTML = currentTab === 'players' ? renderPlayers() : '';
-
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-' + currentTab).classList.add('active');
-
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
-  document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === currentPos));
-
-  // Re-attach sort listeners
+  document.getElementById('tab-captains').innerHTML = tab === 'captains' ? renderCaptains() : '';
+  document.getElementById('tab-ownership').innerHTML = tab === 'ownership' ? renderOwnership() : '';
+  document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
+  document.querySelectorAll('.scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
+  // Sortable click handlers
   document.querySelectorAll('.sortable').forEach(th => {
     th.onclick = () => {
-      const col = th.dataset.sort;
-      if (sortCol === col) sortDir = sortDir === 'desc' ? 'asc' : 'desc';
-      else { sortCol = col; sortDir = 'desc'; }
+      const t = th.dataset.tab, col = th.dataset.col;
+      if (sorts[t].col === col) sorts[t].dir = sorts[t].dir === 'desc' ? 'asc' : 'desc';
+      else { sorts[t].col = col; sorts[t].dir = 'desc'; }
       render();
     };
   });
 }
 
-// Tab clicks
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => { currentTab = t.dataset.tab; render(); });
-});
-
-// Position filter clicks
-document.querySelectorAll('.pos-btn').forEach(b => {
-  b.addEventListener('click', () => { currentPos = b.dataset.pos; render(); });
-});
-
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { tab = t.dataset.tab; render(); }));
+document.querySelectorAll('.pos-btn').forEach(b => b.addEventListener('click', () => { pos = b.dataset.pos; render(); }));
+document.querySelectorAll('.scope-btn').forEach(b => b.addEventListener('click', () => { scope = b.dataset.scope; render(); }));
 render();
 </script>
 </body>
