@@ -189,6 +189,21 @@ def login(session: requests.Session) -> bool:
 
     # Krok 4: GET /connect?g4t7hjq3rcyb0s2m={hash} — ustawia PHPSESSID
     try:
+        # Tymczasowo użyj czystych headerów przeglądarki (bez X-Requested-With)
+        saved_headers = dict(session.headers)
+        session.headers.clear()
+        browser_hdrs = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "pl-PL,pl;q=0.9",
+        }
+        session.headers.update(browser_hdrs)
+
+        # Najpierw GET na stronę główną żeby PHP wystartowało sesję
+        init_resp = session.get(BASE_URL, timeout=15)
+        print(f"   Init GET / status: {init_resp.status_code}, cookies: {dict(session.cookies)}")
+        print(f"   Init Set-Cookie: {init_resp.headers.get('Set-Cookie', 'brak')}")
+
         resp = session.get(
             f"{BASE_URL}/connect",
             params={"g4t7hjq3rcyb0s2m": connect_hash},
@@ -200,13 +215,22 @@ def login(session: requests.Session) -> bool:
             allow_redirects=True,
         )
         print(f"   Connect status: {resp.status_code}, cookies: {dict(session.cookies)}")
+        print(f"   Connect Set-Cookie: {resp.headers.get('Set-Cookie', 'brak')}")
+        print(f"   Connect all headers: {dict(resp.headers)}")
+        print(f"   Connect history (redirects): {[r.status_code for r in resp.history]}")
+        for i, r in enumerate(resp.history):
+            print(f"   Redirect {i}: {r.status_code} → {r.headers.get('Location', '?')}, Set-Cookie: {r.headers.get('Set-Cookie', 'brak')}")
 
         if not dict(session.cookies).get("PHPSESSID"):
             print("   ⚠️  /connect nie ustawiło PHPSESSID")
+            session.headers.clear()
+            session.headers.update(saved_headers)
             return True
 
     except Exception as e:
         print(f"   ❌ Błąd /connect: {e}")
+        session.headers.clear()
+        session.headers.update(saved_headers)
         return True
 
     # Krok 5: POST /login-sso — autoryzuje sesję
@@ -225,11 +249,18 @@ def login(session: requests.Session) -> bool:
             allow_redirects=True,
         )
         print(f"   Login SSO status: {resp.status_code}, resp: {resp.text[:150]}")
+
+        # Przywróć oryginalne headers sesji
+        session.headers.clear()
+        session.headers.update(saved_headers)
+
         print(f"   ✅ Zalogowano! Cookies: {dict(session.cookies)}")
         return True
 
     except Exception as e:
         print(f"   ❌ Błąd SSO: {e}")
+        session.headers.clear()
+        session.headers.update(saved_headers)
         return False
 
 
