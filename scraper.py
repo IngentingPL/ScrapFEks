@@ -75,6 +75,8 @@ TEAMS_TO_SCRAPE = int(os.environ.get("TEAMS_TO_SCRAPE", "100"))
 
 # Slug ligi prywatnej (puste = pomiń)
 LEAGUE_SLUG = os.environ.get("LEAGUE_SLUG", "discord-fmforumcmf")
+# ID ligi (z Network tab: POST /ranking-list → league: 304)
+LEAGUE_ID = os.environ.get("LEAGUE_ID", "304")
 
 # Opóźnienie między requestami (w sekundach) - bądź miły dla serwera
 REQUEST_DELAY = 0.3
@@ -815,63 +817,14 @@ def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
     return teams
 
 
-def fetch_league_teams(session: requests.Session, league_slug: str) -> list[dict]:
+def fetch_league_teams(session: requests.Session, league_slug: str, league_id: str) -> list[dict]:
     """
     Pobiera listę drużyn z ligi prywatnej.
-    1. GET /league/{slug} → parsuje league ID z HTML
-    2. POST /ranking-list z parametrem league={id}
+    POST /ranking-list z parametrem league={id}.
     """
-    print(f"\n🏅 Pobieram drużyny z ligi: {league_slug}...")
+    print(f"\n🏅 Pobieram drużyny z ligi: {league_slug} (ID: {league_id})...")
     teams = []
 
-    # Krok 1: Pobierz ID ligi ze strony HTML
-    league_id = None
-    try:
-        browser_headers = {
-            "User-Agent": HEADERS["User-Agent"],
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "pl-PL,pl;q=0.9",
-        }
-        old_headers = dict(session.headers)
-        session.headers.clear()
-        session.headers.update(browser_headers)
-
-        resp = session.get(f"{BASE_URL}/league/{league_slug}", timeout=30)
-        session.headers.clear()
-        session.headers.update(old_headers)
-
-        if resp.status_code != 200:
-            print(f"   ⚠️  GET /league/{league_slug}: HTTP {resp.status_code}")
-            return teams
-
-        html = resp.text
-        # Szukaj league ID — może być w formie: league: 304, "league":"304", data-league="304"
-        league_match = (
-            re.search(r'league["\s:]+(\d+)', html)
-            or re.search(r'league_id["\s:]+(\d+)', html)
-            or re.search(r'data-league[="\s]+(\d+)', html)
-        )
-        if league_match:
-            league_id = league_match.group(1)
-            print(f"   ✅ League ID: {league_id}")
-        else:
-            # Szukaj w JS
-            js_match = re.search(r'"league"\s*:\s*"?(\d+)"?', html)
-            if js_match:
-                league_id = js_match.group(1)
-                print(f"   ✅ League ID (z JS): {league_id}")
-            else:
-                print(f"   ⚠️  Nie znaleziono league ID w HTML")
-                # Debug
-                league_refs = re.findall(r'league.{0,30}', html)
-                print(f"   DEBUG league konteksty: {league_refs[:5]}")
-                return teams
-
-    except Exception as e:
-        print(f"   ⚠️  Błąd GET league: {e}")
-        return teams
-
-    # Krok 2: POST /ranking-list z parametrem league
     try:
         payload = f"start=0&length=100&league={league_id}&round=0"
         resp = session.post(
@@ -1644,7 +1597,7 @@ def main():
     league_ownership_stats = []
     league_teams = []
     if LEAGUE_SLUG:
-        league_teams = fetch_league_teams(session, LEAGUE_SLUG)
+        league_teams = fetch_league_teams(session, LEAGUE_SLUG, LEAGUE_ID)
 
         if league_teams:
             league_results = scrape_teams_captains(session, league_teams)
