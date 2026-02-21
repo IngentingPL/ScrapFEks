@@ -1,6 +1,7 @@
 name: Fantasy Ekstraklasa Scraper
 
 on:
+  # Ręczne uruchomienie z parametrami
   workflow_dispatch:
     inputs:
       max_players:
@@ -11,12 +12,27 @@ on:
         description: 'Numer kolejki (puste = ostatnia)'
         required: false
         default: ''
+      teams_to_scrape:
+        description: 'Ile drużyn z rankingu scrapować (kapitanowie/ownership)'
+        required: false
+        default: '100'
+      league_slug:
+        description: 'Slug ligi prywatnej (puste = pomiń)'
+        required: false
+        default: 'discord-fmforumcmf'
+      league_id:
+        description: 'ID ligi (z Network tab)'
+        required: false
+        default: '304'
+
+  # Automatyczne uruchomienie - co piątek o 20:00 (po rozpoczęciu kolejki)
+  # Odkomentuj poniżej, żeby włączyć:
+  # schedule:
+  #   - cron: '0 20 * * 5'
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout repo
@@ -36,6 +52,9 @@ jobs:
           FANTASY_PASSWORD: ${{ secrets.FANTASY_PASSWORD }}
           MAX_PLAYER_ID: ${{ github.event.inputs.max_players || '100' }}
           TARGET_ROUND: ${{ github.event.inputs.target_round || '' }}
+          TEAMS_TO_SCRAPE: ${{ github.event.inputs.teams_to_scrape || '100' }}
+          LEAGUE_SLUG: ${{ github.event.inputs.league_slug || 'discord-fmforumcmf' }}
+          LEAGUE_ID: ${{ github.event.inputs.league_id || '304' }}
         run: python scraper.py
 
       - name: Upload results
