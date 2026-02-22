@@ -32,6 +32,7 @@ on:
         required: false
         default: '300'
 
+  # Automatyczne uruchomienie - co piątek o 20:00
   # schedule:
   #   - cron: '0 20 * * 5'
 
@@ -55,4 +56,70 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run scraper
-        env​​​​​​​​​​​​​​​​
+        env:
+          FANTASY_EMAIL: ${{ secrets.FANTASY_EMAIL }}
+          FANTASY_PASSWORD: ${{ secrets.FANTASY_PASSWORD }}
+          MAX_PLAYER_ID: ${{ github.event.inputs.max_players || '100' }}
+          TARGET_ROUND: ${{ github.event.inputs.target_round || '' }}
+          TEAMS_TO_SCRAPE: ${{ github.event.inputs.teams_to_scrape || '100' }}
+          LEAGUE_SLUG: ${{ github.event.inputs.league_slug || 'discord-fmforumcmf' }}
+          LEAGUE_ID: ${{ github.event.inputs.league_id || '304' }}
+          WORKERS: ${{ github.event.inputs.workers || '10' }}
+          MAX_RUNTIME_MINUTES: ${{ github.event.inputs.max_runtime || '300' }}
+        run: python scraper.py
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: fantasy-data-${{ github.run_number }}
+          path: output/
+          retention-days: 90
+
+      - name: Commit results to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          mkdir -p docs
+          cp output/dashboard.html docs/index.html
+          
+          git add output/ docs/ || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "📊 Dane Fantasy Ekstraklasa - $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
+
+      - name: Check if continuation needed
+        id: check
+        run: |
+          NEEDED=${{ github.event.inputs.teams_to_scrape || '100' }}
+          DONE=0
+          if [ -f output/checkpoint_global.json ]; then
+            DONE=$(python3 -c "import json; print(len(json.load(open('output/checkpoint_global.json'))))")
+          fi
+          echo "needed=$NEEDED" >> $GITHUB_OUTPUT
+          echo "done=$DONE" >> $GITHUB_OUTPUT
+          if [ "$DONE" -lt "$NEEDED" ] && [ "$DONE" -gt "0" ]; then
+            echo "continue=true" >> $GITHUB_OUTPUT
+            echo "🔄 Checkpoint: $DONE/$NEEDED — kontynuacja potrzebna"
+          else
+            echo "continue=false" >> $GITHUB_OUTPUT
+            echo "✅ Checkpoint: $DONE/$NEEDED — zakończono"
+          fi
+
+      - name: Auto-continue if incomplete
+        if: steps.check.outputs.continue == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "🔄 Re-trigger workflow (${{ steps.check.outputs.done }}/${{ steps.check.outputs.needed }})..."
+          gh workflow run scrape.yml \
+            -f max_players="${{ github.event.inputs.max_players || '100' }}" \
+            -f target_round="${{ github.event.inputs.target_round || '' }}" \
+            -f teams_to_scrape="${{ github.event.inputs.teams_to_scrape || '100' }}" \
+            -f league_slug="${{ github.event.inputs.league_slug || 'discord-fmforumcmf' }}" \
+            -f league_id="${{ github.event.inputs.league_id || '304' }}" \
+            -f workers="${{ github.event.inputs.workers || '10' }}" \
+            -f max_runtime="${{ github.event.inputs.max_runtime || '300' }}"
