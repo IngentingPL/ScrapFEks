@@ -1119,13 +1119,12 @@ def scrape_teams_captains(session: requests.Session, teams: list[dict],
     return results
 
 
-def generate_captain_stats(team_results: list[dict], filename: str):
-    """
-    Generuje statystyki kapitanów — ile razy dany zawodnik został wybrany kapitanem.
-    Zapisuje do CSV.
-    """
+def _compute_captain_stats(team_results: list[dict]) -> list[dict]:
+    """Oblicza statystyki kapitanów (bez zapisu do CSV)."""
     captain_counts = {}
     total_teams = len(team_results)
+    if total_teams == 0:
+        return []
 
     for team in team_results:
         cid = team.get("captain_id")
@@ -1135,34 +1134,18 @@ def generate_captain_stats(team_results: list[dict], filename: str):
                 captain_counts[cid] = {"player_id": cid, "name": cname, "captain_count": 0}
             captain_counts[cid]["captain_count"] += 1
 
-    # Sortuj po liczbie wyborów
     stats = sorted(captain_counts.values(), key=lambda x: x["captain_count"], reverse=True)
-
-    # Dodaj procent
     for s in stats:
         s["captain_pct"] = f"{round(s['captain_count'] / total_teams * 100, 1)}%"
-
-    save_to_csv(stats, filename)
-
-    # Wydrukuj podsumowanie
-    print(f"\n{'='*60}")
-    print(f"  👑 STATYSTYKI KAPITANÓW (z {total_teams} drużyn)")
-    print(f"{'='*60}")
-    print(f"  {'Zawodnik':<25} {'Wyborów':>8} {'%':>8}")
-    print(f"  {'-'*45}")
-    for s in stats[:15]:
-        print(f"  {s['name']:<25} {s['captain_count']:>8} {s['captain_pct']:>8}")
-
     return stats
 
 
-def generate_squad_stats(team_results: list[dict], filename: str):
-    """
-    Generuje statystyki ownership — ile drużyn ma danego zawodnika w składzie.
-    Zapisuje do CSV.
-    """
+def _compute_squad_stats(team_results: list[dict]) -> list[dict]:
+    """Oblicza statystyki ownership (bez zapisu do CSV)."""
     player_counts = {}
     total_teams = len(team_results)
+    if total_teams == 0:
+        return []
 
     for team in team_results:
         for p in team.get("squad", []):
@@ -1183,11 +1166,35 @@ def generate_squad_stats(team_results: list[dict], filename: str):
                 player_counts[pid]["captain_count"] += 1
 
     stats = sorted(player_counts.values(), key=lambda x: x["in_squad_count"], reverse=True)
-
     for s in stats:
         s["squad_pct"] = f"{round(s['in_squad_count'] / total_teams * 100, 1)}%"
         s["starting_pct"] = f"{round(s['in_starting_count'] / total_teams * 100, 1)}%"
         s["captain_pct"] = f"{round(s['captain_count'] / total_teams * 100, 1)}%"
+    return stats
+
+
+def generate_captain_stats(team_results: list[dict], filename: str):
+    """Generuje statystyki kapitanów i zapisuje do CSV."""
+    stats = _compute_captain_stats(team_results)
+    total_teams = len(team_results)
+
+    save_to_csv(stats, filename)
+
+    print(f"\n{'='*60}")
+    print(f"  👑 STATYSTYKI KAPITANÓW (z {total_teams} drużyn)")
+    print(f"{'='*60}")
+    print(f"  {'Zawodnik':<25} {'Wyborów':>8} {'%':>8}")
+    print(f"  {'-'*45}")
+    for s in stats[:15]:
+        print(f"  {s['name']:<25} {s['captain_count']:>8} {s['captain_pct']:>8}")
+
+    return stats
+
+
+def generate_squad_stats(team_results: list[dict], filename: str):
+    """Generuje statystyki ownership i zapisuje do CSV."""
+    stats = _compute_squad_stats(team_results)
+    total_teams = len(team_results)
 
     save_to_csv(stats, filename)
 
@@ -1208,8 +1215,7 @@ def generate_squad_stats(team_results: list[dict], filename: str):
 
 def generate_dashboard_html(
     summary_data: list[dict],
-    captain_stats: list[dict],
-    ownership_stats: list[dict],
+    tiers: dict,
     teams_count: int,
     league_captain_stats: list[dict],
     league_ownership_stats: list[dict],
@@ -1221,19 +1227,60 @@ def generate_dashboard_html(
 ):
     """Generuje interaktywny dashboard HTML z danymi Fantasy Ekstraklasa."""
 
-    captains_json = json.dumps(captain_stats[:50], ensure_ascii=False)
-    ownership_json = json.dumps(ownership_stats, ensure_ascii=False)
-    players_json = json.dumps(summary_data, ensure_ascii=False)
-    league_captains_json = json.dumps(league_captain_stats[:50], ensure_ascii=False)
-    league_ownership_json = json.dumps(league_ownership_stats, ensure_ascii=False)
-    rosters_json = json.dumps(league_rosters, ensure_ascii=False)
+    # Build DATA object for JS: { scope_key: { captains, ownership, label, count } }
+    scopes_data = {}
+    scope_buttons = []
 
-    top_captain = captain_stats[0] if captain_stats else {}
-    top_owned = ownership_stats[0] if ownership_stats else {}
-    best_ppp = max(summary_data, key=lambda x: x.get("points_per_price", 0)) if summary_data else {}
+    # Tier scopes (top10, top100, all)
+    for key in ["top10", "top100", "all"]:
+        tier = tiers.get(key)
+        if not tier:
+            continue
+        count = tier["count"]
+        label = f"Top {count}" if key != "all" else f"Wszystkie ({count})"
+        scopes_data[key] = {
+            "captains": tier["captains"][:50],
+            "ownership": tier["ownership"],
+            "label": label,
+            "count": count,
+        }
+        emoji = "🏆" if key == "top10" else "🥈" if key == "top100" else "📊"
+        scope_buttons.append((key, f"{emoji} Top {count}" if key != "all" else f"{emoji} Wszystkie ({count})"))
 
+    # League scope
     has_league = league_teams_count > 0
     league_label = league_name.replace("-", " ").title() if league_name else ""
+    if has_league:
+        scopes_data["league"] = {
+            "captains": league_captain_stats[:50],
+            "ownership": league_ownership_stats,
+            "label": league_label,
+            "count": league_teams_count,
+        }
+        scope_buttons.append(("league", f"🏅 {league_label}"))
+
+    data_json = json.dumps(scopes_data, ensure_ascii=False)
+    players_json = json.dumps(summary_data, ensure_ascii=False)
+    rosters_json = json.dumps(league_rosters, ensure_ascii=False)
+
+    # For stat cards
+    all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))
+    all_caps = all_tier.get("captains", []) if all_tier else []
+    all_owns = all_tier.get("ownership", []) if all_tier else []
+    top_captain = all_caps[0] if all_caps else {}
+    top_owned = all_owns[0] if all_owns else {}
+    best_ppp = max(summary_data, key=lambda x: x.get("points_per_price", 0)) if summary_data else {}
+
+    # Default scope
+    default_scope = "top10" if "top10" in scopes_data else ("top100" if "top100" in scopes_data else "league")
+
+    # Build scope toggle HTML
+    scope_toggle_html = ""
+    if len(scope_buttons) > 1:
+        btns = ""
+        for key, label in scope_buttons:
+            btns += f"<button class='scope-btn' data-scope='{key}'>{label}</button>"
+        scope_toggle_html = f"<div class='scope-toggle'>{btns}</div>"
 
     html = f'''<!DOCTYPE html>
 <html lang="pl">
@@ -1410,7 +1457,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       <button class="tab" data-tab="players">⚽ Zawodnicy</button>
     </div>
     <div class="filters-row" style="margin-top: 12px;">
-      {"<div class='scope-toggle'><button class='scope-btn active' data-scope='global'>🏆 Top " + str(teams_count) + "</button><button class='scope-btn' data-scope='league'>🏅 " + league_label + "</button></div>" if has_league else ""}
+      {scope_toggle_html}
       <div class="pos-filters" style="margin-left:auto;">
         <button class="pos-btn active" data-pos="ALL">ALL</button>
         <button class="pos-btn" data-pos="BR">GK</button>
@@ -1427,16 +1474,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 </div>
 
 <script>
-const DATA = {{
-  global: {{
-    captains: {captains_json},
-    ownership: {ownership_json},
-  }},
-  league: {{
-    captains: {league_captains_json},
-    ownership: {league_ownership_json},
-  }},
-}};
+const DATA = {data_json};
 const PLAYERS = {players_json};
 const ROSTERS = {rosters_json};
 
@@ -1444,7 +1482,7 @@ const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
   Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
 
-let tab = 'captains', pos = 'ALL', scope = 'global';
+let tab = 'captains', pos = 'ALL', scope = '{default_scope}';
 let sorts = {{
   captains: {{col:'captain_count', dir:'desc'}},
   ownership: {{col:'in_squad_count', dir:'desc'}},
@@ -1535,11 +1573,12 @@ function attachRosterClicks() {{
 }}
 
 function renderCaptains() {{
+  if (!DATA[scope]) return '<div class="empty-msg">Brak danych dla tego zakresu</div>';
   let data = DATA[scope].captains;
   data = sortData(data, 'captains');
   if (!data.length) return '<div class="empty-msg">Brak danych o kapitanach</div>';
   const maxPct = Math.max(...data.map(c => c.captain_count));
-  let h = '<div class="section-title"><span style="font-size:22px">👑</span><h2>Popularność kapitanów — '+(scope==='league'?'Liga':'Top {teams_count}')+'</h2><div class="line"></div></div>';
+  let h = '<div class="section-title"><span style="font-size:22px">👑</span><h2>Popularność kapitanów — '+(DATA[scope].label||scope)+'</h2><div class="line"></div></div>';
   h += '<div class="data-table"><table><thead><tr>';
   h += '<th class="text-left sortable" data-tab="captains" data-col="index">#'+arrow('captains','index')+'</th>';
   h += '<th class="text-left sortable" data-tab="captains" data-col="name">Zawodnik'+arrow('captains','name')+'</th>';
@@ -1560,10 +1599,11 @@ function renderCaptains() {{
 }}
 
 function renderOwnership() {{
+  if (!DATA[scope]) return '<div class="empty-msg">Brak danych dla tego zakresu</div>';
   let data = filterPos(DATA[scope].ownership);
   data = sortData(data, 'ownership');
   if (!data.length) return '<div class="empty-msg">Brak danych ownership</div>';
-  let h = '<div class="section-title"><span style="font-size:22px">👥</span><h2>Ownership — '+(scope==='league'?'Liga':'Top {teams_count}')+'</h2><div class="line"></div></div>';
+  let h = '<div class="section-title"><span style="font-size:22px">👥</span><h2>Ownership — '+(DATA[scope].label||scope)+'</h2><div class="line"></div></div>';
   h += '<div class="data-table"><table><thead><tr>';
   h += '<th class="text-left">#</th>';
   h += '<th class="text-left sortable" data-tab="ownership" data-col="name">Zawodnik'+arrow('ownership','name')+'</th>';
@@ -1592,11 +1632,12 @@ function renderPlayers() {{
   if (!data.length) return '<div class="empty-msg">Brak danych</div>';
 
   // Buduj lookup ownership z aktualnego scope
-  const ownData = DATA[scope].ownership || [];
+  const scopeData = DATA[scope] || {{}};
+  const ownData = scopeData.ownership || [];
   const ownMap = {{}};
   ownData.forEach(o => {{ ownMap[o.name] = o; }});
   const hasOwn = ownData.length > 0;
-  const scopeLabel = scope === 'league' ? 'Liga' : 'Top';
+  const scopeLabel = scopeData.label || scope;
 
   let h = '<div class="section-title"><span style="font-size:22px">⚽</span><h2>Statystyki zawodników'+(hasOwn ? ' — ownership: '+scopeLabel : '')+'</h2><div class="line"></div></div>';
   h += '<div class="data-table"><table><thead><tr>';
@@ -1776,6 +1817,7 @@ def main():
     # 6. Scrapowanie drużyn (kapitanowie, ownership)
     captain_stats = []
     ownership_stats = []
+    team_results = []
     if TEAMS_TO_SCRAPE > 0:
         ranking_teams = fetch_ranking_teams(session, TEAMS_TO_SCRAPE)
 
@@ -1788,13 +1830,32 @@ def main():
                 os.remove(checkpoint)
                 print(f"   🗑️  Checkpoint globalny usunięty (kompletny)")
 
-            # CSV - statystyki kapitanów
+            # CSV - statystyki kapitanów (pełne)
             captains_file = os.path.join(OUTPUT_DIR, f"fantasy_captains_{timestamp}.csv")
             captain_stats = generate_captain_stats(team_results, captains_file)
 
-            # CSV - ownership w drużynach
+            # CSV - ownership w drużynach (pełne)
             ownership_file = os.path.join(OUTPUT_DIR, f"fantasy_ownership_{timestamp}.csv")
             ownership_stats = generate_squad_stats(team_results, ownership_file)
+
+    # Oblicz statystyki per tier (top10, top100, all)
+    tiers = {}
+    if team_results:
+        for tier_key, tier_limit in [("top10", 10), ("top100", 100)]:
+            tier_teams = [t for t in team_results
+                          if (t.get("ranking_position") or 999999) <= tier_limit]
+            if tier_teams:
+                tiers[tier_key] = {
+                    "captains": _compute_captain_stats(tier_teams),
+                    "ownership": _compute_squad_stats(tier_teams),
+                    "count": len(tier_teams),
+                }
+        # Pełny tier (all)
+        tiers["all"] = {
+            "captains": captain_stats,
+            "ownership": ownership_stats,
+            "count": len(team_results),
+        }
 
     # 7. Scrapowanie ligi prywatnej
     league_captain_stats = []
@@ -1840,8 +1901,7 @@ def main():
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
-        captain_stats=captain_stats,
-        ownership_stats=ownership_stats,
+        tiers=tiers,
         teams_count=TEAMS_TO_SCRAPE,
         league_captain_stats=league_captain_stats,
         league_ownership_stats=league_ownership_stats,
@@ -1869,4 +1929,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
