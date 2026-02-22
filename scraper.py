@@ -25,6 +25,7 @@ import hashlib
 from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from Crypto.Random import get_random_bytes
@@ -80,6 +81,15 @@ LEAGUE_ID = os.environ.get("LEAGUE_ID", "304")
 
 # Opóźnienie między requestami (w sekundach) - bądź miły dla serwera
 REQUEST_DELAY = 0.3
+
+# Ile równoległych workerów do scrapowania drużyn
+WORKERS = int(os.environ.get("WORKERS", "10"))
+
+# Maksymalny czas pracy (minuty) — graceful stop przed limitem GitHub Actions (6h)
+MAX_RUNTIME_MINUTES = int(os.environ.get("MAX_RUNTIME_MINUTES", "300"))
+
+# Globalny czas startu
+SCRIPT_START = time.time()
 
 # Plik wyjściowy
 OUTPUT_DIR = "output"
@@ -865,29 +875,25 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
     """
     Scrapuje skład drużyny ze strony /user-team/view/{slug}.
     Dane są osadzone w HTML jako wywołania app.Pitch.$squad.push({...}).
+    Thread-safe — nie modyfikuje session.headers, używa requests.get() bezpośrednio.
     """
     try:
-        # Użyj czystych headerów przeglądarki — bez X-Requested-With
-        # (ten header powoduje że serwer zwraca Angular shell zamiast PHP)
+        # Czyste headery przeglądarki — bez X-Requested-With
         browser_headers = {
             "User-Agent": HEADERS["User-Agent"],
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
             "Referer": f"{BASE_URL}/",
         }
-        # Tymczasowo nadpisz session headers
-        old_headers = dict(session.headers)
-        session.headers.clear()
-        session.headers.update(browser_headers)
 
-        resp = session.get(
+        # Thread-safe: użyj requests.get() z cookies z sesji
+        resp = requests.get(
             f"{BASE_URL}/user-team/view/{slug}",
+            headers=browser_headers,
+            cookies=dict(session.cookies),
             timeout=15,
         )
 
-        # Przywróć oryginalne headers
-        session.headers.clear()
-        session.headers.update(old_headers)
         if resp.status_code != 200:
             if debug:
                 print(f"      ⚠️  HTTP {resp.status_code} dla {slug}")
@@ -908,28 +914,13 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
                 has_player = "player" in html.lower()
                 print(f"      DEBUG 'squad' w HTML: {has_squad}, 'player' w HTML: {has_player}")
                 print(f"      DEBUG HTML length: {len(html)}")
-                # Pokaż fragment wokół "squad" jeśli istnieje
                 idx = html.find("squad")
                 if idx >= 0:
                     print(f"      DEBUG kontekst squad: ...{html[max(0,idx-50):idx+200]}...")
                 else:
                     print(f"      DEBUG HTML (500 znaków): {html[:500]}")
-            if not matches:
-                # Sprawdź czy HTML zawiera cokolwiek o squad
-                squad_refs = re.findall(r'squad|Pitch|player', html, re.IGNORECASE)
-                print(f"      DEBUG słowa kluczowe w HTML: {squad_refs[:10]}")
-                print(f"      DEBUG długość HTML: {len(html)}")
-                print(f"      DEBUG cookies: {dict(session.cookies)}")
-                # Szukaj fragmentu z app.Pitch
-                pitch_match = re.search(r'app\.Pitch.*', html)
-                if pitch_match:
-                    print(f"      DEBUG app.Pitch fragment: {pitch_match.group()[:300]}")
-                # Szukaj jakichkolwiek push()
-                push_matches = re.findall(r'\.push\(\{.*?\}\)', html[:5000], re.DOTALL)
-                print(f"      DEBUG push() w HTML: {len(push_matches)}")
 
         for match in matches:
-            # Parsuj pola z JS obiektu
             pid = re.search(r'"id"\s*:\s*(\d+)', match)
             name = re.search(r'"name"\s*:\s*"([^"]*)"', match)
             pos = re.search(r'"pos"\s*:\s*(\d+)', match)
@@ -956,12 +947,10 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
                 "points": _safe_int(points_text) if points_text and points_text != "-" else 0,
                 "is_captain": is_captain,
                 "is_subcaptain": is_subcaptain,
-                "is_reserve": False,  # Zostanie ustawione poniżej
+                "is_reserve": False,
                 "status": status.group(1) if status else "",
             })
 
-        # Pierwsi 11 zawodników to skład startowy, reszta to rezerwa
-        # (serwer zwraca w kolejności: 11 startowych + rezerwowi)
         starting_count = 11
         for i, p in enumerate(players):
             if i >= starting_count:
@@ -983,39 +972,139 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
         return {"slug": slug, "players": [], "captain_id": None, "error": str(e)}
 
 
-def scrape_teams_captains(session: requests.Session, teams: list[dict]) -> list[dict]:
-    """Scrapuje składy drużyn i zbiera dane o kapitanach."""
+def _process_team(args):
+    """Worker do przetworzenia jednej drużyny (thread-safe)."""
+    session, team, debug = args
+    slug = team["slug"]
+    squad = scrape_team_squad(session, slug, debug=debug)
+
+    captain_id = squad.get("captain_id")
+    captain_name = ""
+    for p in squad.get("players", []):
+        if p["player_id"] == captain_id:
+            captain_name = p["name"]
+            break
+
+    return {
+        "ranking_position": team.get("position"),
+        "team_slug": slug,
+        "team_points": team.get("total_points"),
+        "captain_id": captain_id,
+        "captain_name": captain_name,
+        "squad": squad.get("players", []),
+    }
+
+
+def scrape_teams_captains(session: requests.Session, teams: list[dict],
+                          checkpoint_file: str = None) -> list[dict]:
+    """
+    Scrapuje składy drużyn równolegle (ThreadPoolExecutor).
+    Zapisuje postęp co 500 drużyn do checkpoint_file.
+    Zatrzymuje się gracefully gdy zbliża się MAX_RUNTIME.
+    """
     total = len(teams)
     results = []
+    done_slugs = set()
 
-    print(f"\n👑 Scrapuję składy {total} drużyn (kapitanowie, składy)...")
+    # Wczytaj checkpoint jeśli istnieje
+    if checkpoint_file and os.path.exists(checkpoint_file):
+        try:
+            with open(checkpoint_file, "r", encoding="utf-8") as f:
+                results = json.load(f)
+            done_slugs = {r["team_slug"] for r in results}
+            print(f"   📂 Wczytano checkpoint: {len(results)} drużyn")
+        except Exception as e:
+            print(f"   ⚠️  Błąd checkpointu: {e}")
 
-    for i, team in enumerate(teams, 1):
-        slug = team["slug"]
-        squad = scrape_team_squad(session, slug, debug=(i <= 2))
+    remaining = [t for t in teams if t["slug"] not in done_slugs]
+    if not remaining:
+        print(f"\n👑 Wszystkie {total} drużyn już pobrane (checkpoint)")
+        return results
 
-        captain_id = squad.get("captain_id")
-        captain_name = ""
-        for p in squad.get("players", []):
-            if p["player_id"] == captain_id:
-                captain_name = p["name"]
-                break
+    print(f"\n👑 Scrapuję składy {len(remaining)} drużyn ({WORKERS} workerów, "
+          f"limit: {MAX_RUNTIME_MINUTES} min)...")
+    if done_slugs:
+        print(f"   Kontynuacja — już pobrano: {len(done_slugs)}")
 
-        results.append({
-            "ranking_position": team.get("position"),
-            "team_slug": slug,
-            "team_points": team.get("total_points"),
-            "captain_id": captain_id,
-            "captain_name": captain_name,
-            "squad": squad.get("players", []),
-        })
+    start_time = time.time()
+    max_seconds = MAX_RUNTIME_MINUTES * 60
+    completed = 0
+    errors = 0
+    timed_out = False
 
-        if i % 20 == 0 or i == total:
-            print(f"   [{i}/{total}] Scrapowanie drużyn...")
+    # Przetwarzaj w batchach po 500 — pozwala sprawdzać czas
+    BATCH_SIZE = 500
+    for batch_start in range(0, len(remaining), BATCH_SIZE):
+        # Sprawdź czas PRZED następnym batchem
+        elapsed_total = time.time() - SCRIPT_START
+        if elapsed_total > max_seconds:
+            timed_out = True
+            print(f"\n   ⏰ Limit czasu ({MAX_RUNTIME_MINUTES} min) — zatrzymuję po {completed} drużynach")
+            break
 
-        time.sleep(REQUEST_DELAY)
+        batch = remaining[batch_start:batch_start + BATCH_SIZE]
+        args_list = [(session, team, False) for team in batch]
 
-    print(f"   ✅ Pobrano składy {len(results)} drużyn")
+        with ThreadPoolExecutor(max_workers=WORKERS) as executor:
+            futures = {executor.submit(_process_team, args): args[1]["slug"]
+                       for args in args_list}
+
+            for future in as_completed(futures):
+                # Sprawdź czas w trakcie batcha
+                elapsed_total = time.time() - SCRIPT_START
+                if elapsed_total > max_seconds:
+                    timed_out = True
+                    # Poczekaj na bieżące futures ale nie startuj nowych
+                    executor._threads.clear()  # type: ignore
+                    break
+
+                slug = futures[future]
+                try:
+                    result = future.result(timeout=30)
+                    results.append(result)
+                    completed += 1
+
+                    if not result.get("squad"):
+                        errors += 1
+                except Exception:
+                    completed += 1
+                    errors += 1
+
+                # Progress co 500 drużyn
+                total_done = len(done_slugs) + completed
+                if completed % 500 == 0:
+                    elapsed = time.time() - start_time
+                    rate = completed / elapsed if elapsed > 0 else 0
+                    remaining_count = len(remaining) - completed
+                    eta = remaining_count / rate / 60 if rate > 0 else 0
+                    time_left = (max_seconds - (time.time() - SCRIPT_START)) / 60
+                    print(f"   [{total_done}/{total}] {rate:.1f}/s, "
+                          f"ETA: {eta:.0f} min, pozostało czasu: {time_left:.0f} min, błędy: {errors}")
+
+        # Checkpoint po każdym batchu
+        if checkpoint_file:
+            try:
+                with open(checkpoint_file, "w", encoding="utf-8") as f:
+                    json.dump(results, f, ensure_ascii=False)
+                print(f"   💾 Checkpoint: {len(results)} drużyn")
+            except Exception:
+                pass
+
+        if timed_out:
+            break
+
+    # Finalny checkpoint
+    if checkpoint_file:
+        try:
+            with open(checkpoint_file, "w", encoding="utf-8") as f:
+                json.dump(results, f, ensure_ascii=False)
+        except Exception:
+            pass
+
+    elapsed = time.time() - start_time
+    status = "⏰ PRZERWANO (limit czasu)" if timed_out else "✅ Zakończono"
+    print(f"   {status} — {len(results)}/{total} drużyn w {elapsed/60:.1f} min "
+          f"({completed/(elapsed or 1):.1f}/s, błędy: {errors})")
     return results
 
 
@@ -1582,7 +1671,13 @@ def main():
         ranking_teams = fetch_ranking_teams(session, TEAMS_TO_SCRAPE)
 
         if ranking_teams:
-            team_results = scrape_teams_captains(session, ranking_teams)
+            checkpoint = os.path.join(OUTPUT_DIR, "checkpoint_global.json")
+            team_results = scrape_teams_captains(session, ranking_teams, checkpoint_file=checkpoint)
+
+            # Usuń checkpoint jeśli wszystko pobrane
+            if len(team_results) >= len(ranking_teams) and os.path.exists(checkpoint):
+                os.remove(checkpoint)
+                print(f"   🗑️  Checkpoint globalny usunięty (kompletny)")
 
             # CSV - statystyki kapitanów
             captains_file = os.path.join(OUTPUT_DIR, f"fantasy_captains_{timestamp}.csv")
@@ -1600,7 +1695,12 @@ def main():
         league_teams = fetch_league_teams(session, LEAGUE_SLUG, LEAGUE_ID)
 
         if league_teams:
-            league_results = scrape_teams_captains(session, league_teams)
+            league_checkpoint = os.path.join(OUTPUT_DIR, "checkpoint_league.json")
+            league_results = scrape_teams_captains(session, league_teams, checkpoint_file=league_checkpoint)
+
+            # Usuń checkpoint jeśli wszystko pobrane
+            if len(league_results) >= len(league_teams) and os.path.exists(league_checkpoint):
+                os.remove(league_checkpoint)
 
             # CSV - statystyki kapitanów ligi
             league_captains_file = os.path.join(OUTPUT_DIR, f"fantasy_league_captains_{timestamp}.csv")
