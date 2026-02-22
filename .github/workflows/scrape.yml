@@ -45,7 +45,6 @@ permissions:
 contents: write
 actions: write
 
-```
 steps:
   - name: Checkout repo
     uses: actions/checkout@v4
@@ -126,4 +125,3 @@ steps:
         -f league_id="${{ github.event.inputs.league_id || '304' }}" \
         -f workers="${{ github.event.inputs.workers || '10' }}" \
         -f max_runtime="${{ github.event.inputs.max_runtime || '300' }}"
-```
