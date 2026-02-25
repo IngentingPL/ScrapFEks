@@ -68,11 +68,11 @@ FANTASY_PASSWORD = os.environ.get("FANTASY_PASSWORD", "")
 # Którą kolejkę analizować (None = ostatnia rozegrana)
 TARGET_ROUND = int(os.environ["TARGET_ROUND"]) if os.environ.get("TARGET_ROUND") else None
 
-# Maksymalne ID zawodnika do sprawdzenia (zmień na ~3000 dla pełnego scrapingu)
-MAX_PLAYER_ID = int(os.environ.get("MAX_PLAYER_ID", "100"))
+# Maksymalne ID zawodnika do sprawdzenia
+MAX_PLAYER_ID = int(os.environ.get("MAX_PLAYER_ID", "4000"))
 
 # Ile drużyn z rankingu scrapować (dla statystyk kapitanów itp.)
-TEAMS_TO_SCRAPE = int(os.environ.get("TEAMS_TO_SCRAPE", "100"))
+TEAMS_TO_SCRAPE = int(os.environ.get("TEAMS_TO_SCRAPE", "1000"))
 
 # Slug ligi prywatnej (puste = pomiń)
 LEAGUE_SLUG = os.environ.get("LEAGUE_SLUG", "discord-fmforumcmf")
@@ -913,19 +913,38 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
 
         if debug:
             print(f"      DEBUG {slug}: squad.push={len(matches)}, bench.push={len(bench_matches)}")
-            if not matches:
-                has_squad = "squad" in html
-                has_player = "player" in html.lower()
-                print(f"      DEBUG 'squad' w HTML: {has_squad}, 'player' w HTML: {has_player}")
-                print(f"      DEBUG HTML length: {len(html)}")
-                idx = html.find("squad")
-                if idx >= 0:
-                    print(f"      DEBUG kontekst squad: ...{html[max(0,idx-50):idx+200]}...")
-                else:
-                    print(f"      DEBUG HTML (500 znaków): {html[:500]}")
-                # Pokaż wszystkie .push() wzorce
-                all_pushes = re.findall(r'(\w+)\.push\(\{', html)
-                print(f"      DEBUG wszystkie .push(): {all_pushes[:20]}")
+            # Pokaż WSZYSTKIE .push() wzorce w HTML
+            all_pushes = re.findall(r'(\$?\w+(?:\.\$?\w+)*)\.push\(\{', html)
+            print(f"      DEBUG wszystkie .push(): {all_pushes}")
+            # Szukaj "bench" w jakimkolwiek kontekście
+            bench_refs = [(m.start(), html[max(0,m.start()-30):m.start()+80]) for m in re.finditer(r'bench', html, re.IGNORECASE)]
+            if bench_refs:
+                for pos, ctx in bench_refs[:5]:
+                    print(f"      DEBUG bench @{pos}: {ctx}")
+            else:
+                print(f"      DEBUG 'bench' NIE ZNALEZIONE w HTML")
+            # Szukaj "reserve" / "rezerw" / "substitute" / "sub"
+            for keyword in ["reserv", "rezerw", "substitut", "ławk", "lawka"]:
+                refs = [(m.start(), html[max(0,m.start()-40):m.start()+80]) for m in re.finditer(keyword, html, re.IGNORECASE)]
+                if refs:
+                    for pos, ctx in refs[:3]:
+                        print(f"      DEBUG '{keyword}' @{pos}: {ctx}")
+            # Pokaż cały blok JS wokół squad.push (szukamy skryptu)
+            sq_idx = html.find("squad.push")
+            if sq_idx >= 0:
+                # Znajdź koniec sekcji z push (następne 3000 znaków po ostatnim push)
+                last_push_idx = html.rfind(".push(", 0, sq_idx + 5000)
+                js_block = html[max(0, sq_idx - 100):min(len(html), last_push_idx + 500)]
+                print(f"      DEBUG JS block ({len(js_block)} chars): ...{js_block[-800:]}...")
+            # Zapisz pełny HTML pierwszej drużyny do pliku
+            try:
+                html_dump = os.path.join(OUTPUT_DIR, f"debug_team_{slug}.html")
+                with open(html_dump, "w", encoding="utf-8") as f:
+                    f.write(html)
+                print(f"      DEBUG HTML zapisany do: {html_dump}")
+            except Exception:
+                pass
+            print(f"      DEBUG HTML length: {len(html)}")
 
         def _parse_player(match, is_reserve=False):
             pid = re.search(r'"id"\s*:\s*(\d+)', match)
@@ -1492,7 +1511,6 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
   <div style="margin-top: 24px;">
     <div class="tabs">
       <button class="tab active" data-tab="captains">👑 Kapitanowie</button>
-      <button class="tab" data-tab="ownership">👥 Ownership</button>
       <button class="tab" data-tab="players">⚽ Zawodnicy</button>
       {"<button class='tab' data-tab='teams'>📋 Drużyny ligi</button>" if has_league else ""}
     </div>
@@ -1507,7 +1525,6 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       </div>
     </div>
     <div id="tab-captains" class="tab-content active"></div>
-    <div id="tab-ownership" class="tab-content"></div>
     <div id="tab-players" class="tab-content"></div>
     <div id="tab-teams" class="tab-content"></div>
   </div>
@@ -1528,7 +1545,6 @@ let tab = 'captains', pos = 'ALL', scope = '{default_scope}';
 let selectedTeam = '';
 let sorts = {{
   captains: {{col:'captain_count', dir:'desc'}},
-  ownership: {{col:'in_squad_count', dir:'desc'}},
   players: {{col:'total_points', dir:'desc'}},
 }};
 
@@ -1658,37 +1674,9 @@ function renderCaptains() {{
   return h;
 }}
 
-function renderOwnership() {{
-  if (!DATA[scope]) return '<div class="empty-msg">Brak danych dla tego zakresu</div>';
-  let data = filterPos(DATA[scope].ownership);
-  data = sortData(data, 'ownership');
-  if (!data.length) return '<div class="empty-msg">Brak danych ownership</div>';
-  let h = '<div class="section-title"><span style="font-size:22px">👥</span><h2>Ownership — '+(DATA[scope].label||scope)+'</h2><div class="line"></div></div>';
-  h += '<div class="data-table"><table><thead><tr>';
-  h += '<th class="text-left">#</th>';
-  h += '<th class="text-left sortable" data-tab="ownership" data-col="name">Zawodnik'+arrow('ownership','name')+'</th>';
-  h += '<th class="text-center sortable" data-tab="ownership" data-col="position">Poz'+arrow('ownership','position')+'</th>';
-  h += '<th class="text-left sortable" data-tab="ownership" data-col="in_squad_count" style="min-width:130px">W składzie'+arrow('ownership','in_squad_count')+'</th>';
-  h += '<th class="text-left sortable" data-tab="ownership" data-col="in_starting_count" style="min-width:130px">Start XI'+arrow('ownership','in_starting_count')+'</th>';
-  h += '<th class="text-left sortable" data-tab="ownership" data-col="captain_count" style="min-width:130px">Kapitan'+arrow('ownership','captain_count')+'</th>';
-  h += '</tr></thead><tbody>';
-  data.forEach((p, i) => {{
-    const sq = num(p.squad_pct), st = num(p.starting_pct), cp = num(p.captain_pct);
-    const pk = POS_ID[p.position] || p.position || '';
-    h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td>'+nameCell(p.name, 'font-weight:600');
-    h += '<td class="text-center">'+posBadge(pk)+'</td>';
-    h += '<td>'+bar(sq, 100, '#10b981')+'</td>';
-    h += '<td>'+bar(st, 100, '#3b82f6')+'</td>';
-    h += '<td>'+bar(cp, 40, '#fbbf24')+'</td></tr>';
-  }});
-  h += '</tbody></table></div>';
-  return h;
-}}
-
 function renderPlayers() {{
   let data = [...PLAYERS];
   if (pos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === pos);
-  data = sortData(data, 'players');
   if (!data.length) return '<div class="empty-msg">Brak danych</div>';
 
   // Buduj lookup ownership z aktualnego scope — dopasowanie po player_id
@@ -1697,9 +1685,10 @@ function renderPlayers() {{
   const ownMap = {{}};
   ownData.forEach(o => {{ ownMap[o.player_id] = o; }});
   const hasOwn = ownData.length > 0;
+  const hasLeague = LEAGUE_TEAMS.length > 0 && Object.keys(LEAGUE_POS_AVGS).length > 0;
   const scopeLabel = scopeData.label || scope;
 
-  let h = '<div class="section-title"><span style="font-size:22px">⚽</span><h2>Statystyki zawodników'+(hasOwn ? ' — ownership: '+scopeLabel : '')+'</h2><div class="line"></div></div>';
+  let h = '<div class="section-title"><span style="font-size:22px">⚽</span><h2>Zawodnicy'+(hasOwn ? ' — ownership: '+scopeLabel : '')+'</h2><div class="line"></div></div>';
   h += '<div class="data-table"><table><thead><tr>';
   h += '<th class="text-left">#</th>';
   h += '<th class="text-left sortable" data-tab="players" data-col="name">Zawodnik'+arrow('players','name')+'</th>';
@@ -1707,24 +1696,33 @@ function renderPlayers() {{
   h += '<th class="text-center sortable" data-tab="players" data-col="position">Poz'+arrow('players','position')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="price">Cena'+arrow('players','price')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="total_points">Punkty'+arrow('players','total_points')+'</th>';
+  h += '<th class="text-center sortable" data-tab="players" data-col="_diff_global" title="Różnica vs średnia pozycji (wszyscy grający)">±Avg'+arrow('players','_diff_global')+'</th>';
+  if (hasLeague) {{
+    h += '<th class="text-center sortable" data-tab="players" data-col="_diff_league" title="Różnica vs średnia pozycji (gracze w lidze)">±Liga'+arrow('players','_diff_league')+'</th>';
+  }}
   h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
-  h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct">Pop.'+arrow('players','popularity_pct')+'</th>';
   h += '<th class="text-center sortable" data-tab="players" data-col="_form_avg" style="min-width:80px">Forma'+arrow('players','_form_avg')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct">Pop.'+arrow('players','popularity_pct')+'</th>';
   if (hasOwn) {{
-    h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad">Skład %'+arrow('players','_own_squad')+'</th>';
-    h += '<th class="text-right sortable" data-tab="players" data-col="_own_captain">Kap %'+arrow('players','_own_captain')+'</th>';
+    h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad" style="min-width:100px">W składzie'+arrow('players','_own_squad')+'</th>';
+    h += '<th class="text-right sortable" data-tab="players" data-col="_own_starting" style="min-width:100px">Start XI'+arrow('players','_own_starting')+'</th>';
+    h += '<th class="text-right sortable" data-tab="players" data-col="_own_captain" style="min-width:100px">Kapitan'+arrow('players','_own_captain')+'</th>';
   }}
   h += '</tr></thead><tbody>';
 
-  // Dodaj dane ownership i formę do sortowania
+  // Dodaj dane ownership, formę i diff do sortowania
   data.forEach(p => {{
     const o = ownMap[p.player_id];
     p._own_squad = o ? num(o.squad_pct) : 0;
+    p._own_starting = o ? num(o.starting_pct) : 0;
     p._own_captain = o ? num(o.captain_pct) : 0;
     const f = p.form || [];
     p._form_avg = f.length ? f.reduce((s,x) => s + (x.pts||0), 0) / f.length : 0;
+    const pk = POS_ID[p.position] || p.position || '';
+    const pts = p.total_points || 0;
+    p._diff_global = (POS_AVGS[pk] && pts > 0) ? pts - POS_AVGS[pk] : 0;
+    p._diff_league = (LEAGUE_POS_AVGS[pk] && pts > 0) ? pts - LEAGUE_POS_AVGS[pk] : 0;
   }});
-  // Re-sort po dodaniu pól
   data = sortData(data, 'players');
 
   data.forEach((p, i) => {{
@@ -1738,13 +1736,18 @@ function renderPlayers() {{
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
     h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
+    h += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
+    if (hasLeague) {{
+      h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
+    }}
     h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
-    h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
     h += '<td class="text-center">'+formChart(p.form)+'</td>';
+    h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
     if (hasOwn) {{
-      const sq = p._own_squad, cp = p._own_captain;
-      h += '<td>'+( sq > 0 ? bar(sq, 100, '#10b981') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
-      h += '<td>'+( cp > 0 ? bar(cp, 40, '#fbbf24') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
+      const sq = p._own_squad, st = p._own_starting, cp = p._own_captain;
+      h += '<td>'+(sq > 0 ? bar(sq, 100, '#10b981') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
+      h += '<td>'+(st > 0 ? bar(st, 100, '#3b82f6') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
+      h += '<td>'+(cp > 0 ? bar(cp, 40, '#fbbf24') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
     }}
     h += '</tr>';
   }});
@@ -1752,7 +1755,7 @@ function renderPlayers() {{
   return h;
 }}
 
-// Oblicz średnie punkty per pozycja (wykluczając <=0)
+// Oblicz średnie punkty per pozycja — globalne (wykluczając <=0)
 const POS_AVGS = {{}};
 (function() {{
   const sums = {{}}, counts = {{}};
@@ -1766,6 +1769,33 @@ const POS_AVGS = {{}};
   }});
   for (const k in sums) POS_AVGS[k] = sums[k] / counts[k];
 }})();
+
+// Oblicz średnie punkty per pozycja — liga (z drużyn ligowych, wykluczając <=0)
+const LEAGUE_POS_AVGS = {{}};
+(function() {{
+  const seen = {{}}, sums = {{}}, counts = {{}};
+  LEAGUE_TEAMS.forEach(t => {{
+    t.players.forEach(p => {{
+      const pid = p.pid;
+      if (seen[pid]) return;
+      seen[pid] = true;
+      const pk = POS_ID[p.pos] || p.pos || '';
+      const pts = p.pts || 0;
+      if (pts > 0 && pk) {{
+        sums[pk] = (sums[pk] || 0) + pts;
+        counts[pk] = (counts[pk] || 0) + 1;
+      }}
+    }});
+  }});
+  for (const k in sums) LEAGUE_POS_AVGS[k] = sums[k] / counts[k];
+}})();
+
+function diffBadge(pts, avg) {{
+  if (!avg) return '<span class="diff-badge diff-zero">—</span>';
+  const d = pts - avg;
+  const cls = d > 0 ? 'diff-pos' : d < 0 ? 'diff-neg' : 'diff-zero';
+  return '<span class="diff-badge '+cls+'">'+(d>0?'+':'')+d.toFixed(0)+'</span>';
+}}
 
 function renderTeams() {{
   if (!LEAGUE_TEAMS.length) return '<div class="empty-msg">Brak danych o drużynach ligi</div>';
@@ -1798,8 +1828,8 @@ function renderTeams() {{
   h += '<th class="text-center">Poz</th>';
   h += '<th class="text-right">Cena</th>';
   h += '<th class="text-right">Punkty</th>';
-  h += '<th class="text-right">Śr. poz.</th>';
-  h += '<th class="text-center">vs Średnia</th>';
+  h += '<th class="text-center">±Avg</th>';
+  h += '<th class="text-center">±Liga</th>';
   h += '<th class="text-center" style="min-width:80px">Forma</th>';
   h += '<th class="text-center">Rola</th>';
   h += '</tr></thead><tbody>';
@@ -1811,10 +1841,6 @@ function renderTeams() {{
   function renderRow(p, idx) {{
     const pk = POS_ID[p.pos] || p.pos || '';
     const pts = p.pts || 0;
-    const avg = POS_AVGS[pk] || 0;
-    const diff = avg > 0 ? pts - avg : 0;
-    const diffCls = diff > 0 ? 'diff-pos' : diff < 0 ? 'diff-neg' : 'diff-zero';
-    const diffStr = diff > 0 ? '+'+diff.toFixed(0) : diff.toFixed(0);
     const price = p.price || 0;
     let role = '';
     if (p.C) role = '<span class="rc-badge rc-cap" style="font-size:11px;padding:2px 6px">C</span>';
@@ -1826,8 +1852,8 @@ function renderTeams() {{
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
     h += '<td class="text-right fw-700">'+pts+'</td>';
-    h += '<td class="text-right c-dim" style="font-size:12px">'+(avg > 0 ? avg.toFixed(0) : '—')+'</td>';
-    h += '<td class="text-center"><span class="diff-badge '+diffCls+'">'+diffStr+'</span></td>';
+    h += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
+    h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
     h += '<td class="text-center">'+formChart(p.form)+'</td>';
     h += '<td class="text-center">'+role+'</td>';
     h += '</tr>';
@@ -1841,16 +1867,20 @@ function renderTeams() {{
 
   // Podsumowanie
   const totalPts = team.players.filter(p => !p.R).reduce((s,p) => s + (p.pts||0), 0);
-  const totalDiff = team.players.reduce((s,p) => {{
+  const totalDiffG = team.players.reduce((s,p) => {{
     const pk = POS_ID[p.pos] || p.pos || '';
-    const avg = POS_AVGS[pk] || 0;
-    return s + ((p.pts||0) - avg);
+    return s + ((p.pts||0) - (POS_AVGS[pk] || 0));
   }}, 0);
-  const tdCls = totalDiff > 0 ? 'diff-pos' : totalDiff < 0 ? 'diff-neg' : 'diff-zero';
+  const totalDiffL = team.players.reduce((s,p) => {{
+    const pk = POS_ID[p.pos] || p.pos || '';
+    return s + ((p.pts||0) - (LEAGUE_POS_AVGS[pk] || 0));
+  }}, 0);
   h += '<tr style="border-top:2px solid #334155"><td colspan="4" class="fw-700" style="text-align:right;padding-top:10px">Razem (startowi):</td>';
   h += '<td class="text-right fw-700" style="padding-top:10px">'+totalPts+'</td>';
-  h += '<td></td>';
-  h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+tdCls+'">'+(totalDiff>0?'+':'')+totalDiff.toFixed(0)+'</span></td>';
+  const gCls = totalDiffG > 0 ? 'diff-pos' : totalDiffG < 0 ? 'diff-neg' : 'diff-zero';
+  const lCls = totalDiffL > 0 ? 'diff-pos' : totalDiffL < 0 ? 'diff-neg' : 'diff-zero';
+  h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
+  h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
   h += '<td colspan="2"></td></tr>';
 
   h += '</tbody></table></div>';
@@ -1859,7 +1889,6 @@ function renderTeams() {{
 
 function render() {{
   document.getElementById('tab-captains').innerHTML = tab === 'captains' ? renderCaptains() : '';
-  document.getElementById('tab-ownership').innerHTML = tab === 'ownership' ? renderOwnership() : '';
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
