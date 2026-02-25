@@ -904,47 +904,19 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
         captain_id = None
 
         # Szukamy wzorca: $squad.push({ ... }); — startowi (11)
-        pattern = r'squad\.push\(\{(.*?)\}\);'
+        pattern = r'\$squad\.push\(\{(.*?)\}\);'
         matches = re.findall(pattern, html, re.DOTALL)
 
-        # Szukamy wzorca: $bench.push({ ... }); — ławka (4)
-        bench_pattern = r'bench\.push\(\{(.*?)\}\);'
-        bench_matches = re.findall(bench_pattern, html, re.DOTALL)
+        # Szukamy wzorca: $subs.push({ ... }); — ławka (4)
+        subs_pattern = r'\$subs\.push\(\{(.*?)\}\);'
+        subs_matches = re.findall(subs_pattern, html, re.DOTALL)
 
         if debug:
-            print(f"      DEBUG {slug}: squad.push={len(matches)}, bench.push={len(bench_matches)}")
-            # Pokaż WSZYSTKIE .push() wzorce w HTML
-            all_pushes = re.findall(r'(\$?\w+(?:\.\$?\w+)*)\.push\(\{', html)
-            print(f"      DEBUG wszystkie .push(): {all_pushes}")
-            # Szukaj "bench" w jakimkolwiek kontekście
-            bench_refs = [(m.start(), html[max(0,m.start()-30):m.start()+80]) for m in re.finditer(r'bench', html, re.IGNORECASE)]
-            if bench_refs:
-                for pos, ctx in bench_refs[:5]:
-                    print(f"      DEBUG bench @{pos}: {ctx}")
-            else:
-                print(f"      DEBUG 'bench' NIE ZNALEZIONE w HTML")
-            # Szukaj "reserve" / "rezerw" / "substitute" / "sub"
-            for keyword in ["reserv", "rezerw", "substitut", "ławk", "lawka"]:
-                refs = [(m.start(), html[max(0,m.start()-40):m.start()+80]) for m in re.finditer(keyword, html, re.IGNORECASE)]
-                if refs:
-                    for pos, ctx in refs[:3]:
-                        print(f"      DEBUG '{keyword}' @{pos}: {ctx}")
-            # Pokaż cały blok JS wokół squad.push (szukamy skryptu)
-            sq_idx = html.find("squad.push")
-            if sq_idx >= 0:
-                # Znajdź koniec sekcji z push (następne 3000 znaków po ostatnim push)
-                last_push_idx = html.rfind(".push(", 0, sq_idx + 5000)
-                js_block = html[max(0, sq_idx - 100):min(len(html), last_push_idx + 500)]
-                print(f"      DEBUG JS block ({len(js_block)} chars): ...{js_block[-800:]}...")
-            # Zapisz pełny HTML pierwszej drużyny do pliku
-            try:
-                html_dump = os.path.join(OUTPUT_DIR, f"debug_team_{slug}.html")
-                with open(html_dump, "w", encoding="utf-8") as f:
-                    f.write(html)
-                print(f"      DEBUG HTML zapisany do: {html_dump}")
-            except Exception:
-                pass
-            print(f"      DEBUG HTML length: {len(html)}")
+            print(f"      DEBUG {slug}: squad.push={len(matches)}, subs.push={len(subs_matches)}")
+            if not matches and not subs_matches:
+                all_pushes = re.findall(r'(\$?\w+(?:\.\$?\w+)*)\.push\(\{', html)
+                print(f"      DEBUG wszystkie .push(): {all_pushes}")
+                print(f"      DEBUG HTML length: {len(html)}")
 
         def _parse_player(match, is_reserve=False):
             pid = re.search(r'"id"\s*:\s*(\d+)', match)
@@ -981,14 +953,14 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
             players.append(p)
 
         # Parsuj ławkę
-        for match in bench_matches:
+        for match in subs_matches:
             p, is_cap, pid = _parse_player(match, is_reserve=True)
             if is_cap and pid:
                 captain_id = pid
             players.append(p)
 
-        # Fallback: jeśli nie było bench.push, ale jest >11 graczy, użyj indeksu
-        if not bench_matches and len(players) > 11:
+        # Fallback: jeśli nie było subs.push, ale jest >11 graczy, użyj indeksu
+        if not subs_matches and len(players) > 11:
             for i, p in enumerate(players):
                 if i >= 11:
                     p["is_reserve"] = True
@@ -997,7 +969,7 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
             cap_name = next((p["name"] for p in players if p["is_captain"]), "brak")
             reserves = sum(1 for p in players if p["is_reserve"])
             print(f"      DEBUG kapitan: {cap_name}, graczy: {len(players)}, "
-                  f"rezerwa: {reserves}, bench.push: {len(bench_matches)}")
+                  f"rezerwa: {reserves}, subs.push: {len(subs_matches)}")
 
         return {
             "slug": slug,
