@@ -903,12 +903,16 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
         players = []
         captain_id = None
 
-        # Szukamy wzorca: app.Pitch.$squad.push({ ... });
+        # Szukamy wzorca: $squad.push({ ... }); — startowi (11)
         pattern = r'squad\.push\(\{(.*?)\}\);'
         matches = re.findall(pattern, html, re.DOTALL)
 
+        # Szukamy wzorca: $bench.push({ ... }); — ławka (4)
+        bench_pattern = r'bench\.push\(\{(.*?)\}\);'
+        bench_matches = re.findall(bench_pattern, html, re.DOTALL)
+
         if debug:
-            print(f"      DEBUG {slug}: znaleziono {len(matches)} zawodników w $squad.push")
+            print(f"      DEBUG {slug}: squad.push={len(matches)}, bench.push={len(bench_matches)}")
             if not matches:
                 has_squad = "squad" in html
                 has_player = "player" in html.lower()
@@ -919,8 +923,11 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
                     print(f"      DEBUG kontekst squad: ...{html[max(0,idx-50):idx+200]}...")
                 else:
                     print(f"      DEBUG HTML (500 znaków): {html[:500]}")
+                # Pokaż wszystkie .push() wzorce
+                all_pushes = re.findall(r'(\w+)\.push\(\{', html)
+                print(f"      DEBUG wszystkie .push(): {all_pushes[:20]}")
 
-        for match in matches:
+        def _parse_player(match, is_reserve=False):
             pid = re.search(r'"id"\s*:\s*(\d+)', match)
             name = re.search(r'"name"\s*:\s*"([^"]*)"', match)
             pos = re.search(r'"pos"\s*:\s*(\d+)', match)
@@ -933,18 +940,9 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
             player_id = pid.group(1) if pid else None
             is_captain = captain.group(1) == "true" if captain else False
             is_subcaptain = subcaptain.group(1) == "true" if subcaptain else False
-
-            if is_captain and player_id:
-                captain_id = player_id
-
             points_text = points_match.group(1).strip() if points_match else ""
 
-            # Sprawdź pole bench/starting/substitute
-            bench = re.search(r'"bench"\s*:\s*(true|false)', match)
-            starting = re.search(r'"starting"\s*:\s*(true|false)', match)
-            is_bench = bench.group(1) == "true" if bench else None
-
-            players.append({
+            return {
                 "player_id": player_id,
                 "name": name.group(1) if name else "",
                 "position_id": pos.group(1) if pos else "",
@@ -952,13 +950,26 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
                 "points": _safe_int(points_text) if points_text and points_text != "-" else 0,
                 "is_captain": is_captain,
                 "is_subcaptain": is_subcaptain,
-                "is_reserve": is_bench if is_bench is not None else False,
+                "is_reserve": is_reserve,
                 "status": status.group(1) if status else "",
-            })
+            }, is_captain, player_id
 
-        # Jeśli nie było pola "bench", użyj indeksu (11+ = rezerwa)
-        has_bench_field = any(re.search(r'"bench"', m) for m in matches)
-        if not has_bench_field:
+        # Parsuj startowych
+        for match in matches:
+            p, is_cap, pid = _parse_player(match, is_reserve=False)
+            if is_cap and pid:
+                captain_id = pid
+            players.append(p)
+
+        # Parsuj ławkę
+        for match in bench_matches:
+            p, is_cap, pid = _parse_player(match, is_reserve=True)
+            if is_cap and pid:
+                captain_id = pid
+            players.append(p)
+
+        # Fallback: jeśli nie było bench.push, ale jest >11 graczy, użyj indeksu
+        if not bench_matches and len(players) > 11:
             for i, p in enumerate(players):
                 if i >= 11:
                     p["is_reserve"] = True
@@ -966,10 +977,8 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
         if debug and players:
             cap_name = next((p["name"] for p in players if p["is_captain"]), "brak")
             reserves = sum(1 for p in players if p["is_reserve"])
-            statuses = set(p["status"] for p in players)
             print(f"      DEBUG kapitan: {cap_name}, graczy: {len(players)}, "
-                  f"rezerwa: {reserves}, statusy: {statuses}, "
-                  f"pole bench: {has_bench_field}")
+                  f"rezerwa: {reserves}, bench.push: {len(bench_matches)}")
 
         return {
             "slug": slug,
@@ -1416,6 +1425,16 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .rc-cap {{ background: #fbbf24; color: #0f172a; }}
 .rc-res {{ background: #475569; color: #e2e8f0; }}
 .rc-xi {{ background: #22d3ee; color: #0f172a; }}
+.form-chart {{
+  display: inline-flex; align-items: flex-end; gap: 2px; height: 28px; vertical-align: middle;
+}}
+.form-bar {{
+  width: 8px; border-radius: 2px 2px 0 0; min-height: 2px; position: relative;
+  display: inline-flex; align-items: flex-start; justify-content: center;
+}}
+.form-bar .form-val {{
+  position: absolute; top: -14px; font-size: 8px; color: #94a3b8; white-space: nowrap;
+}}
 </style>
 </head>
 <body>
@@ -1541,16 +1560,19 @@ function nameCell(name, style, prefix) {{
 function rosterRow(name, colspan) {{
   const r = ROSTERS[name];
   if (!r || !r.length) return '';
+  // Sortuj po pozycji w lidze
+  const sorted = [...r].sort((a,b) => (a.pos||999) - (b.pos||999));
   let chips = '';
-  r.forEach(t => {{
+  sorted.forEach(t => {{
     let badge = '';
     if (t.C) badge = '<span class="rc-badge rc-cap">C</span>';
     else if (t.R) badge = '<span class="rc-badge rc-res">RES</span>';
     else badge = '<span class="rc-badge rc-xi">XI</span>';
     const slug = t.team.replace(/-/g,' ');
-    chips += '<span class="roster-chip">'+slug+' '+badge+'</span>';
+    const posLabel = t.pos ? '<span style="color:#64748b;font-size:10px;margin-right:2px">#'+t.pos+'</span>' : '';
+    chips += '<span class="roster-chip">'+posLabel+slug+' '+badge+'</span>';
   }});
-  return '<tr class="roster-row"><td colspan="'+colspan+'"><div class="roster-panel"><span class="rp-label">Liga:</span>'+chips+'</div></td></tr>';
+  return '<tr class="roster-row"><td colspan="'+colspan+'"><div class="roster-panel"><span class="rp-label">Liga ('+r.length+'):</span>'+chips+'</div></td></tr>';
 }}
 function attachRosterClicks() {{
   document.querySelectorAll('.roster-trigger').forEach(td => {{
@@ -1570,6 +1592,20 @@ function attachRosterClicks() {{
       row.insertAdjacentHTML('afterend', rosterRow(name, cols));
     }};
   }});
+}}
+
+function formChart(form) {{
+  if (!form || !form.length) return '<span class="c-dim" style="font-size:11px">—</span>';
+  const maxPts = Math.max(...form.map(f => Math.abs(f.pts)), 1);
+  let h = '<div class="form-chart" title="Ostatnie '+form.length+' kolejek">';
+  form.forEach(f => {{
+    const pts = f.pts || 0;
+    const ht = Math.max(Math.abs(pts) / maxPts * 24, 2);
+    const c = pts >= 8 ? '#22d3ee' : pts >= 4 ? '#10b981' : pts >= 0 ? '#64748b' : '#ef4444';
+    h += '<div class="form-bar" style="height:'+ht+'px;background:'+c+'"><span class="form-val">'+pts+'</span></div>';
+  }});
+  h += '</div>';
+  return h;
 }}
 
 function renderCaptains() {{
@@ -1649,19 +1685,22 @@ function renderPlayers() {{
   h += '<th class="text-right sortable" data-tab="players" data-col="total_points">Punkty'+arrow('players','total_points')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct">Pop.'+arrow('players','popularity_pct')+'</th>';
+  h += '<th class="text-center sortable" data-tab="players" data-col="_form_avg" style="min-width:80px">Forma'+arrow('players','_form_avg')+'</th>';
   if (hasOwn) {{
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad">Skład %'+arrow('players','_own_squad')+'</th>';
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_captain">Kap %'+arrow('players','_own_captain')+'</th>';
   }}
   h += '</tr></thead><tbody>';
 
-  // Dodaj dane ownership do sortowania
+  // Dodaj dane ownership i formę do sortowania
   data.forEach(p => {{
     const o = ownMap[p.name];
     p._own_squad = o ? num(o.squad_pct) : 0;
     p._own_captain = o ? num(o.captain_pct) : 0;
+    const f = p.form || [];
+    p._form_avg = f.length ? f.reduce((s,x) => s + (x.pts||0), 0) / f.length : 0;
   }});
-  // Re-sort po dodaniu pól ownership
+  // Re-sort po dodaniu pól
   data = sortData(data, 'players');
 
   data.forEach((p, i) => {{
@@ -1677,6 +1716,7 @@ function renderPlayers() {{
     h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
     h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
     h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
+    h += '<td class="text-center">'+formChart(p.form)+'</td>';
     if (hasOwn) {{
       const sq = p._own_squad, cp = p._own_captain;
       h += '<td>'+( sq > 0 ? bar(sq, 100, '#10b981') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
@@ -1782,6 +1822,13 @@ def main():
         pts = p.get("total_points", 0) or 0
         price = p.get("price", 0) or 0
         ppp = round(pts / price, 2) if price > 0 else 0
+
+        # Ostatnie 5 rozegranych kolejek (forma)
+        rounds = p.get("rounds", [])
+        played_rounds = [r for r in rounds if r.get("played")]
+        last5 = played_rounds[-5:] if played_rounds else []
+        form = [{"r": r.get("round", 0), "pts": r.get("points", 0)} for r in last5]
+
         summary_data.append({
             "player_id": p.get("player_id"),
             "name": p.get("name", ""),
@@ -1792,6 +1839,7 @@ def main():
             "points_per_price": ppp,
             "popularity_pct": p.get("popularity_pct", ""),
             "stats_url": p.get("stats_url", ""),
+            "form": form,
         })
     summary_data.sort(key=lambda x: x.get("total_points", 0) or 0, reverse=True)
     csv_file = os.path.join(OUTPUT_DIR, f"fantasy_players_{timestamp}.csv")
@@ -1882,10 +1930,11 @@ def main():
             league_ownership_stats = generate_squad_stats(league_results, league_ownership_file)
 
     # 8. Dashboard HTML
-    # Buduj mapę roster ligi: zawodnik → lista drużyn
+    # Buduj mapę roster ligi: zawodnik → lista drużyn (z pozycją w lidze)
     league_rosters = {}
     for team in league_results:
         slug = team.get("team_slug", "")
+        rank = team.get("ranking_position", "")
         for p in team.get("squad", []):
             name = p.get("name", "")
             if not name:
@@ -1894,6 +1943,7 @@ def main():
                 league_rosters[name] = []
             league_rosters[name].append({
                 "team": slug,
+                "pos": rank,
                 "C": p.get("is_captain", False),
                 "R": p.get("is_reserve", False),
             })
