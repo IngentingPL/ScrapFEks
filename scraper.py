@@ -1231,6 +1231,7 @@ def generate_dashboard_html(
     league_name: str,
     league_teams_count: int,
     league_rosters: dict,
+    league_teams_detail: list[dict],
     timestamp: str,
     filename: str,
 ):
@@ -1271,6 +1272,7 @@ def generate_dashboard_html(
     data_json = json.dumps(scopes_data, ensure_ascii=False)
     players_json = json.dumps(summary_data, ensure_ascii=False)
     rosters_json = json.dumps(league_rosters, ensure_ascii=False)
+    teams_detail_json = json.dumps(league_teams_detail, ensure_ascii=False)
 
     # For stat cards
     all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))
@@ -1435,6 +1437,24 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .form-bar .form-val {{
   position: absolute; top: -14px; font-size: 8px; color: #94a3b8; white-space: nowrap;
 }}
+.team-select {{
+  background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 8px;
+  padding: 8px 14px; font-size: 14px; font-family: inherit; cursor: pointer;
+  min-width: 280px; margin-bottom: 16px;
+}}
+.team-select:focus {{ outline: none; border-color: #22d3ee; }}
+.diff-badge {{
+  display: inline-block; font-size: 12px; font-weight: 700; border-radius: 4px;
+  padding: 2px 8px; min-width: 48px; text-align: center;
+}}
+.diff-pos {{ background: rgba(16,185,129,0.15); color: #10b981; }}
+.diff-neg {{ background: rgba(239,68,68,0.15); color: #ef4444; }}
+.diff-zero {{ background: rgba(100,116,139,0.15); color: #94a3b8; }}
+.team-header {{
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;
+}}
+.team-stat {{ font-size: 13px; color: #94a3b8; }}
+.team-stat b {{ color: #e2e8f0; }}
 </style>
 </head>
 <body>
@@ -1474,6 +1494,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       <button class="tab active" data-tab="captains">👑 Kapitanowie</button>
       <button class="tab" data-tab="ownership">👥 Ownership</button>
       <button class="tab" data-tab="players">⚽ Zawodnicy</button>
+      {"<button class='tab' data-tab='teams'>📋 Drużyny ligi</button>" if has_league else ""}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
@@ -1488,6 +1509,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
     <div id="tab-captains" class="tab-content active"></div>
     <div id="tab-ownership" class="tab-content"></div>
     <div id="tab-players" class="tab-content"></div>
+    <div id="tab-teams" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
@@ -1496,12 +1518,14 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 const DATA = {data_json};
 const PLAYERS = {players_json};
 const ROSTERS = {rosters_json};
+const LEAGUE_TEAMS = {teams_detail_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
   Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
 
 let tab = 'captains', pos = 'ALL', scope = '{default_scope}';
+let selectedTeam = '';
 let sorts = {{
   captains: {{col:'captain_count', dir:'desc'}},
   ownership: {{col:'in_squad_count', dir:'desc'}},
@@ -1667,11 +1691,11 @@ function renderPlayers() {{
   data = sortData(data, 'players');
   if (!data.length) return '<div class="empty-msg">Brak danych</div>';
 
-  // Buduj lookup ownership z aktualnego scope
+  // Buduj lookup ownership z aktualnego scope — dopasowanie po player_id
   const scopeData = DATA[scope] || {{}};
   const ownData = scopeData.ownership || [];
   const ownMap = {{}};
-  ownData.forEach(o => {{ ownMap[o.name] = o; }});
+  ownData.forEach(o => {{ ownMap[o.player_id] = o; }});
   const hasOwn = ownData.length > 0;
   const scopeLabel = scopeData.label || scope;
 
@@ -1694,7 +1718,7 @@ function renderPlayers() {{
 
   // Dodaj dane ownership i formę do sortowania
   data.forEach(p => {{
-    const o = ownMap[p.name];
+    const o = ownMap[p.player_id];
     p._own_squad = o ? num(o.squad_pct) : 0;
     p._own_captain = o ? num(o.captain_pct) : 0;
     const f = p.form || [];
@@ -1728,10 +1752,116 @@ function renderPlayers() {{
   return h;
 }}
 
+// Oblicz średnie punkty per pozycja (wykluczając <=0)
+const POS_AVGS = {{}};
+(function() {{
+  const sums = {{}}, counts = {{}};
+  PLAYERS.forEach(p => {{
+    const pk = POS_ID[p.position] || p.position || '';
+    const pts = p.total_points || 0;
+    if (pts > 0 && pk) {{
+      sums[pk] = (sums[pk] || 0) + pts;
+      counts[pk] = (counts[pk] || 0) + 1;
+    }}
+  }});
+  for (const k in sums) POS_AVGS[k] = sums[k] / counts[k];
+}})();
+
+function renderTeams() {{
+  if (!LEAGUE_TEAMS.length) return '<div class="empty-msg">Brak danych o drużynach ligi</div>';
+
+  let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Drużyny ligi</h2><div class="line"></div></div>';
+
+  // Dropdown
+  h += '<select class="team-select" id="teamSelect">';
+  h += '<option value="">— Wybierz drużynę —</option>';
+  LEAGUE_TEAMS.forEach(t => {{
+    const sel = t.slug === selectedTeam ? ' selected' : '';
+    h += '<option value="'+t.slug+'"'+sel+'>#'+t.rank+' '+t.slug.replace(/-/g,' ')+' ('+t.pts+' pkt)</option>';
+  }});
+  h += '</select>';
+
+  const team = LEAGUE_TEAMS.find(t => t.slug === selectedTeam);
+  if (!team) return h + '<div class="empty-msg" style="padding:20px;color:#64748b">Wybierz drużynę z listy powyżej</div>';
+
+  // Team header
+  h += '<div class="team-header">';
+  h += '<div class="team-stat">Pozycja: <b>#'+team.rank+'</b></div>';
+  h += '<div class="team-stat">Punkty: <b>'+team.pts+'</b></div>';
+  h += '<div class="team-stat">Zawodników: <b>'+team.players.length+'</b></div>';
+  h += '</div>';
+
+  // Tabela zawodników
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left">#</th>';
+  h += '<th class="text-left">Zawodnik</th>';
+  h += '<th class="text-center">Poz</th>';
+  h += '<th class="text-right">Cena</th>';
+  h += '<th class="text-right">Punkty</th>';
+  h += '<th class="text-right">Śr. poz.</th>';
+  h += '<th class="text-center">vs Średnia</th>';
+  h += '<th class="text-center" style="min-width:80px">Forma</th>';
+  h += '<th class="text-center">Rola</th>';
+  h += '</tr></thead><tbody>';
+
+  // Startowi, potem rezerwowi
+  const starters = team.players.filter(p => !p.R);
+  const reserves = team.players.filter(p => p.R);
+
+  function renderRow(p, idx) {{
+    const pk = POS_ID[p.pos] || p.pos || '';
+    const pts = p.pts || 0;
+    const avg = POS_AVGS[pk] || 0;
+    const diff = avg > 0 ? pts - avg : 0;
+    const diffCls = diff > 0 ? 'diff-pos' : diff < 0 ? 'diff-neg' : 'diff-zero';
+    const diffStr = diff > 0 ? '+'+diff.toFixed(0) : diff.toFixed(0);
+    const price = p.price || 0;
+    let role = '';
+    if (p.C) role = '<span class="rc-badge rc-cap" style="font-size:11px;padding:2px 6px">C</span>';
+    else if (p.R) role = '<span class="rc-badge rc-res" style="font-size:11px;padding:2px 6px">RES</span>';
+    else role = '<span class="rc-badge rc-xi" style="font-size:11px;padding:2px 6px">XI</span>';
+
+    h += '<tr><td class="c-muted fw-600">'+(idx+1)+'</td>';
+    h += nameCell(p.name, 'font-weight:600');
+    h += '<td class="text-center">'+posBadge(pk)+'</td>';
+    h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
+    h += '<td class="text-right fw-700">'+pts+'</td>';
+    h += '<td class="text-right c-dim" style="font-size:12px">'+(avg > 0 ? avg.toFixed(0) : '—')+'</td>';
+    h += '<td class="text-center"><span class="diff-badge '+diffCls+'">'+diffStr+'</span></td>';
+    h += '<td class="text-center">'+formChart(p.form)+'</td>';
+    h += '<td class="text-center">'+role+'</td>';
+    h += '</tr>';
+  }}
+
+  starters.forEach((p, i) => renderRow(p, i));
+  if (reserves.length) {{
+    h += '<tr><td colspan="9" style="padding:6px 0;border-top:1px dashed #334155"><span class="c-dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Ławka rezerwowych</span></td></tr>';
+    reserves.forEach((p, i) => renderRow(p, starters.length + i));
+  }}
+
+  // Podsumowanie
+  const totalPts = team.players.filter(p => !p.R).reduce((s,p) => s + (p.pts||0), 0);
+  const totalDiff = team.players.reduce((s,p) => {{
+    const pk = POS_ID[p.pos] || p.pos || '';
+    const avg = POS_AVGS[pk] || 0;
+    return s + ((p.pts||0) - avg);
+  }}, 0);
+  const tdCls = totalDiff > 0 ? 'diff-pos' : totalDiff < 0 ? 'diff-neg' : 'diff-zero';
+  h += '<tr style="border-top:2px solid #334155"><td colspan="4" class="fw-700" style="text-align:right;padding-top:10px">Razem (startowi):</td>';
+  h += '<td class="text-right fw-700" style="padding-top:10px">'+totalPts+'</td>';
+  h += '<td></td>';
+  h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+tdCls+'">'+(totalDiff>0?'+':'')+totalDiff.toFixed(0)+'</span></td>';
+  h += '<td colspan="2"></td></tr>';
+
+  h += '</tbody></table></div>';
+  return h;
+}}
+
 function render() {{
   document.getElementById('tab-captains').innerHTML = tab === 'captains' ? renderCaptains() : '';
   document.getElementById('tab-ownership').innerHTML = tab === 'ownership' ? renderOwnership() : '';
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
+  document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
@@ -1747,6 +1877,9 @@ function render() {{
   }});
   // Attach roster click handlers
   attachRosterClicks();
+  // Team select handler
+  const sel = document.getElementById('teamSelect');
+  if (sel) sel.onchange = () => {{ selectedTeam = sel.value; render(); }};
 }}
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {{ tab = t.dataset.tab; render(); }}));
@@ -1932,13 +2065,23 @@ def main():
     # 8. Dashboard HTML
     # Buduj mapę roster ligi: zawodnik → lista drużyn (z pozycją w lidze)
     league_rosters = {}
+    # Buduj pełne dane drużyn ligi do nowej zakładki
+    league_teams_detail = []
+    # Lookup player_id → pełne dane gracza z API statystyk
+    player_lookup = {str(p.get("player_id")): p for p in players} if players else {}
+
     for team in league_results:
         slug = team.get("team_slug", "")
         rank = team.get("ranking_position", "")
+        team_pts = team.get("team_points", 0)
+
+        team_players = []
         for p in team.get("squad", []):
             name = p.get("name", "")
+            pid = p.get("player_id", "")
             if not name:
                 continue
+            # Roster map
             if name not in league_rosters:
                 league_rosters[name] = []
             league_rosters[name].append({
@@ -1947,6 +2090,32 @@ def main():
                 "C": p.get("is_captain", False),
                 "R": p.get("is_reserve", False),
             })
+            # Dane gracza z API statystyk (pełne punkty, pozycja tekstowa)
+            full = player_lookup.get(str(pid), {})
+            team_players.append({
+                "pid": pid,
+                "name": name,
+                "pos": full.get("position", "") or p.get("position_id", ""),
+                "pts": full.get("total_points", 0) or 0,
+                "price": full.get("price", 0) or p.get("price", 0),
+                "C": p.get("is_captain", False),
+                "R": p.get("is_reserve", False),
+                "form": [],
+            })
+            # Dodaj formę
+            pr = full.get("rounds", [])
+            played = [r for r in pr if r.get("played")]
+            last5 = played[-5:] if played else []
+            team_players[-1]["form"] = [{"r": r.get("round", 0), "pts": r.get("points", 0)} for r in last5]
+
+        league_teams_detail.append({
+            "slug": slug,
+            "rank": rank,
+            "pts": team_pts,
+            "players": team_players,
+        })
+    # Sortuj po pozycji
+    league_teams_detail.sort(key=lambda t: t.get("rank") or 999)
 
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
@@ -1958,6 +2127,7 @@ def main():
         league_name=LEAGUE_SLUG or "",
         league_teams_count=len(league_teams) if LEAGUE_SLUG and league_teams else 0,
         league_rosters=league_rosters,
+        league_teams_detail=league_teams_detail,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
