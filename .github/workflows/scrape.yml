@@ -6,7 +6,7 @@ on:
       max_players:
         description: 'Maksymalna liczba zawodników'
         required: false
-        default: '100'
+        default: '4000'
       target_round:
         description: 'Numer kolejki (puste = ostatnia)'
         required: false
@@ -14,7 +14,7 @@ on:
       teams_to_scrape:
         description: 'Ile drużyn z rankingu scrapować (kapitanowie/ownership)'
         required: false
-        default: '100'
+        default: '1000'
       league_slug:
         description: 'Slug ligi prywatnej (puste = pomiń)'
         required: false
