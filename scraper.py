@@ -1366,6 +1366,7 @@ th {{
 }}
 th.sortable {{ cursor: pointer; user-select: none; }}
 th.sortable:hover {{ color: #94a3b8; }}
+th.sortable[title] {{ cursor: help; border-bottom: 1px dashed #475569; }}
 td {{ padding: 10px 14px; border-top: 1px solid #0f172a; white-space: nowrap; }}
 tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .pos-badge {{
@@ -1399,14 +1400,6 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .empty-msg {{ padding: 40px; text-align: center; color: #64748b; }}
 .clickable {{ cursor: pointer; }}
 .clickable:hover {{ color: #22d3ee; }}
-.roster-row td {{ padding: 0 !important; border-top: none !important; }}
-.roster-panel {{
-  background: #162032; padding: 10px 16px 10px 48px;
-  border-left: 3px solid #22d3ee; margin: 0;
-  display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
-  font-size: 12px;
-}}
-.roster-panel .rp-label {{ color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; margin-right: 4px; }}
 .roster-chip {{
   display: inline-flex; align-items: center; gap: 4px;
   background: #1e293b; border: 1px solid #334155; border-radius: 6px;
@@ -1418,16 +1411,36 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .rc-cap {{ background: #fbbf24; color: #0f172a; }}
 .rc-res {{ background: #475569; color: #e2e8f0; }}
 .rc-xi {{ background: #22d3ee; color: #0f172a; }}
+.form-panel {{
+  background: #0f172a; border: 1px solid #1e293b; border-radius: 8px;
+  padding: 12px 16px; display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+}}
 .form-chart {{
-  display: inline-flex; align-items: flex-end; gap: 2px; height: 28px; vertical-align: middle;
+  display: inline-flex; align-items: flex-end; gap: 3px; height: 48px; vertical-align: middle;
 }}
 .form-bar {{
-  width: 8px; border-radius: 2px 2px 0 0; min-height: 2px; position: relative;
-  display: inline-flex; align-items: flex-start; justify-content: center;
+  width: 14px; border-radius: 3px 3px 0 0; min-height: 2px; position: relative;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-start;
 }}
 .form-bar .form-val {{
-  position: absolute; top: -14px; font-size: 8px; color: #94a3b8; white-space: nowrap;
+  position: absolute; top: -16px; font-size: 10px; color: #e2e8f0; font-weight: 600; white-space: nowrap;
 }}
+.form-bar .form-rnd {{
+  position: absolute; bottom: -16px; font-size: 9px; color: #64748b; white-space: nowrap;
+}}
+.form-bar.not-played {{ opacity: 0.35; border: 1px dashed #475569; background: transparent !important; }}
+.form-avg {{
+  display: flex; flex-direction: column; align-items: center; margin-left: 8px;
+}}
+.form-avg .fa-val {{ font-size: 20px; font-weight: 800; color: #22d3ee; }}
+.form-avg .fa-lbl {{ font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }}
+.detail-row td {{ padding: 0 !important; border-top: none !important; }}
+.detail-panel {{
+  background: #0f172a; border: 1px solid #1e293b; border-radius: 8px;
+  padding: 12px 16px; margin: 4px 0 8px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;
+}}
+.detail-section {{ display: flex; flex-direction: column; gap: 4px; }}
+.detail-section .ds-label {{ font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }}
 .team-select {{
   background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 8px;
   padding: 8px 14px; font-size: 14px; font-family: inherit; cursor: pointer;
@@ -1518,6 +1531,7 @@ let selectedTeam = '';
 let sorts = {{
   captains: {{col:'captain_count', dir:'desc'}},
   players: {{col:'total_points', dir:'desc'}},
+  teams: {{col:'_pos_order', dir:'asc'}},
 }};
 
 function num(v) {{ return typeof v === 'string' ? parseFloat(v) || 0 : v || 0; }}
@@ -1559,64 +1573,106 @@ function sortData(data, tab) {{
   }});
 }}
 
-// Roster detail — kliknięcie na zawodnika pokazuje drużyny z ligi
+// Detail panel — kliknięcie na zawodnika pokazuje formę + drużyny z ligi
 function nameCell(name, style, prefix) {{
-  const r = ROSTERS[name];
-  const hasRoster = r && r.length > 0;
-  const cls = hasRoster ? 'clickable roster-trigger' : '';
-  const icon = hasRoster ? ' <span style="font-size:10px;color:#64748b">▸</span>' : '';
-  // Użyj data-name z base64 żeby uniknąć problemów z cudzysłowami
-  const attr = hasRoster ? ' data-pname="'+btoa(unescape(encodeURIComponent(name)))+'"' : '';
-  return '<td class="'+cls+'"'+attr+' style="'+(style||'')+'">'+( prefix||'')+name+icon+'</td>';
+  // Zawsze klikalne — forma lub roster
+  const attr = ' data-pname="'+btoa(unescape(encodeURIComponent(name)))+'"';
+  return '<td class="clickable roster-trigger"'+attr+' style="cursor:pointer;'+(style||'')+'">'+( prefix||'')+name+' <span style="font-size:10px;color:#64748b">▸</span></td>';
 }}
-function rosterRow(name, colspan) {{
-  const r = ROSTERS[name];
-  if (!r || !r.length) return '';
-  // Sortuj po pozycji w lidze
-  const sorted = [...r].sort((a,b) => (a.pos||999) - (b.pos||999));
-  let chips = '';
-  sorted.forEach(t => {{
-    let badge = '';
-    if (t.C) badge = '<span class="rc-badge rc-cap">C</span>';
-    else if (t.R) badge = '<span class="rc-badge rc-res">RES</span>';
-    else badge = '<span class="rc-badge rc-xi">XI</span>';
-    const slug = t.team.replace(/-/g,' ');
-    const posLabel = t.pos ? '<span style="color:#64748b;font-size:10px;margin-right:2px">#'+t.pos+'</span>' : '';
-    chips += '<span class="roster-chip">'+posLabel+slug+' '+badge+'</span>';
-  }});
-  return '<tr class="roster-row"><td colspan="'+colspan+'"><div class="roster-panel"><span class="rp-label">Liga ('+r.length+'):</span>'+chips+'</div></td></tr>';
-}}
-function attachRosterClicks() {{
+function attachDetailClicks() {{
   document.querySelectorAll('.roster-trigger').forEach(td => {{
     td.onclick = function() {{
       const encoded = this.dataset.pname;
       const name = decodeURIComponent(escape(atob(encoded)));
       const row = this.closest('tr');
       const next = row.nextElementSibling;
-      // Toggle — zamknij jeśli już otwarty
-      if (next && next.classList.contains('roster-row')) {{
+      if (next && next.classList.contains('detail-row')) {{
         next.remove();
         return;
       }}
-      // Zamknij inne otwarte
-      document.querySelectorAll('.roster-row').forEach(r => r.remove());
+      document.querySelectorAll('.detail-row').forEach(r => r.remove());
       const cols = row.querySelectorAll('td').length;
-      row.insertAdjacentHTML('afterend', rosterRow(name, cols));
+      // Znajdź dane formy — szukaj w PLAYERS lub LEAGUE_TEAMS
+      let form = null;
+      const pl = PLAYERS.find(p => p.name === name);
+      if (pl) form = pl.form;
+      if (!form) {{
+        for (const t of LEAGUE_TEAMS) {{
+          const tp = t.players.find(p => p.name === name);
+          if (tp) {{ form = tp.form; break; }}
+        }}
+      }}
+      row.insertAdjacentHTML('afterend', detailRow(name, form, cols));
     }};
   }});
 }}
 
 function formChart(form) {{
-  if (!form || !form.length) return '<span class="c-dim" style="font-size:11px">—</span>';
-  const maxPts = Math.max(...form.map(f => Math.abs(f.pts)), 1);
-  let h = '<div class="form-chart" title="Ostatnie '+form.length+' kolejek">';
+  if (!form || !form.length) return '';
+  const SCALE = 15; // stała skala: 15 pkt = max wysokość
+  const MAX_H = 40;
+  let h = '<div class="form-chart">';
   form.forEach(f => {{
     const pts = f.pts || 0;
-    const ht = Math.max(Math.abs(pts) / maxPts * 24, 2);
-    const c = pts >= 8 ? '#22d3ee' : pts >= 4 ? '#10b981' : pts >= 0 ? '#64748b' : '#ef4444';
-    h += '<div class="form-bar" style="height:'+ht+'px;background:'+c+'"><span class="form-val">'+pts+'</span></div>';
+    const played = f.p !== false;
+    const ht = Math.max(Math.abs(pts) / SCALE * MAX_H, 2);
+    const c = !played ? '#334155' : pts >= 8 ? '#22d3ee' : pts >= 4 ? '#10b981' : pts >= 0 ? '#64748b' : '#ef4444';
+    const np = !played ? ' not-played' : '';
+    h += '<div class="form-bar'+np+'" style="height:'+ht+'px;background:'+c+'">';
+    h += '<span class="form-val">'+(played ? pts : '—')+'</span>';
+    h += '<span class="form-rnd">K'+f.r+'</span>';
+    h += '</div>';
   }});
   h += '</div>';
+  return h;
+}}
+
+function formAvg(form) {{
+  if (!form || !form.length) return '—';
+  const played = form.filter(f => f.p !== false);
+  if (!played.length) return '—';
+  const avg = played.reduce((s,f) => s + (f.pts||0), 0) / played.length;
+  return avg.toFixed(1);
+}}
+
+function formAvgNum(form) {{
+  if (!form || !form.length) return 0;
+  const played = form.filter(f => f.p !== false);
+  if (!played.length) return 0;
+  return played.reduce((s,f) => s + (f.pts||0), 0) / played.length;
+}}
+
+function detailRow(name, form, colspan) {{
+  let h = '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-panel">';
+  // Forma
+  if (form && form.length) {{
+    h += '<div class="detail-section">';
+    h += '<span class="ds-label">Forma (ostatnie kolejki)</span>';
+    h += '<div style="display:flex;align-items:flex-end;gap:12px">';
+    h += formChart(form);
+    h += '<div class="form-avg"><span class="fa-val">'+formAvg(form)+'</span><span class="fa-lbl">Średnia</span></div>';
+    h += '</div></div>';
+  }}
+  // Roster
+  const r = ROSTERS[name];
+  if (r && r.length) {{
+    const sorted = [...r].sort((a,b) => (a.pos||999) - (b.pos||999));
+    let chips = '';
+    sorted.forEach(t => {{
+      let badge = '';
+      if (t.C) badge = '<span class="rc-badge rc-cap">C</span>';
+      else if (t.R) badge = '<span class="rc-badge rc-res">RES</span>';
+      else badge = '<span class="rc-badge rc-xi">XI</span>';
+      const slug = t.team.replace(/-/g,' ');
+      const posLabel = t.pos ? '<span style="color:#64748b;font-size:10px;margin-right:2px">#'+t.pos+'</span>' : '';
+      chips += '<span class="roster-chip">'+posLabel+slug+' '+badge+'</span>';
+    }});
+    h += '<div class="detail-section">';
+    h += '<span class="ds-label">Liga ('+r.length+')</span>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:4px">'+chips+'</div>';
+    h += '</div>';
+  }}
+  h += '</div></td></tr>';
   return h;
 }}
 
@@ -1668,12 +1724,12 @@ function renderPlayers() {{
   h += '<th class="text-center sortable" data-tab="players" data-col="position">Poz'+arrow('players','position')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="price">Cena'+arrow('players','price')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="total_points">Punkty'+arrow('players','total_points')+'</th>';
-  h += '<th class="text-center sortable" data-tab="players" data-col="_diff_global" title="Różnica vs średnia pozycji (wszyscy grający)">±Avg'+arrow('players','_diff_global')+'</th>';
+  h += '<th class="text-center sortable" data-tab="players" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('players','_diff_global')+'</th>';
   if (hasLeague) {{
-    h += '<th class="text-center sortable" data-tab="players" data-col="_diff_league" title="Różnica vs średnia pozycji (gracze w lidze)">±Liga'+arrow('players','_diff_league')+'</th>';
+    h += '<th class="text-center sortable" data-tab="players" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('players','_diff_league')+'</th>';
   }}
   h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
-  h += '<th class="text-center sortable" data-tab="players" data-col="_form_avg" style="min-width:80px">Forma'+arrow('players','_form_avg')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek)">Forma'+arrow('players','_form_avg')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct">Pop.'+arrow('players','popularity_pct')+'</th>';
   if (hasOwn) {{
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad" style="min-width:100px">W składzie'+arrow('players','_own_squad')+'</th>';
@@ -1689,7 +1745,8 @@ function renderPlayers() {{
     p._own_starting = o ? num(o.starting_pct) : 0;
     p._own_captain = o ? num(o.captain_pct) : 0;
     const f = p.form || [];
-    p._form_avg = f.length ? f.reduce((s,x) => s + (x.pts||0), 0) / f.length : 0;
+    const played = f.filter(x => x.p !== false);
+    p._form_avg = played.length ? played.reduce((s,x) => s + (x.pts||0), 0) / played.length : 0;
     const pk = POS_ID[p.position] || p.position || '';
     const pts = p.total_points || 0;
     p._diff_global = (POS_AVGS[pk] && pts > 0) ? pts - POS_AVGS[pk] : 0;
@@ -1713,7 +1770,9 @@ function renderPlayers() {{
       h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
     }}
     h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
-    h += '<td class="text-center">'+formChart(p.form)+'</td>';
+    const favg = p._form_avg;
+    const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
+    h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
     if (hasOwn) {{
       const sq = p._own_squad, st = p._own_starting, cp = p._own_captain;
@@ -1794,66 +1853,85 @@ function renderTeams() {{
   h += '</div>';
 
   // Tabela zawodników
+  const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
+  const NCOLS = 8;
+
+  // Wzbogacenie danych o pola sortowalne
+  team.players.forEach(p => {{
+    const pk = POS_ID[p.pos] || p.pos || '';
+    p._pk = pk;
+    p._pos_order = POS_ORDER[pk] || 99;
+    p._diff_global = (POS_AVGS[pk] && (p.pts||0) > 0) ? (p.pts||0) - POS_AVGS[pk] : 0;
+    p._diff_league = (LEAGUE_POS_AVGS[pk] && (p.pts||0) > 0) ? (p.pts||0) - LEAGUE_POS_AVGS[pk] : 0;
+    p._form_avg = formAvgNum(p.form);
+  }});
+
+  function sortGroup(arr) {{
+    const s = sorts.teams;
+    return [...arr].sort((a,b) => {{
+      let av = a[s.col], bv = b[s.col];
+      if (typeof av === 'string') {{
+        if (av < bv) return s.dir === 'desc' ? 1 : -1;
+        if (av > bv) return s.dir === 'desc' ? -1 : 1;
+        return 0;
+      }}
+      av = num(av); bv = num(bv);
+      return s.dir === 'desc' ? bv - av : av - bv;
+    }});
+  }}
+
   h += '<div class="data-table"><table><thead><tr>';
   h += '<th class="text-left">#</th>';
-  h += '<th class="text-left">Zawodnik</th>';
-  h += '<th class="text-center">Poz</th>';
-  h += '<th class="text-right">Cena</th>';
-  h += '<th class="text-right">Punkty</th>';
-  h += '<th class="text-center">±Avg</th>';
-  h += '<th class="text-center">±Liga</th>';
-  h += '<th class="text-center" style="min-width:80px">Forma</th>';
-  h += '<th class="text-center">Rola</th>';
+  h += '<th class="text-left sortable" data-tab="teams" data-col="name">Zawodnik'+arrow('teams','name')+'</th>';
+  h += '<th class="text-center sortable" data-tab="teams" data-col="_pos_order">Poz'+arrow('teams','_pos_order')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams" data-col="price">Cena'+arrow('teams','price')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams" data-col="pts">Punkty'+arrow('teams','pts')+'</th>';
+  h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('teams','_diff_global')+'</th>';
+  h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('teams','_diff_league')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek)">Forma'+arrow('teams','_form_avg')+'</th>';
   h += '</tr></thead><tbody>';
 
-  // Startowi, potem rezerwowi
-  const starters = team.players.filter(p => !p.R);
-  const reserves = team.players.filter(p => p.R);
+  // Startowi, potem rezerwowi — oba sortowane tak samo
+  const starters = sortGroup(team.players.filter(p => !p.R));
+  const reserves = sortGroup(team.players.filter(p => p.R));
 
   function renderRow(p, idx) {{
-    const pk = POS_ID[p.pos] || p.pos || '';
+    const pk = p._pk;
     const pts = p.pts || 0;
     const price = p.price || 0;
-    let role = '';
-    if (p.C) role = '<span class="rc-badge rc-cap" style="font-size:11px;padding:2px 6px">C</span>';
-    else if (p.R) role = '<span class="rc-badge rc-res" style="font-size:11px;padding:2px 6px">RES</span>';
-    else role = '<span class="rc-badge rc-xi" style="font-size:11px;padding:2px 6px">XI</span>';
+    const favg = p._form_avg;
+    const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
+    let nameStyle = 'font-weight:600';
+    if (p.C) nameStyle += ';color:#fbbf24';
 
     h += '<tr><td class="c-muted fw-600">'+(idx+1)+'</td>';
-    h += nameCell(p.name, 'font-weight:600');
+    h += nameCell(p.name, nameStyle, p.C ? '<span class="captain-badge" style="margin-right:4px">C</span> ' : '');
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
     h += '<td class="text-right fw-700">'+pts+'</td>';
     h += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
     h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
-    h += '<td class="text-center">'+formChart(p.form)+'</td>';
-    h += '<td class="text-center">'+role+'</td>';
+    h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '</tr>';
   }}
 
   starters.forEach((p, i) => renderRow(p, i));
   if (reserves.length) {{
-    h += '<tr><td colspan="9" style="padding:6px 0;border-top:1px dashed #334155"><span class="c-dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Ławka rezerwowych</span></td></tr>';
+    h += '<tr><td colspan="'+NCOLS+'" style="padding:6px 0;border-top:1px dashed #334155"><span class="c-dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Ławka rezerwowych</span></td></tr>';
     reserves.forEach((p, i) => renderRow(p, starters.length + i));
   }}
 
   // Podsumowanie
-  const totalPts = team.players.filter(p => !p.R).reduce((s,p) => s + (p.pts||0), 0);
-  const totalDiffG = team.players.reduce((s,p) => {{
-    const pk = POS_ID[p.pos] || p.pos || '';
-    return s + ((p.pts||0) - (POS_AVGS[pk] || 0));
-  }}, 0);
-  const totalDiffL = team.players.reduce((s,p) => {{
-    const pk = POS_ID[p.pos] || p.pos || '';
-    return s + ((p.pts||0) - (LEAGUE_POS_AVGS[pk] || 0));
-  }}, 0);
-  h += '<tr style="border-top:2px solid #334155"><td colspan="4" class="fw-700" style="text-align:right;padding-top:10px">Razem (startowi):</td>';
+  const totalPts = starters.reduce((s,p) => s + (p.pts||0), 0);
+  const totalDiffG = team.players.reduce((s,p) => s + (p._diff_global||0), 0);
+  const totalDiffL = team.players.reduce((s,p) => s + (p._diff_league||0), 0);
+  h += '<tr style="border-top:2px solid #334155"><td colspan="4" class="fw-700" style="text-align:right;padding-top:10px">Razem:</td>';
   h += '<td class="text-right fw-700" style="padding-top:10px">'+totalPts+'</td>';
   const gCls = totalDiffG > 0 ? 'diff-pos' : totalDiffG < 0 ? 'diff-neg' : 'diff-zero';
   const lCls = totalDiffL > 0 ? 'diff-pos' : totalDiffL < 0 ? 'diff-neg' : 'diff-zero';
   h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
   h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
-  h += '<td colspan="2"></td></tr>';
+  h += '<td></td></tr>';
 
   h += '</tbody></table></div>';
   return h;
@@ -1876,8 +1954,8 @@ function render() {{
       render();
     }};
   }});
-  // Attach roster click handlers
-  attachRosterClicks();
+  // Attach detail click handlers (form + roster)
+  attachDetailClicks();
   // Team select handler
   const sel = document.getElementById('teamSelect');
   if (sel) sel.onchange = () => {{ selectedTeam = sel.value; render(); }};
@@ -1957,11 +2035,10 @@ def main():
         price = p.get("price", 0) or 0
         ppp = round(pts / price, 2) if price > 0 else 0
 
-        # Ostatnie 5 rozegranych kolejek (forma)
+        # Ostatnie 5 kolejek (forma) — w tym nierozegrane (pts=0, p=false)
         rounds = p.get("rounds", [])
-        played_rounds = [r for r in rounds if r.get("played")]
-        last5 = played_rounds[-5:] if played_rounds else []
-        form = [{"r": r.get("round", 0), "pts": r.get("points", 0)} for r in last5]
+        last5 = rounds[-5:] if rounds else []
+        form = [{"r": r.get("round", 0), "pts": r.get("points", 0) if r.get("played") else 0, "p": bool(r.get("played"))} for r in last5]
 
         summary_data.append({
             "player_id": p.get("player_id"),
@@ -2103,11 +2180,10 @@ def main():
                 "R": p.get("is_reserve", False),
                 "form": [],
             })
-            # Dodaj formę
+            # Dodaj formę — ostatnie 5 kolejek (w tym nierozegrane)
             pr = full.get("rounds", [])
-            played = [r for r in pr if r.get("played")]
-            last5 = played[-5:] if played else []
-            team_players[-1]["form"] = [{"r": r.get("round", 0), "pts": r.get("points", 0)} for r in last5]
+            last5 = pr[-5:] if pr else []
+            team_players[-1]["form"] = [{"r": r.get("round", 0), "pts": r.get("points", 0) if r.get("played") else 0, "p": bool(r.get("played"))} for r in last5]
 
         league_teams_detail.append({
             "slug": slug,
