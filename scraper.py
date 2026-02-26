@@ -1595,11 +1595,11 @@ function attachDetailClicks() {{
       // Znajdź dane formy — szukaj w PLAYERS lub LEAGUE_TEAMS
       let form = null;
       const pl = PLAYERS.find(p => p.name === name);
-      if (pl) form = pl.form;
-      if (!form) {{
+      if (pl && pl.form && pl.form.length) form = pl.form;
+      if (!form || !form.length) {{
         for (const t of LEAGUE_TEAMS) {{
           const tp = t.players.find(p => p.name === name);
-          if (tp) {{ form = tp.form; break; }}
+          if (tp && tp.form && tp.form.length) {{ form = tp.form; break; }}
         }}
       }}
       row.insertAdjacentHTML('afterend', detailRow(name, form, cols));
@@ -1729,7 +1729,6 @@ function renderPlayers() {{
     h += '<th class="text-center sortable" data-tab="players" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('players','_diff_league')+'</th>';
   }}
   h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
-  h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek)">Forma'+arrow('players','_form_avg')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct">Pop.'+arrow('players','popularity_pct')+'</th>';
   if (hasOwn) {{
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad" style="min-width:100px">W składzie'+arrow('players','_own_squad')+'</th>';
@@ -1770,9 +1769,6 @@ function renderPlayers() {{
       h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
     }}
     h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
-    const favg = p._form_avg;
-    const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
-    h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
     if (hasOwn) {{
       const sq = p._own_squad, st = p._own_starting, cp = p._own_captain;
@@ -1854,7 +1850,7 @@ function renderTeams() {{
 
   // Tabela zawodników
   const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
-  const NCOLS = 8;
+  const NCOLS = 7;
 
   // Wzbogacenie danych o pola sortowalne
   team.players.forEach(p => {{
@@ -1888,7 +1884,6 @@ function renderTeams() {{
   h += '<th class="text-right sortable" data-tab="teams" data-col="pts">Punkty'+arrow('teams','pts')+'</th>';
   h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('teams','_diff_global')+'</th>';
   h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('teams','_diff_league')+'</th>';
-  h += '<th class="text-right sortable" data-tab="teams" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek)">Forma'+arrow('teams','_form_avg')+'</th>';
   h += '</tr></thead><tbody>';
 
   // Startowi, potem rezerwowi — oba sortowane tak samo
@@ -1899,8 +1894,6 @@ function renderTeams() {{
     const pk = p._pk;
     const pts = p.pts || 0;
     const price = p.price || 0;
-    const favg = p._form_avg;
-    const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
     let nameStyle = 'font-weight:600';
     if (p.C) nameStyle += ';color:#fbbf24';
 
@@ -1911,7 +1904,6 @@ function renderTeams() {{
     h += '<td class="text-right fw-700">'+pts+'</td>';
     h += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
     h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
-    h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '</tr>';
   }}
 
@@ -1931,7 +1923,7 @@ function renderTeams() {{
   const lCls = totalDiffL > 0 ? 'diff-pos' : totalDiffL < 0 ? 'diff-neg' : 'diff-zero';
   h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
   h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
-  h += '<td></td></tr>';
+  h += '</tr>';
 
   h += '</tbody></table></div>';
   return h;
