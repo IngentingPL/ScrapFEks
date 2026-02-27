@@ -86,6 +86,13 @@ Kliknięcie na nazwisko zawodnika rozwija panel szczegółów:
 | `fantasy_captains_*.csv` | Ranking popularności kapitanów |
 | `fantasy_ownership_*.csv` | Ownership — W składzie / Start XI / Kapitan % |
 
+## 📂 Pliki konfiguracyjne
+
+| Plik | Opis |
+|---|---|
+| `terminarz.txt` | Terminarz meczów — edytowany ręcznie, triggeruje automatyczne uruchomienia |
+| `update_schedule.py` | Skrypt parsujący terminarz i aktualizujący cron w scrape.yml |
+
 ## ⚙️ Jak to działa
 
 1. **Logowanie** — automatyczne logowanie emailem/hasłem z szyfrowaniem AES
@@ -98,11 +105,31 @@ Kliknięcie na nazwisko zawodnika rozwija panel szczegółów:
 
 ## ⏰ Automatyczne uruchomienie
 
-Żeby scraper uruchamiał się automatycznie, odkomentuj sekcję `schedule` w `.github/workflows/scrape.yml`:
+Scraper uruchamia się automatycznie 3 godziny po każdym meczu na podstawie pliku `terminarz.txt`.
 
-```yaml
-schedule:
-  - cron: '0 20 * * 5'  # co piątek o 20:00 UTC
+### Jak to działa
+
+1. Edytujesz `terminarz.txt` (format jak z ekstraklasa.org — kolejki, daty, godziny)
+2. Pushasz do repo
+3. Workflow **Update Schedule** automatycznie:
+   - parsuje terminarz
+   - grupuje mecze per dzień, bierze najpóźniejszy
+   - dodaje 3h i konwertuje na UTC
+   - aktualizuje cron w `scrape.yml`
+   - commituje zmianę
+
+Przykład: mecz o 20:15 CET → trigger o 23:15 CET (22:15 UTC).
+
+Możesz też uruchomić **Update Schedule** ręcznie z zakładki Actions.
+
+### Format terminarz.txt
+
+```
+Kolejka 23 - 28 lutego-1 marca
+
+Arka Gdynia	-	Lechia Gdańsk	27 lutego, 20:30 
+Cracovia	-	Piast Gliwice	27 lutego, 18:00 
+...
 ```
 
 ## 🔧 Uruchomienie lokalne
