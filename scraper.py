@@ -2021,15 +2021,25 @@ def main():
     save_full_json(players, json_file)
 
     # CSV - podsumowanie zawodników
+    # Znajdź obecną kolejkę (najwyższa rozegrana)
+    current_round = TARGET_ROUND or 0
+    if not current_round:
+        for p in players:
+            for r in p.get("rounds", []):
+                if r.get("played") and r.get("round", 0) > current_round:
+                    current_round = r["round"]
+    print(f"  📅 Obecna kolejka: {current_round}")
+
     summary_data = []
     for p in players:
         pts = p.get("total_points", 0) or 0
         price = p.get("price", 0) or 0
         ppp = round(pts / price, 2) if price > 0 else 0
 
-        # Ostatnie 5 kolejek (forma) — w tym nierozegrane (pts=0, p=false)
+        # Forma: 5 kolejek PRZED obecną kolejką (w tym nierozegrane)
         rounds = p.get("rounds", [])
-        last5 = rounds[-5:] if rounds else []
+        before_current = [r for r in rounds if r.get("round", 0) < current_round] if current_round else rounds
+        last5 = before_current[-5:] if before_current else []
         form = [{"r": r.get("round", 0), "pts": r.get("points", 0) if r.get("played") else 0, "p": bool(r.get("played"))} for r in last5]
 
         summary_data.append({
@@ -2053,17 +2063,8 @@ def main():
     save_rounds_csv(players, rounds_file)
 
     # 5. Podsumowanie kolejki
-    if TARGET_ROUND:
-        print_round_summary(players, TARGET_ROUND)
-    else:
-        # Znajdź ostatnią rozegraną kolejkę
-        max_round = 0
-        for p in players:
-            for r in p.get("rounds", []):
-                if r.get("played") and r.get("round", 0) > max_round:
-                    max_round = r["round"]
-        if max_round:
-            print_round_summary(players, max_round)
+    if current_round:
+        print_round_summary(players, current_round)
 
     # 6. Scrapowanie drużyn (kapitanowie, ownership)
     captain_stats = []
@@ -2172,9 +2173,10 @@ def main():
                 "R": p.get("is_reserve", False),
                 "form": [],
             })
-            # Dodaj formę — ostatnie 5 kolejek (w tym nierozegrane)
+            # Dodaj formę — 5 kolejek przed obecną kolejką (w tym nierozegrane)
             pr = full.get("rounds", [])
-            last5 = pr[-5:] if pr else []
+            before_current = [r for r in pr if r.get("round", 0) < current_round] if current_round else pr
+            last5 = before_current[-5:] if before_current else []
             team_players[-1]["form"] = [{"r": r.get("round", 0), "pts": r.get("points", 0) if r.get("played") else 0, "p": bool(r.get("played"))} for r in last5]
 
         league_teams_detail.append({
