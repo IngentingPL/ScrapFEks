@@ -1418,6 +1418,12 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .form-chart {{
   display: inline-flex; align-items: flex-end; gap: 3px; height: 48px; vertical-align: middle;
 }}
+.form-chart.mini {{
+  height: 24px; gap: 2px;
+}}
+.form-chart.mini .form-bar {{ width: 8px; }}
+.form-chart.mini .form-val {{ font-size: 8px; top: -12px; color: #94a3b8; font-weight: 500; }}
+.form-chart.mini .form-rnd {{ display: none; }}
 .form-bar {{
   width: 14px; border-radius: 3px 3px 0 0; min-height: 2px; position: relative;
   display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-start;
@@ -1607,11 +1613,11 @@ function attachDetailClicks() {{
   }});
 }}
 
-function formChart(form) {{
-  if (!form || !form.length) return '';
-  const SCALE = 15; // stała skala: 15 pkt = max wysokość
-  const MAX_H = 40;
-  let h = '<div class="form-chart">';
+function formChart(form, mini) {{
+  if (!form || !form.length) return '<span class="c-dim" style="font-size:11px">—</span>';
+  const SCALE = 15;
+  const MAX_H = mini ? 20 : 40;
+  let h = '<div class="form-chart'+(mini ? ' mini' : '')+'">';
   form.forEach(f => {{
     const pts = f.pts || 0;
     const played = f.p !== false;
@@ -1729,6 +1735,8 @@ function renderPlayers() {{
     h += '<th class="text-center sortable" data-tab="players" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('players','_diff_league')+'</th>';
   }}
   h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
+  h += '<th class="text-center" style="min-width:80px">Forma</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek przed obecną)">Średnia'+arrow('players','_form_avg')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct">Pop.'+arrow('players','popularity_pct')+'</th>';
   if (hasOwn) {{
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad" style="min-width:100px">W składzie'+arrow('players','_own_squad')+'</th>';
@@ -1769,6 +1777,10 @@ function renderPlayers() {{
       h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
     }}
     h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
+    h += '<td class="text-center">'+formChart(p.form, true)+'</td>';
+    const favg = p._form_avg;
+    const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
+    h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
     if (hasOwn) {{
       const sq = p._own_squad, st = p._own_starting, cp = p._own_captain;
@@ -1850,7 +1862,7 @@ function renderTeams() {{
 
   // Tabela zawodników
   const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
-  const NCOLS = 7;
+  const NCOLS = 9;
 
   // Wzbogacenie danych o pola sortowalne
   team.players.forEach(p => {{
@@ -1884,6 +1896,8 @@ function renderTeams() {{
   h += '<th class="text-right sortable" data-tab="teams" data-col="pts">Punkty'+arrow('teams','pts')+'</th>';
   h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('teams','_diff_global')+'</th>';
   h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('teams','_diff_league')+'</th>';
+  h += '<th class="text-center" style="min-width:80px">Forma</th>';
+  h += '<th class="text-right sortable" data-tab="teams" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek przed obecną)">Średnia'+arrow('teams','_form_avg')+'</th>';
   h += '</tr></thead><tbody>';
 
   // Startowi, potem rezerwowi — oba sortowane tak samo
@@ -1904,6 +1918,10 @@ function renderTeams() {{
     h += '<td class="text-right fw-700">'+pts+'</td>';
     h += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
     h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
+    const favg = p._form_avg;
+    const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
+    h += '<td class="text-center">'+formChart(p.form, true)+'</td>';
+    h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '</tr>';
   }}
 
@@ -1923,7 +1941,7 @@ function renderTeams() {{
   const lCls = totalDiffL > 0 ? 'diff-pos' : totalDiffL < 0 ? 'diff-neg' : 'diff-zero';
   h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
   h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
-  h += '</tr>';
+  h += '<td colspan="2"></td></tr>';
 
   h += '</tbody></table></div>';
   return h;
@@ -2140,6 +2158,8 @@ def main():
     league_teams_detail = []
     # Lookup player_id → pełne dane gracza z API statystyk
     player_lookup = {str(p.get("player_id")): p for p in players} if players else {}
+    # Lookup player_id → name z API statystyk (na wypadek różnic w nazwach)
+    pid_to_api_name = {str(p.get("player_id")): p.get("name", "") for p in players} if players else {}
 
     for team in league_results:
         slug = team.get("team_slug", "")
@@ -2149,23 +2169,25 @@ def main():
         team_players = []
         for p in team.get("squad", []):
             name = p.get("name", "")
-            pid = p.get("player_id", "")
+            pid = str(p.get("player_id", ""))
             if not name:
                 continue
-            # Roster map
-            if name not in league_rosters:
-                league_rosters[name] = []
-            league_rosters[name].append({
+            # Użyj nazwy z API statystyk jeśli dostępna (spójność z PLAYERS)
+            roster_key = pid_to_api_name.get(pid, name)
+            roster_entry = {
                 "team": slug,
                 "pos": rank,
                 "C": p.get("is_captain", False),
                 "R": p.get("is_reserve", False),
-            })
+            }
+            if roster_key not in league_rosters:
+                league_rosters[roster_key] = []
+            league_rosters[roster_key].append(roster_entry)
             # Dane gracza z API statystyk (pełne punkty, pozycja tekstowa)
             full = player_lookup.get(str(pid), {})
             team_players.append({
                 "pid": pid,
-                "name": name,
+                "name": roster_key,
                 "pos": full.get("position", "") or p.get("position_id", ""),
                 "pts": full.get("total_points", 0) or 0,
                 "price": full.get("price", 0) or p.get("price", 0),

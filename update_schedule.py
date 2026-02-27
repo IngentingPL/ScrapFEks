@@ -88,29 +88,53 @@ def parse_terminarz(filepath: str) -> list[dict]:
 
 def generate_crons(matches: list[dict]) -> list[tuple]:
     """
-    Dla każdego meczu dodaje 3h i generuje cron trigger w UTC.
-    Deduplikuje identyczne czasy triggerów (mecze o tej samej godzinie).
+    Generuje cron triggery:
+    1. 30 min po pierwszym meczu każdej kolejki (szybkie odświeżenie)
+    2. 3h po każdym meczu (pełne odświeżenie)
 
-    Zwraca: [(match_local, trigger_utc, cron_str, round), ...]
+    Deduplikuje identyczne czasy triggerów.
+    Zwraca: [(label, match_local, trigger_utc, cron_str, round), ...]
     """
     seen = set()
     crons = []
-    for m in sorted(matches, key=lambda x: x["datetime"]):
+
+    sorted_matches = sorted(matches, key=lambda x: x["datetime"])
+
+    # 1. Pierwszy mecz per kolejka + 30 min
+    first_per_round = {}
+    for m in sorted_matches:
+        rnd = m["round"]
+        if rnd not in first_per_round:
+            first_per_round[rnd] = m
+
+    for rnd, m in sorted(first_per_round.items()):
+        trigger_local = m["datetime"] + timedelta(minutes=30)
+        trigger_utc = trigger_local.astimezone(TZ_UTC)
+        key = (trigger_utc.month, trigger_utc.day, trigger_utc.hour, trigger_utc.minute)
+        if key not in seen:
+            seen.add(key)
+            cron = (
+                f"{trigger_utc.minute} {trigger_utc.hour} "
+                f"{trigger_utc.day} {trigger_utc.month} *"
+            )
+            crons.append(("start", m["datetime"], trigger_utc, cron, rnd))
+
+    # 2. Każdy mecz + 3h
+    for m in sorted_matches:
         trigger_local = m["datetime"] + timedelta(hours=TRIGGER_DELAY_HOURS)
         trigger_utc = trigger_local.astimezone(TZ_UTC)
-
-        # Deduplikuj — mecze o tej samej godzinie dają ten sam trigger
         key = (trigger_utc.month, trigger_utc.day, trigger_utc.hour, trigger_utc.minute)
         if key in seen:
             continue
         seen.add(key)
-
         cron = (
             f"{trigger_utc.minute} {trigger_utc.hour} "
             f"{trigger_utc.day} {trigger_utc.month} *"
         )
-        crons.append((m["datetime"], trigger_utc, cron, m["round"]))
+        crons.append(("post", m["datetime"], trigger_utc, cron, m["round"]))
 
+    # Sortuj chronologicznie
+    crons.sort(key=lambda x: x[2])
     return crons
 
 
@@ -123,14 +147,22 @@ def update_workflow(workflow_path: str, crons: list[tuple]):
     lines = [MARKER_START]
     if crons:
         lines.append("  schedule:")
-        for match_local, trigger_utc, cron, rnd in crons:
+        for label, match_local, trigger_utc, cron, rnd in crons:
             tz_name = match_local.strftime("%Z")
-            trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
-            comment = (
-                f"K{rnd} {match_local.strftime('%d.%m')} "
-                f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
-                f"trigger {trigger_local.strftime('%H:%M')} {tz_name}"
-            )
+            if label == "start":
+                trigger_local = match_local + timedelta(minutes=30)
+                comment = (
+                    f"K{rnd} START {match_local.strftime('%d.%m')} "
+                    f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
+                    f"+30min {trigger_local.strftime('%H:%M')} {tz_name}"
+                )
+            else:
+                trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
+                comment = (
+                    f"K{rnd} {match_local.strftime('%d.%m')} "
+                    f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
+                    f"+3h {trigger_local.strftime('%H:%M')} {tz_name}"
+                )
             lines.append(f"    - cron: '{cron}'  # {comment}")
     lines.append(MARKER_END)
     new_block = "\n".join(lines)
@@ -165,19 +197,20 @@ def main():
         print("⚠️  Brak meczów w terminarzu!")
         return
 
-    # Filtruj tylko przyszłe mecze
-    now = datetime.now(tz=TZ_WARSAW)
-    future = [m for m in matches if m["datetime"] > now]
-    print(f"   Przyszłych meczów: {len(future)}")
-
-    crons = generate_crons(future)
+    # Generuj crony ze wszystkich meczów — przeszłe i tak nie odpalą się
+    crons = generate_crons(matches)
     print(f"\n⏰ Wygenerowano {len(crons)} triggerów:")
-    for match_local, trigger_utc, cron, rnd in crons:
+    for label, match_local, trigger_utc, cron, rnd in crons:
         tz_name = match_local.strftime("%Z")
-        trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
+        if label == "start":
+            trigger_local = match_local + timedelta(minutes=30)
+            tag = "START"
+        else:
+            trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
+            tag = "     "
         print(
-            f"   K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
-            f" → trigger {trigger_local.strftime('%H:%M')} {tz_name}"
+            f"   {tag} K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
+            f" → {trigger_local.strftime('%H:%M')} {tz_name}"
             f" ({trigger_utc.strftime('%H:%M')} UTC)"
         )
 
