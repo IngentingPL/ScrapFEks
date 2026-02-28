@@ -72,6 +72,15 @@ Kliknięcie na zawodnika rozwija panel z listą drużyn z Twojej ligi, które go
 - Kolumny ±Avg, ±Liga, Forma i Średnia z podsumowaniem na dole
 - Kliknięcie na zawodnika rozwija panel z drużynami ligowymi
 
+**📅 Terminarz** — fixture ticker z trudnością meczów:
+- Siatka: drużyny w wierszach, kolejki w kolumnach
+- Każda komórka = skrót przeciwnika + (D)om/(W)yjazd
+- Kolory od zielonego (łatwy) do czerwonego (trudny) na podstawie siły przeciwnika i dom/wyjazd
+- Kolumna ze średnią trudnością nadchodzących meczów
+- Kliknięcie na nazwę drużyny otwiera modal z suwakami do edycji siły ataku i obrony (1-5)
+- Sortowanie: alfabetyczne lub wg trudności
+- Dane z pliku `terminarz.txt`
+
 ### Filtry i zakresy
 
 - **Filtr pozycji** — BR / OBR / POM / NAP / Wszyscy
@@ -105,7 +114,7 @@ Obie kolumny mierzą popularność zawodnika, ale z różnych źródeł:
 
 | Plik | Opis |
 |---|---|
-| `terminarz.txt` | Terminarz meczów — edytowany ręcznie, triggeruje automatyczne uruchomienia |
+| `terminarz.txt` | Terminarz meczów — źródło danych dla fixture tickera i automatycznych uruchomień |
 | `update_schedule.py` | Skrypt parsujący terminarz i aktualizujący cron w scrape.yml |
 
 ## ⚙️ Jak to działa

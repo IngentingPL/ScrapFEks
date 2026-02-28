@@ -1210,6 +1210,87 @@ def generate_squad_stats(team_results: list[dict], filename: str):
 
 
 # ============================================================
+# FIXTURE TICKER — parsowanie terminarz.txt
+# ============================================================
+
+TEAM_ABBREVS = {
+    "Arka Gdynia": "ARK", "Bruk-Bet Termalica Nieciecza": "BBT",
+    "Cracovia": "CRA", "GKS Katowice": "GKS", "Górnik Zabrze": "GÓR",
+    "Jagiellonia Białystok": "JAG", "Korona Kielce": "KOR",
+    "Lech Poznań": "LPO", "Lechia Gdańsk": "LGD", "Legia Warszawa": "LEG",
+    "Motor Lublin": "MOT", "Piast Gliwice": "PIA", "Pogoń Szczecin": "POG",
+    "Radomiak Radom": "RAD", "Raków Częstochowa": "RAK", "Widzew Łódź": "WID",
+    "Wisła Płock": "WPŁ", "Zagłębie Lubin": "ZAG",
+}
+
+MONTHS_PL = {
+    "stycznia": 1, "lutego": 2, "marca": 3, "kwietnia": 4,
+    "maja": 5, "czerwca": 6, "lipca": 7, "sierpnia": 8,
+    "września": 9, "października": 10, "listopada": 11, "grudnia": 12,
+}
+
+def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
+    """Parsuje terminarz.txt i zwraca dane do fixture ticker."""
+    if not os.path.exists(filepath):
+        print(f"  ⚠️  Brak pliku {filepath} — pomijam fixture ticker")
+        return {"rounds": [], "matches": {}, "teams": [], "abbrevs": {}}
+
+    matches_by_round = {}
+    teams_set = set()
+    current_round = None
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            round_match = re.match(r"Kolejka\s+(\d+)", line)
+            if round_match:
+                current_round = int(round_match.group(1))
+                if current_round not in matches_by_round:
+                    matches_by_round[current_round] = []
+                continue
+            date_match = re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})\s*$", line)
+            if date_match and current_round:
+                day = int(date_match.group(1))
+                month_name = date_match.group(2)
+                month = MONTHS_PL.get(month_name)
+                if not month:
+                    continue
+                # Wyciągnij drużyny
+                teams_part = line[:date_match.start()].strip()
+                parts = re.split(r'\t+-\t+', teams_part)
+                if len(parts) != 2:
+                    parts = re.split(r'\s+-\s+', teams_part)
+                if len(parts) == 2:
+                    home = parts[0].strip()
+                    away = parts[1].strip()
+                    teams_set.add(home)
+                    teams_set.add(away)
+                    matches_by_round[current_round].append({
+                        "home": home,
+                        "away": away,
+                        "date": f"{day:02d}.{month:02d}",
+                    })
+
+    teams = sorted(teams_set)
+    # Buduj skróty — użyj zdefiniowanych lub generuj z pierwszych 3 liter
+    abbrevs = {}
+    for t in teams:
+        abbrevs[t] = TEAM_ABBREVS.get(t, t[:3].upper())
+
+    rounds = sorted(matches_by_round.keys())
+    # Konwertuj klucze na string dla JSON
+    matches_json = {str(r): matches_by_round[r] for r in rounds}
+
+    return {
+        "rounds": rounds,
+        "matches": matches_json,
+        "teams": teams,
+        "abbrevs": abbrevs,
+    }
+
+
 # DASHBOARD HTML
 # ============================================================
 
@@ -1223,6 +1304,7 @@ def generate_dashboard_html(
     league_teams_count: int,
     league_rosters: dict,
     league_teams_detail: list[dict],
+    fixtures_data: dict,
     timestamp: str,
     filename: str,
 ):
@@ -1264,6 +1346,8 @@ def generate_dashboard_html(
     players_json = json.dumps(summary_data, ensure_ascii=False)
     rosters_json = json.dumps(league_rosters, ensure_ascii=False)
     teams_detail_json = json.dumps(league_teams_detail, ensure_ascii=False)
+    fixtures_json = json.dumps(fixtures_data, ensure_ascii=False)
+    has_fixtures = len(fixtures_data.get("rounds", [])) > 0
 
     # For stat cards
     all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))
@@ -1465,6 +1549,32 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 }}
 .team-stat {{ font-size: 13px; color: #94a3b8; }}
 .team-stat b {{ color: #e2e8f0; }}
+/* Fixture Ticker */
+.ft-table {{ border-collapse: collapse; width: 100%; font-size: 13px; }}
+.ft-table th {{ padding: 6px 4px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }}
+.ft-table th.ft-round {{ min-width: 70px; }}
+.ft-table td {{ padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }}
+.ft-table td.ft-team {{ text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; cursor: pointer; }}
+.ft-table td.ft-team:hover {{ color: #22d3ee; }}
+.ft-cell {{ border-radius: 4px; padding: 4px 6px; font-weight: 600; font-size: 12px; display: inline-block; min-width: 52px; text-align: center; }}
+.ft-cell .ft-ha {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
+.ft-legend {{ display: flex; gap: 12px; align-items: center; margin-bottom: 12px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; }}
+.ft-legend-item {{ display: flex; align-items: center; gap: 4px; }}
+.ft-legend-swatch {{ width: 16px; height: 16px; border-radius: 3px; }}
+/* Rating modal */
+.ft-modal-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; align-items: center; justify-content: center; }}
+.ft-modal {{ background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px 32px; min-width: 340px; max-width: 90vw; position: relative; }}
+.ft-modal h3 {{ margin: 0 0 16px; font-size: 18px; }}
+.ft-modal-close {{ position: absolute; top: 12px; right: 16px; background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }}
+.ft-modal-close:hover {{ color: #e2e8f0; }}
+.ft-slider-row {{ margin-bottom: 16px; }}
+.ft-slider-row label {{ display: block; font-size: 13px; color: #94a3b8; margin-bottom: 4px; }}
+.ft-slider-row input[type=range] {{ width: 100%; accent-color: #22d3ee; }}
+.ft-slider-val {{ font-size: 20px; font-weight: 800; color: #22d3ee; text-align: center; margin-top: 2px; }}
+.ft-modal-actions {{ display: flex; gap: 8px; margin-top: 16px; }}
+.ft-modal-actions button {{ flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; cursor: pointer; font-size: 13px; }}
+.ft-modal-actions button:hover {{ border-color: #22d3ee; }}
+.ft-modal-actions button.primary {{ background: #22d3ee; color: #0f172a; border-color: #22d3ee; font-weight: 700; }}
 </style>
 </head>
 <body>
@@ -1504,6 +1614,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       <button class="tab active" data-tab="captains">👑 Kapitanowie</button>
       <button class="tab" data-tab="players">⚽ Zawodnicy</button>
       {"<button class='tab' data-tab='teams'>📋 Drużyny ligi</button>" if has_league else ""}
+      {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
@@ -1518,6 +1629,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
     <div id="tab-captains" class="tab-content active"></div>
     <div id="tab-players" class="tab-content"></div>
     <div id="tab-teams" class="tab-content"></div>
+    <div id="tab-fixtures" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
@@ -1527,6 +1639,7 @@ const DATA = {data_json};
 const PLAYERS = {players_json};
 const ROSTERS = {rosters_json};
 const LEAGUE_TEAMS = {teams_detail_json};
+const FIXTURES = {fixtures_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -1540,7 +1653,11 @@ let sorts = {{
   teams: {{col:'_pos_order', dir:'asc'}},
 }};
 
-function num(v) {{ return typeof v === 'string' ? parseFloat(v) || 0 : v || 0; }}
+function num(v) {{
+  if (v === null || v === undefined || v === '') return 0;
+  const n = typeof v === 'string' ? parseFloat(v) : v;
+  return isNaN(n) ? 0 : n;
+}}
 function bar(val, max, color) {{
   const w = Math.min(val / max * 100, 100);
   return '<div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:'+w+'%;background:'+color+'"></div></div><span class="bar-val">'+val.toFixed(1)+'%</span></div>';
@@ -1575,7 +1692,9 @@ function sortData(data, tab) {{
     }} else {{
       av = num(av); bv = num(bv);
     }}
-    return s.dir === 'desc' ? bv - av : av - bv;
+    if (av < bv) return s.dir === 'desc' ? 1 : -1;
+    if (av > bv) return s.dir === 'desc' ? -1 : 1;
+    return 0;
   }});
 }}
 
@@ -1734,8 +1853,8 @@ function renderPlayers() {{
     p._form_avg = played.length ? played.reduce((s,x) => s + (x.pts||0), 0) / played.length : 0;
     const pk = POS_ID[p.position] || p.position || '';
     const pts = p.total_points || 0;
-    p._diff_global = (POS_AVGS[pk] && pts > 0) ? pts - POS_AVGS[pk] : 0;
-    p._diff_league = (LEAGUE_POS_AVGS[pk] && pts > 0) ? pts - LEAGUE_POS_AVGS[pk] : 0;
+    p._diff_global = (POS_AVGS[pk] && pts > 0) ? Math.round((pts - POS_AVGS[pk]) * 10) / 10 : 0;
+    p._diff_league = (LEAGUE_POS_AVGS[pk] && pts > 0) ? Math.round((pts - LEAGUE_POS_AVGS[pk]) * 10) / 10 : 0;
   }});
   data = sortData(data, 'players');
 
@@ -1847,8 +1966,8 @@ function renderTeams() {{
     const pk = POS_ID[p.pos] || p.pos || '';
     p._pk = pk;
     p._pos_order = POS_ORDER[pk] || 99;
-    p._diff_global = (POS_AVGS[pk] && (p.pts||0) > 0) ? (p.pts||0) - POS_AVGS[pk] : 0;
-    p._diff_league = (LEAGUE_POS_AVGS[pk] && (p.pts||0) > 0) ? (p.pts||0) - LEAGUE_POS_AVGS[pk] : 0;
+    p._diff_global = (POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - POS_AVGS[pk]) * 10) / 10 : 0;
+    p._diff_league = (LEAGUE_POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - LEAGUE_POS_AVGS[pk]) * 10) / 10 : 0;
     p._form_avg = formAvgNum(p.form);
   }});
 
@@ -1862,7 +1981,9 @@ function renderTeams() {{
         return 0;
       }}
       av = num(av); bv = num(bv);
-      return s.dir === 'desc' ? bv - av : av - bv;
+      if (av < bv) return s.dir === 'desc' ? 1 : -1;
+      if (av > bv) return s.dir === 'desc' ? -1 : 1;
+      return 0;
     }});
   }}
 
@@ -1925,10 +2046,142 @@ function renderTeams() {{
   return h;
 }}
 
+// ============ FIXTURE TICKER ============
+const ftRatings = {{}};
+// Domyślne ratingi: 3.0/3.0 (skala 1-5)
+if (FIXTURES.teams) FIXTURES.teams.forEach(t => {{ ftRatings[t] = {{att: 3.0, def: 3.0}}; }});
+let ftSort = 'alpha'; // 'alpha' | 'diff'
+
+function ftDifficulty(opponent, isHome) {{
+  const r = ftRatings[opponent];
+  if (!r) return 3;
+  const base = (r.att + r.def) / 2;
+  return base + (isHome ? -0.4 : 0.4);
+}}
+
+function ftColor(diff) {{
+  if (diff <= 1.8) return {{bg:'#065f46',fg:'#a7f3d0'}};
+  if (diff <= 2.4) return {{bg:'#047857',fg:'#d1fae5'}};
+  if (diff <= 2.9) return {{bg:'#14532d80',fg:'#86efac'}};
+  if (diff <= 3.2) return {{bg:'#1e293b',fg:'#94a3b8'}};
+  if (diff <= 3.7) return {{bg:'#7f1d1d80',fg:'#fca5a5'}};
+  if (diff <= 4.2) return {{bg:'#991b1b',fg:'#fecaca'}};
+  return {{bg:'#7f1d1d',fg:'#fca5a5'}};
+}}
+
+function ftBuildTeamFixtures() {{
+  const tf = {{}};
+  FIXTURES.teams.forEach(t => {{ tf[t] = {{}}; }});
+  const rounds = FIXTURES.rounds || [];
+  rounds.forEach(r => {{
+    const ms = FIXTURES.matches[String(r)] || [];
+    ms.forEach(m => {{
+      tf[m.home][r] = {{opp: m.away, home: true, date: m.date}};
+      tf[m.away][r] = {{opp: m.home, home: false, date: m.date}};
+    }});
+  }});
+  return tf;
+}}
+
+function ftAvgDifficulty(teamFixtures, rounds) {{
+  let sum = 0, cnt = 0;
+  rounds.forEach(r => {{
+    const f = teamFixtures[r];
+    if (f) {{ sum += ftDifficulty(f.opp, f.home); cnt++; }}
+  }});
+  return cnt ? sum / cnt : 3;
+}}
+
+function ftShowModal(team) {{
+  const r = ftRatings[team] || {{att:3,def:3}};
+  const abbr = FIXTURES.abbrevs[team] || team.substring(0,3).toUpperCase();
+  let h = '<div class="ft-modal-bg" id="ftModal"><div class="ft-modal">';
+  h += '<button class="ft-modal-close" onclick="document.getElementById(\'ftModal\').remove()">✕</button>';
+  h += '<h3>'+abbr+' — '+team+'</h3>';
+  h += '<div class="ft-slider-row"><label>Atak (strzelone bramki)</label>';
+  h += '<input type="range" min="1" max="5" step="0.1" value="'+r.att+'" id="ftAtt" oninput="document.getElementById(\'ftAttV\').textContent=this.value">';
+  h += '<div class="ft-slider-val" id="ftAttV">'+r.att+'</div></div>';
+  h += '<div class="ft-slider-row"><label>Obrona (stracone bramki)</label>';
+  h += '<input type="range" min="1" max="5" step="0.1" value="'+r.def+'" id="ftDef" oninput="document.getElementById(\'ftDefV\').textContent=this.value">';
+  h += '<div class="ft-slider-val" id="ftDefV">'+r.def+'</div></div>';
+  h += '<div class="ft-modal-actions">';
+  h += '<button onclick="ftRatings[\''+team.replace(/'/g,"\\'")+'\']={{att:3,def:3}};document.getElementById(\'ftModal\').remove();render()">Reset</button>';
+  h += '<button class="primary" onclick="ftRatings[\''+team.replace(/'/g,"\\'")+'\']={{att:parseFloat(document.getElementById(\'ftAtt\').value),def:parseFloat(document.getElementById(\'ftDef\').value)}};document.getElementById(\'ftModal\').remove();render()">Zapisz</button>';
+  h += '</div></div></div>';
+  document.body.insertAdjacentHTML('beforeend', h);
+}}
+
+function renderFixtures() {{
+  if (!FIXTURES.rounds || !FIXTURES.rounds.length) return '<div class="empty-msg">Brak danych terminarza</div>';
+  const rounds = FIXTURES.rounds;
+  const tf = ftBuildTeamFixtures();
+  const abbr = FIXTURES.abbrevs || {{}};
+
+  // Sortowanie drużyn
+  let teams = [...FIXTURES.teams];
+  if (ftSort === 'diff') {{
+    teams.sort((a,b) => ftAvgDifficulty(tf[a], rounds) - ftAvgDifficulty(tf[b], rounds));
+  }}
+
+  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — trudność meczów</h2><div class="line"></div></div>';
+
+  // Legenda
+  h += '<div class="ft-legend">';
+  const legs = [
+    {{d:1.5,l:'Łatwy'}},{{d:2.2,l:'Średnio-łatwy'}},{{d:2.7,l:'Umiarkowany'}},
+    {{d:3.2,l:'Neutralny'}},{{d:3.5,l:'Średnio-trudny'}},{{d:4.0,l:'Trudny'}},{{d:4.5,l:'Bardzo trudny'}}
+  ];
+  legs.forEach(lg => {{
+    const c = ftColor(lg.d);
+    h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:'+c.bg+'"></span><span style="color:'+c.fg+'">'+lg.l+'</span></span>';
+  }});
+  h += '</div>';
+
+  // Sort toggle
+  h += '<div style="margin-bottom:12px;font-size:12px">';
+  h += '<span class="c-dim">Sortuj: </span>';
+  h += '<button class="scope-btn'+(ftSort==='alpha'?' active':'')+'" onclick="ftSort=\'alpha\';render()" style="font-size:11px;padding:3px 10px">A-Z</button> ';
+  h += '<button class="scope-btn'+(ftSort==='diff'?' active':'')+'" onclick="ftSort=\'diff\';render()" style="font-size:11px;padding:3px 10px">Trudność ↑</button>';
+  h += '<span class="c-dim" style="margin-left:12px;font-size:11px">Kliknij nazwę drużyny żeby zmienić siłę</span>';
+  h += '</div>';
+
+  // Tabela
+  h += '<div class="data-table"><table class="ft-table"><thead><tr>';
+  h += '<th style="text-align:left;min-width:100px">Drużyna</th>';
+  h += '<th style="min-width:40px">Śr.</th>';
+  rounds.forEach(r => {{ h += '<th class="ft-round">K'+r+'</th>'; }});
+  h += '</tr></thead><tbody>';
+
+  teams.forEach(team => {{
+    const ab = abbr[team] || team.substring(0,3).toUpperCase();
+    const avg = ftAvgDifficulty(tf[team], rounds);
+    const avgC = ftColor(avg);
+    h += '<tr>';
+    h += '<td class="ft-team" onclick="ftShowModal(\''+team.replace(/'/g,"\\'")+'\')" title="Kliknij żeby zmienić siłę '+team+'">';
+    h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(teams.indexOf(team)+1)+'</span> '+ab+'</td>';
+    h += '<td><span class="ft-cell" style="background:'+avgC.bg+';color:'+avgC.fg+';font-size:11px;min-width:36px">'+avg.toFixed(1)+'</span></td>';
+    rounds.forEach(r => {{
+      const f = tf[team][r];
+      if (!f) {{ h += '<td>—</td>'; return; }}
+      const oppAb = abbr[f.opp] || f.opp.substring(0,3).toUpperCase();
+      const diff = ftDifficulty(f.opp, f.home);
+      const c = ftColor(diff);
+      const ha = f.home ? 'D' : 'W';
+      h += '<td><span class="ft-cell" style="background:'+c.bg+';color:'+c.fg+'" title="'+f.opp+' ('+( f.home ? 'dom' : 'wyjazd')+') '+f.date+'">'+oppAb+' <span class="ft-ha">('+ha+')</span></span></td>';
+    }});
+    h += '</tr>';
+  }});
+
+  h += '</tbody></table></div>';
+  return h;
+}}
+
 function render() {{
   document.getElementById('tab-captains').innerHTML = tab === 'captains' ? renderCaptains() : '';
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
+  const ftEl = document.getElementById('tab-fixtures');
+  if (ftEl) ftEl.innerHTML = tab === 'fixtures' ? renderFixtures() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
@@ -2185,6 +2438,11 @@ def main():
     # Sortuj po pozycji
     league_teams_detail.sort(key=lambda t: t.get("rank") or 999)
 
+    # 8.5 Parse terminarz for fixture ticker
+    fixtures_data = parse_terminarz("terminarz.txt")
+    if fixtures_data["rounds"]:
+        print(f"  📅 Terminarz: {len(fixtures_data['rounds'])} kolejek, {len(fixtures_data['teams'])} drużyn")
+
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
@@ -2196,6 +2454,7 @@ def main():
         league_teams_count=len(league_teams) if LEAGUE_SLUG and league_teams else 0,
         league_rosters=league_rosters,
         league_teams_detail=league_teams_detail,
+        fixtures_data=fixtures_data,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
