@@ -1580,16 +1580,14 @@ function sortData(data, tab) {{
 }}
 
 // Detail panel — kliknięcie na zawodnika pokazuje formę + drużyny z ligi
-function nameCell(name, style, prefix) {{
-  // Zawsze klikalne — forma lub roster
-  const attr = ' data-pname="'+btoa(unescape(encodeURIComponent(name)))+'"';
+function nameCell(name, pid, style, prefix) {{
+  const attr = pid ? ' data-pid="'+pid+'"' : '';
   return '<td class="clickable roster-trigger"'+attr+' style="cursor:pointer;'+(style||'')+'">'+( prefix||'')+name+' <span style="font-size:10px;color:#64748b">▸</span></td>';
 }}
 function attachDetailClicks() {{
   document.querySelectorAll('.roster-trigger').forEach(td => {{
     td.onclick = function() {{
-      const encoded = this.dataset.pname;
-      const name = decodeURIComponent(escape(atob(encoded)));
+      const pid = this.dataset.pid || '';
       const row = this.closest('tr');
       const next = row.nextElementSibling;
       if (next && next.classList.contains('detail-row')) {{
@@ -1598,17 +1596,7 @@ function attachDetailClicks() {{
       }}
       document.querySelectorAll('.detail-row').forEach(r => r.remove());
       const cols = row.querySelectorAll('td').length;
-      // Znajdź dane formy — szukaj w PLAYERS lub LEAGUE_TEAMS
-      let form = null;
-      const pl = PLAYERS.find(p => p.name === name);
-      if (pl && pl.form && pl.form.length) form = pl.form;
-      if (!form || !form.length) {{
-        for (const t of LEAGUE_TEAMS) {{
-          const tp = t.players.find(p => p.name === name);
-          if (tp && tp.form && tp.form.length) {{ form = tp.form; break; }}
-        }}
-      }}
-      row.insertAdjacentHTML('afterend', detailRow(name, form, cols));
+      row.insertAdjacentHTML('afterend', detailRow(pid, cols));
     }};
   }});
 }}
@@ -1648,37 +1636,27 @@ function formAvgNum(form) {{
   return played.reduce((s,f) => s + (f.pts||0), 0) / played.length;
 }}
 
-function detailRow(name, form, colspan) {{
+function detailRow(pid, colspan) {{
+  const r = ROSTERS[pid];
+  if (!r || !r.length) {{
+    return '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-panel"><span class="c-dim" style="font-size:12px">Brak danych o drużynach ligowych</span></div></td></tr>';
+  }}
+  const sorted = [...r].sort((a,b) => (a.pos||999) - (b.pos||999));
+  let chips = '';
+  sorted.forEach(t => {{
+    let badge = '';
+    if (t.C) badge = '<span class="rc-badge rc-cap">C</span>';
+    else if (t.R) badge = '<span class="rc-badge rc-res">RES</span>';
+    else badge = '<span class="rc-badge rc-xi">XI</span>';
+    const slug = t.team.replace(/-/g,' ');
+    const posLabel = t.pos ? '<span style="color:#64748b;font-size:10px;margin-right:2px">#'+t.pos+'</span>' : '';
+    chips += '<span class="roster-chip">'+posLabel+slug+' '+badge+'</span>';
+  }});
   let h = '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-panel">';
-  // Forma
-  if (form && form.length) {{
-    h += '<div class="detail-section">';
-    h += '<span class="ds-label">Forma (ostatnie kolejki)</span>';
-    h += '<div style="display:flex;align-items:flex-end;gap:12px">';
-    h += formChart(form);
-    h += '<div class="form-avg"><span class="fa-val">'+formAvg(form)+'</span><span class="fa-lbl">Średnia</span></div>';
-    h += '</div></div>';
-  }}
-  // Roster
-  const r = ROSTERS[name];
-  if (r && r.length) {{
-    const sorted = [...r].sort((a,b) => (a.pos||999) - (b.pos||999));
-    let chips = '';
-    sorted.forEach(t => {{
-      let badge = '';
-      if (t.C) badge = '<span class="rc-badge rc-cap">C</span>';
-      else if (t.R) badge = '<span class="rc-badge rc-res">RES</span>';
-      else badge = '<span class="rc-badge rc-xi">XI</span>';
-      const slug = t.team.replace(/-/g,' ');
-      const posLabel = t.pos ? '<span style="color:#64748b;font-size:10px;margin-right:2px">#'+t.pos+'</span>' : '';
-      chips += '<span class="roster-chip">'+posLabel+slug+' '+badge+'</span>';
-    }});
-    h += '<div class="detail-section">';
-    h += '<span class="ds-label">Liga ('+r.length+')</span>';
-    h += '<div style="display:flex;flex-wrap:wrap;gap:4px">'+chips+'</div>';
-    h += '</div>';
-  }}
-  h += '</div></td></tr>';
+  h += '<div class="detail-section">';
+  h += '<span class="ds-label">Drużyny w lidze ('+r.length+')</span>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:4px">'+chips+'</div>';
+  h += '</div></div></td></tr>';
   return h;
 }}
 
@@ -1700,7 +1678,7 @@ function renderCaptains() {{
     const ns = i === 0 ? 'color:#fbbf24;font-weight:700' : i < 3 ? 'font-weight:700' : 'font-weight:500';
     const badge = i === 0 ? '<span class="captain-badge">C</span> ' : '';
     const bc = i === 0 ? '#fbbf24' : '#22d3ee';
-    h += '<tr'+hl+'><td class="c-muted fw-600">'+(i+1)+'</td>'+nameCell(c.name, ns, badge);
+    h += '<tr'+hl+'><td class="c-muted fw-600">'+(i+1)+'</td>'+nameCell(c.name, c.player_id, ns, badge);
     h += '<td class="text-right fw-700">'+c.captain_count+'</td>';
     h += '<td>'+bar(parseFloat(c.captain_pct), maxPct*1.2, bc)+'</td></tr>';
   }});
@@ -1767,7 +1745,7 @@ function renderPlayers() {{
     const pppC = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
     const pk = POS_ID[p.position] || p.position || '';
     h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td>';
-    h += nameCell(p.name, 'font-weight:600');
+    h += nameCell(p.name, p.player_id, 'font-weight:600');
     h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
@@ -1912,7 +1890,7 @@ function renderTeams() {{
     if (p.C) nameStyle += ';color:#fbbf24';
 
     h += '<tr><td class="c-muted fw-600">'+(idx+1)+'</td>';
-    h += nameCell(p.name, nameStyle, p.C ? '<span class="captain-badge" style="margin-right:4px">C</span> ' : '');
+    h += nameCell(p.name, p.pid, nameStyle, p.C ? '<span class="captain-badge" style="margin-right:4px">C</span> ' : '');
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
     h += '<td class="text-right fw-700">'+pts+'</td>';
@@ -2153,13 +2131,11 @@ def main():
 
     # 8. Dashboard HTML
     # Buduj mapę roster ligi: zawodnik → lista drużyn (z pozycją w lidze)
-    league_rosters = {}
+    league_rosters = {}  # keyed by player_id (string)
     # Buduj pełne dane drużyn ligi do nowej zakładki
     league_teams_detail = []
     # Lookup player_id → pełne dane gracza z API statystyk
     player_lookup = {str(p.get("player_id")): p for p in players} if players else {}
-    # Lookup player_id → name z API statystyk (na wypadek różnic w nazwach)
-    pid_to_api_name = {str(p.get("player_id")): p.get("name", "") for p in players} if players else {}
 
     for team in league_results:
         slug = team.get("team_slug", "")
@@ -2170,24 +2146,23 @@ def main():
         for p in team.get("squad", []):
             name = p.get("name", "")
             pid = str(p.get("player_id", ""))
-            if not name:
+            if not name or not pid:
                 continue
-            # Użyj nazwy z API statystyk jeśli dostępna (spójność z PLAYERS)
-            roster_key = pid_to_api_name.get(pid, name)
             roster_entry = {
                 "team": slug,
                 "pos": rank,
                 "C": p.get("is_captain", False),
                 "R": p.get("is_reserve", False),
             }
-            if roster_key not in league_rosters:
-                league_rosters[roster_key] = []
-            league_rosters[roster_key].append(roster_entry)
+            if pid not in league_rosters:
+                league_rosters[pid] = []
+            league_rosters[pid].append(roster_entry)
             # Dane gracza z API statystyk (pełne punkty, pozycja tekstowa)
-            full = player_lookup.get(str(pid), {})
+            full = player_lookup.get(pid, {})
+            api_name = full.get("name", name)
             team_players.append({
                 "pid": pid,
-                "name": roster_key,
+                "name": api_name,
                 "pos": full.get("position", "") or p.get("position_id", ""),
                 "pts": full.get("total_points", 0) or 0,
                 "price": full.get("price", 0) or p.get("price", 0),
