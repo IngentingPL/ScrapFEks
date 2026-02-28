@@ -2,7 +2,7 @@
 
 Scraper i interaktywny dashboard dla [fantasy.ekstraklasa.org](https://fantasy.ekstraklasa.org/) — statystyki zawodników, ownership drużyn z rankingu, analiza ligi prywatnej.
 
-Uruchamiany automatycznie przez **GitHub Actions** z publikacją dashboardu na GitHub Pages.
+Uruchamiany automatycznie przez **GitHub Actions** po każdym meczu, z publikacją dashboardu na GitHub Pages.
 
 ## 🚀 Szybki start
 
@@ -45,35 +45,50 @@ Interaktywny dashboard HTML z ciemnym motywem, generowany automatycznie po każd
 
 ### Zakładki
 
-**👑 Kapitanowie** — ranking najpopularniejszych kapitanów z paskami popularności.
+**👑 Kapitanowie** — ranking najpopularniejszych kapitanów z paskami popularności. Kliknięcie na zawodnika rozwija panel z drużynami ligowymi.
 
-**⚽ Zawodnicy** — pełna tabela ze statystykami i ownership:
-- Punkty, cena, Pkt/Cena, popularność
-- **±Avg** — różnica vs średnia punktów na danej pozycji (wszyscy grający)
-- **±Liga** — różnica vs średnia punktów na danej pozycji w drużynach z Twojej ligi
-- Ownership: W składzie %, Start XI %, Kapitan % (kolorowe paski)
-- Kliknięcie na zawodnika rozwija panel z **wykresem formy** (słupki z 5 kolejek przed obecną + średnia) i **listą drużyn ligowych** z tym graczem
+**⚽ Zawodnicy** — pełna tabela ze statystykami, formą i ownership:
+
+| Kolumna | Opis |
+|---|---|
+| Punkty | Łączne punkty w sezonie |
+| Cena | Aktualna cena zawodnika |
+| ±Avg | Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji |
+| ±Liga | Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi |
+| Pkt/Cena | Stosunek punktów do ceny |
+| Forma | Mini wykres słupkowy z 5 kolejek przed obecną |
+| Średnia | Średnia punktów z rozegranych meczów (ostatnie 5 kolejek przed obecną) |
+| Pop. | Oficjalny % popularności z API Fantasy Ekstraklasa — procent **wszystkich** graczy fantasy, którzy mają tego zawodnika |
+| W składzie | % drużyn z wybranego zakresu (Top 10/100/Wszystkie/Liga), które mają tego zawodnika w składzie |
+| Start XI | % drużyn z wybranego zakresu, które mają tego zawodnika w Starting XI (nie na ławce) |
+| Kapitan | % drużyn z wybranego zakresu, które mają tego zawodnika jako kapitana |
+
+Kliknięcie na zawodnika rozwija panel z listą drużyn z Twojej ligi, które go mają (pozycja w rankingu, rola: C/XI/RES).
 
 **📋 Drużyny ligi** — podgląd składów z ligi prywatnej:
 - Dropdown z wszystkimi drużynami sortowanymi wg pozycji w rankingu
 - Tabela z sortowalnymi kolumnami (domyślnie wg pozycji: GK → DEF → MID → FWD)
 - Podział na Starting XI i ławkę rezerwowych
-- Kolumny ±Avg i ±Liga z podsumowaniem na dole
+- Kolumny ±Avg, ±Liga, Forma i Średnia z podsumowaniem na dole
+- Kliknięcie na zawodnika rozwija panel z drużynami ligowymi
 
 ### Filtry i zakresy
 
 - **Filtr pozycji** — BR / OBR / POM / NAP / Wszyscy
-- **Zakres ownership** — dynamiczne przyciski Top 10 / Top 100 / Wszystkie / Liga — ownership i kapitanowie filtrowane per zakres
+- **Zakres ownership** — dynamiczne przyciski Top 10 / Top 100 / Wszystkie / Liga — kolumny ownership (W składzie, Start XI, Kapitan) zmieniają się z zakresem, a Pop. zawsze pokazuje globalną popularność
 - Wszystkie kolumny sortowalne (kliknij nagłówek)
 
-### Forma zawodnika
+### Forma
 
-Kliknięcie na nazwisko zawodnika rozwija panel szczegółów:
-- Wykres słupkowy z **5 kolejek przed obecną** (stała skala, jednolite wysokości)
-- Kolejki nierozegrane oznaczone przerywanym konturem (0 pkt, nie wliczane do średniej)
+Mini wykres słupkowy w kolumnie tabeli (5 kolejek przed obecną):
 - Kolory: cyan (≥8 pkt), zielony (≥4), szary (≥0), czerwony (<0)
-- Średnia z rozegranych meczów obok wykresu
-- Lista drużyn ligowych z tym graczem (pozycja, rola: C/XI/RES)
+- Kolejki nierozegrane oznaczone przerywanym konturem (0 pkt, nie wliczane do średniej)
+
+### Różnica Pop. vs W składzie
+
+Obie kolumny mierzą popularność zawodnika, ale z różnych źródeł:
+- **Pop.** — oficjalna wartość z API fantasy.ekstraklasa.org, obliczana z **wszystkich** graczy fantasy. Stała niezależnie od wybranego zakresu.
+- **W składzie** — obliczona z naszego scrapowania drużyn z rankingu. Zmienia się z wybranym zakresem (Top 10/100/Wszystkie/Liga), co pozwala porównać popularność zawodnika wśród najlepszych graczy vs ogółu.
 
 ## 📁 Pliki wyjściowe
 
@@ -105,7 +120,9 @@ Kliknięcie na nazwisko zawodnika rozwija panel szczegółów:
 
 ## ⏰ Automatyczne uruchomienie
 
-Scraper uruchamia się automatycznie 3 godziny po każdym meczu na podstawie pliku `terminarz.txt`.
+Scraper uruchamia się automatycznie na podstawie pliku `terminarz.txt`:
+- **+30 minut** po pierwszym meczu każdej kolejki (szybkie odświeżenie na start)
+- **+3 godziny** po każdym meczu (pełne odświeżenie po zakończeniu)
 
 ### Jak to działa
 
@@ -113,12 +130,16 @@ Scraper uruchamia się automatycznie 3 godziny po każdym meczu na podstawie pli
 2. Pushasz do repo
 3. Workflow **Update Schedule** automatycznie:
    - parsuje terminarz
-   - grupuje mecze per dzień, bierze najpóźniejszy
-   - dodaje 3h i konwertuje na UTC
+   - generuje cron trigger po każdym meczu (+3h) i na start kolejki (+30min)
+   - konwertuje czasy na UTC (obsługuje zmianę CET/CEST)
    - aktualizuje cron w `scrape.yml`
    - commituje zmianę
 
-Przykład: mecz o 20:15 CET → trigger o 23:15 CET (22:15 UTC).
+Przykład kolejki z meczami o 18:00, 20:15, 20:30 CET:
+- 18:30 CET — start kolejki (+30min po pierwszym meczu)
+- 21:00 CET — +3h po meczu 18:00
+- 23:15 CET — +3h po meczu 20:15
+- 23:30 CET — +3h po meczu 20:30
 
 Możesz też uruchomić **Update Schedule** ręcznie z zakładki Actions.
 
@@ -156,3 +177,4 @@ python scraper.py
 - **Szanuj serwer** — domyślne opóźnienie 0.3s między requestami
 - **Checkpoint** — przerwane scrapowanie drużyn jest kontynuowane automatycznie
 - **GitHub Pages** — dashboard dostępny online po włączeniu Pages w ustawieniach repo
+- **Opóźnienia cron** — GitHub Actions może opóźnić cron triggery o kilka do kilkunastu minut
