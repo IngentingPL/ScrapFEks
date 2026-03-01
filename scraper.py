@@ -1223,6 +1223,58 @@ TEAM_ABBREVS = {
     "Wisła Płock": "WPŁ", "Zagłębie Lubin": "ZAG",
 }
 
+# Mapowanie nazw drużyn z TheSportsDB API → nazwy lokalne z terminarz.txt
+TSDB_TEAM_MAP = {
+    "Jagiellonia Bialystok": "Jagiellonia Białystok",
+    "Jagiellonia": "Jagiellonia Białystok",
+    "Legia Warsaw": "Legia Warszawa",
+    "Lech Poznan": "Lech Poznań",
+    "Lechia Gdansk": "Lechia Gdańsk",
+    "Gornik Zabrze": "Górnik Zabrze",
+    "Pogon Szczecin": "Pogoń Szczecin",
+    "Widzew Lodz": "Widzew Łódź",
+    "Wisla Plock": "Wisła Płock",
+    "Wisła Plock": "Wisła Płock",
+    "Zaglebie Lubin": "Zagłębie Lubin",
+    "Raków Czestochowa": "Raków Częstochowa",
+    "Rakow Czestochowa": "Raków Częstochowa",
+    "Raków Czestochowa": "Raków Częstochowa",
+    "Bruk-Bet Termalica": "Bruk-Bet Termalica Nieciecza",
+    "Termalica Bruk-Bet Nieciecza": "Bruk-Bet Termalica Nieciecza",
+    "Termalica Nieciecza": "Bruk-Bet Termalica Nieciecza",
+    "Korona Kielce": "Korona Kielce",
+    "Cracovia Krakow": "Cracovia",
+    "KS Cracovia": "Cracovia",
+}
+
+
+def fetch_ekstraklasa_table(season: str = "2025-2026") -> dict:
+    """Pobiera tabelę Ekstraklasy z TheSportsDB API (bramki strzelone/stracone)."""
+    url = f"https://www.thesportsdb.com/api/v1/json/3/lookuptable.php?l=4422&s={season}"
+    team_stats = {}
+    try:
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        table = data.get("table") or []
+        for row in table:
+            api_name = row.get("strTeam", "")
+            # Mapuj nazwę z API na lokalną
+            local_name = TSDB_TEAM_MAP.get(api_name, api_name)
+            # Dopasuj do TEAM_ABBREVS jeśli nie znaleziono
+            if local_name not in TEAM_ABBREVS:
+                for local, abbr in TEAM_ABBREVS.items():
+                    if api_name.lower() in local.lower() or local.lower() in api_name.lower():
+                        local_name = local
+                        break
+            gf = int(row.get("intGoalsFor", 0))
+            ga = int(row.get("intGoalsAgainst", 0))
+            team_stats[local_name] = {"gf": gf, "ga": ga}
+        print(f"  ⚽ API TheSportsDB: pobrano statystyki {len(team_stats)} drużyn")
+    except Exception as e:
+        print(f"  ⚠️  Błąd pobierania z TheSportsDB API: {e}")
+    return team_stats
+
 MONTHS_PL = {
     "stycznia": 1, "lutego": 2, "marca": 3, "kwietnia": 4,
     "maja": 5, "czerwca": 6, "lipca": 7, "sierpnia": 8,
@@ -1305,6 +1357,7 @@ def generate_dashboard_html(
     league_rosters: dict,
     league_teams_detail: list[dict],
     fixtures_data: dict,
+    ekstra_stats: dict,
     timestamp: str,
     filename: str,
 ):
@@ -1347,6 +1400,7 @@ def generate_dashboard_html(
     rosters_json = json.dumps(league_rosters, ensure_ascii=False)
     teams_detail_json = json.dumps(league_teams_detail, ensure_ascii=False)
     fixtures_json = json.dumps(fixtures_data, ensure_ascii=False)
+    ekstra_stats_json = json.dumps(ekstra_stats, ensure_ascii=False)
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
 
     # For stat cards
@@ -1552,12 +1606,17 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 /* Fixture Ticker */
 .ft-table {{ border-collapse: collapse; width: 100%; font-size: 13px; }}
 .ft-table th {{ padding: 6px 4px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }}
-.ft-table th.ft-round {{ min-width: 70px; }}
+.ft-table th.ft-round {{ min-width: 80px; }}
 .ft-table td {{ padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }}
 .ft-table td.ft-team {{ text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; cursor: pointer; }}
 .ft-table td.ft-team:hover {{ color: #22d3ee; }}
 .ft-cell {{ border-radius: 4px; padding: 4px 6px; font-weight: 600; font-size: 12px; display: inline-block; min-width: 52px; text-align: center; }}
 .ft-cell .ft-ha {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
+.ft-cell-dual {{ display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 68px; }}
+.ft-cell-team {{ font-size: 11px; font-weight: 600; color: #e2e8f0; white-space: nowrap; }}
+.ft-cell-team .ft-ha {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
+.ft-cell-vals {{ display: flex; gap: 2px; }}
+.ft-val {{ border-radius: 3px; padding: 2px 5px; font-weight: 700; font-size: 10px; min-width: 28px; text-align: center; }}
 .ft-legend {{ display: flex; gap: 12px; align-items: center; margin-bottom: 12px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; }}
 .ft-legend-item {{ display: flex; align-items: center; gap: 4px; }}
 .ft-legend-swatch {{ width: 16px; height: 16px; border-radius: 3px; }}
@@ -1567,14 +1626,6 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .ft-modal h3 {{ margin: 0 0 16px; font-size: 18px; }}
 .ft-modal-close {{ position: absolute; top: 12px; right: 16px; background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }}
 .ft-modal-close:hover {{ color: #e2e8f0; }}
-.ft-slider-row {{ margin-bottom: 16px; }}
-.ft-slider-row label {{ display: block; font-size: 13px; color: #94a3b8; margin-bottom: 4px; }}
-.ft-slider-row input[type=range] {{ width: 100%; accent-color: #22d3ee; }}
-.ft-slider-val {{ font-size: 20px; font-weight: 800; color: #22d3ee; text-align: center; margin-top: 2px; }}
-.ft-modal-actions {{ display: flex; gap: 8px; margin-top: 16px; }}
-.ft-modal-actions button {{ flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; cursor: pointer; font-size: 13px; }}
-.ft-modal-actions button:hover {{ border-color: #22d3ee; }}
-.ft-modal-actions button.primary {{ background: #22d3ee; color: #0f172a; border-color: #22d3ee; font-weight: 700; }}
 </style>
 </head>
 <body>
@@ -1640,6 +1691,7 @@ const PLAYERS = {players_json};
 const ROSTERS = {rosters_json};
 const LEAGUE_TEAMS = {teams_detail_json};
 const FIXTURES = {fixtures_json};
+const EKSTRA_STATS = {ekstra_stats_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -2047,25 +2099,58 @@ function renderTeams() {{
 }}
 
 // ============ FIXTURE TICKER ============
-const ftRatings = {{}};
-// Domyślne ratingi: 3.0/3.0 (skala 1-5)
-if (FIXTURES.teams) FIXTURES.teams.forEach(t => {{ ftRatings[t] = {{att: 3.0, def: 3.0}}; }});
 let ftSort = 'alpha'; // 'alpha' | 'diff'
+const hasStats = Object.keys(EKSTRA_STATS).length > 0;
 
-function ftDifficulty(opponent, isHome) {{
-  const r = ftRatings[opponent];
-  if (!r) return 3;
-  const base = (r.att + r.def) / 2;
-  return base + (isHome ? -0.4 : 0.4);
+// Oblicz ofensywę i defensywę dla meczu: team vs opponent
+function ftOffense(team, opponent) {{
+  const ts = EKSTRA_STATS[team];
+  const os = EKSTRA_STATS[opponent];
+  if (!ts || !os) return 0;
+  return ts.gf - os.ga; // strzelone(team) - stracone(opponent)
 }}
 
-function ftColor(diff) {{
-  if (diff <= 1.8) return {{bg:'#065f46',fg:'#a7f3d0'}};
-  if (diff <= 2.4) return {{bg:'#047857',fg:'#d1fae5'}};
-  if (diff <= 2.9) return {{bg:'#14532d80',fg:'#86efac'}};
-  if (diff <= 3.2) return {{bg:'#1e293b',fg:'#94a3b8'}};
-  if (diff <= 3.7) return {{bg:'#7f1d1d80',fg:'#fca5a5'}};
-  if (diff <= 4.2) return {{bg:'#991b1b',fg:'#fecaca'}};
+function ftDefense(team, opponent) {{
+  const ts = EKSTRA_STATS[team];
+  const os = EKSTRA_STATS[opponent];
+  if (!ts || !os) return 0;
+  return ts.ga - os.gf; // stracone(team) - strzelone(opponent)
+}}
+
+// Kolor dla ofensywy (im wyżej tym lepiej → zielony)
+function ftColorOff(val) {{
+  if (val >= 12) return {{bg:'#065f46',fg:'#a7f3d0'}};
+  if (val >= 6) return {{bg:'#047857',fg:'#d1fae5'}};
+  if (val >= 2) return {{bg:'#14532d80',fg:'#86efac'}};
+  if (val >= -2) return {{bg:'#1e293b',fg:'#94a3b8'}};
+  if (val >= -6) return {{bg:'#7f1d1d80',fg:'#fca5a5'}};
+  if (val >= -12) return {{bg:'#991b1b',fg:'#fecaca'}};
+  return {{bg:'#7f1d1d',fg:'#fca5a5'}};
+}}
+
+// Kolor dla defensywy (im niżej tym lepiej → zielony)
+function ftColorDef(val) {{
+  if (val <= -12) return {{bg:'#065f46',fg:'#a7f3d0'}};
+  if (val <= -6) return {{bg:'#047857',fg:'#d1fae5'}};
+  if (val <= -2) return {{bg:'#14532d80',fg:'#86efac'}};
+  if (val <= 2) return {{bg:'#1e293b',fg:'#94a3b8'}};
+  if (val <= 6) return {{bg:'#7f1d1d80',fg:'#fca5a5'}};
+  if (val <= 12) return {{bg:'#991b1b',fg:'#fecaca'}};
+  return {{bg:'#7f1d1d',fg:'#fca5a5'}};
+}}
+
+// Łączna trudność meczu (do sortowania i średniej)
+function ftCombined(team, opponent) {{
+  return ftOffense(team, opponent) - ftDefense(team, opponent);
+}}
+
+function ftColorCombined(val) {{
+  if (val >= 24) return {{bg:'#065f46',fg:'#a7f3d0'}};
+  if (val >= 12) return {{bg:'#047857',fg:'#d1fae5'}};
+  if (val >= 4) return {{bg:'#14532d80',fg:'#86efac'}};
+  if (val >= -4) return {{bg:'#1e293b',fg:'#94a3b8'}};
+  if (val >= -12) return {{bg:'#7f1d1d80',fg:'#fca5a5'}};
+  if (val >= -24) return {{bg:'#991b1b',fg:'#fecaca'}};
   return {{bg:'#7f1d1d',fg:'#fca5a5'}};
 }}
 
@@ -2083,45 +2168,36 @@ function ftBuildTeamFixtures() {{
   return tf;
 }}
 
-function ftAvgDifficulty(teamFixtures, rounds) {{
+function ftAvgCombined(teamFixtures, team, rounds) {{
   let sum = 0, cnt = 0;
   rounds.forEach(r => {{
     const f = teamFixtures[r];
-    if (f) {{ sum += ftDifficulty(f.opp, f.home); cnt++; }}
+    if (f) {{ sum += ftCombined(team, f.opp); cnt++; }}
   }});
-  return cnt ? sum / cnt : 3;
+  return cnt ? sum / cnt : 0;
 }}
 
 function ftShowModal(team) {{
-  const r = ftRatings[team] || {{att:3,def:3}};
+  const st = EKSTRA_STATS[team];
   const abbr = FIXTURES.abbrevs[team] || team.substring(0,3).toUpperCase();
   const old = document.getElementById("ftModal");
   if (old) old.remove();
   const wrap = document.createElement("div");
   wrap.className = "ft-modal-bg";
   wrap.id = "ftModal";
+  const gf = st ? st.gf : '?';
+  const ga = st ? st.ga : '?';
   wrap.innerHTML = '<div class="ft-modal"><button class="ft-modal-close" id="ftClose">✕</button>'
     +'<h3>'+abbr+' — '+team+'</h3>'
-    +'<div class="ft-slider-row"><label>Atak (strzelone bramki)</label>'
-    +'<input type="range" min="1" max="5" step="0.1" value="'+r.att+'" id="ftAtt">'
-    +'<div class="ft-slider-val" id="ftAttV">'+r.att+'</div></div>'
-    +'<div class="ft-slider-row"><label>Obrona (stracone bramki)</label>'
-    +'<input type="range" min="1" max="5" step="0.1" value="'+r.def+'" id="ftDef">'
-    +'<div class="ft-slider-val" id="ftDefV">'+r.def+'</div></div>'
-    +'<div class="ft-modal-actions">'
-    +'<button id="ftReset">Reset</button>'
-    +'<button class="primary" id="ftSave">Zapisz</button>'
-    +'</div></div>';
+    +'<div style="display:flex;gap:24px;margin:16px 0">'
+    +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Strzelone (GF)</div><div style="font-size:28px;font-weight:800;color:#22d3ee">'+gf+'</div></div>'
+    +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Stracone (GA)</div><div style="font-size:28px;font-weight:800;color:#f87171">'+ga+'</div></div>'
+    +'</div>'
+    +'<div style="font-size:12px;color:#64748b;text-align:center">Dane z API TheSportsDB</div>'
+    +'</div>';
   document.body.appendChild(wrap);
   document.getElementById("ftClose").onclick = function() {{ wrap.remove(); }};
   wrap.onclick = function(e) {{ if (e.target === wrap) wrap.remove(); }};
-  document.getElementById("ftAtt").oninput = function() {{ document.getElementById("ftAttV").textContent = this.value; }};
-  document.getElementById("ftDef").oninput = function() {{ document.getElementById("ftDefV").textContent = this.value; }};
-  document.getElementById("ftReset").onclick = function() {{ ftRatings[team] = {{att:3,def:3}}; wrap.remove(); render(); }};
-  document.getElementById("ftSave").onclick = function() {{
-    ftRatings[team] = {{att:parseFloat(document.getElementById("ftAtt").value), def:parseFloat(document.getElementById("ftDef").value)}};
-    wrap.remove(); render();
-  }};
 }}
 
 function renderFixtures() {{
@@ -2133,60 +2209,85 @@ function renderFixtures() {{
   // Sortowanie drużyn
   let teams = [...FIXTURES.teams];
   if (ftSort === 'diff') {{
-    teams.sort((a,b) => ftAvgDifficulty(tf[a], rounds) - ftAvgDifficulty(tf[b], rounds));
+    teams.sort((a,b) => ftAvgCombined(tf[b], b, rounds) - ftAvgCombined(tf[a], a, rounds));
   }}
 
-  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — trudność meczów</h2><div class="line"></div></div>';
+  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — ofensywa / defensywa</h2><div class="line"></div></div>';
+
+  if (!hasStats) {{
+    h += '<div class="empty-msg" style="margin-bottom:16px">⚠️ Brak danych z API — nie udało się pobrać statystyk bramkowych</div>';
+  }}
 
   // Legenda
   h += '<div class="ft-legend">';
-  const legs = [
-    {{d:1.5,l:'Łatwy'}},{{d:2.2,l:'Średnio-łatwy'}},{{d:2.7,l:'Umiarkowany'}},
-    {{d:3.2,l:'Neutralny'}},{{d:3.5,l:'Średnio-trudny'}},{{d:4.0,l:'Trudny'}},{{d:4.5,l:'Bardzo trudny'}}
-  ];
-  legs.forEach(lg => {{
-    const c = ftColor(lg.d);
-    h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:'+c.bg+'"></span><span style="color:'+c.fg+'">'+lg.l+'</span></span>';
-  }});
+  h += '<span class="ft-legend-item" style="margin-right:8px;font-weight:600;color:#e2e8f0">Legenda:</span>';
+  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#065f46"></span><span style="color:#a7f3d0">Bardzo korzystny</span></span>';
+  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#047857"></span><span style="color:#d1fae5">Korzystny</span></span>';
+  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#14532d80"></span><span style="color:#86efac">Lekko korzystny</span></span>';
+  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#1e293b"></span><span style="color:#94a3b8">Neutralny</span></span>';
+  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#7f1d1d80"></span><span style="color:#fca5a5">Niekorzystny</span></span>';
+  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#991b1b"></span><span style="color:#fecaca">Bardzo niekorzystny</span></span>';
+  h += '</div>';
+
+  // Opis ofensywy i defensywy
+  h += '<div style="margin-bottom:8px;font-size:11px;color:#64748b">';
+  h += '<span style="color:#22d3ee;font-weight:600">OFE</span> = strzelone(twoja) − stracone(przeciwnik) &nbsp;|&nbsp; ';
+  h += '<span style="color:#f87171;font-weight:600">DEF</span> = stracone(twoja) − strzelone(przeciwnik)';
   h += '</div>';
 
   // Sort toggle
   h += '<div style="margin-bottom:12px;font-size:12px">';
   h += '<span class="c-dim">Sortuj: </span>';
   h += '<button class="scope-btn ft-sort-btn" data-ftsort="alpha" style="font-size:11px;padding:3px 10px">A-Z</button> ';
-  h += '<button class="scope-btn ft-sort-btn" data-ftsort="diff" style="font-size:11px;padding:3px 10px">Trudność ↑</button>';
-  h += '<span class="c-dim" style="margin-left:12px;font-size:11px">Kliknij nazwę drużyny żeby zmienić siłę</span>';
+  h += '<button class="scope-btn ft-sort-btn" data-ftsort="diff" style="font-size:11px;padding:3px 10px">Łatwość ↓</button>';
+  h += '<span class="c-dim" style="margin-left:12px;font-size:11px">Kliknij nazwę drużyny aby zobaczyć statystyki</span>';
   h += '</div>';
 
   // Tabela
   h += '<div class="data-table"><table class="ft-table"><thead><tr>';
   h += '<th style="text-align:left;min-width:100px">Drużyna</th>';
-  h += '<th style="min-width:40px">Śr.</th>';
+  h += '<th style="min-width:50px">GF/GA</th>';
   rounds.forEach(r => {{ h += '<th class="ft-round">K'+r+'</th>'; }});
   h += '</tr></thead><tbody>';
 
   teams.forEach((team, ti) => {{
     const ab = abbr[team] || team.substring(0,3).toUpperCase();
-    const avg = ftAvgDifficulty(tf[team], rounds);
-    const avgC = ftColor(avg);
+    const st = EKSTRA_STATS[team];
     h += '<tr>';
     h += '<td class="ft-team ft-team-click" data-ftteam="'+ti+'">';
     h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(ti+1)+'</span> '+ab+'</td>';
-    h += '<td><span class="ft-cell" style="background:'+avgC.bg+';color:'+avgC.fg+';font-size:11px;min-width:36px">'+avg.toFixed(1)+'</span></td>';
+    // GF/GA kolumna
+    if (st) {{
+      h += '<td><span class="ft-cell" style="background:#1e293b;color:#e2e8f0;font-size:11px;min-width:42px"><span style="color:#22d3ee">'+st.gf+'</span>/<span style="color:#f87171">'+st.ga+'</span></span></td>';
+    }} else {{
+      h += '<td><span class="ft-cell" style="background:#1e293b;color:#64748b;font-size:11px;min-width:42px">—</span></td>';
+    }}
     rounds.forEach(r => {{
       const f = tf[team][r];
       if (!f) {{ h += '<td>—</td>'; return; }}
       const oppAb = abbr[f.opp] || f.opp.substring(0,3).toUpperCase();
-      const diff = ftDifficulty(f.opp, f.home);
-      const c = ftColor(diff);
       const ha = f.home ? 'D' : 'W';
-      h += '<td><span class="ft-cell" style="background:'+c.bg+';color:'+c.fg+'" title="'+f.opp+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">'+oppAb+' <span class="ft-ha">('+ha+')</span></span></td>';
+      if (hasStats && EKSTRA_STATS[team] && EKSTRA_STATS[f.opp]) {{
+        const off = ftOffense(team, f.opp);
+        const def = ftDefense(team, f.opp);
+        const cOff = ftColorOff(off);
+        const cDef = ftColorDef(def);
+        const offSign = off > 0 ? '+' : '';
+        const defSign = def > 0 ? '+' : '';
+        h += '<td><div class="ft-cell-dual" title="'+f.opp+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
+        h += '<div class="ft-cell-team">'+oppAb+' <span class="ft-ha">('+ha+')</span></div>';
+        h += '<div class="ft-cell-vals">';
+        h += '<span class="ft-val" style="background:'+cOff.bg+';color:'+cOff.fg+'">'+offSign+off+'</span>';
+        h += '<span class="ft-val" style="background:'+cDef.bg+';color:'+cDef.fg+'">'+defSign+def+'</span>';
+        h += '</div></div></td>';
+      }} else {{
+        h += '<td><span class="ft-cell" style="background:#1e293b;color:#94a3b8" title="'+f.opp+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">'+oppAb+' <span class="ft-ha">('+ha+')</span></span></td>';
+      }}
     }});
     h += '</tr>';
   }});
 
   h += '</tbody></table></div>';
-  // Store teams array for click handler
   window._ftTeams = teams;
   return h;
 }}
@@ -2215,11 +2316,12 @@ function render() {{
   // Team select handler
   const sel = document.getElementById('teamSelect');
   if (sel) sel.onchange = () => {{ selectedTeam = sel.value; render(); }};
-  // Fixture sort & team click handlers
+  // Fixture sort handlers
   document.querySelectorAll('.ft-sort-btn').forEach(b => {{
     b.classList.toggle('active', b.dataset.ftsort === ftSort);
     b.onclick = () => {{ ftSort = b.dataset.ftsort; render(); }};
   }});
+  // Team click → show stats modal
   document.querySelectorAll('.ft-team-click').forEach(td => {{
     td.onclick = () => {{
       const teams = window._ftTeams || FIXTURES.teams || [];
@@ -2470,6 +2572,9 @@ def main():
     if fixtures_data["rounds"]:
         print(f"  📅 Terminarz: {len(fixtures_data['rounds'])} kolejek, {len(fixtures_data['teams'])} drużyn")
 
+    # 8.6 Pobierz statystyki bramkowe z TheSportsDB API
+    ekstra_stats = fetch_ekstraklasa_table()
+
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
@@ -2482,6 +2587,7 @@ def main():
         league_rosters=league_rosters,
         league_teams_detail=league_teams_detail,
         fixtures_data=fixtures_data,
+        ekstra_stats=ekstra_stats,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
