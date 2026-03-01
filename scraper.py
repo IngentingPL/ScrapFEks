@@ -2095,20 +2095,33 @@ function ftAvgDifficulty(teamFixtures, rounds) {{
 function ftShowModal(team) {{
   const r = ftRatings[team] || {{att:3,def:3}};
   const abbr = FIXTURES.abbrevs[team] || team.substring(0,3).toUpperCase();
-  let h = '<div class="ft-modal-bg" id="ftModal"><div class="ft-modal">';
-  h += '<button class="ft-modal-close" onclick="document.getElementById(\'ftModal\').remove()">✕</button>';
-  h += '<h3>'+abbr+' — '+team+'</h3>';
-  h += '<div class="ft-slider-row"><label>Atak (strzelone bramki)</label>';
-  h += '<input type="range" min="1" max="5" step="0.1" value="'+r.att+'" id="ftAtt" oninput="document.getElementById(\'ftAttV\').textContent=this.value">';
-  h += '<div class="ft-slider-val" id="ftAttV">'+r.att+'</div></div>';
-  h += '<div class="ft-slider-row"><label>Obrona (stracone bramki)</label>';
-  h += '<input type="range" min="1" max="5" step="0.1" value="'+r.def+'" id="ftDef" oninput="document.getElementById(\'ftDefV\').textContent=this.value">';
-  h += '<div class="ft-slider-val" id="ftDefV">'+r.def+'</div></div>';
-  h += '<div class="ft-modal-actions">';
-  h += '<button onclick="ftRatings[\''+team.replace(/'/g,"\\'")+'\']={{att:3,def:3}};document.getElementById(\'ftModal\').remove();render()">Reset</button>';
-  h += '<button class="primary" onclick="ftRatings[\''+team.replace(/'/g,"\\'")+'\']={{att:parseFloat(document.getElementById(\'ftAtt\').value),def:parseFloat(document.getElementById(\'ftDef\').value)}};document.getElementById(\'ftModal\').remove();render()">Zapisz</button>';
-  h += '</div></div></div>';
-  document.body.insertAdjacentHTML('beforeend', h);
+  const old = document.getElementById("ftModal");
+  if (old) old.remove();
+  const wrap = document.createElement("div");
+  wrap.className = "ft-modal-bg";
+  wrap.id = "ftModal";
+  wrap.innerHTML = '<div class="ft-modal"><button class="ft-modal-close" id="ftClose">✕</button>'
+    +'<h3>'+abbr+' — '+team+'</h3>'
+    +'<div class="ft-slider-row"><label>Atak (strzelone bramki)</label>'
+    +'<input type="range" min="1" max="5" step="0.1" value="'+r.att+'" id="ftAtt">'
+    +'<div class="ft-slider-val" id="ftAttV">'+r.att+'</div></div>'
+    +'<div class="ft-slider-row"><label>Obrona (stracone bramki)</label>'
+    +'<input type="range" min="1" max="5" step="0.1" value="'+r.def+'" id="ftDef">'
+    +'<div class="ft-slider-val" id="ftDefV">'+r.def+'</div></div>'
+    +'<div class="ft-modal-actions">'
+    +'<button id="ftReset">Reset</button>'
+    +'<button class="primary" id="ftSave">Zapisz</button>'
+    +'</div></div>';
+  document.body.appendChild(wrap);
+  document.getElementById("ftClose").onclick = function() {{ wrap.remove(); }};
+  wrap.onclick = function(e) {{ if (e.target === wrap) wrap.remove(); }};
+  document.getElementById("ftAtt").oninput = function() {{ document.getElementById("ftAttV").textContent = this.value; }};
+  document.getElementById("ftDef").oninput = function() {{ document.getElementById("ftDefV").textContent = this.value; }};
+  document.getElementById("ftReset").onclick = function() {{ ftRatings[team] = {{att:3,def:3}}; wrap.remove(); render(); }};
+  document.getElementById("ftSave").onclick = function() {{
+    ftRatings[team] = {{att:parseFloat(document.getElementById("ftAtt").value), def:parseFloat(document.getElementById("ftDef").value)}};
+    wrap.remove(); render();
+  }};
 }}
 
 function renderFixtures() {{
@@ -2140,8 +2153,8 @@ function renderFixtures() {{
   // Sort toggle
   h += '<div style="margin-bottom:12px;font-size:12px">';
   h += '<span class="c-dim">Sortuj: </span>';
-  h += '<button class="scope-btn'+(ftSort==='alpha'?' active':'')+'" onclick="ftSort=\'alpha\';render()" style="font-size:11px;padding:3px 10px">A-Z</button> ';
-  h += '<button class="scope-btn'+(ftSort==='diff'?' active':'')+'" onclick="ftSort=\'diff\';render()" style="font-size:11px;padding:3px 10px">Trudność ↑</button>';
+  h += '<button class="scope-btn ft-sort-btn" data-ftsort="alpha" style="font-size:11px;padding:3px 10px">A-Z</button> ';
+  h += '<button class="scope-btn ft-sort-btn" data-ftsort="diff" style="font-size:11px;padding:3px 10px">Trudność ↑</button>';
   h += '<span class="c-dim" style="margin-left:12px;font-size:11px">Kliknij nazwę drużyny żeby zmienić siłę</span>';
   h += '</div>';
 
@@ -2152,13 +2165,13 @@ function renderFixtures() {{
   rounds.forEach(r => {{ h += '<th class="ft-round">K'+r+'</th>'; }});
   h += '</tr></thead><tbody>';
 
-  teams.forEach(team => {{
+  teams.forEach((team, ti) => {{
     const ab = abbr[team] || team.substring(0,3).toUpperCase();
     const avg = ftAvgDifficulty(tf[team], rounds);
     const avgC = ftColor(avg);
     h += '<tr>';
-    h += '<td class="ft-team" onclick="ftShowModal(\''+team.replace(/'/g,"\\'")+'\')" title="Kliknij żeby zmienić siłę '+team+'">';
-    h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(teams.indexOf(team)+1)+'</span> '+ab+'</td>';
+    h += '<td class="ft-team ft-team-click" data-ftteam="'+ti+'">';
+    h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(ti+1)+'</span> '+ab+'</td>';
     h += '<td><span class="ft-cell" style="background:'+avgC.bg+';color:'+avgC.fg+';font-size:11px;min-width:36px">'+avg.toFixed(1)+'</span></td>';
     rounds.forEach(r => {{
       const f = tf[team][r];
@@ -2167,12 +2180,14 @@ function renderFixtures() {{
       const diff = ftDifficulty(f.opp, f.home);
       const c = ftColor(diff);
       const ha = f.home ? 'D' : 'W';
-      h += '<td><span class="ft-cell" style="background:'+c.bg+';color:'+c.fg+'" title="'+f.opp+' ('+( f.home ? 'dom' : 'wyjazd')+') '+f.date+'">'+oppAb+' <span class="ft-ha">('+ha+')</span></span></td>';
+      h += '<td><span class="ft-cell" style="background:'+c.bg+';color:'+c.fg+'" title="'+f.opp+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">'+oppAb+' <span class="ft-ha">('+ha+')</span></span></td>';
     }});
     h += '</tr>';
   }});
 
   h += '</tbody></table></div>';
+  // Store teams array for click handler
+  window._ftTeams = teams;
   return h;
 }}
 
@@ -2185,7 +2200,7 @@ function render() {{
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
-  document.querySelectorAll('.scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
+  document.querySelectorAll('.scope-btn:not(.ft-sort-btn)').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
   // Sortable click handlers
   document.querySelectorAll('.sortable').forEach(th => {{
     th.onclick = () => {{
@@ -2200,6 +2215,18 @@ function render() {{
   // Team select handler
   const sel = document.getElementById('teamSelect');
   if (sel) sel.onchange = () => {{ selectedTeam = sel.value; render(); }};
+  // Fixture sort & team click handlers
+  document.querySelectorAll('.ft-sort-btn').forEach(b => {{
+    b.classList.toggle('active', b.dataset.ftsort === ftSort);
+    b.onclick = () => {{ ftSort = b.dataset.ftsort; render(); }};
+  }});
+  document.querySelectorAll('.ft-team-click').forEach(td => {{
+    td.onclick = () => {{
+      const teams = window._ftTeams || FIXTURES.teams || [];
+      const team = teams[parseInt(td.dataset.ftteam)];
+      if (team) ftShowModal(team);
+    }};
+  }});
 }}
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {{ tab = t.dataset.tab; render(); }}));
