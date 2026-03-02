@@ -1405,9 +1405,7 @@ def generate_dashboard_html(
 
     # For stat cards
     all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))
-    all_caps = all_tier.get("captains", []) if all_tier else []
     all_owns = all_tier.get("ownership", []) if all_tier else []
-    top_captain = all_caps[0] if all_caps else {}
     top_owned = all_owns[0] if all_owns else {}
     best_ppp = max(summary_data, key=lambda x: x.get("points_per_price", 0)) if summary_data else {}
 
@@ -1646,11 +1644,6 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       <div class="val">{teams_count}</div>
       <div class="label">Top drużyn</div>
     </div>
-    <div class="stat-card accent-gold">
-      <div class="val">{top_captain.get('name', '—')}</div>
-      <div class="label">Top kapitan</div>
-      <div class="sub">{top_captain.get('captain_pct', '—')} drużyn</div>
-    </div>
     <div class="stat-card accent-green">
       <div class="val">{top_owned.get('squad_pct', '—')}</div>
       <div class="label">Top owned</div>
@@ -1666,8 +1659,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 
   <div style="margin-top: 24px;">
     <div class="tabs">
-      <button class="tab active" data-tab="captains">👑 Kapitanowie</button>
-      <button class="tab" data-tab="players">⚽ Zawodnicy</button>
+      <button class="tab active" data-tab="players">⚽ Zawodnicy</button>
       {"<button class='tab' data-tab='teams'>📋 Liga CMF</button>" if has_league else ""}
       {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
     </div>
@@ -1681,8 +1673,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
         <button class="pos-btn" data-pos="NAP">FWD</button>
       </div>
     </div>
-    <div id="tab-captains" class="tab-content active"></div>
-    <div id="tab-players" class="tab-content"></div>
+    <div id="tab-players" class="tab-content active"></div>
     <div id="tab-teams" class="tab-content"></div>
     <div id="tab-fixtures" class="tab-content"></div>
   </div>
@@ -1701,10 +1692,9 @@ const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
   Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
 
-let tab = 'captains', pos = 'ALL', scope = '{default_scope}';
+let tab = 'players', pos = 'ALL', scope = '{default_scope}';
 let selectedTeam = '';
 let sorts = {{
-  captains: {{col:'captain_count', dir:'desc'}},
   players: {{col:'total_points', dir:'desc'}},
   teams: {{col:'_pos_order', dir:'asc'}},
 }};
@@ -1832,32 +1822,6 @@ function detailRow(pid, colspan) {{
   h += '<span class="ds-label">Drużyny w lidze ('+r.length+')</span>';
   h += '<div style="display:flex;flex-wrap:wrap;gap:4px">'+chips+'</div>';
   h += '</div></div></td></tr>';
-  return h;
-}}
-
-function renderCaptains() {{
-  if (!DATA[scope]) return '<div class="empty-msg">Brak danych dla tego zakresu</div>';
-  let data = DATA[scope].captains;
-  data = sortData(data, 'captains');
-  if (!data.length) return '<div class="empty-msg">Brak danych o kapitanach</div>';
-  const maxPct = Math.max(...data.map(c => c.captain_count));
-  let h = '<div class="section-title"><span style="font-size:22px">👑</span><h2>Popularność kapitanów — '+(DATA[scope].label||scope)+'</h2><div class="line"></div></div>';
-  h += '<div class="data-table"><table><thead><tr>';
-  h += '<th class="text-left sortable" data-tab="captains" data-col="index">#'+arrow('captains','index')+'</th>';
-  h += '<th class="text-left sortable" data-tab="captains" data-col="name">Zawodnik'+arrow('captains','name')+'</th>';
-  h += '<th class="text-right sortable" data-tab="captains" data-col="captain_count">Wyborów'+arrow('captains','captain_count')+'</th>';
-  h += '<th class="text-left" style="min-width:160px">Popularność</th>';
-  h += '</tr></thead><tbody>';
-  data.forEach((c, i) => {{
-    const hl = i === 0 ? ' class="highlight"' : '';
-    const ns = i === 0 ? 'color:#fbbf24;font-weight:700' : i < 3 ? 'font-weight:700' : 'font-weight:500';
-    const badge = i === 0 ? '<span class="captain-badge">C</span> ' : '';
-    const bc = i === 0 ? '#fbbf24' : '#22d3ee';
-    h += '<tr'+hl+'><td class="c-muted fw-600">'+(i+1)+'</td>'+nameCell(c.name, c.player_id, ns, badge);
-    h += '<td class="text-right fw-700">'+c.captain_count+'</td>';
-    h += '<td>'+bar(parseFloat(c.captain_pct), maxPct*1.2, bc)+'</td></tr>';
-  }});
-  h += '</tbody></table></div>';
   return h;
 }}
 
@@ -2298,7 +2262,6 @@ function renderFixtures() {{
 }}
 
 function render() {{
-  document.getElementById('tab-captains').innerHTML = tab === 'captains' ? renderCaptains() : '';
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
   const ftEl = document.getElementById('tab-fixtures');
@@ -2307,6 +2270,8 @@ function render() {{
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
   document.querySelectorAll('.scope-btn:not(.ft-sort-btn)').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
+  const fr = document.querySelector('.filters-row');
+  if (fr) fr.style.display = tab === 'players' ? 'flex' : 'none';
   // Sortable click handlers
   document.querySelectorAll('.sortable').forEach(th => {{
     th.onclick = () => {{
