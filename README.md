@@ -45,9 +45,7 @@ Interaktywny dashboard HTML z ciemnym motywem, generowany automatycznie po każd
 
 ### Zakładki
 
-**👑 Kapitanowie** — ranking najpopularniejszych kapitanów z paskami popularności. Kliknięcie na zawodnika rozwija panel z drużynami ligowymi.
-
-**⚽ Zawodnicy** — pełna tabela ze statystykami, formą i ownership:
+**⚽ Zawodnicy** — domyślna zakładka. Pełna tabela ze statystykami, formą i ownership:
 
 | Kolumna | Opis |
 |---|---|
@@ -65,7 +63,7 @@ Interaktywny dashboard HTML z ciemnym motywem, generowany automatycznie po każd
 
 Kliknięcie na zawodnika rozwija panel z listą drużyn z Twojej ligi, które go mają (pozycja w rankingu, rola: C/XI/RES).
 
-**📋 Drużyny ligi** — podgląd składów z ligi prywatnej:
+**📋 Liga CMF** — podgląd składów z ligi prywatnej:
 - Dropdown z wszystkimi drużynami sortowanymi wg pozycji w rankingu
 - Tabela z sortowalnymi kolumnami (domyślnie wg pozycji: GK → DEF → MID → FWD)
 - Podział na Starting XI i ławkę rezerwowych
@@ -75,11 +73,11 @@ Kliknięcie na zawodnika rozwija panel z listą drużyn z Twojej ligi, które go
 **📅 Terminarz** — fixture ticker z trudnością meczów:
 - Siatka: drużyny w wierszach, kolejki w kolumnach
 - Każda komórka = skrót przeciwnika + (D)om/(W)yjazd
-- Kolory od zielonego (łatwy) do czerwonego (trudny) na podstawie siły przeciwnika i dom/wyjazd
+- Kolory od zielonego (łatwy) do czerwonego (trudny) na podstawie siły drużyn (obrony/ataku) i dom/wyjazd
 - Kolumna ze średnią trudnością nadchodzących meczów
 - Kliknięcie na nazwę drużyny otwiera modal z suwakami do edycji siły ataku i obrony (1-5)
 - Sortowanie: alfabetyczne lub wg trudności
-- Dane z pliku `terminarz.txt`
+- Terminarz meczów z pliku `terminarz.txt`; siła drużyn (bramki strzelone/stracone) scrapowana z **90minut.pl**
 
 ### Filtry i zakresy
 
@@ -123,9 +121,10 @@ Obie kolumny mierzą popularność zawodnika, ale z różnych źródeł:
 2. **Skanowanie zawodników** — równoległe pobieranie statystyk (ID 1–4000), dane z profili zawodników
 3. **Scrapowanie drużyn** — 1000 drużyn z rankingu (10 workerów), parsowanie HTML składów (`$squad.push` + `$subs.push`)
 4. **Liga prywatna** — pobieranie składów z ligi, matching z pełnymi danymi graczy
-5. **Obliczenia** — ownership, kapitanowie, średnie pozycyjne (globalne + ligowe), forma
-6. **Dashboard** — generowanie HTML z osadzonym JS, publikacja na GitHub Pages
-7. **Auto-kontynuacja** — jeśli limit czasu zostanie przekroczony, workflow restartuje się automatycznie z checkpointu
+5. **Siła drużyn** — scrapowanie tabeli ligowej z **90minut.pl** (bramki strzelone/stracone) na potrzeby fixture tickera
+6. **Obliczenia** — ownership, średnie pozycyjne (globalne + ligowe), forma
+7. **Dashboard** — generowanie HTML z osadzonym JS, publikacja na GitHub Pages
+8. **Auto-kontynuacja** — jeśli limit czasu zostanie przekroczony, workflow restartuje się automatycznie z checkpointu
 
 ## ⏰ Automatyczne uruchomienie
 
