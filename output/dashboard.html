@@ -14,7 +14,7 @@ body {
   font-family: 'DM Sans', -apple-system, sans-serif;
   padding: 24px 16px;
 }
-.container { max-width: 1060px; margin: 0 auto; }
+.container { max-width: 95vw; margin: 0 auto; }
 .header { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
 .logo {
   width: 40px; height: 40px; border-radius: 10px;
@@ -161,12 +161,16 @@ tr.highlight { background: rgba(251,191,36,0.06); }
 }
 .detail-section { display: flex; flex-direction: column; gap: 4px; }
 .detail-section .ds-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-.team-select {
-  background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 8px;
-  padding: 8px 14px; font-size: 14px; font-family: inherit; cursor: pointer;
-  min-width: 280px; margin-bottom: 16px;
-}
-.team-select:focus { outline: none; border-color: #22d3ee; }
+.team-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.team-list-item { background: #1e293b; border: 1px solid #334155; border-radius: 8px; overflow: hidden; }
+.team-list-item.active { border-color: #22d3ee; }
+.team-list-header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background 0.15s; }
+.team-list-header:hover { background: #334155; }
+.team-list-rank { font-size: 13px; font-weight: 800; color: #22d3ee; min-width: 32px; }
+.team-list-name { font-size: 14px; font-weight: 700; color: #e2e8f0; flex: 1; text-transform: capitalize; }
+.team-list-pts { font-size: 12px; color: #94a3b8; font-weight: 600; }
+.team-list-count { font-size: 11px; color: #64748b; }
+.team-list-arrow { font-size: 10px; color: #64748b; margin-left: 4px; }
 .diff-badge {
   display: inline-block; font-size: 12px; font-weight: 700; border-radius: 4px;
   padding: 2px 8px; min-width: 48px; text-align: center;
@@ -567,26 +571,27 @@ function renderTeams() {
 
   let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Drużyny ligi</h2><div class="line"></div></div>';
 
-  // Dropdown
-  h += '<select class="team-select" id="teamSelect">';
-  h += '<option value="">— Wybierz drużynę —</option>';
+  // Lista drużyn — klikalna, posortowana wg pozycji
+  h += '<div class="team-list">';
   LEAGUE_TEAMS.forEach(t => {
-    const sel = t.slug === selectedTeam ? ' selected' : '';
-    h += '<option value="'+t.slug+'"'+sel+'>#'+t.rank+' '+t.slug.replace(/-/g,' ')+' ('+t.pts+' pkt)</option>';
+    const isOpen = t.slug === selectedTeam;
+    const cls = isOpen ? 'team-list-item active' : 'team-list-item';
+    h += '<div class="'+cls+'" data-teamslug="'+t.slug+'">';
+    h += '<div class="team-list-header">';
+    h += '<span class="team-list-rank">#'+t.rank+'</span>';
+    h += '<span class="team-list-name">'+t.slug.replace(/-/g,' ')+'</span>';
+    h += '<span class="team-list-pts">'+t.pts+' pkt</span>';
+    h += '<span class="team-list-count">'+t.players.length+' zawodników</span>';
+    h += '<span class="team-list-arrow">'+(isOpen ? '▼' : '▶')+'</span>';
+    h += '</div>';
+    h += '</div>';
   });
-  h += '</select>';
-
-  const team = LEAGUE_TEAMS.find(t => t.slug === selectedTeam);
-  if (!team) return h + '<div class="empty-msg" style="padding:20px;color:#64748b">Wybierz drużynę z listy powyżej</div>';
-
-  // Team header
-  h += '<div class="team-header">';
-  h += '<div class="team-stat">Pozycja: <b>#'+team.rank+'</b></div>';
-  h += '<div class="team-stat">Punkty: <b>'+team.pts+'</b></div>';
-  h += '<div class="team-stat">Zawodników: <b>'+team.players.length+'</b></div>';
   h += '</div>';
 
-  // Tabela zawodników
+  const team = LEAGUE_TEAMS.find(t => t.slug === selectedTeam);
+  if (!team) return h;
+
+  // Tabela zawodników (rozwija się pod wybraną drużyną)
   const POS_ORDER = {BR:1,OBR:2,POM:3,NAP:4};
   const NCOLS = 9;
 
@@ -881,9 +886,14 @@ function render() {
   });
   // Attach detail click handlers (form + roster)
   attachDetailClicks();
-  // Team select handler
-  const sel = document.getElementById('teamSelect');
-  if (sel) sel.onchange = () => { selectedTeam = sel.value; render(); };
+  // Team list click handlers
+  document.querySelectorAll('.team-list-header').forEach(el => {
+    el.onclick = () => {
+      const slug = el.parentElement.dataset.teamslug;
+      selectedTeam = selectedTeam === slug ? '' : slug;
+      render();
+    };
+  });
   // Fixture sort handlers
   document.querySelectorAll('.ft-sort-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.ftsort === ftSort);
