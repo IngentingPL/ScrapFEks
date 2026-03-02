@@ -1668,7 +1668,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
     <div class="tabs">
       <button class="tab active" data-tab="captains">👑 Kapitanowie</button>
       <button class="tab" data-tab="players">⚽ Zawodnicy</button>
-      {"<button class='tab' data-tab='teams'>📋 Drużyny ligi</button>" if has_league else ""}
+      {"<button class='tab' data-tab='teams'>📋 Liga CMF</button>" if has_league else ""}
       {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
@@ -1992,7 +1992,7 @@ function diffBadge(pts, avg) {{
 function renderTeams() {{
   if (!LEAGUE_TEAMS.length) return '<div class="empty-msg">Brak danych o drużynach ligi</div>';
 
-  let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Drużyny ligi</h2><div class="line"></div></div>';
+  let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Liga CMF</h2><div class="line"></div></div>';
 
   // Helpers for squad table
   const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
