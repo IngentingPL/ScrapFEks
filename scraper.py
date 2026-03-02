@@ -1223,56 +1223,119 @@ TEAM_ABBREVS = {
     "Wisła Płock": "WPŁ", "Zagłębie Lubin": "ZAG",
 }
 
-# Mapowanie nazw drużyn z TheSportsDB API → nazwy lokalne z terminarz.txt
-TSDB_TEAM_MAP = {
-    "Jagiellonia Bialystok": "Jagiellonia Białystok",
-    "Jagiellonia": "Jagiellonia Białystok",
-    "Legia Warsaw": "Legia Warszawa",
-    "Lech Poznan": "Lech Poznań",
-    "Lechia Gdansk": "Lechia Gdańsk",
-    "Gornik Zabrze": "Górnik Zabrze",
-    "Pogon Szczecin": "Pogoń Szczecin",
-    "Widzew Lodz": "Widzew Łódź",
-    "Wisla Plock": "Wisła Płock",
-    "Wisła Plock": "Wisła Płock",
-    "Zaglebie Lubin": "Zagłębie Lubin",
-    "Raków Czestochowa": "Raków Częstochowa",
-    "Rakow Czestochowa": "Raków Częstochowa",
-    "Raków Czestochowa": "Raków Częstochowa",
+# Mapowanie nazw drużyn z 90minut.pl → nazwy lokalne z terminarz.txt
+NINETYM_TEAM_MAP = {
+    "Jagiellonia Białystok": "Jagiellonia Białystok",
+    "Jagiellonia B.": "Jagiellonia Białystok",
+    "Legia Warszawa": "Legia Warszawa",
+    "Lech Poznań": "Lech Poznań",
+    "Lechia Gdańsk": "Lechia Gdańsk",
+    "Górnik Zabrze": "Górnik Zabrze",
+    "Pogoń Szczecin": "Pogoń Szczecin",
+    "Widzew Łódź": "Widzew Łódź",
+    "Wisła Płock": "Wisła Płock",
+    "Zagłębie Lubin": "Zagłębie Lubin",
+    "Raków Częstochowa": "Raków Częstochowa",
+    "Bruk-Bet Termalica Nieciecza": "Bruk-Bet Termalica Nieciecza",
     "Bruk-Bet Termalica": "Bruk-Bet Termalica Nieciecza",
     "Termalica Bruk-Bet Nieciecza": "Bruk-Bet Termalica Nieciecza",
     "Termalica Nieciecza": "Bruk-Bet Termalica Nieciecza",
     "Korona Kielce": "Korona Kielce",
-    "Cracovia Krakow": "Cracovia",
+    "Cracovia": "Cracovia",
     "KS Cracovia": "Cracovia",
+    "Cracovia Kraków": "Cracovia",
+    "Arka Gdynia": "Arka Gdynia",
+    "GKS Katowice": "GKS Katowice",
+    "Piast Gliwice": "Piast Gliwice",
+    "Radomiak Radom": "Radomiak Radom",
+    "Motor Lublin": "Motor Lublin",
 }
 
+# ID rozgrywek Ekstraklasy na 90minut.pl (aktualizuj co sezon)
+NINETYM_LIGA_ID = "14072"  # PKO BP Ekstraklasa 2025/2026
 
-def fetch_ekstraklasa_table(season: str = "2025-2026") -> dict:
-    """Pobiera tabelę Ekstraklasy z TheSportsDB API (bramki strzelone/stracone)."""
-    url = f"https://www.thesportsdb.com/api/v1/json/3/lookuptable.php?l=4422&s={season}"
+
+def fetch_ekstraklasa_table() -> dict:
+    """Scrapuje tabelę Ekstraklasy z 90minut.pl (bramki strzelone/stracone)."""
+    url = f"https://www.90minut.pl/liga/1/liga{NINETYM_LIGA_ID}.html"
     team_stats = {}
     try:
-        resp = requests.get(url, timeout=15)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        resp = requests.get(url, headers=headers, timeout=15)
         resp.raise_for_status()
-        data = resp.json()
-        table = data.get("table") or []
-        for row in table:
-            api_name = row.get("strTeam", "")
-            # Mapuj nazwę z API na lokalną
-            local_name = TSDB_TEAM_MAP.get(api_name, api_name)
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        # Znajdź tabelę z klasyfikacją — szukamy tabeli z nagłówkami M./Pkt./Bramki
+        tables = soup.find_all("table")
+        target_table = None
+        for table in tables:
+            header_text = table.get_text()
+            if "Pkt." in header_text and "Bramki" in header_text:
+                target_table = table
+                break
+
+        if not target_table:
+            print(f"  ⚠️  Nie znaleziono tabeli na 90minut.pl")
+            return team_stats
+
+        rows = target_table.find_all("tr")
+        for row in rows:
+            cells = row.find_all("td")
+            if len(cells) < 7:
+                continue
+
+            # Znajdź nazwę drużyny — szukamy <a> w komórkach
+            team_name = None
+            for cell in cells:
+                link = cell.find("a")
+                if link and "/klub/" in (link.get("href") or ""):
+                    team_name = link.get_text(strip=True)
+                    break
+
+            if not team_name:
+                # Fallback: druga komórka to zazwyczaj nazwa drużyny
+                team_text = cells[1].get_text(strip=True)
+                if team_text and not team_text.isdigit():
+                    team_name = team_text
+
+            if not team_name:
+                continue
+
+            # Znajdź kolumnę Bramki — szuka formatu "XX:XX" lub "XX-XX"
+            goals_text = None
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if re.match(r"^\d+[:\-]\d+$", text):
+                    goals_text = text
+                    break
+
+            if not goals_text:
+                continue
+
+            # Parsuj bramki
+            parts = re.split(r"[:\-]", goals_text)
+            if len(parts) == 2:
+                gf = int(parts[0])
+                ga = int(parts[1])
+            else:
+                continue
+
+            # Mapuj nazwę na lokalną
+            local_name = NINETYM_TEAM_MAP.get(team_name, team_name)
             # Dopasuj do TEAM_ABBREVS jeśli nie znaleziono
             if local_name not in TEAM_ABBREVS:
-                for local, abbr in TEAM_ABBREVS.items():
-                    if api_name.lower() in local.lower() or local.lower() in api_name.lower():
+                for local in TEAM_ABBREVS:
+                    if team_name.lower() in local.lower() or local.lower() in team_name.lower():
                         local_name = local
                         break
-            gf = int(row.get("intGoalsFor", 0))
-            ga = int(row.get("intGoalsAgainst", 0))
+
             team_stats[local_name] = {"gf": gf, "ga": ga}
-        print(f"  ⚽ API TheSportsDB: pobrano statystyki {len(team_stats)} drużyn")
+
+        print(f"  ⚽ 90minut.pl: pobrano statystyki {len(team_stats)} drużyn")
     except Exception as e:
-        print(f"  ⚠️  Błąd pobierania z TheSportsDB API: {e}")
+        print(f"  ⚠️  Błąd scrapowania z 90minut.pl: {e}")
     return team_stats
 
 MONTHS_PL = {
@@ -2162,7 +2225,7 @@ function ftShowModal(team) {{
     +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Strzelone (GF)</div><div style="font-size:28px;font-weight:800;color:#22d3ee">'+gf+'</div></div>'
     +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Stracone (GA)</div><div style="font-size:28px;font-weight:800;color:#f87171">'+ga+'</div></div>'
     +'</div>'
-    +'<div style="font-size:12px;color:#64748b;text-align:center">Dane z API TheSportsDB</div>'
+    +'<div style="font-size:12px;color:#64748b;text-align:center">Dane z 90minut.pl</div>'
     +'</div>';
   document.body.appendChild(wrap);
   document.getElementById("ftClose").onclick = function() {{ wrap.remove(); }};
@@ -2184,7 +2247,7 @@ function renderFixtures() {{
   let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — ofensywa / defensywa</h2><div class="line"></div></div>';
 
   if (!hasStats) {{
-    h += '<div class="empty-msg" style="margin-bottom:16px">⚠️ Brak danych z API — nie udało się pobrać statystyk bramkowych</div>';
+    h += '<div class="empty-msg" style="margin-bottom:16px">⚠️ Brak danych z 90minut.pl — nie udało się pobrać statystyk bramkowych</div>';
   }}
 
   // Legenda
@@ -2547,7 +2610,7 @@ def main():
     if fixtures_data["rounds"]:
         print(f"  📅 Terminarz: {len(fixtures_data['rounds'])} kolejek, {len(fixtures_data['teams'])} drużyn")
 
-    # 8.6 Pobierz statystyki bramkowe z TheSportsDB API
+    # 8.6 Scrapuj statystyki bramkowe z 90minut.pl
     ekstra_stats = fetch_ekstraklasa_table()
 
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
