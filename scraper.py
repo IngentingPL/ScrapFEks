@@ -1586,7 +1586,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .detail-section {{ display: flex; flex-direction: column; gap: 4px; }}
 .detail-section .ds-label {{ font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }}
 .team-list {{ display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }}
-.team-list-item {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; overflow: hidden; }}
+.team-list-item {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; }}
 .team-list-item.active {{ border-color: #22d3ee; }}
 .team-list-header {{ display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background 0.15s; }}
 .team-list-header:hover {{ background: #334155; }}
@@ -1994,39 +1994,9 @@ function renderTeams() {{
 
   let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Drużyny ligi</h2><div class="line"></div></div>';
 
-  // Lista drużyn — klikalna, posortowana wg pozycji
-  h += '<div class="team-list">';
-  LEAGUE_TEAMS.forEach(t => {{
-    const isOpen = t.slug === selectedTeam;
-    const cls = isOpen ? 'team-list-item active' : 'team-list-item';
-    h += '<div class="'+cls+'" data-teamslug="'+t.slug+'">';
-    h += '<div class="team-list-header">';
-    h += '<span class="team-list-rank">#'+t.rank+'</span>';
-    h += '<span class="team-list-name">'+t.slug.replace(/-/g,' ')+'</span>';
-    h += '<span class="team-list-pts">'+t.pts+' pkt</span>';
-    h += '<span class="team-list-count">'+t.players.length+' zawodników</span>';
-    h += '<span class="team-list-arrow">'+(isOpen ? '▼' : '▶')+'</span>';
-    h += '</div>';
-    h += '</div>';
-  }});
-  h += '</div>';
-
-  const team = LEAGUE_TEAMS.find(t => t.slug === selectedTeam);
-  if (!team) return h;
-
-  // Tabela zawodników (rozwija się pod wybraną drużyną)
+  // Helpers for squad table
   const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
   const NCOLS = 9;
-
-  // Wzbogacenie danych o pola sortowalne
-  team.players.forEach(p => {{
-    const pk = POS_ID[p.pos] || p.pos || '';
-    p._pk = pk;
-    p._pos_order = POS_ORDER[pk] || 99;
-    p._diff_global = (POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - POS_AVGS[pk]) * 10) / 10 : 0;
-    p._diff_league = (LEAGUE_POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - LEAGUE_POS_AVGS[pk]) * 10) / 10 : 0;
-    p._form_avg = formAvgNum(p.form);
-  }});
 
   function sortGroup(arr) {{
     const s = sorts.teams;
@@ -2044,62 +2014,92 @@ function renderTeams() {{
     }});
   }}
 
-  h += '<div class="data-table"><table><thead><tr>';
-  h += '<th class="text-left">#</th>';
-  h += '<th class="text-left sortable" data-tab="teams" data-col="name">Zawodnik'+arrow('teams','name')+'</th>';
-  h += '<th class="text-center sortable" data-tab="teams" data-col="_pos_order">Poz'+arrow('teams','_pos_order')+'</th>';
-  h += '<th class="text-right sortable" data-tab="teams" data-col="price">Cena'+arrow('teams','price')+'</th>';
-  h += '<th class="text-right sortable" data-tab="teams" data-col="pts">Punkty'+arrow('teams','pts')+'</th>';
-  h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('teams','_diff_global')+'</th>';
-  h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('teams','_diff_league')+'</th>';
-  h += '<th class="text-center" style="min-width:80px">Forma</th>';
-  h += '<th class="text-right sortable" data-tab="teams" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek przed obecną)">Średnia'+arrow('teams','_form_avg')+'</th>';
-  h += '</tr></thead><tbody>';
-
-  // Startowi, potem rezerwowi — oba sortowane tak samo
-  const starters = sortGroup(team.players.filter(p => !p.R));
-  const reserves = sortGroup(team.players.filter(p => p.R));
-
-  function renderRow(p, idx) {{
+  function renderSquadRow(p, idx) {{
     const pk = p._pk;
     const pts = p.pts || 0;
     const price = p.price || 0;
     let nameStyle = 'font-weight:600';
     if (p.C) nameStyle += ';color:#fbbf24';
-
-    h += '<tr><td class="c-muted fw-600">'+(idx+1)+'</td>';
-    h += nameCell(p.name, p.pid, nameStyle, p.C ? '<span class="captain-badge" style="margin-right:4px">C</span> ' : '');
-    h += '<td class="text-center">'+posBadge(pk)+'</td>';
-    h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
-    h += '<td class="text-right fw-700">'+pts+'</td>';
-    h += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
-    h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
+    let r = '<tr><td class="c-muted fw-600">'+(idx+1)+'</td>';
+    r += nameCell(p.name, p.pid, nameStyle, p.C ? '<span class="captain-badge" style="margin-right:4px">C</span> ' : '');
+    r += '<td class="text-center">'+posBadge(pk)+'</td>';
+    r += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
+    r += '<td class="text-right fw-700">'+pts+'</td>';
+    r += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
+    r += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
     const favg = p._form_avg;
     const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
-    h += '<td class="text-center">'+formChart(p.form, true)+'</td>';
-    h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
-    h += '</tr>';
+    r += '<td class="text-center">'+formChart(p.form, true)+'</td>';
+    r += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
+    r += '</tr>';
+    return r;
   }}
 
-  starters.forEach((p, i) => renderRow(p, i));
-  if (reserves.length) {{
-    h += '<tr><td colspan="'+NCOLS+'" style="padding:6px 0;border-top:1px dashed #334155"><span class="c-dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Ławka rezerwowych</span></td></tr>';
-    reserves.forEach((p, i) => renderRow(p, starters.length + i));
-  }}
+  // Lista drużyn — klikalna, posortowana wg pozycji (accordion)
+  h += '<div class="team-list">';
+  LEAGUE_TEAMS.forEach(t => {{
+    const isOpen = t.slug === selectedTeam;
+    const cls = isOpen ? 'team-list-item active' : 'team-list-item';
+    h += '<div class="'+cls+'" data-teamslug="'+t.slug+'">';
+    h += '<div class="team-list-header">';
+    h += '<span class="team-list-rank">#'+t.rank+'</span>';
+    h += '<span class="team-list-name">'+t.slug.replace(/-/g,' ')+'</span>';
+    h += '<span class="team-list-pts">'+t.pts+' pkt</span>';
+    h += '<span class="team-list-count">'+t.players.length+' zawodników</span>';
+    h += '<span class="team-list-arrow">'+(isOpen ? '▼' : '▶')+'</span>';
+    h += '</div>';
 
-  // Podsumowanie
-  const totalPts = starters.reduce((s,p) => s + (p.pts||0), 0);
-  const totalDiffG = team.players.reduce((s,p) => s + (p._diff_global||0), 0);
-  const totalDiffL = team.players.reduce((s,p) => s + (p._diff_league||0), 0);
-  h += '<tr style="border-top:2px solid #334155"><td colspan="4" class="fw-700" style="text-align:right;padding-top:10px">Razem:</td>';
-  h += '<td class="text-right fw-700" style="padding-top:10px">'+totalPts+'</td>';
-  const gCls = totalDiffG > 0 ? 'diff-pos' : totalDiffG < 0 ? 'diff-neg' : 'diff-zero';
-  const lCls = totalDiffL > 0 ? 'diff-pos' : totalDiffL < 0 ? 'diff-neg' : 'diff-zero';
-  h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
-  h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
-  h += '<td colspan="2"></td></tr>';
+    // Skład drużyny — rozwija się wewnątrz klikniętego elementu
+    if (isOpen) {{
+      t.players.forEach(p => {{
+        const pk = POS_ID[p.pos] || p.pos || '';
+        p._pk = pk;
+        p._pos_order = POS_ORDER[pk] || 99;
+        p._diff_global = (POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - POS_AVGS[pk]) * 10) / 10 : 0;
+        p._diff_league = (LEAGUE_POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - LEAGUE_POS_AVGS[pk]) * 10) / 10 : 0;
+        p._form_avg = formAvgNum(p.form);
+      }});
 
-  h += '</tbody></table></div>';
+      h += '<div class="data-table" style="padding:0 12px 12px">';
+      h += '<table><thead><tr>';
+      h += '<th class="text-left">#</th>';
+      h += '<th class="text-left sortable" data-tab="teams" data-col="name">Zawodnik'+arrow('teams','name')+'</th>';
+      h += '<th class="text-center sortable" data-tab="teams" data-col="_pos_order">Poz'+arrow('teams','_pos_order')+'</th>';
+      h += '<th class="text-right sortable" data-tab="teams" data-col="price">Cena'+arrow('teams','price')+'</th>';
+      h += '<th class="text-right sortable" data-tab="teams" data-col="pts">Punkty'+arrow('teams','pts')+'</th>';
+      h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('teams','_diff_global')+'</th>';
+      h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('teams','_diff_league')+'</th>';
+      h += '<th class="text-center" style="min-width:80px">Forma</th>';
+      h += '<th class="text-right sortable" data-tab="teams" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek przed obecną)">Średnia'+arrow('teams','_form_avg')+'</th>';
+      h += '</tr></thead><tbody>';
+
+      const starters = sortGroup(t.players.filter(p => !p.R));
+      const reserves = sortGroup(t.players.filter(p => p.R));
+
+      starters.forEach((p, i) => {{ h += renderSquadRow(p, i); }});
+      if (reserves.length) {{
+        h += '<tr><td colspan="'+NCOLS+'" style="padding:6px 0;border-top:1px dashed #334155"><span class="c-dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Ławka rezerwowych</span></td></tr>';
+        reserves.forEach((p, i) => {{ h += renderSquadRow(p, starters.length + i); }});
+      }}
+
+      // Podsumowanie
+      const totalPts = starters.reduce((s,p) => s + (p.pts||0), 0);
+      const totalDiffG = t.players.reduce((s,p) => s + (p._diff_global||0), 0);
+      const totalDiffL = t.players.reduce((s,p) => s + (p._diff_league||0), 0);
+      h += '<tr style="border-top:2px solid #334155"><td colspan="4" class="fw-700" style="text-align:right;padding-top:10px">Razem:</td>';
+      h += '<td class="text-right fw-700" style="padding-top:10px">'+totalPts+'</td>';
+      const gCls = totalDiffG > 0 ? 'diff-pos' : totalDiffG < 0 ? 'diff-neg' : 'diff-zero';
+      const lCls = totalDiffL > 0 ? 'diff-pos' : totalDiffL < 0 ? 'diff-neg' : 'diff-zero';
+      h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
+      h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
+      h += '<td colspan="2"></td></tr>';
+
+      h += '</tbody></table></div>';
+    }}
+
+    h += '</div>'; // close team-list-item
+  }});
+  h += '</div>'; // close team-list
   return h;
 }}
 
