@@ -1255,9 +1255,91 @@ NINETYM_TEAM_MAP = {
 NINETYM_LIGA_ID = "14072"  # PKO BP Ekstraklasa 2025/2026
 
 
+def _parse_90min_table(table) -> dict:
+    """Parsuje pojedynczą tabelę ligową z 90minut.pl. Zwraca {raw_name: {gf, ga, mp}}."""
+    results = {}
+    rows = table.find_all("tr")
+    for row in rows:
+        cells = row.find_all("td")
+        if len(cells) < 5:
+            continue
+
+        # Znajdź nazwę drużyny — szukamy <a> z linkiem do klubu
+        team_name = None
+        for cell in cells:
+            link = cell.find("a")
+            if link:
+                href = link.get("href") or ""
+                if "klub" in href or "druzyna" in href or "/liga/" not in href:
+                    candidate = link.get_text(strip=True)
+                    if candidate and not candidate.isdigit() and len(candidate) > 2:
+                        team_name = candidate
+                        break
+
+        if not team_name:
+            for cell in cells[1:4]:
+                text = cell.get_text(strip=True)
+                if text and not text.isdigit() and len(text) > 3:
+                    team_name = text
+                    break
+
+        if not team_name:
+            continue
+
+        # Znajdź liczbę meczów — pierwsza komórka z samą liczbą (po pozycji i nazwie)
+        mp = 0
+        for cell in cells[2:6]:
+            text = cell.get_text(strip=True)
+            if text.isdigit() and int(text) > 0:
+                mp = int(text)
+                break
+
+        # Znajdź bramki w formacie "XX:XX" lub "XX-XX"
+        goals_text = None
+        for cell in cells:
+            text = cell.get_text(strip=True)
+            if re.match(r"^\d+[:\-]\d+$", text):
+                goals_text = text
+                break
+
+        if not goals_text:
+            continue
+
+        parts = re.split(r"[:\-]", goals_text)
+        if len(parts) == 2:
+            results[team_name] = {"gf": int(parts[0]), "ga": int(parts[1]), "mp": mp}
+
+    return results
+
+
+def _map_team_name(raw_name: str) -> str:
+    """Mapuje nazwę drużyny z 90minut.pl na lokalną z terminarz.txt."""
+    local_name = NINETYM_TEAM_MAP.get(raw_name, raw_name)
+    if local_name not in TEAM_ABBREVS:
+        for local in TEAM_ABBREVS:
+            if raw_name.lower() in local.lower() or local.lower() in raw_name.lower():
+                return local
+    return local_name
+
+
+def _find_standings_tables(soup) -> list:
+    """Znajduje tabele z klasyfikacją na stronie 90minut.pl (RAZEM, DOM, WYJAZD)."""
+    tables = soup.find_all("table")
+    standings = []
+    for table in tables:
+        header_text = table.get_text()
+        if "Pkt" in header_text and "Bramki" in header_text:
+            standings.append(table)
+        elif not standings:
+            # Fallback: tabela z >=16 wierszy i formatem bramek X:X
+            rows = table.find_all("tr")
+            if len(rows) >= 16 and re.search(r"\d+:\d+", table.get_text()):
+                standings.append(table)
+    return standings
+
+
 def fetch_ekstraklasa_table() -> dict:
-    """Scrapuje tabelę Ekstraklasy z 90minut.pl (bramki strzelone/stracone)."""
-    # 90minut.pl używa HTTP (nie HTTPS) i kodowania windows-1250
+    """Scrapuje tabelę Ekstraklasy z 90minut.pl (bramki ogółem + dom/wyjazd)."""
     url = f"http://www.90minut.pl/liga/1/liga{NINETYM_LIGA_ID}.html"
     team_stats = {}
     try:
@@ -1271,98 +1353,231 @@ def fetch_ekstraklasa_table() -> dict:
         resp = requests.get(url, headers=headers, timeout=20)
         resp.raise_for_status()
 
-        # 90minut.pl używa kodowania iso-8859-2 / windows-1250
         resp.encoding = resp.apparent_encoding or "iso-8859-2"
         soup = BeautifulSoup(resp.text, "lxml")
 
-        # Znajdź tabelę z klasyfikacją — szukamy tabeli z nagłówkami M./Pkt./Bramki
-        tables = soup.find_all("table")
-        target_table = None
-        for table in tables:
-            header_text = table.get_text()
-            if "Pkt" in header_text and "Bramki" in header_text:
-                target_table = table
-                break
-
-        if not target_table:
-            # Fallback: szukaj największej tabeli z wieloma wierszami danych
-            for table in tables:
-                rows = table.find_all("tr")
-                if len(rows) >= 18:
-                    # Sprawdź czy wygląda jak tabela ligowa (ma bramki w formacie X:X)
-                    text = table.get_text()
-                    if re.search(r"\d+:\d+", text):
-                        target_table = table
-                        break
-
-        if not target_table:
-            print(f"  ⚠️  Nie znaleziono tabeli na 90minut.pl ({len(tables)} tabel na stronie)")
+        standings = _find_standings_tables(soup)
+        if not standings:
+            print(f"  ⚠️  Nie znaleziono tabeli na 90minut.pl")
             return team_stats
 
-        rows = target_table.find_all("tr")
-        for row in rows:
-            cells = row.find_all("td")
-            if len(cells) < 5:
-                continue
+        # Tabele w kolejności: RAZEM, DOM, WYJAZD
+        razem = _parse_90min_table(standings[0])
+        dom = _parse_90min_table(standings[1]) if len(standings) >= 2 else {}
+        wyjazd = _parse_90min_table(standings[2]) if len(standings) >= 3 else {}
 
-            # Znajdź nazwę drużyny — szukamy <a> z linkiem do klubu
-            team_name = None
-            for cell in cells:
-                link = cell.find("a")
-                if link:
-                    href = link.get("href") or ""
-                    if "klub" in href or "druzyna" in href or "/liga/" not in href:
-                        candidate = link.get_text(strip=True)
-                        # Ignoruj linki liczbowe (np. numery kolejek)
-                        if candidate and not candidate.isdigit() and len(candidate) > 2:
-                            team_name = candidate
-                            break
+        for raw_name, data in razem.items():
+            local_name = _map_team_name(raw_name)
+            entry = {"gf": data["gf"], "ga": data["ga"], "mp": data["mp"]}
 
-            if not team_name:
-                # Fallback: szukaj komórki z dłuższym tekstem (nazwa drużyny)
-                for cell in cells[1:4]:
-                    text = cell.get_text(strip=True)
-                    if text and not text.isdigit() and len(text) > 3:
-                        team_name = text
-                        break
+            # Dodaj dane domowe
+            home = dom.get(raw_name, {})
+            entry["gf_home"] = home.get("gf", 0)
+            entry["ga_home"] = home.get("ga", 0)
+            entry["mp_home"] = home.get("mp", 0)
 
-            if not team_name:
-                continue
+            # Dodaj dane wyjazdowe
+            away = wyjazd.get(raw_name, {})
+            entry["gf_away"] = away.get("gf", 0)
+            entry["ga_away"] = away.get("ga", 0)
+            entry["mp_away"] = away.get("mp", 0)
 
-            # Znajdź kolumnę Bramki — szuka formatu "XX:XX" lub "XX-XX"
-            goals_text = None
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if re.match(r"^\d+[:\-]\d+$", text):
-                    goals_text = text
-                    break
+            team_stats[local_name] = entry
 
-            if not goals_text:
-                continue
-
-            # Parsuj bramki
-            parts = re.split(r"[:\-]", goals_text)
-            if len(parts) == 2:
-                gf = int(parts[0])
-                ga = int(parts[1])
-            else:
-                continue
-
-            # Mapuj nazwę na lokalną
-            local_name = NINETYM_TEAM_MAP.get(team_name, team_name)
-            # Dopasuj do TEAM_ABBREVS jeśli nie znaleziono
-            if local_name not in TEAM_ABBREVS:
-                for local in TEAM_ABBREVS:
-                    if team_name.lower() in local.lower() or local.lower() in team_name.lower():
-                        local_name = local
-                        break
-
-            team_stats[local_name] = {"gf": gf, "ga": ga}
-
-        print(f"  ⚽ 90minut.pl: pobrano statystyki {len(team_stats)} drużyn")
+        has_ha = bool(dom and wyjazd)
+        print(f"  ⚽ 90minut.pl: pobrano statystyki {len(team_stats)} drużyn"
+              f" {'(z podziałem dom/wyjazd)' if has_ha else '(tylko ogółem)'}")
     except Exception as e:
         print(f"  ⚠️  Błąd scrapowania z 90minut.pl: {e}")
     return team_stats
+
+def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0, num_rounds: int = 6) -> dict:
+    """Oblicza Fixture Difficulty Rating (FDR) 1-5 dla każdego meczu.
+
+    Algorytm wzorowany na FPL:
+    1. Oblicz średnie ligowe goli strzelonych/straconych (dom/wyjazd)
+    2. Oblicz siłę ataku/obrony każdej drużyny (dom/wyjazd)
+    3. Dla każdego meczu: FDR = siła rywala, znormalizowana do 1-5 (kwantyle)
+    """
+    teams = fixtures_data.get("teams", [])
+    rounds = fixtures_data.get("rounds", [])
+    matches = fixtures_data.get("matches", {})
+    abbrevs = fixtures_data.get("abbrevs", {})
+
+    if not teams or not rounds or not ekstra_stats:
+        return {"teams": [], "gameweeks": [], "team_strengths": {}}
+
+    # Sprawdź czy mamy dane dom/wyjazd
+    sample = next(iter(ekstra_stats.values()), {})
+    has_ha = "gf_home" in sample and sample.get("mp_home", 0) > 0
+
+    # Oblicz średnie ligowe
+    total_gf_home = total_ga_home = total_mp_home = 0
+    total_gf_away = total_ga_away = total_mp_away = 0
+
+    for team in teams:
+        st = ekstra_stats.get(team)
+        if not st:
+            continue
+        if has_ha:
+            total_gf_home += st.get("gf_home", 0)
+            total_ga_home += st.get("ga_home", 0)
+            total_mp_home += st.get("mp_home", 0)
+            total_gf_away += st.get("gf_away", 0)
+            total_ga_away += st.get("ga_away", 0)
+            total_mp_away += st.get("mp_away", 0)
+        else:
+            # Fallback: użyj ogólnych danych podzielonych przez 2
+            mp = st.get("mp", 0) or 1
+            total_gf_home += st["gf"]
+            total_ga_home += st["ga"]
+            total_mp_home += mp
+            total_gf_away += st["gf"]
+            total_ga_away += st["ga"]
+            total_mp_away += mp
+
+    # Średnie na mecz
+    avg_gf_home = total_gf_home / total_mp_home if total_mp_home else 1
+    avg_ga_home = total_ga_home / total_mp_home if total_mp_home else 1
+    avg_gf_away = total_gf_away / total_mp_away if total_mp_away else 1
+    avg_ga_away = total_ga_away / total_mp_away if total_mp_away else 1
+
+    # Siła ataku i obrony każdej drużyny
+    team_strengths = {}
+    for team in teams:
+        st = ekstra_stats.get(team)
+        if not st:
+            team_strengths[team] = {"attack_h": 1.0, "attack_a": 1.0, "defense_h": 1.0, "defense_a": 1.0}
+            continue
+
+        if has_ha:
+            mp_h = st.get("mp_home", 1) or 1
+            mp_a = st.get("mp_away", 1) or 1
+            gf_h_avg = st.get("gf_home", 0) / mp_h
+            ga_h_avg = st.get("ga_home", 0) / mp_h
+            gf_a_avg = st.get("gf_away", 0) / mp_a
+            ga_a_avg = st.get("ga_away", 0) / mp_a
+        else:
+            mp = st.get("mp", 1) or 1
+            gf_avg = st["gf"] / mp
+            ga_avg = st["ga"] / mp
+            gf_h_avg = gf_a_avg = gf_avg
+            ga_h_avg = ga_a_avg = ga_avg
+
+        team_strengths[team] = {
+            "attack_h": round(gf_h_avg / avg_gf_home, 2) if avg_gf_home else 1.0,
+            "attack_a": round(gf_a_avg / avg_gf_away, 2) if avg_gf_away else 1.0,
+            "defense_h": round(ga_h_avg / avg_ga_home, 2) if avg_ga_home else 1.0,
+            "defense_a": round(ga_a_avg / avg_ga_away, 2) if avg_ga_away else 1.0,
+        }
+
+    # Wybierz kolejki do pokazania
+    if current_round:
+        upcoming = [r for r in rounds if r >= current_round]
+    else:
+        upcoming = rounds
+    shown_rounds = upcoming[:num_rounds] if upcoming else rounds[:num_rounds]
+
+    # Oblicz surowe trudności dla wszystkich meczów w pokazywanych kolejkach
+    raw_difficulties = []
+    fixture_map = {}  # (team, round) -> raw_diff
+
+    for r in shown_rounds:
+        ms = matches.get(str(r), [])
+        for m in ms:
+            home_team = m["home"]
+            away_team = m["away"]
+            opp_str_h = team_strengths.get(away_team, {"attack_a": 1.0, "defense_a": 1.0})
+            opp_str_a = team_strengths.get(home_team, {"attack_h": 1.0, "defense_h": 1.0})
+
+            # Trudność dla gospodarza = siła wyjazdowa rywala
+            diff_home = opp_str_h["attack_a"] + opp_str_h["defense_a"]
+            # Trudność dla gościa = siła domowa rywala
+            diff_away = opp_str_a["attack_h"] + opp_str_a["defense_h"]
+
+            # Mecze wyjazdowe trudniejsze — dodaj bonus
+            diff_away += 0.15
+
+            raw_difficulties.append(diff_home)
+            raw_difficulties.append(diff_away)
+            fixture_map[(home_team, r)] = diff_home
+            fixture_map[(away_team, r)] = diff_away
+
+    # Normalizacja do FDR 1-5 za pomocą kwantyli
+    if raw_difficulties:
+        sorted_diffs = sorted(raw_difficulties)
+        n = len(sorted_diffs)
+        # Progi kwantylowe: 20% każdy (FDR 1=najłatwiejsze 20%, FDR 5=najtrudniejsze 20%)
+        thresholds = [
+            sorted_diffs[max(0, int(n * 0.2) - 1)],
+            sorted_diffs[max(0, int(n * 0.4) - 1)],
+            sorted_diffs[max(0, int(n * 0.6) - 1)],
+            sorted_diffs[max(0, int(n * 0.8) - 1)],
+        ]
+    else:
+        thresholds = [1.5, 1.8, 2.0, 2.3]
+
+    def diff_to_fdr(val):
+        if val <= thresholds[0]:
+            return 1
+        if val <= thresholds[1]:
+            return 2
+        if val <= thresholds[2]:
+            return 3
+        if val <= thresholds[3]:
+            return 4
+        return 5
+
+    # Buduj dane FDR per drużyna
+    fdr_teams = []
+    for team in teams:
+        ab = abbrevs.get(team, team[:3].upper())
+        fixtures_list = []
+        total_fdr = 0
+        for r in shown_rounds:
+            ms = matches.get(str(r), [])
+            fixture_info = None
+            for m in ms:
+                if m["home"] == team:
+                    fixture_info = {"opponent": m["away"], "home": True, "date": m.get("date", "")}
+                    break
+                elif m["away"] == team:
+                    fixture_info = {"opponent": m["home"], "home": False, "date": m.get("date", "")}
+                    break
+            if fixture_info:
+                raw = fixture_map.get((team, r), 2.0)
+                fdr = diff_to_fdr(raw)
+                total_fdr += fdr
+                opp_ab = abbrevs.get(fixture_info["opponent"], fixture_info["opponent"][:3].upper())
+                fixtures_list.append({
+                    "gw": r,
+                    "opponent": fixture_info["opponent"],
+                    "opponent_short": opp_ab,
+                    "home": fixture_info["home"],
+                    "fdr": fdr,
+                    "date": fixture_info["date"],
+                })
+            else:
+                fixtures_list.append({"gw": r, "opponent": "", "opponent_short": "—", "home": True, "fdr": 0, "date": ""})
+
+        fdr_teams.append({
+            "name": team,
+            "short": ab,
+            "total_fdr": total_fdr,
+            "fixtures": fixtures_list,
+        })
+
+    # Sortuj po sumie FDR (najłatwiejszy terminarz na górze)
+    fdr_teams.sort(key=lambda t: t["total_fdr"])
+
+    print(f"  📊 FDR: obliczono dla {len(fdr_teams)} drużyn, kolejki K{shown_rounds[0]}-K{shown_rounds[-1]}" if shown_rounds else "  📊 FDR: brak danych")
+
+    return {
+        "teams": fdr_teams,
+        "gameweeks": shown_rounds,
+        "team_strengths": {t: team_strengths.get(t, {}) for t in teams},
+    }
+
 
 MONTHS_PL = {
     "stycznia": 1, "lutego": 2, "marca": 3, "kwietnia": 4,
@@ -1447,6 +1662,7 @@ def generate_dashboard_html(
     league_teams_detail: list[dict],
     fixtures_data: dict,
     ekstra_stats: dict,
+    fdr_data: dict,
     timestamp: str,
     filename: str,
 ):
@@ -1490,6 +1706,7 @@ def generate_dashboard_html(
     teams_detail_json = json.dumps(league_teams_detail, ensure_ascii=False)
     fixtures_json = json.dumps(fixtures_data, ensure_ascii=False)
     ekstra_stats_json = json.dumps(ekstra_stats, ensure_ascii=False)
+    fdr_data_json = json.dumps(fdr_data, ensure_ascii=False)
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
 
     # For stat cards
@@ -1717,6 +1934,17 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .ft-modal h3 {{ margin: 0 0 16px; font-size: 18px; }}
 .ft-modal-close {{ position: absolute; top: 12px; right: 16px; background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }}
 .ft-modal-close:hover {{ color: #e2e8f0; }}
+/* FDR tiles */
+.fdr-table {{ border-collapse: collapse; width: 100%; font-size: 13px; }}
+.fdr-table th {{ padding: 8px 6px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }}
+.fdr-table td {{ padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }}
+.fdr-table td.fdr-team {{ text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; }}
+.fdr-tile {{ border-radius: 4px; padding: 6px 10px; font-size: 13px; font-weight: 600; display: inline-block; min-width: 72px; text-align: center; cursor: default; }}
+.fdr-tile .fdr-ha {{ font-size: 10px; font-weight: 400; opacity: 0.8; }}
+.fdr-sum {{ font-weight: 800; font-size: 15px; }}
+.fdr-legend {{ display: flex; gap: 8px; align-items: center; margin-bottom: 14px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; }}
+.fdr-legend-item {{ display: flex; align-items: center; gap: 5px; }}
+.fdr-legend-swatch {{ width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }}
 </style>
 </head>
 <body>
@@ -1776,6 +2004,7 @@ const ROSTERS = {rosters_json};
 const LEAGUE_TEAMS = {teams_detail_json};
 const FIXTURES = {fixtures_json};
 const EKSTRA_STATS = {ekstra_stats_json};
+const FDR_DATA = {fdr_data_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -2156,87 +2385,20 @@ function renderTeams() {{
   return h;
 }}
 
-// ============ FIXTURE TICKER ============
-let ftSort = 'alpha'; // 'alpha' | 'diff'
-const hasStats = Object.keys(EKSTRA_STATS).length > 0;
+// ============ FDR (Fixture Difficulty Rating) ============
+const FDR_COLORS = {{
+  1: {{bg:'#375523', fg:'#ffffff'}},
+  2: {{bg:'#01FC7A', fg:'#000000'}},
+  3: {{bg:'#E7E7E7', fg:'#000000'}},
+  4: {{bg:'#FF1751', fg:'#ffffff'}},
+  5: {{bg:'#80072D', fg:'#ffffff'}},
+}};
+const FDR_LABELS = {{1:'Bardzo łatwy', 2:'Łatwy', 3:'Średni', 4:'Trudny', 5:'Bardzo trudny'}};
+let fdrSort = 'fdr'; // 'fdr' | 'alpha'
 
-// Oblicz ofensywę i defensywę dla meczu: team vs opponent
-function ftOffense(team, opponent) {{
-  const ts = EKSTRA_STATS[team];
-  const os = EKSTRA_STATS[opponent];
-  if (!ts || !os) return 0;
-  return os.gf - ts.gf; // strzelone(przeciwnik) - strzelone(twoja)
-}}
-
-function ftDefense(team, opponent) {{
-  const ts = EKSTRA_STATS[team];
-  const os = EKSTRA_STATS[opponent];
-  if (!ts || !os) return 0;
-  return ts.ga - os.gf; // stracone(team) - strzelone(opponent)
-}}
-
-// Kolor dla ofensywy (im wyżej tym lepiej → zielony)
-function ftColorOff(val) {{
-  if (val >= 12) return {{bg:'#065f46',fg:'#a7f3d0'}};
-  if (val >= 6) return {{bg:'#047857',fg:'#d1fae5'}};
-  if (val >= 2) return {{bg:'#14532d80',fg:'#86efac'}};
-  if (val >= -2) return {{bg:'#1e293b',fg:'#94a3b8'}};
-  if (val >= -6) return {{bg:'#7f1d1d80',fg:'#fca5a5'}};
-  if (val >= -12) return {{bg:'#991b1b',fg:'#fecaca'}};
-  return {{bg:'#7f1d1d',fg:'#fca5a5'}};
-}}
-
-// Kolor dla defensywy (im niżej tym lepiej → zielony)
-function ftColorDef(val) {{
-  if (val <= -12) return {{bg:'#065f46',fg:'#a7f3d0'}};
-  if (val <= -6) return {{bg:'#047857',fg:'#d1fae5'}};
-  if (val <= -2) return {{bg:'#14532d80',fg:'#86efac'}};
-  if (val <= 2) return {{bg:'#1e293b',fg:'#94a3b8'}};
-  if (val <= 6) return {{bg:'#7f1d1d80',fg:'#fca5a5'}};
-  if (val <= 12) return {{bg:'#991b1b',fg:'#fecaca'}};
-  return {{bg:'#7f1d1d',fg:'#fca5a5'}};
-}}
-
-// Łączna trudność meczu (do sortowania i średniej)
-function ftCombined(team, opponent) {{
-  return ftOffense(team, opponent) - ftDefense(team, opponent);
-}}
-
-function ftColorCombined(val) {{
-  if (val >= 24) return {{bg:'#065f46',fg:'#a7f3d0'}};
-  if (val >= 12) return {{bg:'#047857',fg:'#d1fae5'}};
-  if (val >= 4) return {{bg:'#14532d80',fg:'#86efac'}};
-  if (val >= -4) return {{bg:'#1e293b',fg:'#94a3b8'}};
-  if (val >= -12) return {{bg:'#7f1d1d80',fg:'#fca5a5'}};
-  if (val >= -24) return {{bg:'#991b1b',fg:'#fecaca'}};
-  return {{bg:'#7f1d1d',fg:'#fca5a5'}};
-}}
-
-function ftBuildTeamFixtures() {{
-  const tf = {{}};
-  FIXTURES.teams.forEach(t => {{ tf[t] = {{}}; }});
-  const rounds = FIXTURES.rounds || [];
-  rounds.forEach(r => {{
-    const ms = FIXTURES.matches[String(r)] || [];
-    ms.forEach(m => {{
-      tf[m.home][r] = {{opp: m.away, home: true, date: m.date}};
-      tf[m.away][r] = {{opp: m.home, home: false, date: m.date}};
-    }});
-  }});
-  return tf;
-}}
-
-function ftAvgCombined(teamFixtures, team, rounds) {{
-  let sum = 0, cnt = 0;
-  rounds.forEach(r => {{
-    const f = teamFixtures[r];
-    if (f) {{ sum += ftCombined(team, f.opp); cnt++; }}
-  }});
-  return cnt ? sum / cnt : 0;
-}}
-
-function ftShowModal(team) {{
+function fdrShowModal(team) {{
   const st = EKSTRA_STATS[team];
+  const str = (FDR_DATA.team_strengths || {{}})[team];
   const abbr = FIXTURES.abbrevs[team] || team.substring(0,3).toUpperCase();
   const old = document.getElementById("ftModal");
   if (old) old.remove();
@@ -2245,13 +2407,23 @@ function ftShowModal(team) {{
   wrap.id = "ftModal";
   const gf = st ? st.gf : '?';
   const ga = st ? st.ga : '?';
+  let strengthHtml = '';
+  if (str) {{
+    strengthHtml = '<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div style="text-align:center;background:#0f172a;border-radius:8px;padding:8px"><div style="font-size:10px;color:#64748b;text-transform:uppercase">Atak (D)</div><div style="font-size:20px;font-weight:800;color:#22d3ee">'+str.attack_h+'</div></div>'
+      +'<div style="text-align:center;background:#0f172a;border-radius:8px;padding:8px"><div style="font-size:10px;color:#64748b;text-transform:uppercase">Atak (W)</div><div style="font-size:20px;font-weight:800;color:#22d3ee">'+str.attack_a+'</div></div>'
+      +'<div style="text-align:center;background:#0f172a;border-radius:8px;padding:8px"><div style="font-size:10px;color:#64748b;text-transform:uppercase">Obrona (D)</div><div style="font-size:20px;font-weight:800;color:#f87171">'+str.defense_h+'</div></div>'
+      +'<div style="text-align:center;background:#0f172a;border-radius:8px;padding:8px"><div style="font-size:10px;color:#64748b;text-transform:uppercase">Obrona (W)</div><div style="font-size:20px;font-weight:800;color:#f87171">'+str.defense_a+'</div></div>'
+      +'</div>';
+  }}
   wrap.innerHTML = '<div class="ft-modal"><button class="ft-modal-close" id="ftClose">✕</button>'
     +'<h3>'+abbr+' — '+team+'</h3>'
     +'<div style="display:flex;gap:24px;margin:16px 0">'
     +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Strzelone (GF)</div><div style="font-size:28px;font-weight:800;color:#22d3ee">'+gf+'</div></div>'
     +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Stracone (GA)</div><div style="font-size:28px;font-weight:800;color:#f87171">'+ga+'</div></div>'
     +'</div>'
-    +'<div style="font-size:12px;color:#64748b;text-align:center">Dane z 90minut.pl</div>'
+    +strengthHtml
+    +'<div style="font-size:11px;color:#64748b;text-align:center;margin-top:12px">Siła >1.0 = powyżej średniej ligowej &nbsp;|&nbsp; Dane z 90minut.pl</div>'
     +'</div>';
   document.body.appendChild(wrap);
   document.getElementById("ftClose").onclick = function() {{ wrap.remove(); }};
@@ -2259,94 +2431,77 @@ function ftShowModal(team) {{
 }}
 
 function renderFixtures() {{
-  if (!FIXTURES.rounds || !FIXTURES.rounds.length) return '<div class="empty-msg">Brak danych terminarza</div>';
-  const rounds = FIXTURES.rounds;
-  const tf = ftBuildTeamFixtures();
-  const abbr = FIXTURES.abbrevs || {{}};
+  const fdrTeams = FDR_DATA.teams || [];
+  const gws = FDR_DATA.gameweeks || [];
+  if (!gws.length) return '<div class="empty-msg">Brak danych FDR — sprawdź terminarz.txt i dane z 90minut.pl</div>';
 
-  // Sortowanie drużyn
-  let teams = [...FIXTURES.teams];
-  if (ftSort === 'diff') {{
-    teams.sort((a,b) => ftAvgCombined(tf[b], b, rounds) - ftAvgCombined(tf[a], a, rounds));
+  // Sortowanie
+  let teams = [...fdrTeams];
+  if (fdrSort === 'alpha') {{
+    teams.sort((a,b) => a.name.localeCompare(b.name, 'pl'));
   }}
+  // domyślnie (fdr) — już posortowane po total_fdr z Pythona
 
-  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — ofensywa / defensywa</h2><div class="line"></div></div>';
+  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — FDR (Fixture Difficulty Rating)</h2><div class="line"></div></div>';
 
-  if (!hasStats) {{
-    h += '<div class="empty-msg" style="margin-bottom:16px">⚠️ Brak danych z 90minut.pl — nie udało się pobrać statystyk bramkowych</div>';
-  }}
-
-  // Legenda
-  h += '<div class="ft-legend">';
-  h += '<span class="ft-legend-item" style="margin-right:8px;font-weight:600;color:#e2e8f0">Legenda:</span>';
-  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#065f46"></span><span style="color:#a7f3d0">Bardzo korzystny</span></span>';
-  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#047857"></span><span style="color:#d1fae5">Korzystny</span></span>';
-  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#14532d80"></span><span style="color:#86efac">Lekko korzystny</span></span>';
-  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#1e293b"></span><span style="color:#94a3b8">Neutralny</span></span>';
-  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#7f1d1d80"></span><span style="color:#fca5a5">Niekorzystny</span></span>';
-  h += '<span class="ft-legend-item"><span class="ft-legend-swatch" style="background:#991b1b"></span><span style="color:#fecaca">Bardzo niekorzystny</span></span>';
+  // Legenda FDR
+  h += '<div class="fdr-legend">';
+  h += '<span class="fdr-legend-item" style="margin-right:6px;font-weight:600;color:#e2e8f0">FDR:</span>';
+  [1,2,3,4,5].forEach(fdr => {{
+    const c = FDR_COLORS[fdr];
+    h += '<span class="fdr-legend-item"><span class="fdr-legend-swatch" style="background:'+c.bg+';color:'+c.fg+'">'+fdr+'</span><span style="color:#94a3b8">'+FDR_LABELS[fdr]+'</span></span>';
+  }});
   h += '</div>';
 
-  // Opis ofensywy i defensywy
   h += '<div style="margin-bottom:8px;font-size:11px;color:#64748b">';
-  h += '<span style="color:#22d3ee;font-weight:600">OFE</span> = strzelone(przeciwnik) − strzelone(twoja) &nbsp;|&nbsp; ';
-  h += '<span style="color:#f87171;font-weight:600">DEF</span> = stracone(twoja) − strzelone(przeciwnik)';
+  h += 'FDR obliczony na podstawie siły ataku i obrony drużyn (dom/wyjazd) z danych 90minut.pl &nbsp;|&nbsp; ';
+  h += '<span style="font-weight:600">D</span> = dom, <span style="font-weight:600">W</span> = wyjazd &nbsp;|&nbsp; ';
+  h += 'Kliknij nazwę drużyny aby zobaczyć statystyki';
   h += '</div>';
 
   // Sort toggle
   h += '<div style="margin-bottom:12px;font-size:12px">';
   h += '<span class="c-dim">Sortuj: </span>';
-  h += '<button class="scope-btn ft-sort-btn" data-ftsort="alpha" style="font-size:11px;padding:3px 10px">A-Z</button> ';
-  h += '<button class="scope-btn ft-sort-btn" data-ftsort="diff" style="font-size:11px;padding:3px 10px">Łatwość ↓</button>';
-  h += '<span class="c-dim" style="margin-left:12px;font-size:11px">Kliknij nazwę drużyny aby zobaczyć statystyki</span>';
+  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="fdr" style="font-size:11px;padding:3px 10px">Σ FDR ↑</button> ';
+  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="alpha" style="font-size:11px;padding:3px 10px">A-Z</button>';
   h += '</div>';
 
   // Tabela
-  h += '<div class="data-table"><table class="ft-table"><thead><tr>';
+  h += '<div class="data-table" style="overflow-x:auto"><table class="fdr-table"><thead><tr>';
   h += '<th style="text-align:left;min-width:100px">Drużyna</th>';
-  h += '<th style="min-width:50px">GF/GA</th>';
-  rounds.forEach(r => {{ h += '<th class="ft-round">K'+r+'</th>'; }});
+  h += '<th style="min-width:50px">Σ FDR</th>';
+  gws.forEach(gw => {{ h += '<th style="min-width:90px">K'+gw+'</th>'; }});
   h += '</tr></thead><tbody>';
 
   teams.forEach((team, ti) => {{
-    const ab = abbr[team] || team.substring(0,3).toUpperCase();
-    const st = EKSTRA_STATS[team];
     h += '<tr>';
-    h += '<td class="ft-team ft-team-click" data-ftteam="'+ti+'">';
-    h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(ti+1)+'</span> '+ab+'</td>';
-    // GF/GA kolumna
-    if (st) {{
-      h += '<td><span class="ft-cell" style="background:#1e293b;color:#e2e8f0;font-size:11px;min-width:42px"><span style="color:#22d3ee">'+st.gf+'</span>/<span style="color:#f87171">'+st.ga+'</span></span></td>';
-    }} else {{
-      h += '<td><span class="ft-cell" style="background:#1e293b;color:#64748b;font-size:11px;min-width:42px">—</span></td>';
-    }}
-    rounds.forEach(r => {{
-      const f = tf[team][r];
-      if (!f) {{ h += '<td>—</td>'; return; }}
-      const oppAb = abbr[f.opp] || f.opp.substring(0,3).toUpperCase();
-      const ha = f.home ? 'D' : 'W';
-      if (hasStats && EKSTRA_STATS[team] && EKSTRA_STATS[f.opp]) {{
-        const off = ftOffense(team, f.opp);
-        const def = ftDefense(team, f.opp);
-        const cOff = ftColorOff(off);
-        const cDef = ftColorDef(def);
-        const offSign = off > 0 ? '+' : '';
-        const defSign = def > 0 ? '+' : '';
-        h += '<td><div class="ft-cell-dual" title="'+f.opp+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
-        h += '<div class="ft-cell-team">'+oppAb+' <span class="ft-ha">('+ha+')</span></div>';
-        h += '<div class="ft-cell-vals">';
-        h += '<span class="ft-val" style="background:'+cOff.bg+';color:'+cOff.fg+'">'+offSign+off+'</span>';
-        h += '<span class="ft-val" style="background:'+cDef.bg+';color:'+cDef.fg+'">'+defSign+def+'</span>';
-        h += '</div></div></td>';
-      }} else {{
-        h += '<td><span class="ft-cell" style="background:#1e293b;color:#94a3b8" title="'+f.opp+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">'+oppAb+' <span class="ft-ha">('+ha+')</span></span></td>';
+    h += '<td class="fdr-team fdr-team-click" data-fdrteam="'+ti+'" style="text-align:left;font-weight:700;white-space:nowrap;padding-left:8px;cursor:pointer">';
+    h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(ti+1)+'</span> '+team.short+'</td>';
+
+    // Σ FDR kolumna
+    const sumFdr = team.total_fdr;
+    const avgFdr = gws.length ? (sumFdr / gws.length) : 3;
+    const sumColor = avgFdr <= 2 ? '#10b981' : avgFdr <= 3 ? '#94a3b8' : '#ef4444';
+    h += '<td><span class="fdr-sum" style="color:'+sumColor+'">'+sumFdr+'</span></td>';
+
+    // Kafelki FDR per kolejka
+    team.fixtures.forEach(f => {{
+      if (!f.opponent) {{
+        h += '<td>—</td>';
+        return;
       }}
+      const c = FDR_COLORS[f.fdr] || FDR_COLORS[3];
+      const ha = f.home ? 'D' : 'W';
+      h += '<td><span class="fdr-tile" style="background:'+c.bg+';color:'+c.fg+'" title="'+f.opponent+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
+      h += f.opponent_short+' <span class="fdr-ha">('+ha+')</span>';
+      h += '</span></td>';
     }});
+
     h += '</tr>';
   }});
 
   h += '</tbody></table></div>';
-  window._ftTeams = teams;
+  window._fdrTeams = teams;
   return h;
 }}
 
@@ -2358,7 +2513,7 @@ function render() {{
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
-  document.querySelectorAll('.scope-btn:not(.ft-sort-btn)').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
+  document.querySelectorAll('.scope-btn:not(.fdr-sort-btn)').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
   const fr = document.querySelector('.filters-row');
   if (fr) fr.style.display = tab === 'players' ? 'flex' : 'none';
   // Sortable click handlers
@@ -2380,17 +2535,17 @@ function render() {{
       render();
     }};
   }});
-  // Fixture sort handlers
-  document.querySelectorAll('.ft-sort-btn').forEach(b => {{
-    b.classList.toggle('active', b.dataset.ftsort === ftSort);
-    b.onclick = () => {{ ftSort = b.dataset.ftsort; render(); }};
+  // FDR sort handlers
+  document.querySelectorAll('.fdr-sort-btn').forEach(b => {{
+    b.classList.toggle('active', b.dataset.fdrsort === fdrSort);
+    b.onclick = () => {{ fdrSort = b.dataset.fdrsort; render(); }};
   }});
-  // Team click → show stats modal
-  document.querySelectorAll('.ft-team-click').forEach(td => {{
+  // FDR team click → show stats modal
+  document.querySelectorAll('.fdr-team-click').forEach(td => {{
     td.onclick = () => {{
-      const teams = window._ftTeams || FIXTURES.teams || [];
-      const team = teams[parseInt(td.dataset.ftteam)];
-      if (team) ftShowModal(team);
+      const teams = window._fdrTeams || [];
+      const t = teams[parseInt(td.dataset.fdrteam)];
+      if (t) fdrShowModal(t.name);
     }};
   }});
 }}
@@ -2639,6 +2794,9 @@ def main():
     # 8.6 Scrapuj statystyki bramkowe z 90minut.pl
     ekstra_stats = fetch_ekstraklasa_table()
 
+    # 8.7 Oblicz FDR (Fixture Difficulty Rating)
+    fdr_data = compute_fdr(ekstra_stats, fixtures_data, current_round=current_round)
+
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
@@ -2652,6 +2810,7 @@ def main():
         league_teams_detail=league_teams_detail,
         fixtures_data=fixtures_data,
         ekstra_stats=ekstra_stats,
+        fdr_data=fdr_data,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
