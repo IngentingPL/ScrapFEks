@@ -2165,7 +2165,7 @@ function ftOffense(team, opponent) {{
   const ts = EKSTRA_STATS[team];
   const os = EKSTRA_STATS[opponent];
   if (!ts || !os) return 0;
-  return ts.gf - os.ga; // strzelone(team) - stracone(opponent)
+  return os.gf - ts.gf; // strzelone(przeciwnik) - strzelone(twoja)
 }}
 
 function ftDefense(team, opponent) {{
@@ -2289,7 +2289,7 @@ function renderFixtures() {{
 
   // Opis ofensywy i defensywy
   h += '<div style="margin-bottom:8px;font-size:11px;color:#64748b">';
-  h += '<span style="color:#22d3ee;font-weight:600">OFE</span> = strzelone(twoja) − stracone(przeciwnik) &nbsp;|&nbsp; ';
+  h += '<span style="color:#22d3ee;font-weight:600">OFE</span> = strzelone(przeciwnik) − strzelone(twoja) &nbsp;|&nbsp; ';
   h += '<span style="color:#f87171;font-weight:600">DEF</span> = stracone(twoja) − strzelone(przeciwnik)';
   h += '</div>';
 
