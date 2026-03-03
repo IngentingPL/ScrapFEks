@@ -2679,6 +2679,8 @@ def main():
     summary_data = []
     for p in players:
         pts = p.get("total_points", 0) or 0
+        if pts == 0:
+            continue
         price = p.get("price", 0) or 0
         ppp = round(pts / price, 2) if price > 0 else 0
 
