@@ -871,9 +871,10 @@ def fetch_league_teams(session: requests.Session, league_slug: str, league_id: s
     return teams
 
 
-def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False) -> dict:
+def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
+                      round_num: int = None) -> dict:
     """
-    Scrapuje skład drużyny ze strony /user-team/view/{slug}.
+    Scrapuje skład drużyny ze strony /user-team/view/{slug}[/{round_num}].
     Dane są osadzone w HTML jako wywołania app.Pitch.$squad.push({...}).
     Thread-safe — nie modyfikuje session.headers, używa requests.get() bezpośrednio.
     """
@@ -886,9 +887,13 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False)
             "Referer": f"{BASE_URL}/",
         }
 
+        url = (f"{BASE_URL}/user-team/view/{slug}/{round_num}"
+               if round_num is not None
+               else f"{BASE_URL}/user-team/view/{slug}")
+
         # Thread-safe: użyj requests.get() z cookies z sesji
         resp = requests.get(
-            f"{BASE_URL}/user-team/view/{slug}",
+            url,
             headers=browser_headers,
             cookies=dict(session.cookies),
             timeout=15,
@@ -1207,6 +1212,120 @@ def generate_squad_stats(team_results: list[dict], filename: str):
         print(f"  {s['name']:<25} {s['squad_pct']:>10} {s['starting_pct']:>10} {s['captain_pct']:>10}")
 
     return stats
+
+
+def compute_league_transfers(
+    session: requests.Session,
+    league_results: list[dict],
+    current_round: int,
+    player_lookup: dict,
+) -> dict:
+    """
+    Oblicza popularne transfery w lidze prywatnej.
+    Porównuje skład każdej drużyny w current_round vs current_round-1
+    i zlicza, ile drużyn kupło / sprzedało każdego zawodnika.
+    """
+    empty = {
+        "gameweek": current_round,
+        "prev_gameweek": max(current_round - 1, 1),
+        "league_teams_count": 0,
+        "transfers_in": [],
+        "transfers_out": [],
+    }
+
+    if not league_results or current_round <= 1:
+        return empty
+
+    prev_round = current_round - 1
+    total_teams = len(league_results)
+
+    transfers_in_count: dict[str, int] = {}
+    transfers_out_count: dict[str, int] = {}
+
+    print(f"\n🔄 Obliczam transfery ligi (K{prev_round} → K{current_round}, {total_teams} drużyn)...")
+
+    browser_headers = {
+        "User-Agent": HEADERS["User-Agent"],
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
+        "Referer": f"{BASE_URL}/",
+    }
+
+    for i, team in enumerate(league_results):
+        slug = team.get("team_slug", "")
+        if not slug:
+            continue
+
+        # Aktualny skład (już pobrany)
+        current_pids = {
+            str(p.get("player_id"))
+            for p in team.get("squad", [])
+            if p.get("player_id")
+        }
+
+        # Skład z poprzedniej kolejki
+        try:
+            prev_squad_data = scrape_team_squad(session, slug, round_num=prev_round)
+            prev_pids = {
+                str(p.get("player_id"))
+                for p in prev_squad_data.get("players", [])
+                if p.get("player_id")
+            }
+        except Exception as e:
+            if i < 3:
+                print(f"   ⚠️  Błąd pobierania K{prev_round} dla {slug}: {e}")
+            prev_pids = set()
+
+        # Transfery IN = pojawili się w current, nie było ich w prev
+        for pid in current_pids - prev_pids:
+            transfers_in_count[pid] = transfers_in_count.get(pid, 0) + 1
+
+        # Transfery OUT = byli w prev, nie ma ich w current
+        for pid in prev_pids - current_pids:
+            transfers_out_count[pid] = transfers_out_count.get(pid, 0) + 1
+
+        if (i + 1) % 5 == 0 or (i + 1) == total_teams:
+            print(f"   [{i + 1}/{total_teams}] drużyn przetworzono")
+
+        time.sleep(REQUEST_DELAY)
+
+    def _build_list(count_dict: dict, limit: int = 15) -> list[dict]:
+        rows = []
+        for pid, count in sorted(count_dict.items(), key=lambda x: x[1], reverse=True):
+            full = player_lookup.get(str(pid), {})
+            if not full:
+                continue
+            # Zmiana ceny z historii
+            price_change = 0.0
+            ph = full.get("price_history", [])
+            if len(ph) >= 2:
+                price_change = round((ph[-1].get("price") or 0) - (ph[-2].get("price") or 0), 2)
+            rows.append({
+                "player_id": pid,
+                "name": full.get("name", ""),
+                "position": full.get("position", ""),
+                "team": full.get("team", ""),
+                "price": full.get("price", 0),
+                "price_change": price_change,
+                "count": count,
+                "pct": round(count / total_teams * 100, 1),
+            })
+            if len(rows) >= limit:
+                break
+        return rows
+
+    result = {
+        "gameweek": current_round,
+        "prev_gameweek": prev_round,
+        "league_teams_count": total_teams,
+        "transfers_in": _build_list(transfers_in_count),
+        "transfers_out": _build_list(transfers_out_count),
+    }
+
+    t_in = len(result["transfers_in"])
+    t_out = len(result["transfers_out"])
+    print(f"   ✅ Transfery: {t_in} kupno, {t_out} sprzedaż (top 15 każdy)")
+    return result
 
 
 # ============================================================
@@ -1696,6 +1815,7 @@ def generate_dashboard_html(
     fixtures_data: dict,
     ekstra_stats: dict,
     fdr_data: dict,
+    transfers_data: dict,
     timestamp: str,
     filename: str,
 ):
@@ -1740,7 +1860,9 @@ def generate_dashboard_html(
     fixtures_json = json.dumps(fixtures_data, ensure_ascii=False)
     ekstra_stats_json = json.dumps(ekstra_stats, ensure_ascii=False)
     fdr_data_json = json.dumps(fdr_data, ensure_ascii=False)
+    transfers_data_json = json.dumps(transfers_data or {}, ensure_ascii=False)
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
+    has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
 
     # For stat cards
     all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))
@@ -1982,6 +2104,16 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .fdr-cell-vals {{ display: flex; gap: 3px; }}
 .fdr-mini {{ border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: 700; min-width: 36px; text-align: center; display: inline-flex; align-items: center; gap: 2px; }}
 .fdr-mini .fdr-lbl {{ font-size: 8px; font-weight: 600; opacity: 0.8; letter-spacing: 0.3px; }}
+/* Transfers tab */
+.transfers-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
+@media (max-width: 768px) {{ .transfers-grid {{ grid-template-columns: 1fr; }} }}
+.transfers-header {{ display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }}
+.transfers-header h3 {{ font-size: 14px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }}
+.tr-filters-row {{ display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }}
+.tr-gw-badge {{ background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 4px 12px; font-size: 12px; color: #94a3b8; font-weight: 600; }}
+.price-up {{ color: #10b981; font-size: 11px; font-weight: 700; }}
+.price-down {{ color: #ef4444; font-size: 11px; font-weight: 700; }}
+.price-neutral {{ color: #64748b; font-size: 11px; }}
 </style>
 </head>
 <body>
@@ -2016,6 +2148,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       <button class="tab active" data-tab="players">⚽ Zawodnicy</button>
       {"<button class='tab' data-tab='teams'>📋 Liga CMF</button>" if has_league else ""}
       {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
+      {"<button class='tab' data-tab='transfers'>🔄 Transfery</button>" if has_transfers else ""}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
@@ -2030,6 +2163,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
     <div id="tab-players" class="tab-content active"></div>
     <div id="tab-teams" class="tab-content"></div>
     <div id="tab-fixtures" class="tab-content"></div>
+    <div id="tab-transfers" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
@@ -2042,6 +2176,7 @@ const LEAGUE_TEAMS = {teams_detail_json};
 const FIXTURES = {fixtures_json};
 const EKSTRA_STATS = {ekstra_stats_json};
 const FDR_DATA = {fdr_data_json};
+const TRANSFERS_DATA = {transfers_data_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -2554,17 +2689,110 @@ function renderFixtures() {{
   return h;
 }}
 
+// ============ Transfers Tab ============
+let trPos = 'ALL';
+
+function priceChangeHtml(pc) {{
+  if (!pc) return '';
+  const v = parseFloat(pc) || 0;
+  if (v > 0) return ' <span class="price-up">↑ +' + v.toFixed(1) + 'M</span>';
+  if (v < 0) return ' <span class="price-down">↓ ' + v.toFixed(1) + 'M</span>';
+  return '';
+}}
+
+function renderTransfersTable(list, totalTeams, title, color) {{
+  if (!list || !list.length) return '<div class="empty-msg" style="padding:24px">Brak danych</div>';
+
+  const filtered = trPos === 'ALL' ? list : list.filter(p => {{
+    const pk = POS_ID[p.position] || p.position || '';
+    return pk === trPos;
+  }});
+
+  if (!filtered.length) return '<div class="empty-msg" style="padding:24px">Brak zawodników dla wybranej pozycji</div>';
+
+  let h = '<div class="transfers-header"><span style="font-size:18px">'+title.split(' ')[0]+'</span>';
+  h += '<h3 style="color:'+color+'">'+title.split(' ').slice(1).join(' ')+'</h3></div>';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left">#</th>';
+  h += '<th class="text-left">Zawodnik</th>';
+  h += '<th class="text-center">Poz</th>';
+  h += '<th class="text-left" style="max-width:120px">Drużyna</th>';
+  h += '<th class="text-right">Cena</th>';
+  h += '<th style="min-width:120px">Drużyn</th>';
+  h += '</tr></thead><tbody>';
+
+  filtered.forEach((p, i) => {{
+    const pk = POS_ID[p.position] || p.position || '';
+    const pct = p.pct || 0;
+    const barW = Math.min(pct, 100);
+    const priceChg = priceChangeHtml(p.price_change);
+    h += '<tr>';
+    h += '<td class="c-muted fw-600">' + (i + 1) + '</td>';
+    h += '<td class="fw-600">' + p.name + priceChg + '</td>';
+    h += '<td class="text-center">' + posBadge(pk) + '</td>';
+    h += '<td class="c-muted" style="font-size:12px;max-width:120px;white-space:normal">' + (p.team || '—') + '</td>';
+    h += '<td class="text-right c-muted">' + (p.price ? p.price.toFixed(1) + 'M' : '—') + '</td>';
+    h += '<td><div class="bar-wrap"><div class="bar-bg" style="width:80px"><div class="bar-fill" style="width:' + barW + '%;background:' + color + '"></div></div>';
+    h += '<span class="bar-val">' + p.count + ' (' + pct.toFixed(1) + '%)</span></div></td>';
+    h += '</tr>';
+  }});
+  h += '</tbody></table></div>';
+  return h;
+}}
+
+function renderTransfers() {{
+  const td = TRANSFERS_DATA;
+  if (!td || (!td.transfers_in && !td.transfers_out)) {{
+    return '<div class="empty-msg">Brak danych transferowych — upewnij się że liga prywatna jest skonfigurowana i rozegrano co najmniej 2 kolejki</div>';
+  }}
+
+  const gw = td.gameweek || '?';
+  const prevGw = td.prev_gameweek || (gw - 1);
+  const leagueCount = td.league_teams_count || 0;
+  const tin = td.transfers_in || [];
+  const tout = td.transfers_out || [];
+
+  let h = '<div class="section-title"><span style="font-size:22px">🔄</span><h2>Transfery — K' + prevGw + ' → K' + gw + '</h2><div class="line"></div></div>';
+
+  // Filters row
+  h += '<div class="tr-filters-row">';
+  h += '<div class="pos-filters">';
+  ['ALL','BR','OBR','POM','NAP'].forEach(p => {{
+    const labels = {{ALL:'ALL',BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD'}};
+    const active = trPos === p ? ' active' : '';
+    h += '<button class="pos-btn tr-pos-btn' + active + '" data-trpos="' + p + '" data-pos="' + p + '">' + labels[p] + '</button>';
+  }});
+  h += '</div>';
+  h += '<span class="tr-gw-badge" style="margin-left:auto">K' + prevGw + ' → K' + gw + ' · ' + leagueCount + ' drużyn</span>';
+  h += '</div>';
+
+  // Two tables side by side
+  h += '<div class="transfers-grid">';
+  h += '<div>' + renderTransfersTable(tin, leagueCount, '🟢 Najpopularniejsze kupna', '#10b981') + '</div>';
+  h += '<div>' + renderTransfersTable(tout, leagueCount, '🔴 Najpopularniejsze sprzedaże', '#ef4444') + '</div>';
+  h += '</div>';
+
+  return h;
+}}
+
 function render() {{
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
   const ftEl = document.getElementById('tab-fixtures');
   if (ftEl) ftEl.innerHTML = tab === 'fixtures' ? renderFixtures() : '';
+  const trEl = document.getElementById('tab-transfers');
+  if (trEl) trEl.innerHTML = tab === 'transfers' ? renderTransfers() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
   document.querySelectorAll('.scope-btn:not(.fdr-sort-btn)').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
   const fr = document.querySelector('.filters-row');
   if (fr) fr.style.display = tab === 'players' ? 'flex' : 'none';
+  // Transfers position filter handlers
+  document.querySelectorAll('.tr-pos-btn').forEach(b => {{
+    b.classList.toggle('active', b.dataset.trpos === trPos);
+    b.onclick = () => {{ trPos = b.dataset.trpos; render(); }};
+  }});
   // Sortable click handlers
   document.querySelectorAll('.sortable').forEach(th => {{
     th.onclick = () => {{
@@ -2848,6 +3076,16 @@ def main():
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
     fdr_data = compute_fdr(ekstra_stats, fixtures_data, current_round=current_round)
 
+    # 8.8 Oblicz transfery w lidze prywatnej
+    transfers_data: dict = {}
+    if league_results and current_round > 1:
+        transfers_data = compute_league_transfers(
+            session=session,
+            league_results=league_results,
+            current_round=current_round,
+            player_lookup=player_lookup,
+        )
+
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
@@ -2862,6 +3100,7 @@ def main():
         fixtures_data=fixtures_data,
         ekstra_stats=ekstra_stats,
         fdr_data=fdr_data,
+        transfers_data=transfers_data,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
