@@ -1257,14 +1257,22 @@ NINETYM_LIGA_ID = "14072"  # PKO BP Ekstraklasa 2025/2026
 
 def fetch_ekstraklasa_table() -> dict:
     """Scrapuje tabelę Ekstraklasy z 90minut.pl (bramki strzelone/stracone)."""
-    url = f"https://www.90minut.pl/liga/1/liga{NINETYM_LIGA_ID}.html"
+    # 90minut.pl używa HTTP (nie HTTPS) i kodowania windows-1250
+    url = f"http://www.90minut.pl/liga/1/liga{NINETYM_LIGA_ID}.html"
     team_stats = {}
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Accept-Encoding": "gzip, deflate",
+            "Connection": "keep-alive",
         }
-        resp = requests.get(url, headers=headers, timeout=15)
+        resp = requests.get(url, headers=headers, timeout=20)
         resp.raise_for_status()
+
+        # 90minut.pl używa kodowania iso-8859-2 / windows-1250
+        resp.encoding = resp.apparent_encoding or "iso-8859-2"
         soup = BeautifulSoup(resp.text, "lxml")
 
         # Znajdź tabelę z klasyfikacją — szukamy tabeli z nagłówkami M./Pkt./Bramki
@@ -1272,33 +1280,51 @@ def fetch_ekstraklasa_table() -> dict:
         target_table = None
         for table in tables:
             header_text = table.get_text()
-            if "Pkt." in header_text and "Bramki" in header_text:
+            if "Pkt" in header_text and "Bramki" in header_text:
                 target_table = table
                 break
 
         if not target_table:
-            print(f"  ⚠️  Nie znaleziono tabeli na 90minut.pl")
+            # Fallback: szukaj największej tabeli z wieloma wierszami danych
+            for table in tables:
+                rows = table.find_all("tr")
+                if len(rows) >= 18:
+                    # Sprawdź czy wygląda jak tabela ligowa (ma bramki w formacie X:X)
+                    text = table.get_text()
+                    if re.search(r"\d+:\d+", text):
+                        target_table = table
+                        break
+
+        if not target_table:
+            print(f"  ⚠️  Nie znaleziono tabeli na 90minut.pl ({len(tables)} tabel na stronie)")
             return team_stats
 
         rows = target_table.find_all("tr")
         for row in rows:
             cells = row.find_all("td")
-            if len(cells) < 7:
+            if len(cells) < 5:
                 continue
 
-            # Znajdź nazwę drużyny — szukamy <a> w komórkach
+            # Znajdź nazwę drużyny — szukamy <a> z linkiem do klubu
             team_name = None
             for cell in cells:
                 link = cell.find("a")
-                if link and "/klub/" in (link.get("href") or ""):
-                    team_name = link.get_text(strip=True)
-                    break
+                if link:
+                    href = link.get("href") or ""
+                    if "klub" in href or "druzyna" in href or "/liga/" not in href:
+                        candidate = link.get_text(strip=True)
+                        # Ignoruj linki liczbowe (np. numery kolejek)
+                        if candidate and not candidate.isdigit() and len(candidate) > 2:
+                            team_name = candidate
+                            break
 
             if not team_name:
-                # Fallback: druga komórka to zazwyczaj nazwa drużyny
-                team_text = cells[1].get_text(strip=True)
-                if team_text and not team_text.isdigit():
-                    team_name = team_text
+                # Fallback: szukaj komórki z dłuższym tekstem (nazwa drużyny)
+                for cell in cells[1:4]:
+                    text = cell.get_text(strip=True)
+                    if text and not text.isdigit() and len(text) > 3:
+                        team_name = text
+                        break
 
             if not team_name:
                 continue
