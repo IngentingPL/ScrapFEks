@@ -1392,12 +1392,14 @@ def fetch_ekstraklasa_table() -> dict:
     return team_stats
 
 def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0, num_rounds: int = 6) -> dict:
-    """Oblicza Fixture Difficulty Rating (FDR) 1-5 dla każdego meczu.
+    """Oblicza osobne wskaźniki ATK i DEF rywala (1-5) dla każdego meczu.
 
-    Algorytm wzorowany na FPL:
-    1. Oblicz średnie ligowe goli strzelonych/straconych (dom/wyjazd)
-    2. Oblicz siłę ataku/obrony każdej drużyny (dom/wyjazd)
-    3. Dla każdego meczu: FDR = siła rywala, znormalizowana do 1-5 (kwantyle)
+    ATK rywala = siła ataku rywala (wysoki = rywal dużo strzela = źle dla Twoich obrońców)
+    DEF rywala = siła obrony rywala (wysoki = rywal mało traci = źle dla Twoich napastników)
+
+    Skala 1-5 (kwantyle):
+      1 = najsłabszy (korzystny mecz)
+      5 = najsilniejszy (trudny mecz)
     """
     teams = fixtures_data.get("teams", [])
     rounds = fixtures_data.get("rounds", [])
@@ -1427,7 +1429,6 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
             total_ga_away += st.get("ga_away", 0)
             total_mp_away += st.get("mp_away", 0)
         else:
-            # Fallback: użyj ogólnych danych podzielonych przez 2
             mp = st.get("mp", 0) or 1
             total_gf_home += st["gf"]
             total_ga_home += st["ga"]
@@ -1436,7 +1437,6 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
             total_ga_away += st["ga"]
             total_mp_away += mp
 
-    # Średnie na mecz
     avg_gf_home = total_gf_home / total_mp_home if total_mp_home else 1
     avg_ga_home = total_ga_home / total_mp_home if total_mp_home else 1
     avg_gf_away = total_gf_away / total_mp_away if total_mp_away else 1
@@ -1471,69 +1471,97 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
             "defense_a": round(ga_a_avg / avg_ga_away, 2) if avg_ga_away else 1.0,
         }
 
-    # Wybierz kolejki do pokazania
-    if current_round:
-        upcoming = [r for r in rounds if r >= current_round]
-    else:
-        upcoming = rounds
-    shown_rounds = upcoming[:num_rounds] if upcoming else rounds[:num_rounds]
+    # Określ nadchodzące kolejki na podstawie dat meczów
+    today = datetime.now()
+    current_year = today.year
 
-    # Oblicz surowe trudności dla wszystkich meczów w pokazywanych kolejkach
-    raw_difficulties = []
-    fixture_map = {}  # (team, round) -> raw_diff
+    def _round_is_past(round_num):
+        """Sprawdza czy wszystkie mecze w kolejce już się odbyły."""
+        ms = matches.get(str(round_num), [])
+        if not ms:
+            return True
+        for m in ms:
+            date_str = m.get("date", "")
+            if not date_str:
+                return False
+            try:
+                day, month = date_str.split(".")
+                # Zakładamy bieżący rok; dla meczów lip-gru może być rok wcześniejszy
+                match_date = datetime(current_year, int(month), int(day))
+                if int(month) >= 7 and today.month <= 6:
+                    match_date = datetime(current_year - 1, int(month), int(day))
+                if match_date >= today:
+                    return False  # Jest mecz w przyszłości
+            except (ValueError, TypeError):
+                return False
+        return True
+
+    upcoming = [r for r in rounds if not _round_is_past(r)]
+    if not upcoming:
+        upcoming = rounds[-num_rounds:]  # fallback: ostatnie kolejki
+    shown_rounds = upcoming[:num_rounds]
+
+    # Zbierz surowe wartości ATK i DEF rywala dla kwantyli
+    raw_atk_vals = []
+    raw_def_vals = []
+    fixture_map = {}  # (team, round) -> {atk_raw, def_raw}
 
     for r in shown_rounds:
         ms = matches.get(str(r), [])
         for m in ms:
             home_team = m["home"]
             away_team = m["away"]
-            opp_str_h = team_strengths.get(away_team, {"attack_a": 1.0, "defense_a": 1.0})
-            opp_str_a = team_strengths.get(home_team, {"attack_h": 1.0, "defense_h": 1.0})
+            opp_away = team_strengths.get(away_team, {"attack_a": 1.0, "defense_a": 1.0})
+            opp_home = team_strengths.get(home_team, {"attack_h": 1.0, "defense_h": 1.0})
 
-            # Trudność dla gospodarza = siła wyjazdowa rywala
-            diff_home = opp_str_h["attack_a"] + opp_str_h["defense_a"]
-            # Trudność dla gościa = siła domowa rywala
-            diff_away = opp_str_a["attack_h"] + opp_str_a["defense_h"]
+            # Dla gospodarza: rywal gra na wyjeździe
+            atk_raw_h = opp_away["attack_a"]   # atak wyjazdowy rywala
+            def_raw_h = opp_away["defense_a"]   # obrona wyjazdowa rywala (GA-based)
 
-            # Mecze wyjazdowe trudniejsze — dodaj bonus
-            diff_away += 0.15
+            # Dla gościa: rywal gra u siebie
+            atk_raw_a = opp_home["attack_h"]    # atak domowy rywala
+            def_raw_a = opp_home["defense_h"]   # obrona domowa rywala (GA-based)
 
-            raw_difficulties.append(diff_home)
-            raw_difficulties.append(diff_away)
-            fixture_map[(home_team, r)] = diff_home
-            fixture_map[(away_team, r)] = diff_away
+            raw_atk_vals.extend([atk_raw_h, atk_raw_a])
+            raw_def_vals.extend([def_raw_h, def_raw_a])
+            fixture_map[(home_team, r)] = {"atk": atk_raw_h, "def": def_raw_h}
+            fixture_map[(away_team, r)] = {"atk": atk_raw_a, "def": def_raw_a}
 
-    # Normalizacja do FDR 1-5 za pomocą kwantyli
-    if raw_difficulties:
-        sorted_diffs = sorted(raw_difficulties)
-        n = len(sorted_diffs)
-        # Progi kwantylowe: 20% każdy (FDR 1=najłatwiejsze 20%, FDR 5=najtrudniejsze 20%)
-        thresholds = [
-            sorted_diffs[max(0, int(n * 0.2) - 1)],
-            sorted_diffs[max(0, int(n * 0.4) - 1)],
-            sorted_diffs[max(0, int(n * 0.6) - 1)],
-            sorted_diffs[max(0, int(n * 0.8) - 1)],
-        ]
-    else:
-        thresholds = [1.5, 1.8, 2.0, 2.3]
+    # Kwantyle dla ATK (direct: wysoki attack_strength → wysoki rating 5)
+    def _quantile_thresholds(vals):
+        if not vals:
+            return [0.8, 0.95, 1.05, 1.2]
+        s = sorted(vals)
+        n = len(s)
+        return [s[max(0, int(n * 0.2) - 1)], s[max(0, int(n * 0.4) - 1)],
+                s[max(0, int(n * 0.6) - 1)], s[max(0, int(n * 0.8) - 1)]]
 
-    def diff_to_fdr(val):
-        if val <= thresholds[0]:
-            return 1
-        if val <= thresholds[1]:
-            return 2
-        if val <= thresholds[2]:
-            return 3
-        if val <= thresholds[3]:
-            return 4
+    atk_thr = _quantile_thresholds(raw_atk_vals)
+    def_thr = _quantile_thresholds(raw_def_vals)
+
+    def _val_to_rating(val, thr):
+        """Direct: niska wartość → rating 1, wysoka → rating 5."""
+        if val <= thr[0]: return 1
+        if val <= thr[1]: return 2
+        if val <= thr[2]: return 3
+        if val <= thr[3]: return 4
         return 5
 
-    # Buduj dane FDR per drużyna
+    def _val_to_rating_inv(val, thr):
+        """Inverted: niska wartość → rating 5 (silna obrona), wysoka → rating 1."""
+        if val <= thr[0]: return 5
+        if val <= thr[1]: return 4
+        if val <= thr[2]: return 3
+        if val <= thr[3]: return 2
+        return 1
+
+    # Buduj dane per drużyna
     fdr_teams = []
     for team in teams:
         ab = abbrevs.get(team, team[:3].upper())
         fixtures_list = []
-        total_fdr = 0
+        total_atk = 0
+        total_def = 0
         for r in shown_rounds:
             ms = matches.get(str(r), [])
             fixture_info = None
@@ -1545,32 +1573,37 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
                     fixture_info = {"opponent": m["home"], "home": False, "date": m.get("date", "")}
                     break
             if fixture_info:
-                raw = fixture_map.get((team, r), 2.0)
-                fdr = diff_to_fdr(raw)
-                total_fdr += fdr
+                raw = fixture_map.get((team, r), {"atk": 1.0, "def": 1.0})
+                atk_r = _val_to_rating(raw["atk"], atk_thr)
+                # DEF: niska defense_strength = mało bramek traci = silna obrona = rating 5
+                def_r = _val_to_rating_inv(raw["def"], def_thr)
+                total_atk += atk_r
+                total_def += def_r
                 opp_ab = abbrevs.get(fixture_info["opponent"], fixture_info["opponent"][:3].upper())
                 fixtures_list.append({
                     "gw": r,
                     "opponent": fixture_info["opponent"],
                     "opponent_short": opp_ab,
                     "home": fixture_info["home"],
-                    "fdr": fdr,
+                    "atk": atk_r,
+                    "def": def_r,
                     "date": fixture_info["date"],
                 })
             else:
-                fixtures_list.append({"gw": r, "opponent": "", "opponent_short": "—", "home": True, "fdr": 0, "date": ""})
+                fixtures_list.append({"gw": r, "opponent": "", "opponent_short": "—", "home": True, "atk": 0, "def": 0, "date": ""})
 
         fdr_teams.append({
             "name": team,
             "short": ab,
-            "total_fdr": total_fdr,
+            "total_atk": total_atk,
+            "total_def": total_def,
             "fixtures": fixtures_list,
         })
 
-    # Sortuj po sumie FDR (najłatwiejszy terminarz na górze)
-    fdr_teams.sort(key=lambda t: t["total_fdr"])
-
-    print(f"  📊 FDR: obliczono dla {len(fdr_teams)} drużyn, kolejki K{shown_rounds[0]}-K{shown_rounds[-1]}" if shown_rounds else "  📊 FDR: brak danych")
+    if shown_rounds:
+        print(f"  📊 FDR: obliczono ATK/DEF dla {len(fdr_teams)} drużyn, kolejki K{shown_rounds[0]}-K{shown_rounds[-1]}")
+    else:
+        print("  📊 FDR: brak nadchodzących kolejek")
 
     return {
         "teams": fdr_teams,
@@ -1939,12 +1972,16 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .fdr-table th {{ padding: 8px 6px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }}
 .fdr-table td {{ padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }}
 .fdr-table td.fdr-team {{ text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; }}
-.fdr-tile {{ border-radius: 4px; padding: 6px 10px; font-size: 13px; font-weight: 600; display: inline-block; min-width: 72px; text-align: center; cursor: default; }}
-.fdr-tile .fdr-ha {{ font-size: 10px; font-weight: 400; opacity: 0.8; }}
 .fdr-sum {{ font-weight: 800; font-size: 15px; }}
 .fdr-legend {{ display: flex; gap: 8px; align-items: center; margin-bottom: 14px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; }}
 .fdr-legend-item {{ display: flex; align-items: center; gap: 5px; }}
 .fdr-legend-swatch {{ width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }}
+.fdr-cell {{ display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 80px; }}
+.fdr-cell-team {{ font-size: 12px; font-weight: 600; color: #e2e8f0; white-space: nowrap; }}
+.fdr-cell-team .fdr-ha {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
+.fdr-cell-vals {{ display: flex; gap: 3px; }}
+.fdr-mini {{ border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: 700; min-width: 36px; text-align: center; display: inline-flex; align-items: center; gap: 2px; }}
+.fdr-mini .fdr-lbl {{ font-size: 8px; font-weight: 600; opacity: 0.8; letter-spacing: 0.3px; }}
 </style>
 </head>
 <body>
@@ -2394,7 +2431,7 @@ const FDR_COLORS = {{
   5: {{bg:'#80072D', fg:'#ffffff'}},
 }};
 const FDR_LABELS = {{1:'Bardzo łatwy', 2:'Łatwy', 3:'Średni', 4:'Trudny', 5:'Bardzo trudny'}};
-let fdrSort = 'fdr'; // 'fdr' | 'alpha'
+let fdrSort = 'alpha'; // 'alpha' | 'def' | 'atk'
 
 function fdrShowModal(team) {{
   const st = EKSTRA_STATS[team];
@@ -2433,44 +2470,47 @@ function fdrShowModal(team) {{
 function renderFixtures() {{
   const fdrTeams = FDR_DATA.teams || [];
   const gws = FDR_DATA.gameweeks || [];
-  if (!gws.length) return '<div class="empty-msg">Brak danych FDR — sprawdź terminarz.txt i dane z 90minut.pl</div>';
+  if (!gws.length) return '<div class="empty-msg">Brak danych terminarza — sprawdź terminarz.txt i dane z 90minut.pl</div>';
 
   // Sortowanie
   let teams = [...fdrTeams];
-  if (fdrSort === 'alpha') {{
+  if (fdrSort === 'def') {{
+    teams.sort((a,b) => a.total_def - b.total_def);
+  }} else if (fdrSort === 'atk') {{
+    teams.sort((a,b) => a.total_atk - b.total_atk);
+  }} else {{
     teams.sort((a,b) => a.name.localeCompare(b.name, 'pl'));
   }}
-  // domyślnie (fdr) — już posortowane po total_fdr z Pythona
 
-  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — FDR (Fixture Difficulty Rating)</h2><div class="line"></div></div>';
+  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — trudność meczów</h2><div class="line"></div></div>';
 
-  // Legenda FDR
+  // Legenda
   h += '<div class="fdr-legend">';
-  h += '<span class="fdr-legend-item" style="margin-right:6px;font-weight:600;color:#e2e8f0">FDR:</span>';
-  [1,2,3,4,5].forEach(fdr => {{
-    const c = FDR_COLORS[fdr];
-    h += '<span class="fdr-legend-item"><span class="fdr-legend-swatch" style="background:'+c.bg+';color:'+c.fg+'">'+fdr+'</span><span style="color:#94a3b8">'+FDR_LABELS[fdr]+'</span></span>';
+  [1,2,3,4,5].forEach(r => {{
+    const c = FDR_COLORS[r];
+    h += '<span class="fdr-legend-item"><span class="fdr-legend-swatch" style="background:'+c.bg+';color:'+c.fg+'">'+r+'</span><span style="color:#94a3b8">'+FDR_LABELS[r]+'</span></span>';
   }});
   h += '</div>';
 
-  h += '<div style="margin-bottom:8px;font-size:11px;color:#64748b">';
-  h += 'FDR obliczony na podstawie siły ataku i obrony drużyn (dom/wyjazd) z danych 90minut.pl &nbsp;|&nbsp; ';
-  h += '<span style="font-weight:600">D</span> = dom, <span style="font-weight:600">W</span> = wyjazd &nbsp;|&nbsp; ';
-  h += 'Kliknij nazwę drużyny aby zobaczyć statystyki';
+  h += '<div style="margin-bottom:10px;font-size:11px;color:#64748b;line-height:1.6">';
+  h += '<span style="color:#22d3ee;font-weight:600">ATK</span> = siła ataku rywala (ważne dla obrońców/GK — zielony = słaby atak rywala) &nbsp;|&nbsp; ';
+  h += '<span style="color:#f87171;font-weight:600">DEF</span> = siła obrony rywala (ważne dla napastników/pomocników — zielony = słaba obrona rywala)';
   h += '</div>';
 
   // Sort toggle
   h += '<div style="margin-bottom:12px;font-size:12px">';
   h += '<span class="c-dim">Sortuj: </span>';
-  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="fdr" style="font-size:11px;padding:3px 10px">Σ FDR ↑</button> ';
-  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="alpha" style="font-size:11px;padding:3px 10px">A-Z</button>';
+  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="alpha" style="font-size:11px;padding:3px 10px">A-Z</button> ';
+  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="def" style="font-size:11px;padding:3px 10px">Najłatwiejszy dla ataku ↑</button> ';
+  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="atk" style="font-size:11px;padding:3px 10px">Najłatwiejszy dla obrony ↑</button>';
   h += '</div>';
 
   // Tabela
   h += '<div class="data-table" style="overflow-x:auto"><table class="fdr-table"><thead><tr>';
   h += '<th style="text-align:left;min-width:100px">Drużyna</th>';
-  h += '<th style="min-width:50px">Σ FDR</th>';
-  gws.forEach(gw => {{ h += '<th style="min-width:90px">K'+gw+'</th>'; }});
+  h += '<th style="min-width:56px">Σ ATK</th>';
+  h += '<th style="min-width:56px">Σ DEF</th>';
+  gws.forEach(gw => {{ h += '<th style="min-width:100px">K'+gw+'</th>'; }});
   h += '</tr></thead><tbody>';
 
   teams.forEach((team, ti) => {{
@@ -2478,23 +2518,32 @@ function renderFixtures() {{
     h += '<td class="fdr-team fdr-team-click" data-fdrteam="'+ti+'" style="text-align:left;font-weight:700;white-space:nowrap;padding-left:8px;cursor:pointer">';
     h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(ti+1)+'</span> '+team.short+'</td>';
 
-    // Σ FDR kolumna
-    const sumFdr = team.total_fdr;
-    const avgFdr = gws.length ? (sumFdr / gws.length) : 3;
-    const sumColor = avgFdr <= 2 ? '#10b981' : avgFdr <= 3 ? '#94a3b8' : '#ef4444';
-    h += '<td><span class="fdr-sum" style="color:'+sumColor+'">'+sumFdr+'</span></td>';
+    // Σ ATK
+    const avgAtk = gws.length ? (team.total_atk / gws.length) : 3;
+    const atkColor = avgAtk <= 2 ? '#10b981' : avgAtk <= 3 ? '#94a3b8' : '#ef4444';
+    h += '<td><span class="fdr-sum" style="color:'+atkColor+'">'+team.total_atk+'</span></td>';
 
-    // Kafelki FDR per kolejka
+    // Σ DEF
+    const avgDef = gws.length ? (team.total_def / gws.length) : 3;
+    const defColor = avgDef <= 2 ? '#10b981' : avgDef <= 3 ? '#94a3b8' : '#ef4444';
+    h += '<td><span class="fdr-sum" style="color:'+defColor+'">'+team.total_def+'</span></td>';
+
+    // Dual ATK/DEF tiles per gameweek
     team.fixtures.forEach(f => {{
       if (!f.opponent) {{
         h += '<td>—</td>';
         return;
       }}
-      const c = FDR_COLORS[f.fdr] || FDR_COLORS[3];
+      const cA = FDR_COLORS[f.atk] || FDR_COLORS[3];
+      const cD = FDR_COLORS[f.def] || FDR_COLORS[3];
       const ha = f.home ? 'D' : 'W';
-      h += '<td><span class="fdr-tile" style="background:'+c.bg+';color:'+c.fg+'" title="'+f.opponent+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
-      h += f.opponent_short+' <span class="fdr-ha">('+ha+')</span>';
-      h += '</span></td>';
+      h += '<td title="'+f.opponent+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
+      h += '<div class="fdr-cell">';
+      h += '<div class="fdr-cell-team">'+f.opponent_short+' <span class="fdr-ha">('+ha+')</span></div>';
+      h += '<div class="fdr-cell-vals">';
+      h += '<span class="fdr-mini" style="background:'+cA.bg+';color:'+cA.fg+'"><span class="fdr-lbl">ATK</span>'+f.atk+'</span>';
+      h += '<span class="fdr-mini" style="background:'+cD.bg+';color:'+cD.fg+'"><span class="fdr-lbl">DEF</span>'+f.def+'</span>';
+      h += '</div></div></td>';
     }});
 
     h += '</tr>';
