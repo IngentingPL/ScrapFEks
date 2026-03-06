@@ -79,6 +79,9 @@ LEAGUE_SLUG = os.environ.get("LEAGUE_SLUG", "discord-fmforumcmf")
 # ID ligi (z Network tab: POST /ranking-list → league: 304)
 LEAGUE_ID = os.environ.get("LEAGUE_ID", "304")
 
+# Slug drużyny użytkownika (do zakładki transferów; puste = wykryj automatycznie)
+USER_TEAM_SLUG = os.environ.get("USER_TEAM_SLUG", "")
+
 # Opóźnienie między requestami (w sekundach) - bądź miły dla serwera
 REQUEST_DELAY = 0.3
 
@@ -387,6 +390,159 @@ def get_player_ids_by_scanning(session: requests.Session, max_id: int = 3000) ->
 
     print(f"   Znaleziono {len(valid_ids)} zawodników")
     return valid_ids
+
+
+def get_user_team_slug(session: requests.Session) -> str:
+    """
+    Wykrywa slug drużyny zalogowanego użytkownika.
+    Sprawdza zmienną USER_TEAM_SLUG, potem szuka linku /user-team/view/{slug}
+    na stronie głównej.
+    """
+    if USER_TEAM_SLUG:
+        return USER_TEAM_SLUG
+
+    print("🔍 Wykrywam slug drużyny użytkownika...")
+    try:
+        resp = session.get(BASE_URL, timeout=15)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, "lxml")
+            for link in soup.select("a[href*='/user-team/view/']"):
+                href = link.get("href", "")
+                m = re.search(r"/user-team/view/([^/\s\"'?#]+)", href)
+                if m:
+                    slug = m.group(1)
+                    print(f"   Znaleziono slug: {slug}")
+                    return slug
+    except Exception as e:
+        print(f"   ⚠️  Błąd wykrywania slug drużyny: {e}")
+
+    return ""
+
+
+def get_player_ids_from_transfers(session: requests.Session, slug: str) -> list[dict]:
+    """
+    Pobiera listę wszystkich aktywnych zawodników z zakładki transferów.
+
+    Próbuje endpointy:
+      1. GET /user-team/transfer-info/{slug}  (JSON lub HTML z danymi)
+      2. Parsuje JS bloki push() z HTML strony transferów
+
+    Zwraca listę słowników: player_id, name, price, position_id, team, status.
+    """
+    print(f"🔄 Pobieram listę zawodników z zakładki transferów (slug: {slug})...")
+    players = []
+
+    endpoints_to_try = [
+        f"{BASE_URL}/user-team/transfer-info/{slug}",
+        f"{BASE_URL}/user-team/view/{slug}",
+    ]
+
+    for url in endpoints_to_try:
+        try:
+            resp = session.get(
+                url,
+                headers={
+                    **HEADERS,
+                    "Accept": "application/json, text/html, */*",
+                    "Referer": f"{BASE_URL}/user-team/view/{slug}",
+                },
+                timeout=30,
+            )
+
+            if resp.status_code != 200:
+                print(f"   ⚠️  HTTP {resp.status_code} dla {url}")
+                continue
+
+            content_type = resp.headers.get("Content-Type", "")
+
+            # Próba 1: JSON response
+            if "application/json" in content_type:
+                data = resp.json()
+                player_list = (
+                    data.get("players")
+                    or data.get("data")
+                    or data.get("available")
+                    or []
+                )
+                for p in player_list:
+                    player_id = str(p.get("id") or p.get("player_id") or "")
+                    if player_id:
+                        players.append({
+                            "player_id": player_id,
+                            "name": p.get("name", ""),
+                            "price": str(p.get("price", "")),
+                            "position_id": str(p.get("pos") or p.get("position_id") or ""),
+                            "team": p.get("team", ""),
+                            "status": p.get("status", ""),
+                        })
+                if players:
+                    break
+
+            # Próba 2: HTML z atrybutami data-player-id
+            soup = BeautifulSoup(resp.text, "lxml")
+            for el in soup.select("[data-player-id]"):
+                player_id = el.get("data-player-id", "")
+                if not player_id:
+                    continue
+                name_el = el.select_one(".name, .player-name")
+                team_el = el.select_one(".team, .player-team")
+                players.append({
+                    "player_id": player_id,
+                    "name": name_el.text.strip() if name_el else "",
+                    "price": el.get("data-player-price", ""),
+                    "position_id": el.get("data-player-pos", ""),
+                    "team": (team_el.text.strip() if team_el
+                             else el.get("data-player-team", "")),
+                    "status": el.get("data-player-status", ""),
+                })
+            if players:
+                break
+
+            # Próba 3: JS bloki push() osadzone w HTML
+            html = resp.text
+            js_patterns = [
+                r'\$available\.push\(\{(.*?)\}\)',
+                r'app\.\w+\.\$available\.push\(\{(.*?)\}\)',
+                r'availablePlayers\.push\(\{(.*?)\}\)',
+                r'allPlayers\.push\(\{(.*?)\}\)',
+            ]
+            for pat in js_patterns:
+                matches = re.findall(pat, html, re.DOTALL)
+                for match in matches:
+                    pid = re.search(r'"id"\s*:\s*(\d+)', match)
+                    if not pid:
+                        continue
+                    name = re.search(r'"name"\s*:\s*"([^"]*)"', match)
+                    pos = re.search(r'"pos"\s*:\s*(\d+)', match)
+                    price = re.search(r'"price"\s*:\s*([\d.]+)', match)
+                    team = re.search(r'"team"\s*:\s*"([^"]*)"', match)
+                    status = re.search(r'"status"\s*:\s*"([^"]*)"', match)
+                    players.append({
+                        "player_id": pid.group(1),
+                        "name": name.group(1) if name else "",
+                        "price": price.group(1) if price else "",
+                        "position_id": pos.group(1) if pos else "",
+                        "team": team.group(1) if team else "",
+                        "status": status.group(1) if status else "",
+                    })
+                if players:
+                    break
+            if players:
+                break
+
+        except Exception as e:
+            print(f"   ⚠️  Błąd pobierania {url}: {e}")
+
+    # Deduplikuj po player_id
+    seen = set()
+    unique_players = []
+    for p in players:
+        if p["player_id"] not in seen:
+            seen.add(p["player_id"])
+            unique_players.append(p)
+
+    print(f"   Znaleziono {len(unique_players)} zawodników w zakładce transferów")
+    return unique_players
 
 
 def parse_player_detail(html_content: str) -> dict:
@@ -2857,14 +3013,33 @@ def main():
     session = get_session()
 
     # 2. Pobierz listę zawodników
-    stats_players = scrape_stats_page(session)
+    # Metoda 1 (preferowana): zakładka transferów — tylko aktywni zawodnicy
+    player_ids = []
+    user_slug = get_user_team_slug(session)
+    if user_slug:
+        transfer_players = get_player_ids_from_transfers(session, user_slug)
+        if transfer_players:
+            player_ids = [
+                int(p["player_id"])
+                for p in transfer_players
+                if str(p.get("player_id", "")).isdigit()
+            ]
+            print(f"   ✅ Lista z zakładki transferów: {len(player_ids)} zawodników")
 
-    if stats_players:
-        # Mamy listę z data-player-id, ale potrzebujemy stats-player ID
-        # Spróbujmy najpierw data-player-id jako stats-player ID
-        player_ids = [int(p["data_player_id"]) for p in stats_players if p["data_player_id"].isdigit()]
-    else:
-        # Fallback: skanuj zakres ID
+    # Metoda 2 (fallback): strona /stats
+    if not player_ids:
+        print("\n⚠️  Nie udało się pobrać listy z zakładki transferów")
+        print("   Próbuję stronę /stats...")
+        stats_players = scrape_stats_page(session)
+        if stats_players:
+            player_ids = [
+                int(p["data_player_id"])
+                for p in stats_players
+                if p["data_player_id"].isdigit()
+            ]
+
+    # Metoda 3 (ostateczny fallback): skanowanie zakresu ID
+    if not player_ids:
         print("\n⚠️  Nie udało się pobrać listy ze strony /stats")
         print("   Przechodzę do skanowania ID...")
         player_ids = get_player_ids_by_scanning(session, MAX_PLAYER_ID)
