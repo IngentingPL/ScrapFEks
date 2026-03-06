@@ -394,98 +394,41 @@ def get_player_ids_by_scanning(session: requests.Session, max_id: int = 3000) ->
 
 def get_user_team_slug(session: requests.Session) -> str:
     """
-    Wykrywa slug drużyny zalogowanego użytkownika.
+    Zwraca slug drużyny do użycia z transfer-info.
 
     Kolejność prób:
-    1. Zmienna środowiskowa USER_TEAM_SLUG
-    2. Sesja AJAX — endpointy które mogą zwrócić dane drużyny użytkownika
-    3. Strona główna (SPA shell — mała szansa, ale próbujemy)
+    1. Zmienna środowiskowa USER_TEAM_SLUG (własna drużyna użytkownika — preferowane)
+    2. Pierwszy slug z ranking-list (działa, bo ranking-list AJAX już działał)
+       — transfer-info może być dostępne z dowolnym autentykowanym slugiem
     """
     if USER_TEAM_SLUG:
         return USER_TEAM_SLUG
 
-    print("🔍 Wykrywam slug drużyny użytkownika...")
-
-    cookies = dict(session.cookies)
-    print(f"   DEBUG cookies: {cookies}")
-
-    # Czyste headery przeglądarki (jak scrape_team_squad)
-    browser_headers = {
-        "User-Agent": HEADERS["User-Agent"],
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": HEADERS["Accept-Language"],
-        "Referer": f"{BASE_URL}/",
-    }
-
-    def _search_slug(text: str) -> str:
-        """Szuka slug w tekście (HTML lub JSON)."""
-        # 1. /user-team/view/{slug}
-        m = re.search(r'/user-team/view/([a-z0-9][a-z0-9-]{2,}[a-z0-9])', text)
-        if m:
-            return m.group(1)
-        # 2. "slug": "..." w JSON/JS
-        for pat in [
-            r'"slug"\s*:\s*"([a-z0-9][a-z0-9-]{2,}[a-z0-9])"',
-            r"'slug'\s*:\s*'([a-z0-9][a-z0-9-]{2,}[a-z0-9])'",
-        ]:
-            m = re.search(pat, text)
-            if m:
-                return m.group(1)
-        return ""
-
-    # Próba 1: Sesja AJAX — typowe endpointy z danymi użytkownika
-    # Używamy session (ma X-Requested-With) bo te endpointy są AJAX-owe
-    ajax_endpoints: list[tuple[str, str]] = [
-        ("GET",  f"{BASE_URL}/user-team/my"),
-        ("GET",  f"{BASE_URL}/user-team/current"),
-        ("GET",  f"{BASE_URL}/user-team/info"),
-        ("GET",  f"{BASE_URL}/user-team/list"),
-        ("GET",  f"{BASE_URL}/user/team"),
-        ("GET",  f"{BASE_URL}/user/my-team"),
-        ("GET",  f"{BASE_URL}/profile"),
-        ("POST", f"{BASE_URL}/user-team-list"),
-    ]
-    for method, url in ajax_endpoints:
-        try:
-            if method == "POST":
-                resp = session.post(url, data="start=0&length=1", timeout=10)
-            else:
-                resp = session.get(url, timeout=10)
-
-            short = url.replace(BASE_URL, "")
-            print(f"   DEBUG AJAX {method} {short}: "
-                  f"HTTP {resp.status_code}, "
-                  f"CT: {resp.headers.get('Content-Type', '?')[:40]}")
-
-            if resp.status_code == 200:
-                slug = _search_slug(resp.text)
-                if slug:
-                    print(f"   Znaleziono slug (AJAX {short}): {slug}")
-                    return slug
-                preview = resp.text[:200].replace('\n', ' ')
-                print(f"   DEBUG odpowiedź: {preview}")
-        except Exception as e:
-            print(f"   DEBUG AJAX {url.replace(BASE_URL,'')}: błąd {e}")
-
-    # Próba 2: Strona główna z browser headers
+    print("🔍 Szukam slug drużyny przez ranking-list...")
     try:
-        resp = requests.get(
-            BASE_URL,
-            headers=browser_headers,
-            cookies=cookies,
+        resp = session.post(
+            f"{BASE_URL}/ranking-list",
+            data="start=0&length=1",
+            headers={
+                **HEADERS,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
             timeout=15,
-            allow_redirects=True,
         )
-        print(f"   DEBUG strona główna: HTTP {resp.status_code}, URL: {resp.url}")
+        print(f"   DEBUG ranking-list: HTTP {resp.status_code}, "
+              f"CT: {resp.headers.get('Content-Type','?')[:50]}")
         if resp.status_code == 200:
-            slug = _search_slug(resp.text)
-            if slug:
-                print(f"   Znaleziono slug (strona główna): {slug}")
-                return slug
+            data = resp.json()
+            for team in data.get("data", []):
+                slug = team.get("slug", "")
+                if slug:
+                    print(f"   Znaleziono slug z rankingu: {slug}")
+                    print(f"   💡 Dla pewności ustaw USER_TEAM_SLUG na własny slug drużyny")
+                    return slug
     except Exception as e:
-        print(f"   ⚠️  Błąd strony głównej: {e}")
+        print(f"   ⚠️  Błąd ranking-list: {e}")
 
-    print("   ⚠️  Nie udało się wykryć slug drużyny")
+    print("   ⚠️  Nie udało się pobrać żadnego slug")
     print("   💡 Ustaw zmienną środowiskową USER_TEAM_SLUG lub GitHub Secret")
     return ""
 
@@ -607,8 +550,20 @@ def get_player_ids_from_transfers(session: requests.Session, slug: str) -> list[
                             "team": p.get("team", ""),
                             "status": p.get("status", ""),
                         })
+                if not players:
+                    print(f"   DEBUG JSON keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+                    print(f"   DEBUG JSON preview: {str(data)[:300]}")
             if not players:
                 players = _parse_html_attrs(resp.text) or _parse_js_blocks(resp.text)
+            if not players:
+                # Debug — pokaż co faktycznie zwrócił serwer
+                preview = resp.text[:500].replace('\n', ' ')
+                print(f"   DEBUG transfer-info body: {preview}")
+                all_pushes = re.findall(r'(\$?\w+(?:\.\$?\w+)*)\.push\(\{', resp.text)
+                if all_pushes:
+                    print(f"   DEBUG push() patterns w transfer-info: {set(all_pushes)}")
+        else:
+            print(f"   DEBUG transfer-info body: {resp.text[:300]}")
     except Exception as e:
         print(f"   ⚠️  Błąd transfer-info: {e}")
 
@@ -1033,6 +988,12 @@ def scrape_stats_page(session: requests.Session) -> list[dict]:
                 cookies=cookies,
                 timeout=30,
             )
+            if pos == 1:  # DEBUG: raz na pierwszej pozycji
+                print(f"   DEBUG /stats?pos={pos}: HTTP {resp.status_code}, "
+                      f"CT: {resp.headers.get('Content-Type','?')[:50]}, "
+                      f"len: {len(resp.text)}")
+                preview = resp.text[:400].replace('\n', ' ')
+                print(f"   DEBUG /stats HTML: {preview}")
             if resp.status_code == 200:
                 soup = BeautifulSoup(resp.text, "lxml")
                 players = soup.select("[data-player-id]")
