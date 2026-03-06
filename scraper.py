@@ -602,6 +602,78 @@ def get_player_ids_from_transfers(session: requests.Session, slug: str) -> list[
     return unique_players
 
 
+def get_player_ids_from_ranking_squads(
+    session: requests.Session, n_teams: int = 150
+) -> list[dict]:
+    """
+    Pobiera listę unikalnych zawodników poprzez scrapowanie składów drużyn z rankingu.
+
+    Metoda:
+    1. POST /ranking-list → n_teams drużyn z rankingu (1 request)
+    2. scrape_team_squad() dla każdej drużyny → 15 zawodników per drużyna
+    3. Deduplikacja po player_id
+
+    150 drużyn daje ~400-500 unikalnych zawodników w ~45s (vs 10 min dla skanera).
+    Zawiera tylko zawodników faktycznie wybranych przez użytkowników gry — brak
+    nieaktywnych/usuniętych graczy.
+    """
+    print(f"🏆 Pobieram zawodników przez składy {n_teams} drużyn z rankingu...")
+
+    # Pobierz slugi N drużyn
+    slugs: list[str] = []
+    try:
+        resp = session.post(
+            f"{BASE_URL}/ranking-list",
+            data=f"start=0&length={n_teams}",
+            headers={
+                **HEADERS,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            for team in resp.json().get("data", []):
+                slug = team.get("slug", "")
+                if slug:
+                    slugs.append(slug)
+    except Exception as e:
+        print(f"   ⚠️  Błąd pobierania rankingu: {e}")
+
+    if not slugs:
+        return []
+    print(f"   Pobrano {len(slugs)} drużyn z rankingu")
+
+    # Scrapuj składy i zbieraj unikalne player_id
+    seen: set[str] = set()
+    players: list[dict] = []
+
+    for i, slug in enumerate(slugs):
+        try:
+            squad_data = scrape_team_squad(session, slug)
+            for p in squad_data.get("players", []):
+                pid = str(p.get("player_id") or "")
+                if pid and pid not in seen:
+                    seen.add(pid)
+                    players.append({
+                        "player_id": pid,
+                        "name": p.get("name", ""),
+                        "price": str(p.get("price", "")),
+                        "position_id": p.get("position_id", ""),
+                        "team": "",
+                        "status": p.get("status", ""),
+                    })
+            if (i + 1) % 50 == 0:
+                print(f"   Postęp: {i + 1}/{len(slugs)} drużyn, "
+                      f"{len(players)} unikalnych zawodników...")
+            time.sleep(REQUEST_DELAY)
+        except Exception as e:
+            print(f"   ⚠️  Błąd scraping {slug}: {e}")
+
+    print(f"   ✅ Znaleziono {len(players)} unikalnych zawodników "
+          f"z {len(slugs)} drużyn rankingu")
+    return players
+
+
 def parse_player_detail(html_content: str) -> dict:
     """
     Parsuje HTML z odpowiedzi /stats-player/{id} i wyciąga dane zawodnika.
@@ -3096,34 +3168,20 @@ def main():
     session = get_session()
 
     # 2. Pobierz listę zawodników
-    # Metoda 1 (preferowana): zakładka transferów — tylko aktywni zawodnicy
-    player_ids = []
-    user_slug = get_user_team_slug(session)
-    if user_slug:
-        transfer_players = get_player_ids_from_transfers(session, user_slug)
-        if transfer_players:
-            player_ids = [
-                int(p["player_id"])
-                for p in transfer_players
-                if str(p.get("player_id", "")).isdigit()
-            ]
-            print(f"   ✅ Lista z zakładki transferów: {len(player_ids)} zawodników")
+    # Metoda 1 (preferowana): składy drużyn z rankingu — szybka (150 drużyn ≈ 45s)
+    # Daje ~400-500 aktywnych zawodników wybranych przez graczy fantazji.
+    ranking_players = get_player_ids_from_ranking_squads(session, n_teams=150)
+    if ranking_players:
+        player_ids = [
+            int(p["player_id"])
+            for p in ranking_players
+            if str(p.get("player_id", "")).isdigit()
+        ]
+        print(f"   ✅ Lista ze składów rankingowych: {len(player_ids)} zawodników")
 
-    # Metoda 2 (fallback): strona /stats
+    # Metoda 2 (ostateczny fallback): skanowanie zakresu ID (wolne, ~10 min)
     if not player_ids:
-        print("\n⚠️  Nie udało się pobrać listy z zakładki transferów")
-        print("   Próbuję stronę /stats...")
-        stats_players = scrape_stats_page(session)
-        if stats_players:
-            player_ids = [
-                int(p["data_player_id"])
-                for p in stats_players
-                if p["data_player_id"].isdigit()
-            ]
-
-    # Metoda 3 (ostateczny fallback): skanowanie zakresu ID
-    if not player_ids:
-        print("\n⚠️  Nie udało się pobrać listy ze strony /stats")
+        print("\n⚠️  Nie udało się pobrać listy ze składów rankingowych")
         print("   Przechodzę do skanowania ID...")
         player_ids = get_player_ids_by_scanning(session, MAX_PLAYER_ID)
 
