@@ -395,27 +395,87 @@ def get_player_ids_by_scanning(session: requests.Session, max_id: int = 3000) ->
 def get_user_team_slug(session: requests.Session) -> str:
     """
     Wykrywa slug drużyny zalogowanego użytkownika.
-    Sprawdza zmienną USER_TEAM_SLUG, potem szuka linku /user-team/view/{slug}
-    na stronie głównej.
+
+    Kolejność prób:
+    1. Zmienna środowiskowa USER_TEAM_SLUG
+    2. GET /user-team → redirect do /user-team/view/{slug}
+    3. Strona główna BASE_URL → szuka linków i zmiennych JS
     """
     if USER_TEAM_SLUG:
         return USER_TEAM_SLUG
 
     print("🔍 Wykrywam slug drużyny użytkownika...")
-    try:
-        resp = session.get(BASE_URL, timeout=15)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "lxml")
-            for link in soup.select("a[href*='/user-team/view/']"):
-                href = link.get("href", "")
-                m = re.search(r"/user-team/view/([^/\s\"'?#]+)", href)
-                if m:
-                    slug = m.group(1)
-                    print(f"   Znaleziono slug: {slug}")
-                    return slug
-    except Exception as e:
-        print(f"   ⚠️  Błąd wykrywania slug drużyny: {e}")
 
+    # Czyste headery przeglądarki — bez X-Requested-With, identycznie jak scrape_team_squad
+    browser_headers = {
+        "User-Agent": HEADERS["User-Agent"],
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": HEADERS["Accept-Language"],
+        "Referer": f"{BASE_URL}/",
+    }
+    cookies = dict(session.cookies)
+
+    def _extract_slug_from_html(html: str) -> str:
+        soup = BeautifulSoup(html, "lxml")
+        for link in soup.select("a[href*='/user-team/view/']"):
+            href = link.get("href", "")
+            m = re.search(r"/user-team/view/([^/\s\"'?#]+)", href)
+            if m:
+                return m.group(1)
+        for js_pat in [
+            r'["\']slug["\']\s*:\s*["\']([^"\']+)["\']',
+            r'userSlug\s*[=:]\s*["\']([^"\']+)["\']',
+            r'teamSlug\s*[=:]\s*["\']([^"\']+)["\']',
+            r'/user-team/view/([^/\s"\'?#\\]+)',
+        ]:
+            m = re.search(js_pat, html)
+            if m:
+                return m.group(1)
+        return ""
+
+    # Próba 1: GET /user-team — strona powinna zredirigeować do /user-team/view/{slug}
+    try:
+        resp = requests.get(
+            f"{BASE_URL}/user-team",
+            headers=browser_headers,
+            cookies=cookies,
+            timeout=15,
+            allow_redirects=True,
+        )
+        if resp.status_code == 200:
+            # Sprawdź URL po redirectach
+            m = re.search(r"/user-team/view/([^/\s\"'?#]+)", resp.url)
+            if m:
+                slug = m.group(1)
+                print(f"   Znaleziono slug (redirect URL): {slug}")
+                return slug
+            # Szukaj w HTML i JS
+            slug = _extract_slug_from_html(resp.text)
+            if slug:
+                print(f"   Znaleziono slug (/user-team HTML): {slug}")
+                return slug
+    except Exception as e:
+        print(f"   ⚠️  Błąd /user-team: {e}")
+
+    # Próba 2: Strona główna
+    try:
+        resp = requests.get(
+            BASE_URL,
+            headers=browser_headers,
+            cookies=cookies,
+            timeout=15,
+            allow_redirects=True,
+        )
+        if resp.status_code == 200:
+            slug = _extract_slug_from_html(resp.text)
+            if slug:
+                print(f"   Znaleziono slug (strona główna): {slug}")
+                return slug
+    except Exception as e:
+        print(f"   ⚠️  Błąd strony głównej: {e}")
+
+    print("   ⚠️  Nie udało się wykryć slug drużyny")
+    print("   💡 Ustaw zmienną środowiskową USER_TEAM_SLUG lub GitHub Secret")
     return ""
 
 
@@ -423,118 +483,149 @@ def get_player_ids_from_transfers(session: requests.Session, slug: str) -> list[
     """
     Pobiera listę wszystkich aktywnych zawodników z zakładki transferów.
 
-    Próbuje endpointy:
-      1. GET /user-team/transfer-info/{slug}  (JSON lub HTML z danymi)
-      2. Parsuje JS bloki push() z HTML strony transferów
+    Próbuje endpointy w kolejności:
+      1. GET /user-team/transfer-info/{slug}  — AJAX/JSON
+      2. GET /user-team/view/{slug}           — HTML ze skryptami JS
+
+    Parsuje trzy formaty: JSON, HTML data-player-id, JS push() bloki.
+    Używa czystych headerów przeglądarki (bez X-Requested-With) dla HTML,
+    tak jak scrape_team_squad().
 
     Zwraca listę słowników: player_id, name, price, position_id, team, status.
     """
     print(f"🔄 Pobieram listę zawodników z zakładki transferów (slug: {slug})...")
     players = []
+    cookies = dict(session.cookies)
 
-    endpoints_to_try = [
-        f"{BASE_URL}/user-team/transfer-info/{slug}",
-        f"{BASE_URL}/user-team/view/{slug}",
-    ]
+    # Headery dla endpointów AJAX (JSON)
+    ajax_headers = {
+        **HEADERS,
+        "Accept": "application/json, text/javascript, */*",
+        "Referer": f"{BASE_URL}/user-team/view/{slug}",
+    }
+    # Czyste headery przeglądarki dla stron HTML (bez X-Requested-With)
+    browser_headers = {
+        "User-Agent": HEADERS["User-Agent"],
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": HEADERS["Accept-Language"],
+        "Referer": f"{BASE_URL}/user-team/view/{slug}",
+    }
 
-    for url in endpoints_to_try:
-        try:
-            resp = session.get(
-                url,
-                headers={
-                    **HEADERS,
-                    "Accept": "application/json, text/html, */*",
-                    "Referer": f"{BASE_URL}/user-team/view/{slug}",
-                },
-                timeout=30,
-            )
-
-            if resp.status_code != 200:
-                print(f"   ⚠️  HTTP {resp.status_code} dla {url}")
+    def _parse_js_blocks(html: str) -> list[dict]:
+        """Parsuje bloki push() z JS osadzonego w HTML (jak scrape_team_squad)."""
+        result = []
+        # Wzorce podobne do $squad.push / $subs.push ale dla dostępnych graczy
+        js_patterns = [
+            r'\$available\.push\(\{(.*?)\}\)',
+            r'app\.\w+\.\$available\.push\(\{(.*?)\}\)',
+            r'\$players\.push\(\{(.*?)\}\)',
+            r'availablePlayers\.push\(\{(.*?)\}\)',
+            r'allPlayers\.push\(\{(.*?)\}\)',
+            r'\$all\.push\(\{(.*?)\}\)',
+        ]
+        for pat in js_patterns:
+            matches = re.findall(pat, html, re.DOTALL)
+            if not matches:
                 continue
+            for match in matches:
+                pid = re.search(r'"id"\s*:\s*(\d+)', match)
+                if not pid:
+                    continue
+                name = re.search(r'"name"\s*:\s*"([^"]*)"', match)
+                pos = re.search(r'"pos"\s*:\s*(\d+)', match)
+                price = re.search(r'"price"\s*:\s*([\d.]+)', match)
+                team = re.search(r'"team"\s*:\s*"([^"]*)"', match)
+                status = re.search(r'"status"\s*:\s*"([^"]*)"', match)
+                result.append({
+                    "player_id": pid.group(1),
+                    "name": name.group(1) if name else "",
+                    "price": price.group(1) if price else "",
+                    "position_id": pos.group(1) if pos else "",
+                    "team": team.group(1) if team else "",
+                    "status": status.group(1) if status else "",
+                })
+            if result:
+                break
+        return result
 
+    def _parse_html_attrs(html: str) -> list[dict]:
+        """Parsuje elementy HTML z atrybutami data-player-id."""
+        result = []
+        soup = BeautifulSoup(html, "lxml")
+        for el in soup.select("[data-player-id]"):
+            player_id = el.get("data-player-id", "")
+            if not player_id:
+                continue
+            name_el = el.select_one(".name, .player-name")
+            team_el = el.select_one(".team, .player-team")
+            result.append({
+                "player_id": player_id,
+                "name": name_el.text.strip() if name_el else "",
+                "price": el.get("data-player-price", ""),
+                "position_id": el.get("data-player-pos", ""),
+                "team": (team_el.text.strip() if team_el
+                         else el.get("data-player-team", "")),
+                "status": el.get("data-player-status", ""),
+            })
+        return result
+
+    # Endpoint 1: transfer-info — może zwrócić JSON lub HTML z danymi
+    try:
+        resp = requests.get(
+            f"{BASE_URL}/user-team/transfer-info/{slug}",
+            headers=ajax_headers,
+            cookies=cookies,
+            timeout=30,
+        )
+        print(f"   transfer-info HTTP {resp.status_code}, "
+              f"Content-Type: {resp.headers.get('Content-Type', '?')[:60]}")
+        if resp.status_code == 200:
             content_type = resp.headers.get("Content-Type", "")
-
-            # Próba 1: JSON response
             if "application/json" in content_type:
                 data = resp.json()
-                player_list = (
-                    data.get("players")
-                    or data.get("data")
-                    or data.get("available")
-                    or []
-                )
+                player_list = (data.get("players") or data.get("data")
+                               or data.get("available") or [])
                 for p in player_list:
-                    player_id = str(p.get("id") or p.get("player_id") or "")
-                    if player_id:
+                    pid = str(p.get("id") or p.get("player_id") or "")
+                    if pid:
                         players.append({
-                            "player_id": player_id,
+                            "player_id": pid,
                             "name": p.get("name", ""),
                             "price": str(p.get("price", "")),
                             "position_id": str(p.get("pos") or p.get("position_id") or ""),
                             "team": p.get("team", ""),
                             "status": p.get("status", ""),
                         })
-                if players:
-                    break
+            if not players:
+                players = _parse_html_attrs(resp.text) or _parse_js_blocks(resp.text)
+    except Exception as e:
+        print(f"   ⚠️  Błąd transfer-info: {e}")
 
-            # Próba 2: HTML z atrybutami data-player-id
-            soup = BeautifulSoup(resp.text, "lxml")
-            for el in soup.select("[data-player-id]"):
-                player_id = el.get("data-player-id", "")
-                if not player_id:
-                    continue
-                name_el = el.select_one(".name, .player-name")
-                team_el = el.select_one(".team, .player-team")
-                players.append({
-                    "player_id": player_id,
-                    "name": name_el.text.strip() if name_el else "",
-                    "price": el.get("data-player-price", ""),
-                    "position_id": el.get("data-player-pos", ""),
-                    "team": (team_el.text.strip() if team_el
-                             else el.get("data-player-team", "")),
-                    "status": el.get("data-player-status", ""),
-                })
-            if players:
-                break
-
-            # Próba 3: JS bloki push() osadzone w HTML
-            html = resp.text
-            js_patterns = [
-                r'\$available\.push\(\{(.*?)\}\)',
-                r'app\.\w+\.\$available\.push\(\{(.*?)\}\)',
-                r'availablePlayers\.push\(\{(.*?)\}\)',
-                r'allPlayers\.push\(\{(.*?)\}\)',
-            ]
-            for pat in js_patterns:
-                matches = re.findall(pat, html, re.DOTALL)
-                for match in matches:
-                    pid = re.search(r'"id"\s*:\s*(\d+)', match)
-                    if not pid:
-                        continue
-                    name = re.search(r'"name"\s*:\s*"([^"]*)"', match)
-                    pos = re.search(r'"pos"\s*:\s*(\d+)', match)
-                    price = re.search(r'"price"\s*:\s*([\d.]+)', match)
-                    team = re.search(r'"team"\s*:\s*"([^"]*)"', match)
-                    status = re.search(r'"status"\s*:\s*"([^"]*)"', match)
-                    players.append({
-                        "player_id": pid.group(1),
-                        "name": name.group(1) if name else "",
-                        "price": price.group(1) if price else "",
-                        "position_id": pos.group(1) if pos else "",
-                        "team": team.group(1) if team else "",
-                        "status": status.group(1) if status else "",
-                    })
-                if players:
-                    break
-            if players:
-                break
-
+    # Endpoint 2: widok drużyny — HTML z danymi JS (jak scrape_team_squad)
+    if not players:
+        try:
+            resp = requests.get(
+                f"{BASE_URL}/user-team/view/{slug}",
+                headers=browser_headers,
+                cookies=cookies,
+                timeout=30,
+            )
+            print(f"   user-team/view HTTP {resp.status_code}, "
+                  f"Content-Type: {resp.headers.get('Content-Type', '?')[:60]}")
+            if resp.status_code == 200:
+                players = _parse_html_attrs(resp.text) or _parse_js_blocks(resp.text)
+                # DEBUG: pokaż jakie wzorce push() są obecne
+                if not players:
+                    all_pushes = re.findall(r'(\$?\w+(?:\.\$?\w+)*)\.push\(\{', resp.text)
+                    if all_pushes:
+                        print(f"   DEBUG push() patterns: {set(all_pushes)}")
+                    else:
+                        print(f"   DEBUG: brak push() patterns, długość HTML: {len(resp.text)}")
         except Exception as e:
-            print(f"   ⚠️  Błąd pobierania {url}: {e}")
+            print(f"   ⚠️  Błąd user-team/view: {e}")
 
     # Deduplikuj po player_id
-    seen = set()
+    seen: set[str] = set()
     unique_players = []
     for p in players:
         if p["player_id"] not in seen:
