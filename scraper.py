@@ -399,7 +399,8 @@ def get_user_team_slug(session: requests.Session) -> str:
     Kolejność prób:
     1. Zmienna środowiskowa USER_TEAM_SLUG
     2. GET /user-team → redirect do /user-team/view/{slug}
-    3. Strona główna BASE_URL → szuka linków i zmiennych JS
+    3. GET /user-team/view → redirect do /user-team/view/{slug}
+    4. Strona główna BASE_URL → szuka linków i zmiennych JS
     """
     if USER_TEAM_SLUG:
         return USER_TEAM_SLUG
@@ -414,65 +415,113 @@ def get_user_team_slug(session: requests.Session) -> str:
         "Referer": f"{BASE_URL}/",
     }
     cookies = dict(session.cookies)
+    print(f"   DEBUG cookies: {cookies}")
 
-    def _extract_slug_from_html(html: str) -> str:
+    def _extract_slug_from_html(html: str, label: str = "") -> str:
+        """Szuka slug w HTML: linki, atrybuty, zmienne JS."""
+        # 1. Linki HTML
         soup = BeautifulSoup(html, "lxml")
         for link in soup.select("a[href*='/user-team/view/']"):
             href = link.get("href", "")
             m = re.search(r"/user-team/view/([^/\s\"'?#]+)", href)
             if m:
                 return m.group(1)
+
+        # 2. Dowolna wzmianka o /user-team/view/ w całym HTML (także JS)
+        m = re.search(r'/user-team/view/([a-z0-9][-a-z0-9]+[a-z0-9])', html)
+        if m:
+            return m.group(1)
+
+        # 3. Zmienne JS z slugiem
         for js_pat in [
-            r'["\']slug["\']\s*:\s*["\']([^"\']+)["\']',
+            r'["\']slug["\']\s*:\s*["\']([a-z0-9][-a-z0-9]+[a-z0-9])["\']',
             r'userSlug\s*[=:]\s*["\']([^"\']+)["\']',
             r'teamSlug\s*[=:]\s*["\']([^"\']+)["\']',
-            r'/user-team/view/([^/\s"\'?#\\]+)',
+            r'team_slug\s*[=:]\s*["\']([^"\']+)["\']',
         ]:
             m = re.search(js_pat, html)
             if m:
                 return m.group(1)
+
+        # 4. Meta refresh redirect
+        m = re.search(r'<meta[^>]+url=([^"\'>\s]+/user-team/view/([^"\'>\s/]+))', html, re.I)
+        if m:
+            return m.group(2)
+
         return ""
 
-    # Próba 1: GET /user-team — strona powinna zredirigeować do /user-team/view/{slug}
-    try:
-        resp = requests.get(
-            f"{BASE_URL}/user-team",
-            headers=browser_headers,
-            cookies=cookies,
-            timeout=15,
-            allow_redirects=True,
-        )
-        if resp.status_code == 200:
+    def _try_url(url: str, label: str) -> str:
+        """Pobiera URL i próbuje wyciągnąć slug."""
+        try:
+            resp = requests.get(
+                url,
+                headers=browser_headers,
+                cookies=cookies,
+                timeout=15,
+                allow_redirects=True,
+            )
+            print(f"   DEBUG {label}: HTTP {resp.status_code}, "
+                  f"URL: {resp.url}, "
+                  f"redirects: {[r.status_code for r in resp.history]}, "
+                  f"Content-Type: {resp.headers.get('Content-Type', '?')[:50]}")
+            if resp.history:
+                for i, r in enumerate(resp.history):
+                    print(f"   DEBUG redirect {i}: {r.status_code} → "
+                          f"{r.headers.get('Location', '?')}")
+
+            if resp.status_code != 200:
+                return ""
+
             # Sprawdź URL po redirectach
             m = re.search(r"/user-team/view/([^/\s\"'?#]+)", resp.url)
             if m:
-                slug = m.group(1)
-                print(f"   Znaleziono slug (redirect URL): {slug}")
-                return slug
-            # Szukaj w HTML i JS
-            slug = _extract_slug_from_html(resp.text)
-            if slug:
-                print(f"   Znaleziono slug (/user-team HTML): {slug}")
-                return slug
-    except Exception as e:
-        print(f"   ⚠️  Błąd /user-team: {e}")
+                return m.group(1)
 
-    # Próba 2: Strona główna
-    try:
-        resp = requests.get(
-            BASE_URL,
-            headers=browser_headers,
-            cookies=cookies,
-            timeout=15,
-            allow_redirects=True,
-        )
-        if resp.status_code == 200:
-            slug = _extract_slug_from_html(resp.text)
+            # Szukaj w HTML
+            slug = _extract_slug_from_html(resp.text, label)
             if slug:
-                print(f"   Znaleziono slug (strona główna): {slug}")
                 return slug
-    except Exception as e:
-        print(f"   ⚠️  Błąd strony głównej: {e}")
+
+            # Debug: pokaż fragment HTML
+            text_preview = resp.text[:800].replace('\n', ' ').replace('\r', '')
+            print(f"   DEBUG {label} HTML preview: {text_preview[:400]}")
+
+            # Debug: pokaż wszystkie linki na stronie
+            soup = BeautifulSoup(resp.text, "lxml")
+            all_hrefs = [a.get("href", "") for a in soup.select("a[href]")]
+            user_team_hrefs = [h for h in all_hrefs if "user-team" in h]
+            if user_team_hrefs:
+                print(f"   DEBUG {label} user-team hrefs: {user_team_hrefs[:10]}")
+            else:
+                print(f"   DEBUG {label} all hrefs ({len(all_hrefs)}): "
+                      f"{all_hrefs[:15]}")
+
+        except Exception as e:
+            print(f"   ⚠️  Błąd {label}: {e}")
+
+        return ""
+
+    # Próba 1: GET /user-team
+    slug = _try_url(f"{BASE_URL}/user-team", "/user-team")
+    if slug:
+        print(f"   Znaleziono slug (/user-team): {slug}")
+        return slug
+
+    time.sleep(REQUEST_DELAY)
+
+    # Próba 2: GET /user-team/view (bez slug — może redirect)
+    slug = _try_url(f"{BASE_URL}/user-team/view", "/user-team/view")
+    if slug:
+        print(f"   Znaleziono slug (/user-team/view): {slug}")
+        return slug
+
+    time.sleep(REQUEST_DELAY)
+
+    # Próba 3: Strona główna
+    slug = _try_url(BASE_URL, "strona główna")
+    if slug:
+        print(f"   Znaleziono slug (strona główna): {slug}")
+        return slug
 
     print("   ⚠️  Nie udało się wykryć slug drużyny")
     print("   💡 Ustaw zmienną środowiskową USER_TEAM_SLUG lub GitHub Secret")
