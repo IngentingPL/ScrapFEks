@@ -3260,7 +3260,7 @@ function renderPredictions() {{
     h += '<td class="text-center">'+fdrUsedLabel(p.position, fdrMod)+'</td>';
 
     // Średnie minuty
-    h += '<td class="text-right c-muted">'+Math.round(avgMin)+'\'</td>';
+    h += '<td class="text-right c-muted">'+Math.round(avgMin)+'&prime;</td>';
 
     // Pewność
     h += '<td class="text-center">'+confidenceBadge(p.confidence)+'</td>';
