@@ -26,6 +26,7 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from predictor import predict_all_players
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from Crypto.Random import get_random_bytes
@@ -2127,6 +2128,7 @@ def generate_dashboard_html(
     ekstra_stats: dict,
     fdr_data: dict,
     transfers_data: dict,
+    predictions_data: list[dict],
     timestamp: str,
     filename: str,
 ):
@@ -2172,8 +2174,10 @@ def generate_dashboard_html(
     ekstra_stats_json = json.dumps(ekstra_stats, ensure_ascii=False)
     fdr_data_json = json.dumps(fdr_data, ensure_ascii=False)
     transfers_data_json = json.dumps(transfers_data or {}, ensure_ascii=False)
+    predictions_json = json.dumps(predictions_data or [], ensure_ascii=False)
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
+    has_predictions = len(predictions_data or []) > 0
 
     # For stat cards
     all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))
@@ -2425,6 +2429,33 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .price-up {{ color: #10b981; font-size: 11px; font-weight: 700; }}
 .price-down {{ color: #ef4444; font-size: 11px; font-weight: 700; }}
 .price-neutral {{ color: #64748b; font-size: 11px; }}
+/* Predictions tab */
+.pred-val {{
+  font-size: 18px; font-weight: 800; padding: 4px 10px; border-radius: 6px;
+  display: inline-block; min-width: 48px; text-align: center;
+}}
+.pred-fdr-tile {{
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 12px; font-weight: 700; min-width: 32px; text-align: center;
+}}
+.pred-fdr-used {{
+  font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+  display: inline-block; background: rgba(255,255,255,0.05);
+}}
+.pred-confidence {{
+  display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px;
+  border-radius: 10px; letter-spacing: 0.3px;
+}}
+.pred-conf-high {{ background: rgba(16,185,129,0.2); color: #10b981; }}
+.pred-conf-medium {{ background: rgba(251,191,36,0.2); color: #fbbf24; }}
+.pred-conf-low {{ background: rgba(239,68,68,0.2); color: #ef4444; }}
+.pred-conf-insufficient {{ background: rgba(100,116,139,0.2); color: #94a3b8; }}
+.pred-legend {{
+  background: #1e293b; border-radius: 8px; padding: 12px 16px;
+  margin-bottom: 16px; font-size: 12px; color: #94a3b8; line-height: 1.8;
+}}
+.pred-legend b {{ color: #e2e8f0; }}
+.pred-filters {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }}
 </style>
 </head>
 <body>
@@ -2460,6 +2491,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       {"<button class='tab' data-tab='teams'>📋 Liga CMF</button>" if has_league else ""}
       {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
       {"<button class='tab' data-tab='transfers'>🔄 Transfery</button>" if has_transfers else ""}
+      {"<button class='tab' data-tab='predictions'>🔮 Prognoza</button>" if has_predictions else ""}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
@@ -2475,6 +2507,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
     <div id="tab-teams" class="tab-content"></div>
     <div id="tab-fixtures" class="tab-content"></div>
     <div id="tab-transfers" class="tab-content"></div>
+    <div id="tab-predictions" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
@@ -2488,6 +2521,7 @@ const FIXTURES = {fixtures_json};
 const EKSTRA_STATS = {ekstra_stats_json};
 const FDR_DATA = {fdr_data_json};
 const TRANSFERS_DATA = {transfers_data_json};
+const PREDICTIONS = {predictions_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -3002,6 +3036,8 @@ function renderFixtures() {{
 
 // ============ Transfers Tab ============
 let trPos = 'ALL';
+let predPos = 'ALL';
+if (!sorts.predictions) sorts.predictions = {{col:'predicted_points', dir:'desc'}};
 
 function priceChangeHtml(pc) {{
   if (!pc) return '';
@@ -3086,6 +3122,156 @@ function renderTransfers() {{
   return h;
 }}
 
+function renderPredictions() {{
+  if (!PREDICTIONS || !PREDICTIONS.length) return '<div class="empty-msg">Brak danych prognoz — sprawdź czy predictor.py jest dostępny i dane FDR zostały obliczone</div>';
+
+  let data = [...PREDICTIONS].filter(p => p.predicted_points !== null && p.predicted_points !== undefined);
+  if (predPos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === predPos);
+  if (!data.length) return '<div class="empty-msg">Brak prognoz dla wybranej pozycji</div>';
+
+  // Sort
+  const s = sorts.predictions;
+  data.sort((a, b) => {{
+    let av = a[s.col], bv = b[s.col];
+    if (s.col === 'name' || s.col === 'team' || s.col === 'next_opponent') {{
+      av = (av || '').toLowerCase(); bv = (bv || '').toLowerCase();
+      if (av < bv) return s.dir === 'desc' ? 1 : -1;
+      if (av > bv) return s.dir === 'desc' ? -1 : 1;
+      return 0;
+    }}
+    av = num(av); bv = num(bv);
+    if (av < bv) return s.dir === 'desc' ? 1 : -1;
+    if (av > bv) return s.dir === 'desc' ? -1 : 1;
+    return 0;
+  }});
+
+  function predArrow(col) {{
+    return s.col === col ? (s.dir === 'desc' ? ' ▼' : ' ▲') : '';
+  }}
+
+  // Prediction value gradient: high = green, medium = yellow, low = gray
+  function predGradient(val) {{
+    if (val >= 8) return 'background:rgba(16,185,129,0.25);color:#10b981';
+    if (val >= 6) return 'background:rgba(34,211,238,0.2);color:#22d3ee';
+    if (val >= 4) return 'background:rgba(251,191,36,0.2);color:#fbbf24';
+    if (val >= 2) return 'background:rgba(148,163,184,0.15);color:#94a3b8';
+    return 'background:rgba(100,116,139,0.1);color:#64748b';
+  }}
+
+  function fdrTile(val) {{
+    const c = FDR_COLORS[val] || FDR_COLORS[3];
+    return '<span class="pred-fdr-tile" style="background:'+c.bg+';color:'+c.fg+'">'+val+'</span>';
+  }}
+
+  function fdrUsedLabel(position, fdr_mod) {{
+    const pk = POS_ID[position] || position;
+    let label = 'MIX';
+    if (pk === 'NAP') label = 'DEF';
+    else if (pk === 'OBR' || pk === 'BR') label = 'ATK';
+    const color = fdr_mod > 1.0 ? '#10b981' : fdr_mod < 1.0 ? '#ef4444' : '#94a3b8';
+    return '<span class="pred-fdr-used" style="color:'+color+'">'+label+' ×'+fdr_mod.toFixed(2)+'</span>';
+  }}
+
+  function confidenceBadge(conf) {{
+    const map = {{
+      high: {{emoji:'🟢', label:'high', cls:'pred-conf-high'}},
+      medium: {{emoji:'🟡', label:'medium', cls:'pred-conf-medium'}},
+      low: {{emoji:'🔴', label:'low', cls:'pred-conf-low'}},
+      insufficient_data: {{emoji:'⚪', label:'insuf.', cls:'pred-conf-insufficient'}},
+    }};
+    const m = map[conf] || map.low;
+    return '<span class="pred-confidence '+m.cls+'">'+m.emoji+' '+m.label+'</span>';
+  }}
+
+  let h = '<div class="section-title"><span style="font-size:22px">🔮</span><h2>Prognoza punktów — następna kolejka</h2><div class="line"></div></div>';
+
+  // Legend
+  h += '<div class="pred-legend">';
+  h += '<b>NAP</b> / <b>POM</b> → FDR DEF rywala (słabsza obrona = wyższa prognoza) &nbsp;|&nbsp; ';
+  h += '<b>BR</b> / <b>OBR</b> → FDR ATK rywala (słabszy atak = wyższa prognoza)';
+  h += '</div>';
+
+  // Position filters
+  h += '<div class="pred-filters">';
+  h += '<div class="pos-filters">';
+  ['ALL','BR','OBR','POM','NAP'].forEach(p => {{
+    const labels = {{ALL:'ALL',BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD'}};
+    const active = predPos === p ? ' active' : '';
+    h += '<button class="pos-btn pred-pos-btn'+active+'" data-predpos="'+p+'" data-pos="'+p+'">'+labels[p]+'</button>';
+  }});
+  h += '</div>';
+  h += '<span style="margin-left:auto;font-size:12px;color:#64748b">'+data.length+' zawodników</span>';
+  h += '</div>';
+
+  // Table
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-left">#</th>';
+  h += '<th class="text-left sortable" data-tab="predictions" data-col="name">Zawodnik'+predArrow('name')+'</th>';
+  h += '<th class="text-center sortable" data-tab="predictions" data-col="position">Poz'+predArrow('position')+'</th>';
+  h += '<th class="text-left sortable" data-tab="predictions" data-col="team">Drużyna'+predArrow('team')+'</th>';
+  h += '<th class="text-center">Rywal</th>';
+  h += '<th class="text-center">D/W</th>';
+  h += '<th class="text-right sortable" data-tab="predictions" data-col="predicted_points">Prognoza'+predArrow('predicted_points')+'</th>';
+  h += '<th class="text-right sortable" data-tab="predictions" data-col="base_avg">Śr. pkt'+predArrow('base_avg')+'</th>';
+  h += '<th class="text-center">FDR ATK</th>';
+  h += '<th class="text-center">FDR DEF</th>';
+  h += '<th class="text-center">Użyty FDR</th>';
+  h += '<th class="text-right sortable" data-tab="predictions" data-col="avg_minutes">Śr. min'+predArrow('avg_minutes')+'</th>';
+  h += '<th class="text-center sortable" data-tab="predictions" data-col="confidence">Pewność'+predArrow('confidence')+'</th>';
+  h += '</tr></thead><tbody>';
+
+  data.forEach((p, i) => {{
+    const pred = p.predicted_points || 0;
+    const pk = POS_ID[p.position] || p.position || '';
+    const oppFdrAtk = p.fdr_atk_opponent || 3;
+    const oppFdrDef = p.fdr_def_opponent || 3;
+    const fdrMod = p.fdr_modifier || 1.0;
+    const avgMin = p.avg_minutes || 0;
+    const baseAvg = p.base_avg || 0;
+    const detail = p.detail || '';
+
+    h += '<tr>';
+    h += '<td class="c-muted fw-600">'+(i+1)+'</td>';
+    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+p.name+'</td>';
+    h += '<td class="text-center">'+posBadge(pk)+'</td>';
+    h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
+
+    // Rywal z FDR kolorem (używamy wyższego FDR)
+    const oppName = p.opponent_short || p.next_opponent || '';
+    const oppFdr = Math.max(oppFdrAtk, oppFdrDef);
+    const oppC = FDR_COLORS[oppFdr] || FDR_COLORS[3];
+    h += '<td class="text-center"><span class="pred-fdr-tile" style="background:'+oppC.bg+';color:'+oppC.fg+';font-size:11px;padding:3px 8px">'+oppName+'</span></td>';
+
+    // Dom/Wyjazd
+    h += '<td class="text-center">'+(p.is_home ? '🏠' : '✈️')+'</td>';
+
+    // Prognoza — pogrubiona, gradient
+    h += '<td class="text-right"><span class="pred-val" style="'+predGradient(pred)+'">'+pred.toFixed(1)+'</span></td>';
+
+    // Średnia ważona
+    const avgC = baseAvg >= 6 ? '#22d3ee' : baseAvg >= 3 ? '#10b981' : '#94a3b8';
+    h += '<td class="text-right fw-600" style="color:'+avgC+'">'+baseAvg.toFixed(1)+'</td>';
+
+    // FDR ATK/DEF rywala
+    h += '<td class="text-center">'+fdrTile(oppFdrAtk)+'</td>';
+    h += '<td class="text-center">'+fdrTile(oppFdrDef)+'</td>';
+
+    // Użyty FDR
+    h += '<td class="text-center">'+fdrUsedLabel(p.position, fdrMod)+'</td>';
+
+    // Średnie minuty
+    h += '<td class="text-right c-muted">'+Math.round(avgMin)+'\'</td>';
+
+    // Pewność
+    h += '<td class="text-center">'+confidenceBadge(p.confidence)+'</td>';
+
+    h += '</tr>';
+  }});
+
+  h += '</tbody></table></div>';
+  return h;
+}}
+
 function render() {{
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
@@ -3093,16 +3279,23 @@ function render() {{
   if (ftEl) ftEl.innerHTML = tab === 'fixtures' ? renderFixtures() : '';
   const trEl = document.getElementById('tab-transfers');
   if (trEl) trEl.innerHTML = tab === 'transfers' ? renderTransfers() : '';
+  const prEl = document.getElementById('tab-predictions');
+  if (prEl) prEl.innerHTML = tab === 'predictions' ? renderPredictions() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
   document.querySelectorAll('.scope-btn:not(.fdr-sort-btn)').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
   const fr = document.querySelector('.filters-row');
-  if (fr) fr.style.display = tab === 'players' ? 'flex' : 'none';
+  if (fr) fr.style.display = (tab === 'players') ? 'flex' : 'none';
   // Transfers position filter handlers
   document.querySelectorAll('.tr-pos-btn').forEach(b => {{
     b.classList.toggle('active', b.dataset.trpos === trPos);
     b.onclick = () => {{ trPos = b.dataset.trpos; render(); }};
+  }});
+  // Predictions position filter handlers
+  document.querySelectorAll('.pred-pos-btn').forEach(b => {{
+    b.classList.toggle('active', b.dataset.predpos === predPos);
+    b.onclick = () => {{ predPos = b.dataset.predpos; render(); }};
   }});
   // Sortable click handlers
   document.querySelectorAll('.sortable').forEach(th => {{
@@ -3392,7 +3585,77 @@ def main():
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
     fdr_data = compute_fdr(ekstra_stats, fixtures_data, current_round=current_round)
 
-    # 8.8 Oblicz transfery w lidze prywatnej
+    # 8.8 Prognoza punktów (predictor)
+    predictions_data = []
+    if fdr_data.get("teams") and fdr_data.get("gameweeks"):
+        # Znajdź pierwszą nierozgraną kolejkę
+        next_gw = fdr_data["gameweeks"][0]
+        next_matches = fixtures_data.get("matches", {}).get(str(next_gw), [])
+
+        # Buduj fixtures w formacie predictora: {team: {opponent, is_home}}
+        pred_fixtures = {}
+        for m in next_matches:
+            pred_fixtures[m["home"]] = {"opponent": m["away"], "is_home": True}
+            pred_fixtures[m["away"]] = {"opponent": m["home"], "is_home": False}
+
+        # Buduj fdr_data w formacie predictora: {team: {atk, def}}
+        # Użyj FDR z pierwszej kolejki w fdr_data (next_gw)
+        pred_fdr = {}
+        for team_fdr in fdr_data["teams"]:
+            for fix in team_fdr.get("fixtures", []):
+                if fix.get("gw") == next_gw and fix.get("opponent"):
+                    # FDR rywala: atk i def rywala
+                    pred_fdr[fix["opponent"]] = {
+                        "atk": fix.get("atk", 3),
+                        "def": fix.get("def", 3),
+                    }
+
+        # Mapuj pozycje z pełnych nazw na skróty dla predictora
+        pos_map = {"Bramkarz": "BR", "Obrońca": "OBR", "Pomocnik": "POM", "Napastnik": "NAP"}
+        players_for_pred = []
+        for p in players:
+            pp = dict(p)
+            raw_pos = pp.get("position", "")
+            pp["position"] = pos_map.get(raw_pos, raw_pos)
+            players_for_pred.append(pp)
+
+        predictions_data = predict_all_players(players_for_pred, pred_fdr, pred_fixtures)
+
+        # Dodaj informacje o rywalu z FDR dla dashboardu
+        fdr_by_team = {}
+        for team_fdr in fdr_data["teams"]:
+            for fix in team_fdr.get("fixtures", []):
+                if fix.get("gw") == next_gw:
+                    fdr_by_team[team_fdr["name"]] = {
+                        "opponent": fix.get("opponent", ""),
+                        "opponent_short": fix.get("opponent_short", ""),
+                        "home": fix.get("home", True),
+                        "atk": fix.get("atk", 3),
+                        "def": fix.get("def", 3),
+                    }
+        for pred in predictions_data:
+            team = pred.get("team", "")
+            fi = fdr_by_team.get(team, {})
+            pred["opponent_short"] = fi.get("opponent_short", "")
+            pred["fdr_atk_team"] = fi.get("atk", 3)
+            pred["fdr_def_team"] = fi.get("def", 3)
+
+        # Zapisz CSV z prognozami
+        if predictions_data:
+            pred_csv = os.path.join(OUTPUT_DIR, f"fantasy_predictions_{timestamp}.csv")
+            pred_fields = [
+                "name", "team", "position", "next_opponent", "is_home",
+                "predicted_points", "base_avg", "fdr_modifier",
+                "minutes_factor", "home_away_factor", "avg_minutes",
+                "confidence", "detail",
+            ]
+            with open(pred_csv, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=pred_fields, extrasaction="ignore")
+                writer.writeheader()
+                writer.writerows(predictions_data)
+            print(f"  🔮 Prognoza: {len(predictions_data)} zawodników → {os.path.basename(pred_csv)}")
+
+    # 8.9 Oblicz transfery w lidze prywatnej
     transfers_data: dict = {}
     if league_results and current_round > 1:
         transfers_data = compute_league_transfers(
@@ -3417,6 +3680,7 @@ def main():
         ekstra_stats=ekstra_stats,
         fdr_data=fdr_data,
         transfers_data=transfers_data,
+        predictions_data=predictions_data,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
@@ -3432,6 +3696,8 @@ def main():
     if LEAGUE_SLUG and league_teams:
         print(f"   - {os.path.basename(league_captains_file)} (kapitanowie ligi)")
         print(f"   - {os.path.basename(league_ownership_file)} (ownership ligi)")
+    if predictions_data:
+        print(f"   - fantasy_predictions_{timestamp}.csv (prognoza punktów)")
     print(f"   - dashboard.html (interaktywny dashboard)")
     print(f"🕐 Koniec: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
