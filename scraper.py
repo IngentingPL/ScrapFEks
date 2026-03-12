@@ -1181,6 +1181,7 @@ def fetch_league_teams(session: requests.Session, league_slug: str, league_id: s
                     "slug": slug,
                     "total_points": _safe_int(str(team.get("total_points", "0"))),
                     "last_points": _safe_int(str(team.get("last_points", "0"))),
+                    "max_points": _safe_int(str(team.get("max_points", "0"))),
                     "position": team.get("pos"),
                 })
 
@@ -3742,13 +3743,21 @@ def main():
                 else:
                     autumn_lookup[key] = {"points": val, "best_gw": 0, "display_name": name}
 
-            # Buduj lookup wiosenny: normalize(slug-name) → {spring_pts, display_name}
+            # Buduj lookup max_points z league_teams (fetch_league_teams → /ranking-list)
+            max_pts_lookup = {}
+            if league_teams:
+                for t in league_teams:
+                    slug_name = t["slug"].replace("-", " ")
+                    key = normalize_team_name(slug_name)
+                    max_pts_lookup[key] = t.get("max_points", 0)
+
+            # Buduj lookup wiosenny: normalize(slug-name) → {spring_pts, display_name, best_gw_spring}
             spring_lookup = {}
             if league_teams_detail:
                 for t in league_teams_detail:
                     slug_name = t["slug"].replace("-", " ")
                     key = normalize_team_name(slug_name)
-                    spring_lookup[key] = {"spring_pts": t["pts"], "display_name": slug_name}
+                    spring_lookup[key] = {"spring_pts": t["pts"], "display_name": slug_name, "best_gw_spring": max_pts_lookup.get(key, 0)}
 
             # Wczytaj poprzedni ranking (jeśli istnieje)
             prev_ranking = {}
@@ -3764,10 +3773,11 @@ def main():
 
             for key in all_team_keys:
                 autumn_info = autumn_lookup.get(key, {"points": 0, "best_gw": 0, "display_name": ""})
-                spring_info = spring_lookup.get(key, {"spring_pts": 0, "display_name": ""})
+                spring_info = spring_lookup.get(key, {"spring_pts": 0, "display_name": "", "best_gw_spring": 0})
                 autumn_pts = autumn_info["points"]
                 spring_pts = spring_info["spring_pts"]
                 best_gw_autumn = autumn_info["best_gw"]
+                best_gw_spring = spring_info.get("best_gw_spring", 0)
                 total_pts = autumn_pts + spring_pts
                 # Preferuj nazwę z jesieni (oryginalna pisownia), fallback na wiosenne
                 display_name = autumn_info["display_name"] or spring_info["display_name"]
@@ -3780,7 +3790,7 @@ def main():
                     "spring_pts": spring_pts,
                     "total_pts": total_pts,
                     "best_gw_autumn": best_gw_autumn,
-                    "best_gw_spring": "—",
+                    "best_gw_spring": best_gw_spring if best_gw_spring else "—",
                     "autumn_only": autumn_only,
                     "spring_only": spring_only,
                 })
