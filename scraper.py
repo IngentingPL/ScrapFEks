@@ -2806,7 +2806,16 @@ function renderTeams() {{
 
   // Helpers for squad table
   const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
-  const NCOLS = 9;
+  const NCOLS = 10;
+
+  // Build player ownership map: pid -> number of teams owning that player
+  const playerOwnerCount = {{}};
+  const totalTeams = LEAGUE_TEAMS.length;
+  LEAGUE_TEAMS.forEach(team => {{
+    if (team.players) team.players.forEach(p => {{
+      playerOwnerCount[p.pid] = (playerOwnerCount[p.pid] || 0) + 1;
+    }});
+  }});
 
   function sortGroup(arr) {{
     const s = sorts.teams;
@@ -2841,6 +2850,9 @@ function renderTeams() {{
     const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
     r += '<td class="text-center">'+formChart(p.form, true)+'</td>';
     r += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
+    const imp = p._imp != null ? p._imp : 100;
+    const impColor = imp >= 70 ? '#10b981' : imp >= 30 ? '#eab308' : '#ef4444';
+    r += '<td class="text-center fw-600" style="color:'+impColor+'">'+imp+'%</td>';
     r += '</tr>';
     return r;
   }}
@@ -2918,6 +2930,8 @@ function renderTeams() {{
         p._diff_global = (POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - POS_AVGS[pk]) * 10) / 10 : 0;
         p._diff_league = (LEAGUE_POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - LEAGUE_POS_AVGS[pk]) * 10) / 10 : 0;
         p._form_avg = formAvgNum(p.form);
+        const ownersExcl = (playerOwnerCount[p.pid] || 1) - 1;
+        p._imp = totalTeams > 1 ? Math.round(((totalTeams - 1 - ownersExcl) / (totalTeams - 1)) * 100) : 100;
       }});
 
       h += '<tr><td colspan="8" style="padding:0;background:#0f172a">';
@@ -2932,6 +2946,7 @@ function renderTeams() {{
       h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('teams','_diff_league')+'</th>';
       h += '<th class="text-center" style="min-width:80px">Forma</th>';
       h += '<th class="text-right sortable" data-tab="teams" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek przed obecną)">Średnia'+arrow('teams','_form_avg')+'</th>';
+      h += '<th class="text-center sortable" data-tab="teams" data-col="_imp" title="Differential ownership — im wyższy %, tym mniej managerów w lidze posiada tego zawodnika">Imp'+arrow('teams','_imp')+'</th>';
       h += '</tr></thead><tbody>';
 
       const starters = sortGroup(t.players.filter(p => !p.R));
@@ -2953,7 +2968,9 @@ function renderTeams() {{
       const lCls = totalDiffL > 0 ? 'diff-pos' : totalDiffL < 0 ? 'diff-neg' : 'diff-zero';
       h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
       h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
-      h += '<td colspan="2"></td></tr>';
+      const avgImp = t.players.length > 0 ? Math.round(t.players.reduce((s,p) => s + (p._imp||0), 0) / t.players.length) : 0;
+      const avgImpColor = avgImp >= 70 ? '#10b981' : avgImp >= 30 ? '#eab308' : '#ef4444';
+      h += '<td colspan="2"></td><td class="text-center fw-700" style="padding-top:10px;color:'+avgImpColor+'">Ø '+avgImp+'%</td></tr>';
 
       h += '</tbody></table></div>';
       h += '</td></tr>';
