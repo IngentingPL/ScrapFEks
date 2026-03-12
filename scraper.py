@@ -22,6 +22,7 @@ import re
 import os
 import sys
 import hashlib
+import unicodedata
 from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
@@ -30,6 +31,14 @@ from predictor import predict_all_players
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from Crypto.Random import get_random_bytes
+
+
+def normalize_team_name(name: str) -> str:
+    """Normalizuj nazwę drużyny: lowercase + usuń polskie diakrytyki."""
+    nfkd = unicodedata.normalize("NFKD", name)
+    ascii_name = "".join(c for c in nfkd if not unicodedata.combining(c))
+    ascii_name = ascii_name.replace("ł", "l").replace("Ł", "L")
+    return ascii_name.lower().strip()
 
 
 def cryptojs_aes_encrypt(plaintext: str, passphrase: str) -> str:
@@ -3284,7 +3293,9 @@ function renderHockey() {{
   h += '<th style="width:50px">#</th>';
   h += '<th>Drużyna</th>';
   h += '<th class="text-right">Jesień</th>';
+  h += '<th class="text-right" style="font-size:11px;color:#64748b">🔥 J</th>';
   h += '<th class="text-right">Wiosna</th>';
+  h += '<th class="text-right" style="font-size:11px;color:#64748b">🔥 W</th>';
   h += '<th class="text-right" style="font-size:13px;font-weight:800">SUMA</th>';
   h += '<th class="text-center">Zmiana</th>';
   h += '</tr></thead><tbody>';
@@ -3292,12 +3303,17 @@ function renderHockey() {{
     const pos = i + 1;
     const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
     const isMyTeam = t.name.toLowerCase() === 'tokusatsu soccer';
-    const cls = isMyTeam ? ' class="highlight"' : '';
+    const dimRow = t.autumn_only;
+    let cls = '';
+    if (isMyTeam) cls = ' class="highlight"';
+    else if (dimRow) cls = ' style="opacity:0.45"';
     h += '<tr'+cls+'>';
     h += '<td class="text-center" style="font-size:'+(pos<=3?'18px':'14px')+'">' + medal + '</td>';
-    h += '<td style="font-weight:600">' + t.name + '</td>';
+    h += '<td style="font-weight:600">' + t.name + (dimRow ? ' <span style="font-size:10px;color:#64748b">(nie gra)</span>' : '') + '</td>';
     h += '<td class="text-right" style="color:#94a3b8">' + t.autumn_pts + '</td>';
+    h += '<td class="text-right" style="color:#64748b;font-size:12px">' + (t.best_gw_autumn > 0 ? t.best_gw_autumn : '—') + '</td>';
     h += '<td class="text-right" style="color:#94a3b8">' + t.spring_pts + '</td>';
+    h += '<td class="text-right" style="color:#64748b;font-size:12px">' + (t.best_gw_spring !== '—' ? t.best_gw_spring : '—') + '</td>';
     h += '<td class="text-right" style="font-weight:800;font-size:15px">' + t.total_pts + '</td>';
     let changeHtml = '';
     if (t.rank_change > 0) changeHtml = '<span style="color:#10b981">▲' + t.rank_change + '</span>';
@@ -3707,45 +3723,86 @@ def main():
 
     # 8.10 Liga Hokejowa — klasyfikacja łączna (jesień + wiosna)
     hockey_data = []
-    autumn_points_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "autumn_points.json")
-    if os.path.exists(autumn_points_file) and league_teams_detail:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    autumn_points_file = os.path.join(script_dir, "autumn_points.json")
+    hockey_prev_file = os.path.join(script_dir, "hockey_prev_ranking.json")
+    if os.path.exists(autumn_points_file):
         try:
             with open(autumn_points_file, "r", encoding="utf-8") as f:
-                autumn_points = json.load(f)
-            print(f"\n🏒 Liga Hokejowa: wczytano {len(autumn_points)} drużyn z rundy jesiennej")
+                autumn_raw = json.load(f)
+            print(f"\n🏒 Liga Hokejowa: wczytano {len(autumn_raw)} drużyn z rundy jesiennej")
 
-            # Buduj lookup: nazwa (z autumn JSON) lowercase → autumn_pts
-            autumn_lookup = {name.lower(): pts for name, pts in autumn_points.items()}
+            # Nowy format: {"name": {"points": N, "best_gameweek": N}}
+            # Buduj lookup: normalize(name) → {points, best_gameweek, display_name}
+            autumn_lookup = {}
+            for name, val in autumn_raw.items():
+                key = normalize_team_name(name)
+                if isinstance(val, dict):
+                    autumn_lookup[key] = {"points": val.get("points", 0), "best_gw": val.get("best_gameweek", 0), "display_name": name}
+                else:
+                    autumn_lookup[key] = {"points": val, "best_gw": 0, "display_name": name}
 
-            # Buduj ranking wiosenny (pozycja wg spring_pts malejąco)
-            spring_ranking = []
-            for t in league_teams_detail:
-                name = t["slug"].replace("-", " ")
-                spring_ranking.append({"name": name, "spring_pts": t["pts"]})
-            spring_ranking.sort(key=lambda x: x["spring_pts"], reverse=True)
-            spring_pos = {item["name"].lower(): i + 1 for i, item in enumerate(spring_ranking)}
+            # Buduj lookup wiosenny: normalize(slug-name) → {spring_pts, display_name}
+            spring_lookup = {}
+            if league_teams_detail:
+                for t in league_teams_detail:
+                    slug_name = t["slug"].replace("-", " ")
+                    key = normalize_team_name(slug_name)
+                    spring_lookup[key] = {"spring_pts": t["pts"], "display_name": slug_name}
 
-            # Buduj dane hokejowe
-            for t in league_teams_detail:
-                name = t["slug"].replace("-", " ")
-                spring_pts = t["pts"]
-                autumn_pts = autumn_lookup.get(name.lower(), 0)
+            # Wczytaj poprzedni ranking (jeśli istnieje)
+            prev_ranking = {}
+            if os.path.exists(hockey_prev_file):
+                try:
+                    with open(hockey_prev_file, "r", encoding="utf-8") as f:
+                        prev_ranking = json.load(f)
+                except Exception:
+                    pass
+
+            # Zbierz wszystkie unikalne drużyny (jesień ∪ wiosna)
+            all_team_keys = set(autumn_lookup.keys()) | set(spring_lookup.keys())
+
+            for key in all_team_keys:
+                autumn_info = autumn_lookup.get(key, {"points": 0, "best_gw": 0, "display_name": ""})
+                spring_info = spring_lookup.get(key, {"spring_pts": 0, "display_name": ""})
+                autumn_pts = autumn_info["points"]
+                spring_pts = spring_info["spring_pts"]
+                best_gw_autumn = autumn_info["best_gw"]
                 total_pts = autumn_pts + spring_pts
+                # Preferuj nazwę z jesieni (oryginalna pisownia), fallback na wiosenne
+                display_name = autumn_info["display_name"] or spring_info["display_name"]
+                # Drużyna tylko jesienna (nie gra wiosną)
+                spring_only = key not in autumn_lookup
+                autumn_only = key not in spring_lookup
                 hockey_data.append({
-                    "name": name,
+                    "name": display_name,
                     "autumn_pts": autumn_pts,
                     "spring_pts": spring_pts,
                     "total_pts": total_pts,
+                    "best_gw_autumn": best_gw_autumn,
+                    "best_gw_spring": "—",
+                    "autumn_only": autumn_only,
+                    "spring_only": spring_only,
                 })
 
             # Sortuj po total_pts malejąco
             hockey_data.sort(key=lambda x: x["total_pts"], reverse=True)
 
-            # Oblicz rank_change: pozycja wiosenna minus pozycja łączna
+            # Oblicz rank_change vs. poprzednie uruchomienie
+            current_ranking = {}
             for i, item in enumerate(hockey_data):
                 combined_pos = i + 1
-                s_pos = spring_pos.get(item["name"].lower(), combined_pos)
-                item["rank_change"] = s_pos - combined_pos  # + = awans, - = spadek
+                norm_key = normalize_team_name(item["name"])
+                current_ranking[norm_key] = combined_pos
+                prev_pos = prev_ranking.get(norm_key)
+                if prev_pos is not None:
+                    item["rank_change"] = prev_pos - combined_pos
+                else:
+                    item["rank_change"] = 0
+
+            # Zapisz aktualny ranking do pliku
+            with open(hockey_prev_file, "w", encoding="utf-8") as f:
+                json.dump(current_ranking, f, ensure_ascii=False, indent=2)
 
             print(f"   ✅ Przygotowano {len(hockey_data)} drużyn do klasyfikacji łącznej")
         except Exception as e:
