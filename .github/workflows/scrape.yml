@@ -183,7 +183,7 @@ jobs:
           mkdir -p docs
           cp output/dashboard.html docs/index.html
           
-          git add output/ docs/ || true
+          git add output/ docs/ hockey_prev_ranking.json || true
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
