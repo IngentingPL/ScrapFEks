@@ -2129,6 +2129,7 @@ def generate_dashboard_html(
     fdr_data: dict,
     transfers_data: dict,
     predictions_data: list[dict],
+    hockey_data: list[dict],
     timestamp: str,
     filename: str,
 ):
@@ -2175,6 +2176,8 @@ def generate_dashboard_html(
     fdr_data_json = json.dumps(fdr_data, ensure_ascii=False)
     transfers_data_json = json.dumps(transfers_data or {}, ensure_ascii=False)
     predictions_json = json.dumps(predictions_data or [], ensure_ascii=False)
+    hockey_json = json.dumps(hockey_data or [], ensure_ascii=False)
+    has_hockey = len(hockey_data or []) > 0
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
     has_predictions = len(predictions_data or []) > 0
@@ -2492,6 +2495,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
       {"<button class='tab' data-tab='transfers'>🔄 Transfery</button>" if has_transfers else ""}
       {"<button class='tab' data-tab='predictions'>🔮 Prognoza</button>" if has_predictions else ""}
+      {"<button class='tab' data-tab='hockey'>🏒 Liga Hokejowa</button>" if has_hockey else ""}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
@@ -2508,6 +2512,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
     <div id="tab-fixtures" class="tab-content"></div>
     <div id="tab-transfers" class="tab-content"></div>
     <div id="tab-predictions" class="tab-content"></div>
+    <div id="tab-hockey" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
@@ -2522,6 +2527,7 @@ const EKSTRA_STATS = {ekstra_stats_json};
 const FDR_DATA = {fdr_data_json};
 const TRANSFERS_DATA = {transfers_data_json};
 const PREDICTIONS = {predictions_json};
+const HOCKEY_DATA = {hockey_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -3272,6 +3278,38 @@ function renderPredictions() {{
   return h;
 }}
 
+function renderHockey() {{
+  if (!HOCKEY_DATA || !HOCKEY_DATA.length) return '<p style="color:#94a3b8;padding:24px;">Brak danych dla Ligi Hokejowej.</p>';
+  let h = '<div class="data-table"><table><thead><tr>';
+  h += '<th style="width:50px">#</th>';
+  h += '<th>Drużyna</th>';
+  h += '<th class="text-right">Jesień</th>';
+  h += '<th class="text-right">Wiosna</th>';
+  h += '<th class="text-right" style="font-size:13px;font-weight:800">SUMA</th>';
+  h += '<th class="text-center">Zmiana</th>';
+  h += '</tr></thead><tbody>';
+  HOCKEY_DATA.forEach((t, i) => {{
+    const pos = i + 1;
+    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+    const isMyTeam = t.name.toLowerCase() === 'tokusatsu soccer';
+    const cls = isMyTeam ? ' class="highlight"' : '';
+    h += '<tr'+cls+'>';
+    h += '<td class="text-center" style="font-size:'+(pos<=3?'18px':'14px')+'">' + medal + '</td>';
+    h += '<td style="font-weight:600">' + t.name + '</td>';
+    h += '<td class="text-right" style="color:#94a3b8">' + t.autumn_pts + '</td>';
+    h += '<td class="text-right" style="color:#94a3b8">' + t.spring_pts + '</td>';
+    h += '<td class="text-right" style="font-weight:800;font-size:15px">' + t.total_pts + '</td>';
+    let changeHtml = '';
+    if (t.rank_change > 0) changeHtml = '<span style="color:#10b981">▲' + t.rank_change + '</span>';
+    else if (t.rank_change < 0) changeHtml = '<span style="color:#ef4444">▼' + Math.abs(t.rank_change) + '</span>';
+    else changeHtml = '<span style="color:#64748b">–</span>';
+    h += '<td class="text-center">' + changeHtml + '</td>';
+    h += '</tr>';
+  }});
+  h += '</tbody></table></div>';
+  return h;
+}}
+
 function render() {{
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
@@ -3281,6 +3319,8 @@ function render() {{
   if (trEl) trEl.innerHTML = tab === 'transfers' ? renderTransfers() : '';
   const prEl = document.getElementById('tab-predictions');
   if (prEl) prEl.innerHTML = tab === 'predictions' ? renderPredictions() : '';
+  const hkEl = document.getElementById('tab-hockey');
+  if (hkEl) hkEl.innerHTML = tab === 'hockey' ? renderHockey() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
@@ -3665,6 +3705,52 @@ def main():
             player_lookup=player_lookup,
         )
 
+    # 8.10 Liga Hokejowa — klasyfikacja łączna (jesień + wiosna)
+    hockey_data = []
+    autumn_points_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "autumn_points.json")
+    if os.path.exists(autumn_points_file) and league_teams_detail:
+        try:
+            with open(autumn_points_file, "r", encoding="utf-8") as f:
+                autumn_points = json.load(f)
+            print(f"\n🏒 Liga Hokejowa: wczytano {len(autumn_points)} drużyn z rundy jesiennej")
+
+            # Buduj lookup: nazwa (z autumn JSON) lowercase → autumn_pts
+            autumn_lookup = {name.lower(): pts for name, pts in autumn_points.items()}
+
+            # Buduj ranking wiosenny (pozycja wg spring_pts malejąco)
+            spring_ranking = []
+            for t in league_teams_detail:
+                name = t["slug"].replace("-", " ")
+                spring_ranking.append({"name": name, "spring_pts": t["pts"]})
+            spring_ranking.sort(key=lambda x: x["spring_pts"], reverse=True)
+            spring_pos = {item["name"].lower(): i + 1 for i, item in enumerate(spring_ranking)}
+
+            # Buduj dane hokejowe
+            for t in league_teams_detail:
+                name = t["slug"].replace("-", " ")
+                spring_pts = t["pts"]
+                autumn_pts = autumn_lookup.get(name.lower(), 0)
+                total_pts = autumn_pts + spring_pts
+                hockey_data.append({
+                    "name": name,
+                    "autumn_pts": autumn_pts,
+                    "spring_pts": spring_pts,
+                    "total_pts": total_pts,
+                })
+
+            # Sortuj po total_pts malejąco
+            hockey_data.sort(key=lambda x: x["total_pts"], reverse=True)
+
+            # Oblicz rank_change: pozycja wiosenna minus pozycja łączna
+            for i, item in enumerate(hockey_data):
+                combined_pos = i + 1
+                s_pos = spring_pos.get(item["name"].lower(), combined_pos)
+                item["rank_change"] = s_pos - combined_pos  # + = awans, - = spadek
+
+            print(f"   ✅ Przygotowano {len(hockey_data)} drużyn do klasyfikacji łącznej")
+        except Exception as e:
+            print(f"   ⚠️  Błąd ładowania danych jesiennych: {e}")
+
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
@@ -3681,6 +3767,7 @@ def main():
         fdr_data=fdr_data,
         transfers_data=transfers_data,
         predictions_data=predictions_data,
+        hockey_data=hockey_data,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
