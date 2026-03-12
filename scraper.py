@@ -2139,7 +2139,6 @@ def generate_dashboard_html(
     fdr_data: dict,
     transfers_data: dict,
     predictions_data: list[dict],
-    hockey_data: list[dict],
     timestamp: str,
     filename: str,
 ):
@@ -2186,8 +2185,6 @@ def generate_dashboard_html(
     fdr_data_json = json.dumps(fdr_data, ensure_ascii=False)
     transfers_data_json = json.dumps(transfers_data or {}, ensure_ascii=False)
     predictions_json = json.dumps(predictions_data or [], ensure_ascii=False)
-    hockey_json = json.dumps(hockey_data or [], ensure_ascii=False)
-    has_hockey = len(hockey_data or []) > 0
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
     has_predictions = len(predictions_data or []) > 0
@@ -2505,7 +2502,6 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
       {"<button class='tab' data-tab='transfers'>🔄 Transfery</button>" if has_transfers else ""}
       {"<button class='tab' data-tab='predictions'>🔮 Prognoza</button>" if has_predictions else ""}
-      {"<button class='tab' data-tab='hockey'>🏒 Liga Hokejowa</button>" if has_hockey else ""}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
@@ -2522,7 +2518,6 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
     <div id="tab-fixtures" class="tab-content"></div>
     <div id="tab-transfers" class="tab-content"></div>
     <div id="tab-predictions" class="tab-content"></div>
-    <div id="tab-hockey" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
@@ -2537,7 +2532,6 @@ const EKSTRA_STATS = {ekstra_stats_json};
 const FDR_DATA = {fdr_data_json};
 const TRANSFERS_DATA = {transfers_data_json};
 const PREDICTIONS = {predictions_json};
-const HOCKEY_DATA = {hockey_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -2548,6 +2542,7 @@ let selectedTeam = '';
 let sorts = {{
   players: {{col:'total_points', dir:'desc'}},
   teams: {{col:'_pos_order', dir:'asc'}},
+  teams_list: {{col:'total_pts', dir:'desc'}},
 }};
 
 function num(v) {{
@@ -2850,22 +2845,72 @@ function renderTeams() {{
     return r;
   }}
 
-  // Lista drużyn — klikalna, posortowana wg pozycji (accordion)
-  h += '<div class="team-list">';
-  LEAGUE_TEAMS.forEach(t => {{
-    const isOpen = t.slug === selectedTeam;
-    const cls = isOpen ? 'team-list-item active' : 'team-list-item';
-    h += '<div class="'+cls+'" data-teamslug="'+t.slug+'">';
-    h += '<div class="team-list-header">';
-    h += '<span class="team-list-rank">#'+t.rank+'</span>';
-    h += '<span class="team-list-name">'+t.slug.replace(/-/g,' ')+'</span>';
-    h += '<span class="team-list-pts">'+t.pts+' pkt</span>';
-    h += '<span class="team-list-count">'+t.players.length+' zawodników</span>';
-    h += '<span class="team-list-arrow">'+(isOpen ? '▼' : '▶')+'</span>';
-    h += '</div>';
+  // Sort teams by selected column
+  const tls = sorts.teams_list;
+  const sortedTeams = [...LEAGUE_TEAMS].sort((a, b) => {{
+    let av, bv;
+    if (tls.col === 'name') {{
+      av = (a.display_name || a.slug.replace(/-/g,' ')).toLowerCase();
+      bv = (b.display_name || b.slug.replace(/-/g,' ')).toLowerCase();
+      if (av < bv) return tls.dir === 'desc' ? 1 : -1;
+      if (av > bv) return tls.dir === 'desc' ? -1 : 1;
+      return 0;
+    }}
+    av = num(a[tls.col]); bv = num(b[tls.col]);
+    if (av < bv) return tls.dir === 'desc' ? 1 : -1;
+    if (av > bv) return tls.dir === 'desc' ? -1 : 1;
+    return 0;
+  }});
 
-    // Skład drużyny — rozwija się wewnątrz klikniętego elementu
-    if (isOpen) {{
+  function tlArrow(col) {{
+    return tls.col === col ? (tls.dir === 'desc' ? ' ▼' : ' ▲') : '';
+  }}
+
+  // Hockey-style table with expandable squads
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-center sortable" data-tab="teams_list" data-col="hockey_pos" style="width:50px">#'+tlArrow('hockey_pos')+'</th>';
+  h += '<th class="text-left sortable" data-tab="teams_list" data-col="name">Drużyna'+tlArrow('name')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="autumn_pts">Jesień'+tlArrow('autumn_pts')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="best_gw_autumn" style="font-size:11px;color:#64748b">🔥 J'+tlArrow('best_gw_autumn')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="spring_pts">Wiosna'+tlArrow('spring_pts')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="best_gw_spring" style="font-size:11px;color:#64748b">🔥 W'+tlArrow('best_gw_spring')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="total_pts" style="font-size:13px;font-weight:800">SUMA'+tlArrow('total_pts')+'</th>';
+  h += '<th class="text-center sortable" data-tab="teams_list" data-col="rank_change">Zmiana'+tlArrow('rank_change')+'</th>';
+  h += '</tr></thead><tbody>';
+
+  sortedTeams.forEach((t, i) => {{
+    const pos = t.hockey_pos || (i + 1);
+    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+    const tName = t.display_name || t.slug.replace(/-/g,' ');
+    const isMyTeam = tName.toLowerCase() === 'tokusatsu soccer';
+    const dimRow = t.autumn_only;
+    const isOpen = t.slug === selectedTeam;
+    const hasPlayers = t.players && t.players.length > 0;
+
+    let rowCls = isMyTeam ? 'highlight' : '';
+    let rowStyle = '';
+    if (dimRow) rowStyle = 'opacity:0.45';
+    if (hasPlayers) rowStyle += (rowStyle ? ';' : '') + 'cursor:pointer';
+
+    h += '<tr'+(rowCls ? ' class="'+rowCls+'"' : '')+(rowStyle ? ' style="'+rowStyle+'"' : '')+' data-teamslug="'+t.slug+'">';
+    h += '<td class="text-center" style="font-size:'+(pos<=3?'18px':'14px')+'">' + medal + '</td>';
+    h += '<td style="font-weight:600">' + tName + (dimRow ? ' <span style="font-size:10px;color:#64748b">(nie gra)</span>' : '') + (hasPlayers ? ' <span style="font-size:10px;color:#475569">'+(isOpen?'▼':'▶')+'</span>' : '') + '</td>';
+    h += '<td class="text-right" style="color:#94a3b8">' + (t.autumn_pts||0) + '</td>';
+    h += '<td class="text-right" style="color:#64748b;font-size:12px">' + (t.best_gw_autumn > 0 ? t.best_gw_autumn : '—') + '</td>';
+    h += '<td class="text-right" style="color:#94a3b8">' + (t.spring_pts||0) + '</td>';
+    h += '<td class="text-right" style="color:#64748b;font-size:12px">' + (t.best_gw_spring > 0 ? t.best_gw_spring : '—') + '</td>';
+    h += '<td class="text-right" style="font-weight:800;font-size:15px">' + (t.total_pts||0) + '</td>';
+
+    const rc = t.rank_change || 0;
+    let changeHtml = '';
+    if (rc > 0) changeHtml = '<span style="color:#10b981">▲' + rc + '</span>';
+    else if (rc < 0) changeHtml = '<span style="color:#ef4444">▼' + Math.abs(rc) + '</span>';
+    else changeHtml = '<span style="color:#64748b">–</span>';
+    h += '<td class="text-center">' + changeHtml + '</td>';
+    h += '</tr>';
+
+    // Expandable squad panel
+    if (isOpen && hasPlayers) {{
       t.players.forEach(p => {{
         const pk = POS_ID[p.pos] || p.pos || '';
         p._pk = pk;
@@ -2875,7 +2920,8 @@ function renderTeams() {{
         p._form_avg = formAvgNum(p.form);
       }});
 
-      h += '<div class="data-table" style="padding:0 12px 12px">';
+      h += '<tr><td colspan="8" style="padding:0;background:#0f172a">';
+      h += '<div class="data-table" style="padding:4px 12px 12px">';
       h += '<table><thead><tr>';
       h += '<th class="text-left">#</th>';
       h += '<th class="text-left sortable" data-tab="teams" data-col="name">Zawodnik'+arrow('teams','name')+'</th>';
@@ -2891,10 +2937,10 @@ function renderTeams() {{
       const starters = sortGroup(t.players.filter(p => !p.R));
       const reserves = sortGroup(t.players.filter(p => p.R));
 
-      starters.forEach((p, i) => {{ h += renderSquadRow(p, i); }});
+      starters.forEach((p, idx) => {{ h += renderSquadRow(p, idx); }});
       if (reserves.length) {{
         h += '<tr><td colspan="'+NCOLS+'" style="padding:6px 0;border-top:1px dashed #334155"><span class="c-dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Ławka rezerwowych</span></td></tr>';
-        reserves.forEach((p, i) => {{ h += renderSquadRow(p, starters.length + i); }});
+        reserves.forEach((p, idx) => {{ h += renderSquadRow(p, starters.length + idx); }});
       }}
 
       // Podsumowanie
@@ -2910,11 +2956,11 @@ function renderTeams() {{
       h += '<td colspan="2"></td></tr>';
 
       h += '</tbody></table></div>';
+      h += '</td></tr>';
     }}
-
-    h += '</div>'; // close team-list-item
   }});
-  h += '</div>'; // close team-list
+
+  h += '</tbody></table></div>';
   return h;
 }}
 
@@ -3288,45 +3334,6 @@ function renderPredictions() {{
   return h;
 }}
 
-function renderHockey() {{
-  if (!HOCKEY_DATA || !HOCKEY_DATA.length) return '<p style="color:#94a3b8;padding:24px;">Brak danych dla Ligi Hokejowej.</p>';
-  let h = '<div class="data-table"><table><thead><tr>';
-  h += '<th style="width:50px">#</th>';
-  h += '<th>Drużyna</th>';
-  h += '<th class="text-right">Jesień</th>';
-  h += '<th class="text-right" style="font-size:11px;color:#64748b">🔥 J</th>';
-  h += '<th class="text-right">Wiosna</th>';
-  h += '<th class="text-right" style="font-size:11px;color:#64748b">🔥 W</th>';
-  h += '<th class="text-right" style="font-size:13px;font-weight:800">SUMA</th>';
-  h += '<th class="text-center">Zmiana</th>';
-  h += '</tr></thead><tbody>';
-  HOCKEY_DATA.forEach((t, i) => {{
-    const pos = i + 1;
-    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
-    const isMyTeam = t.name.toLowerCase() === 'tokusatsu soccer';
-    const dimRow = t.autumn_only;
-    let cls = '';
-    if (isMyTeam) cls = ' class="highlight"';
-    else if (dimRow) cls = ' style="opacity:0.45"';
-    h += '<tr'+cls+'>';
-    h += '<td class="text-center" style="font-size:'+(pos<=3?'18px':'14px')+'">' + medal + '</td>';
-    h += '<td style="font-weight:600">' + t.name + (dimRow ? ' <span style="font-size:10px;color:#64748b">(nie gra)</span>' : '') + '</td>';
-    h += '<td class="text-right" style="color:#94a3b8">' + t.autumn_pts + '</td>';
-    h += '<td class="text-right" style="color:#64748b;font-size:12px">' + (t.best_gw_autumn > 0 ? t.best_gw_autumn : '—') + '</td>';
-    h += '<td class="text-right" style="color:#94a3b8">' + t.spring_pts + '</td>';
-    h += '<td class="text-right" style="color:#64748b;font-size:12px">' + (t.best_gw_spring !== '—' ? t.best_gw_spring : '—') + '</td>';
-    h += '<td class="text-right" style="font-weight:800;font-size:15px">' + t.total_pts + '</td>';
-    let changeHtml = '';
-    if (t.rank_change > 0) changeHtml = '<span style="color:#10b981">▲' + t.rank_change + '</span>';
-    else if (t.rank_change < 0) changeHtml = '<span style="color:#ef4444">▼' + Math.abs(t.rank_change) + '</span>';
-    else changeHtml = '<span style="color:#64748b">–</span>';
-    h += '<td class="text-center">' + changeHtml + '</td>';
-    h += '</tr>';
-  }});
-  h += '</tbody></table></div>';
-  return h;
-}}
-
 function render() {{
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
@@ -3336,8 +3343,6 @@ function render() {{
   if (trEl) trEl.innerHTML = tab === 'transfers' ? renderTransfers() : '';
   const prEl = document.getElementById('tab-predictions');
   if (prEl) prEl.innerHTML = tab === 'predictions' ? renderPredictions() : '';
-  const hkEl = document.getElementById('tab-hockey');
-  if (hkEl) hkEl.innerHTML = tab === 'hockey' ? renderHockey() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
@@ -3365,10 +3370,11 @@ function render() {{
   }});
   // Attach detail click handlers (form + roster)
   attachDetailClicks();
-  // Team list click handlers
-  document.querySelectorAll('.team-list-header').forEach(el => {{
-    el.onclick = () => {{
-      const slug = el.parentElement.dataset.teamslug;
+  // Team row click handlers (expand/collapse squad)
+  document.querySelectorAll('tr[data-teamslug]').forEach(el => {{
+    el.onclick = (e) => {{
+      if (e.target.closest('a')) return;
+      const slug = el.dataset.teamslug;
       selectedTeam = selectedTeam === slug ? '' : slug;
       render();
     }};
@@ -3722,8 +3728,7 @@ def main():
             player_lookup=player_lookup,
         )
 
-    # 8.10 Liga Hokejowa — klasyfikacja łączna (jesień + wiosna)
-    hockey_data = []
+    # 8.10 Liga Hokejowa — wzbogać league_teams_detail o dane jesienne i ranking łączny
     script_dir = os.path.dirname(os.path.abspath(__file__))
     autumn_points_file = os.path.join(script_dir, "autumn_points.json")
     hockey_prev_file = os.path.join(script_dir, "hockey_prev_ranking.json")
@@ -3733,8 +3738,7 @@ def main():
                 autumn_raw = json.load(f)
             print(f"\n🏒 Liga Hokejowa: wczytano {len(autumn_raw)} drużyn z rundy jesiennej")
 
-            # Nowy format: {"name": {"points": N, "best_gameweek": N}}
-            # Buduj lookup: normalize(name) → {points, best_gameweek, display_name}
+            # Buduj lookup: normalize(name) → {points, best_gw, display_name}
             autumn_lookup = {}
             for name, val in autumn_raw.items():
                 key = normalize_team_name(name)
@@ -3751,15 +3755,45 @@ def main():
                     key = normalize_team_name(slug_name)
                     max_pts_lookup[key] = t.get("max_points", 0)
 
-            # Buduj lookup wiosenny: normalize(slug-name) → {spring_pts, display_name, best_gw_spring}
-            spring_lookup = {}
-            if league_teams_detail:
-                for t in league_teams_detail:
-                    slug_name = t["slug"].replace("-", " ")
-                    key = normalize_team_name(slug_name)
-                    spring_lookup[key] = {"spring_pts": t["pts"], "display_name": slug_name, "best_gw_spring": max_pts_lookup.get(key, 0)}
+            # Wzbogać league_teams_detail o dane hokejowe
+            spring_seen_keys = set()
+            for t in league_teams_detail:
+                slug_name = t["slug"].replace("-", " ")
+                key = normalize_team_name(slug_name)
+                spring_seen_keys.add(key)
+                autumn_info = autumn_lookup.get(key, {"points": 0, "best_gw": 0, "display_name": ""})
+                t["autumn_pts"] = autumn_info["points"]
+                t["best_gw_autumn"] = autumn_info["best_gw"]
+                best_gw_spring = max_pts_lookup.get(key, 0)
+                t["best_gw_spring"] = best_gw_spring if best_gw_spring else 0
+                t["spring_pts"] = t["pts"]
+                t["total_pts"] = t["autumn_pts"] + t["spring_pts"]
+                t["display_name"] = autumn_info["display_name"] or slug_name
+                t["autumn_only"] = False
+                t["spring_only"] = key not in autumn_lookup
 
-            # Wczytaj poprzedni ranking (jeśli istnieje)
+            # Dodaj drużyny jesienne bez wiosny (autumn_only)
+            for key, info in autumn_lookup.items():
+                if key not in spring_seen_keys:
+                    league_teams_detail.append({
+                        "slug": info["display_name"].lower().replace(" ", "-"),
+                        "rank": None,
+                        "pts": 0,
+                        "players": [],
+                        "autumn_pts": info["points"],
+                        "best_gw_autumn": info["best_gw"],
+                        "best_gw_spring": 0,
+                        "spring_pts": 0,
+                        "total_pts": info["points"],
+                        "display_name": info["display_name"],
+                        "autumn_only": True,
+                        "spring_only": False,
+                    })
+
+            # Sortuj po total_pts malejąco
+            league_teams_detail.sort(key=lambda x: x["total_pts"], reverse=True)
+
+            # Wczytaj poprzedni ranking
             prev_ranking = {}
             if os.path.exists(hockey_prev_file):
                 try:
@@ -3768,53 +3802,21 @@ def main():
                 except Exception:
                     pass
 
-            # Zbierz wszystkie unikalne drużyny (jesień ∪ wiosna)
-            all_team_keys = set(autumn_lookup.keys()) | set(spring_lookup.keys())
-
-            for key in all_team_keys:
-                autumn_info = autumn_lookup.get(key, {"points": 0, "best_gw": 0, "display_name": ""})
-                spring_info = spring_lookup.get(key, {"spring_pts": 0, "display_name": "", "best_gw_spring": 0})
-                autumn_pts = autumn_info["points"]
-                spring_pts = spring_info["spring_pts"]
-                best_gw_autumn = autumn_info["best_gw"]
-                best_gw_spring = spring_info.get("best_gw_spring", 0)
-                total_pts = autumn_pts + spring_pts
-                # Preferuj nazwę z jesieni (oryginalna pisownia), fallback na wiosenne
-                display_name = autumn_info["display_name"] or spring_info["display_name"]
-                # Drużyna tylko jesienna (nie gra wiosną)
-                spring_only = key not in autumn_lookup
-                autumn_only = key not in spring_lookup
-                hockey_data.append({
-                    "name": display_name,
-                    "autumn_pts": autumn_pts,
-                    "spring_pts": spring_pts,
-                    "total_pts": total_pts,
-                    "best_gw_autumn": best_gw_autumn,
-                    "best_gw_spring": best_gw_spring if best_gw_spring else "—",
-                    "autumn_only": autumn_only,
-                    "spring_only": spring_only,
-                })
-
-            # Sortuj po total_pts malejąco
-            hockey_data.sort(key=lambda x: x["total_pts"], reverse=True)
-
             # Oblicz rank_change vs. poprzednie uruchomienie
             current_ranking = {}
-            for i, item in enumerate(hockey_data):
+            for i, t in enumerate(league_teams_detail):
                 combined_pos = i + 1
-                norm_key = normalize_team_name(item["name"])
+                norm_key = normalize_team_name(t.get("display_name", t["slug"].replace("-", " ")))
                 current_ranking[norm_key] = combined_pos
                 prev_pos = prev_ranking.get(norm_key)
-                if prev_pos is not None:
-                    item["rank_change"] = prev_pos - combined_pos
-                else:
-                    item["rank_change"] = 0
+                t["rank_change"] = (prev_pos - combined_pos) if prev_pos is not None else 0
+                t["hockey_pos"] = combined_pos
 
             # Zapisz aktualny ranking do pliku
             with open(hockey_prev_file, "w", encoding="utf-8") as f:
                 json.dump(current_ranking, f, ensure_ascii=False, indent=2)
 
-            print(f"   ✅ Przygotowano {len(hockey_data)} drużyn do klasyfikacji łącznej")
+            print(f"   ✅ Przygotowano {len(league_teams_detail)} drużyn do klasyfikacji łącznej")
         except Exception as e:
             print(f"   ⚠️  Błąd ładowania danych jesiennych: {e}")
 
@@ -3834,7 +3836,6 @@ def main():
         fdr_data=fdr_data,
         transfers_data=transfers_data,
         predictions_data=predictions_data,
-        hockey_data=hockey_data,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
