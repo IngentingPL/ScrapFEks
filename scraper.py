@@ -28,6 +28,7 @@ from typing import Optional
 from urllib.parse import quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from predictor import predict_all_players
+from accuracy import evaluate_predictions, find_latest_predictions_csv, load_accuracy_history
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from Crypto.Random import get_random_bytes
@@ -2139,6 +2140,7 @@ def generate_dashboard_html(
     fdr_data: dict,
     transfers_data: dict,
     predictions_data: list[dict],
+    accuracy_history: list[dict],
     timestamp: str,
     filename: str,
 ):
@@ -2185,9 +2187,11 @@ def generate_dashboard_html(
     fdr_data_json = json.dumps(fdr_data, ensure_ascii=False)
     transfers_data_json = json.dumps(transfers_data or {}, ensure_ascii=False)
     predictions_json = json.dumps(predictions_data or [], ensure_ascii=False)
+    accuracy_json = json.dumps(accuracy_history or [], ensure_ascii=False)
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
     has_predictions = len(predictions_data or []) > 0
+    has_accuracy = len(accuracy_history or []) > 0
 
     # For stat cards
     all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))
@@ -2502,6 +2506,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
       {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
       {"<button class='tab' data-tab='transfers'>🔄 Transfery</button>" if has_transfers else ""}
       {"<button class='tab' data-tab='predictions'>🔮 Prognoza</button>" if has_predictions else ""}
+      {"<button class='tab' data-tab='accuracy'>📊 Trafność</button>" if has_accuracy else ""}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
@@ -2518,6 +2523,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
     <div id="tab-fixtures" class="tab-content"></div>
     <div id="tab-transfers" class="tab-content"></div>
     <div id="tab-predictions" class="tab-content"></div>
+    <div id="tab-accuracy" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
@@ -2532,6 +2538,7 @@ const EKSTRA_STATS = {ekstra_stats_json};
 const FDR_DATA = {fdr_data_json};
 const TRANSFERS_DATA = {transfers_data_json};
 const PREDICTIONS = {predictions_json};
+const ACCURACY_HISTORY = {accuracy_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -3351,6 +3358,153 @@ function renderPredictions() {{
   return h;
 }}
 
+function renderAccuracy() {{
+  if (!ACCURACY_HISTORY || !ACCURACY_HISTORY.length) return '<div class="empty-msg">Brak danych trafności — uruchom scraper przynajmniej dwa razy, aby porównać prognozy z rzeczywistością</div>';
+
+  const latest = ACCURACY_HISTORY[ACCURACY_HISTORY.length - 1];
+  let h = '';
+
+  // === STAT CARDS ===
+  const maeByPos = latest.mae_by_pos || {{}};
+  const posNames = Object.keys(maeByPos);
+  let bestPos = '—';
+  let bestPosVal = Infinity;
+  posNames.forEach(p => {{ if (maeByPos[p] < bestPosVal) {{ bestPosVal = maeByPos[p]; bestPos = p; }} }});
+
+  h += '<div class="stats-row">';
+  h += '<div class="stat-card accent-cyan"><div class="val">' + latest.mae + ' pkt</div><div class="label">MAE ogólne</div><div class="sub">Średni błąd prognozy</div></div>';
+  h += '<div class="stat-card accent-green"><div class="val">' + Math.round(latest.hit_rate * 100) + '%</div><div class="label">Hit rate</div><div class="sub">Błąd &lt; 3 pkt</div></div>';
+  h += '<div class="stat-card accent-gold"><div class="val">' + bestPos + ' — ' + bestPosVal + '</div><div class="label">Najlepsza pozycja</div><div class="sub">Najniższy MAE</div></div>';
+  h += '<div class="stat-card accent-purple"><div class="val">' + latest.top10_mae + ' pkt</div><div class="label">Top 10 MAE</div><div class="sub">Trafność liderów</div></div>';
+  h += '</div>';
+
+  // === MAE TREND CHART (SVG) ===
+  if (ACCURACY_HISTORY.length >= 1) {{
+    const W = 700, H = 250, PAD = 50, PADR = 30, PADT = 20, PADB = 40;
+    const chartW = W - PAD - PADR, chartH = H - PADT - PADB;
+
+    // Zbierz dane
+    const rounds = ACCURACY_HISTORY.map(a => a.round);
+    const allVals = [];
+    ACCURACY_HISTORY.forEach(a => {{
+      allVals.push(a.mae);
+      ['BR','OBR','POM','NAP'].forEach(p => {{ if (a.mae_by_pos && a.mae_by_pos[p] !== undefined) allVals.push(a.mae_by_pos[p]); }});
+    }});
+    const minR = Math.min(...rounds), maxR = Math.max(...rounds);
+    const maxV = Math.max(...allVals, 1);
+    const rangeR = Math.max(maxR - minR, 1);
+
+    const x = r => PAD + ((r - minR) / rangeR) * chartW;
+    const y = v => PADT + chartH - (v / maxV) * chartH;
+
+    let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:700px;height:auto;display:block;margin:20px auto;">';
+
+    // Grid lines
+    for (let i = 0; i <= 4; i++) {{
+      const yy = PADT + (chartH / 4) * i;
+      const val = (maxV * (4 - i) / 4).toFixed(1);
+      svg += '<line x1="' + PAD + '" y1="' + yy + '" x2="' + (W - PADR) + '" y2="' + yy + '" stroke="#334155" stroke-width="1"/>';
+      svg += '<text x="' + (PAD - 8) + '" y="' + (yy + 4) + '" text-anchor="end" fill="#64748b" font-size="11">' + val + '</text>';
+    }}
+
+    // X axis labels
+    rounds.forEach(r => {{
+      svg += '<text x="' + x(r) + '" y="' + (H - 8) + '" text-anchor="middle" fill="#64748b" font-size="11">K' + r + '</text>';
+    }});
+
+    // Position lines
+    const posColors = {{BR:'#f59e0b', OBR:'#3b82f6', POM:'#10b981', NAP:'#ef4444'}};
+    ['BR','OBR','POM','NAP'].forEach(pos => {{
+      const pts = [];
+      ACCURACY_HISTORY.forEach(a => {{
+        if (a.mae_by_pos && a.mae_by_pos[pos] !== undefined) pts.push({{r: a.round, v: a.mae_by_pos[pos]}});
+      }});
+      if (pts.length > 1) {{
+        const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + x(p.r) + ',' + y(p.v)).join(' ');
+        svg += '<path d="' + d + '" fill="none" stroke="' + posColors[pos] + '" stroke-width="1.5" opacity="0.6"/>';
+      }} else if (pts.length === 1) {{
+        svg += '<circle cx="' + x(pts[0].r) + '" cy="' + y(pts[0].v) + '" r="4" fill="' + posColors[pos] + '" opacity="0.6"/>';
+      }}
+    }});
+
+    // Overall MAE line (thick, white)
+    if (ACCURACY_HISTORY.length > 1) {{
+      const d = ACCURACY_HISTORY.map((a, i) => (i === 0 ? 'M' : 'L') + x(a.round) + ',' + y(a.mae)).join(' ');
+      svg += '<path d="' + d + '" fill="none" stroke="#e2e8f0" stroke-width="2.5"/>';
+    }}
+    // Dots for overall MAE
+    ACCURACY_HISTORY.forEach(a => {{
+      svg += '<circle cx="' + x(a.round) + '" cy="' + y(a.mae) + '" r="4" fill="#e2e8f0"/>';
+    }});
+
+    svg += '</svg>';
+
+    // Legend
+    let legend = '<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">';
+    legend += '<span style="color:#e2e8f0;font-weight:700;font-size:12px;">━━ MAE ogólne</span>';
+    Object.entries(posColors).forEach(([p, c]) => {{
+      legend += '<span style="color:' + c + ';font-size:12px;">━ ' + p + '</span>';
+    }});
+    legend += '</div>';
+
+    h += '<div class="section-title" style="margin-top:24px;"><h2>Trend MAE</h2><div class="line"></div></div>';
+    h += '<div class="data-table" style="padding:16px;">' + svg + legend + '</div>';
+  }}
+
+  // === DETAIL TABLE (latest round) ===
+  const details = latest.details || [];
+  if (details.length) {{
+    h += '<div class="section-title" style="margin-top:24px;"><h2>Szczegóły — Kolejka ' + latest.round + '</h2><div class="line"></div></div>';
+
+    if (!sorts.accuracy) sorts.accuracy = {{col:'abs_error', dir:'asc'}};
+    const s = sorts.accuracy;
+    let sorted = [...details];
+    sorted.forEach(d => {{ d.abs_error = Math.abs(d.error); }});
+    sorted.sort((a, b) => {{
+      let va = a[s.col], vb = b[s.col];
+      if (typeof va === 'string') {{ va = va.toLowerCase(); vb = (vb||'').toLowerCase(); }}
+      if (va < vb) return s.dir === 'asc' ? -1 : 1;
+      if (va > vb) return s.dir === 'asc' ? 1 : -1;
+      return 0;
+    }});
+
+    function accArrow(col) {{
+      if (s.col !== col) return '';
+      return s.dir === 'desc' ? ' ▼' : ' ▲';
+    }}
+
+    h += '<div class="data-table"><table><thead><tr>';
+    h += '<th class="text-left sortable" data-tab="accuracy" data-col="name">Zawodnik' + accArrow('name') + '</th>';
+    h += '<th class="text-center sortable" data-tab="accuracy" data-col="position">Poz' + accArrow('position') + '</th>';
+    h += '<th class="text-left sortable" data-tab="accuracy" data-col="team">Drużyna' + accArrow('team') + '</th>';
+    h += '<th class="text-right sortable" data-tab="accuracy" data-col="predicted">Prognoza' + accArrow('predicted') + '</th>';
+    h += '<th class="text-right sortable" data-tab="accuracy" data-col="actual">Rzeczywistość' + accArrow('actual') + '</th>';
+    h += '<th class="text-right sortable" data-tab="accuracy" data-col="abs_error">Błąd' + accArrow('abs_error') + '</th>';
+    h += '</tr></thead><tbody>';
+
+    sorted.forEach(d => {{
+      const absErr = Math.abs(d.error);
+      let errColor = '#ef4444';
+      if (absErr < 2) errColor = '#10b981';
+      else if (absErr < 4) errColor = '#94a3b8';
+
+      const posClass = 'pos-' + (d.position || '');
+      h += '<tr>';
+      h += '<td class="text-left">' + (d.name || '') + '</td>';
+      h += '<td class="text-center"><span class="pos-badge ' + posClass + '">' + (d.position || '') + '</span></td>';
+      h += '<td class="text-left c-muted">' + (d.team || '') + '</td>';
+      h += '<td class="text-right">' + (d.predicted != null ? d.predicted.toFixed(1) : '—') + '</td>';
+      h += '<td class="text-right">' + (d.actual != null ? d.actual : '—') + '</td>';
+      h += '<td class="text-right" style="color:' + errColor + ';font-weight:700;">' + absErr.toFixed(1) + '</td>';
+      h += '</tr>';
+    }});
+
+    h += '</tbody></table></div>';
+  }}
+
+  return h;
+}}
+
 function render() {{
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
@@ -3360,6 +3514,8 @@ function render() {{
   if (trEl) trEl.innerHTML = tab === 'transfers' ? renderTransfers() : '';
   const prEl = document.getElementById('tab-predictions');
   if (prEl) prEl.innerHTML = tab === 'predictions' ? renderPredictions() : '';
+  const acEl = document.getElementById('tab-accuracy');
+  if (acEl) acEl.innerHTML = tab === 'accuracy' ? renderAccuracy() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
@@ -3724,7 +3880,7 @@ def main():
         if predictions_data:
             pred_csv = os.path.join(OUTPUT_DIR, f"fantasy_predictions_{timestamp}.csv")
             pred_fields = [
-                "name", "team", "position", "next_opponent", "is_home",
+                "player_id", "name", "team", "position", "next_opponent", "is_home",
                 "predicted_points", "base_avg", "fdr_modifier",
                 "minutes_factor", "home_away_factor", "avg_minutes",
                 "confidence", "detail",
@@ -3734,6 +3890,19 @@ def main():
                 writer.writeheader()
                 writer.writerows(predictions_data)
             print(f"  🔮 Prognoza: {len(predictions_data)} zawodników → {os.path.basename(pred_csv)}")
+
+    # 8.8b Sprawdź trafność prognoz z poprzedniego uruchomienia
+    accuracy_data = None
+    if current_round:
+        # Znajdź najnowszy plik prognoz PRZED tym uruchomieniem
+        prev_pred_csv = find_latest_predictions_csv(OUTPUT_DIR)
+        # Upewnij się, że to nie jest plik z tego uruchomienia
+        current_pred_csv = os.path.join(OUTPUT_DIR, f"fantasy_predictions_{timestamp}.csv")
+        if prev_pred_csv and os.path.abspath(prev_pred_csv) != os.path.abspath(current_pred_csv):
+            accuracy_data = evaluate_predictions(prev_pred_csv, players, current_round)
+
+    # Wczytaj historię trafności dla dashboardu
+    accuracy_history = load_accuracy_history()
 
     # 8.9 Oblicz transfery w lidze prywatnej
     transfers_data: dict = {}
@@ -3853,6 +4022,7 @@ def main():
         fdr_data=fdr_data,
         transfers_data=transfers_data,
         predictions_data=predictions_data,
+        accuracy_history=accuracy_history,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )
