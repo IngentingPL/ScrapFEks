@@ -29,6 +29,7 @@ from urllib.parse import quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from predictor import predict_all_players
 from accuracy import evaluate_predictions, find_latest_predictions_csv, load_accuracy_history
+from tuner import run_tuning
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from Crypto.Random import get_random_bytes
@@ -2141,6 +2142,7 @@ def generate_dashboard_html(
     transfers_data: dict,
     predictions_data: list[dict],
     accuracy_history: list[dict],
+    tuned_params: dict,
     timestamp: str,
     filename: str,
 ):
@@ -2188,6 +2190,7 @@ def generate_dashboard_html(
     transfers_data_json = json.dumps(transfers_data or {}, ensure_ascii=False)
     predictions_json = json.dumps(predictions_data or [], ensure_ascii=False)
     accuracy_json = json.dumps(accuracy_history or [], ensure_ascii=False)
+    tuned_params_json = json.dumps(tuned_params or None, ensure_ascii=False)
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
     has_predictions = len(predictions_data or []) > 0
@@ -2539,6 +2542,7 @@ const FDR_DATA = {fdr_data_json};
 const TRANSFERS_DATA = {transfers_data_json};
 const PREDICTIONS = {predictions_json};
 const ACCURACY_HISTORY = {accuracy_json};
+const TUNED_PARAMS = {tuned_params_json};
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -3502,6 +3506,90 @@ function renderAccuracy() {{
     h += '</tbody></table></div>';
   }}
 
+  // === AUTO-TUNING SECTION ===
+  // Sekcja pokazuje status i wyniki auto-tunera parametrów predictora
+  h += '<div class="section-title" style="margin-top:32px;"><h2>🔧 Auto-tuning</h2><div class="line"></div></div>';
+  h += '<div class="data-table" style="padding:20px;">';
+
+  if (!TUNED_PARAMS) {{
+    // Tuning jeszcze nie miał wystarczająco danych — zbieramy historię
+    const totalRounds = ACCURACY_HISTORY ? ACCURACY_HISTORY.length : 0;
+    h += '<div style="text-align:center;padding:16px 0;">';
+    h += '<div style="font-size:32px;margin-bottom:8px;">⏳</div>';
+    h += '<div style="color:#94a3b8;font-size:14px;">Zbiera dane (' + totalRounds + '/4 kolejek)</div>';
+    h += '<div style="color:#64748b;font-size:12px;margin-top:4px;">Auto-tuning uruchomi się automatycznie po zebraniu min. 4 kolejek historii trafności</div>';
+    h += '</div>';
+  }} else {{
+    // Tuning został wykonany — pokazuj wyniki
+    const tp = TUNED_PARAMS;
+
+    // Domyślne wartości predictora (przed tuningiem)
+    const defaults = {{
+      decay: 0.85,
+      fdr_strength: 1.0,
+      home_away_bonus: 0.05,
+    }};
+
+    // Status: aktywny
+    h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">';
+    h += '<span style="background:#10b981;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;">✅ Aktywny</span>';
+    h += '<span style="color:#94a3b8;font-size:13px;">' + tp.rounds_used + ' kolejek · ostatni tuning: ' + (tp.last_tuned || '—') + '</span>';
+    h += '</div>';
+
+    // Tabela porównawcza parametrów
+    h += '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">';
+    h += '<thead><tr>';
+    h += '<th style="text-align:left;padding:8px 12px;border-bottom:1px solid #334155;color:#64748b;font-size:12px;font-weight:600;">PARAMETR</th>';
+    h += '<th style="text-align:right;padding:8px 12px;border-bottom:1px solid #334155;color:#64748b;font-size:12px;font-weight:600;">DOMYŚLNA</th>';
+    h += '<th style="text-align:right;padding:8px 12px;border-bottom:1px solid #334155;color:#64748b;font-size:12px;font-weight:600;">WYTUNOWANA</th>';
+    h += '<th style="text-align:right;padding:8px 12px;border-bottom:1px solid #334155;color:#64748b;font-size:12px;font-weight:600;">ZMIANA</th>';
+    h += '</tr></thead><tbody>';
+
+    function tuneRow(label, key, fmt) {{
+      const defVal = defaults[key];
+      const tunedVal = tp[key];
+      if (tunedVal === undefined || tunedVal === null) return '';
+      const diff = tunedVal - defVal;
+      const diffStr = diff > 0.001 ? '+' + fmt(diff) : diff < -0.001 ? fmt(diff) : '—';
+      const diffColor = Math.abs(diff) > 0.001 ? '#f59e0b' : '#64748b';
+      return '<tr>'
+        + '<td style="padding:8px 12px;color:#e2e8f0;font-size:13px;">' + label + '</td>'
+        + '<td style="text-align:right;padding:8px 12px;color:#64748b;font-size:13px;">' + fmt(defVal) + '</td>'
+        + '<td style="text-align:right;padding:8px 12px;color:#e2e8f0;font-weight:700;font-size:13px;">' + fmt(tunedVal) + '</td>'
+        + '<td style="text-align:right;padding:8px 12px;color:' + diffColor + ';font-size:13px;">' + diffStr + '</td>'
+        + '</tr>';
+    }}
+
+    const f2 = v => (Math.round(v * 100) / 100).toFixed(2);
+    h += tuneRow('Decay (zanik wag)', 'decay', f2);
+    h += tuneRow('FDR Strength (siła FDR)', 'fdr_strength', f2);
+    h += tuneRow('Home/Away Bonus', 'home_away_bonus', f2);
+
+    h += '</tbody></table>';
+
+    // Poprawa MAE
+    if (tp.mae_before != null && tp.mae_after != null) {{
+      const improved = tp.mae_after < tp.mae_before;
+      const arrow = improved ? '↓' : '↑';
+      const color = improved ? '#10b981' : '#ef4444';
+      const sign = improved ? '' : '+';
+      h += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
+      h += '<div style="background:#1e293b;border-radius:8px;padding:12px 20px;">';
+      h += '<div style="color:#64748b;font-size:11px;font-weight:600;margin-bottom:4px;">POPRAWA MAE</div>';
+      h += '<div style="font-size:18px;font-weight:700;">';
+      h += '<span style="color:#94a3b8;">' + tp.mae_before.toFixed(1) + '</span>';
+      h += ' <span style="color:#64748b;font-size:14px;">→</span> ';
+      h += '<span style="color:#e2e8f0;">' + tp.mae_after.toFixed(1) + '</span>';
+      const pct = tp.improvement_pct != null ? tp.improvement_pct : 0;
+      h += ' <span style="color:' + color + ';font-size:14px;">(' + arrow + Math.abs(pct).toFixed(1) + '%)</span>';
+      h += '</div>';
+      h += '</div>';
+      h += '</div>';
+    }}
+  }}
+
+  h += '</div>';  // end data-table
+
   return h;
 }}
 
@@ -3904,6 +3992,14 @@ def main():
     # Wczytaj historię trafności dla dashboardu
     accuracy_history = load_accuracy_history()
 
+    # 8.8c Auto-tuning parametrów predictora (po zebraniu min. 4 kolejek)
+    # Uruchamiamy PO ewaluacji trafności — dane są już aktualne
+    run_tuning(
+        accuracy_history_path=os.path.join(OUTPUT_DIR, "accuracy_history.json"),
+        output_dir=OUTPUT_DIR,
+        output_path=os.path.join(OUTPUT_DIR, "tuned_params.json"),
+    )
+
     # 8.9 Oblicz transfery w lidze prywatnej
     transfers_data: dict = {}
     if league_results and current_round > 1:
@@ -4006,6 +4102,16 @@ def main():
         except Exception as e:
             print(f"   ⚠️  Błąd ładowania danych jesiennych: {e}")
 
+    # Wczytaj wytunowane parametry dla dashboardu (mogły zostać właśnie zaktualizowane)
+    tuned_params_file = os.path.join(OUTPUT_DIR, "tuned_params.json")
+    tuned_params = None
+    if os.path.exists(tuned_params_file):
+        try:
+            with open(tuned_params_file, encoding="utf-8") as f:
+                tuned_params = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            pass
+
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
@@ -4023,6 +4129,7 @@ def main():
         transfers_data=transfers_data,
         predictions_data=predictions_data,
         accuracy_history=accuracy_history,
+        tuned_params=tuned_params,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )

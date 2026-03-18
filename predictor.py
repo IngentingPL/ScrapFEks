@@ -14,6 +14,51 @@ Kluczowe koncepty użyte tutaj:
 4. FUNKCJA (def) — nazwany blok kodu, który przyjmuje dane i zwraca wynik
 """
 
+import json
+import os
+
+# ============================================================
+# WCZYTYWANIE WYTUNOWANYCH PARAMETRÓW (auto-tuning)
+# ============================================================
+# 📖 LEKCJA: Wczytujemy parametry RAZ przy starcie modułu — to szybsze niż
+# czytanie pliku za każdym razem, gdy wywołujemy predict_points.
+# Jeśli plik nie istnieje — używamy wartości domyślnych (identyczne działanie).
+
+def _load_tuned_params():
+    """
+    Wczytuje wytunowane parametry z pliku output/tuned_params.json.
+
+    Jeśli plik nie istnieje lub jest uszkodzony — zwraca None.
+    Wówczas predictor używa wbudowanych wartości domyślnych.
+    """
+    path = os.path.join("output", "tuned_params.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        return None
+
+
+# Wczytaj parametry raz przy imporcie modułu
+_TUNED = _load_tuned_params()
+
+# Parametry do użycia (wytunowane jeśli dostępne, w przeciwnym razie domyślne)
+# decay=0.85: współczynnik zaniku dla średniej ważonej
+# fdr_strength=1.0: siła wpływu FDR (mnożnik efektu)
+# home_away_bonus=0.05: bonus za grę u siebie (home_factor = 1.0 + bonus)
+_DEFAULT_DECAY = _TUNED.get("decay", 0.85) if _TUNED else 0.85
+_DEFAULT_FDR_STRENGTH = _TUNED.get("fdr_strength", 1.0) if _TUNED else 1.0
+_DEFAULT_HOME_AWAY_BONUS = _TUNED.get("home_away_bonus", 0.05) if _TUNED else 0.05
+
+if _TUNED:
+    print(
+        f"  🔧 Predictor: wczytano wytunowane parametry "
+        f"(decay={_DEFAULT_DECAY}, fdr_strength={_DEFAULT_FDR_STRENGTH}, "
+        f"home_away_bonus={_DEFAULT_HOME_AWAY_BONUS})"
+    )
+
 # ============================================================
 # STAŁE — wartości, które nie zmieniają się w trakcie działania
 # ============================================================
@@ -40,7 +85,7 @@ MIN_ROUNDS_FOR_PREDICTION = 2
 # FUNKCJE POMOCNICZE
 # ============================================================
 
-def weighted_average(values, decay=0.85):
+def weighted_average(values, decay=None):
     """
     Średnia ważona z malejącymi wagami (nowsze = ważniejsze).
 
@@ -50,11 +95,15 @@ def weighted_average(values, decay=0.85):
 
     Parametry:
         values: lista punktów z kolejek [najnowsza, ..., najstarsza]
-        decay: współczynnik zaniku (0.0-1.0), mniejszy = nowsze ważniejsze
+        decay: współczynnik zaniku (0.0-1.0), mniejszy = nowsze ważniejsze.
+               None = użyj wartości z tuned_params.json (lub 0.85 domyślnie).
 
     Zwraca:
         float — średnia ważona
     """
+    if decay is None:
+        decay = _DEFAULT_DECAY  # Wytunowany lub domyślny (0.85)
+
     if not values:
         return 0.0
 
@@ -111,9 +160,14 @@ def get_fdr_modifier(fdr_atk, fdr_def, position):
     # Dlatego ODWRACAMY skalę: FDR 5 → 0.80 (trudno), FDR 1 → 1.20 (łatwo)
 
     # Konwersja: FDR → modyfikator (skala odwrócona)
-    # FDR 1→1.20, 2→1.10, 3→1.00, 4→0.90, 5→0.80
+    # FDR 1→1.20, 2→1.10, 3→1.00, 4→0.90, 5→0.80 (przy domyślnym fdr_strength=1.0)
+    # fdr_strength kontroluje jak mocno FDR wpływa na prognozę:
+    #   fdr_strength=0.5 → efekt o połowę słabszy
+    #   fdr_strength=1.5 → efekt o połowę silniejszy
+    _fdr_coeff = 0.10 * _DEFAULT_FDR_STRENGTH
+
     def fdr_to_modifier(fdr_value):
-        return 1.0 + (3 - fdr_value) * 0.10
+        return 1.0 + (3 - fdr_value) * _fdr_coeff
 
     # Dla napastnika/pomocnika: interesuje nas FDR DEF rywala (im słabsza obrona, tym lepiej)
     mod_from_def = fdr_to_modifier(fdr_def)
@@ -164,16 +218,26 @@ def get_home_away_factor(is_home):
         is_home: True jeśli mecz u siebie, False jeśli wyjazd
 
     Zwraca:
-        float — modyfikator (1.05 dom, 0.97 wyjazd)
+        float — modyfikator (domyślnie: 1.05 dom, 0.97 wyjazd)
+
+    Parametryzacja:
+        home_away_bonus (z tuned_params lub domyślny 0.05):
+          home_factor = 1.0 + home_away_bonus
+          away_factor = 1.0 - home_away_bonus * 0.6
+        Przy home_away_bonus=0.05: home=1.05, away=0.97 (domyślne)
     """
-    return 1.05 if is_home else 0.97
+    bonus = _DEFAULT_HOME_AWAY_BONUS
+    if is_home:
+        return 1.0 + bonus
+    else:
+        return 1.0 - bonus * 0.6
 
 
 # ============================================================
 # GŁÓWNA FUNKCJA PREDYKCJI
 # ============================================================
 
-def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, decay=0.85):
+def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, decay=None):
     """
     Prognozuje punkty zawodnika na następną kolejkę.
 
@@ -190,7 +254,8 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         next_fixture: dict z informacją o następnym meczu
             Format: {"opponent": "Legia", "is_home": True}
         lookback: ile ostatnich kolejek brać pod uwagę
-        decay: współczynnik zaniku dla średniej ważonej
+        decay: współczynnik zaniku dla średniej ważonej.
+               None = użyj wartości z tuned_params.json (lub 0.85 domyślnie).
 
     Zwraca:
         dict z prognozą:
