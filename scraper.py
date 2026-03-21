@@ -2092,6 +2092,7 @@ def generate_dashboard_html(
     league_teams_count: int,
     league_rosters: dict,
     league_teams_detail: list[dict],
+    duets_data: list[dict],
     fixtures_data: dict,
     ekstra_stats: dict,
     fdr_data: dict,
@@ -2140,6 +2141,7 @@ def generate_dashboard_html(
     players_json = json.dumps(summary_data, ensure_ascii=False)
     rosters_json = json.dumps(league_rosters, ensure_ascii=False)
     teams_detail_json = json.dumps(league_teams_detail, ensure_ascii=False)
+    duets_data_json = json.dumps(duets_data or [], ensure_ascii=False)
     fixtures_json = json.dumps(fixtures_data, ensure_ascii=False)
     ekstra_stats_json = json.dumps(ekstra_stats, ensure_ascii=False)
     fdr_data_json = json.dumps(fdr_data, ensure_ascii=False)
@@ -2492,6 +2494,7 @@ const DATA = {data_json};
 const PLAYERS = {players_json};
 const ROSTERS = {rosters_json};
 const LEAGUE_TEAMS = {teams_detail_json};
+const DUETS_DATA = {duets_data_json};
 const FIXTURES = {fixtures_json};
 const EKSTRA_STATS = {ekstra_stats_json};
 const FDR_DATA = {fdr_data_json};
@@ -2506,10 +2509,13 @@ const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'P
 
 let tab = 'players', pos = 'ALL', scope = '{default_scope}';
 let selectedTeam = '';
+let selectedDuet = '';
+let currentTeamsView = 'teams';
 let sorts = {{
   players: {{col:'total_points', dir:'desc'}},
   teams: {{col:'_pos_order', dir:'asc'}},
   teams_list: {{col:'total_pts', dir:'desc'}},
+  duets_list: {{col:'total_pts', dir:'desc'}},
 }};
 
 function num(v) {{
@@ -2766,10 +2772,92 @@ function diffBadge(pts, avg) {{
   return '<span class="diff-badge '+cls+'">'+(d>0?'+':'')+d.toFixed(0)+'</span>';
 }}
 
+function renderDuets() {{
+  if (!DUETS_DATA.length) return '<div class="empty-msg">Brak danych o duetach</div>';
+
+  const dls = sorts.duets_list;
+  function dlArrow(col) {{
+    return dls.col === col ? (dls.dir === 'desc' ? ' ▼' : ' ▲') : '';
+  }}
+
+  const sortedDuets = [...DUETS_DATA].sort((a, b) => {{
+    let av = a[dls.col], bv = b[dls.col];
+    if (typeof av === 'string') {{
+      if (av < bv) return dls.dir === 'desc' ? 1 : -1;
+      if (av > bv) return dls.dir === 'desc' ? -1 : 1;
+      return 0;
+    }}
+    av = num(av); bv = num(bv);
+    if (av < bv) return dls.dir === 'desc' ? 1 : -1;
+    if (av > bv) return dls.dir === 'desc' ? -1 : 1;
+    return 0;
+  }});
+
+  let h = '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-center" style="width:50px">#</th>';
+  h += '<th class="text-left sortable" data-tab="duets_list" data-col="duet_name">Duet'+dlArrow('duet_name')+'</th>';
+  h += '<th class="text-left">Gracze</th>';
+  h += '<th class="text-right sortable" data-tab="duets_list" data-col="autumn_pts">Jesień'+dlArrow('autumn_pts')+'</th>';
+  h += '<th class="text-right sortable" data-tab="duets_list" data-col="spring_pts">Wiosna'+dlArrow('spring_pts')+'</th>';
+  h += '<th class="text-right sortable" data-tab="duets_list" data-col="total_pts" style="font-size:13px;font-weight:800">SUMA'+dlArrow('total_pts')+'</th>';
+  h += '<th class="text-center sortable" data-tab="duets_list" data-col="rank_change">Zmiana'+dlArrow('rank_change')+'</th>';
+  h += '</tr></thead><tbody>';
+
+  sortedDuets.forEach((d, i) => {{
+    const pos = i + 1;
+    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+    const isOpen = d.duet_name === selectedDuet;
+
+    h += '<tr style="cursor:pointer" data-duetname="'+encodeURIComponent(d.duet_name)+'">';
+    h += '<td class="text-center" style="font-size:'+(pos<=3?'18px':'14px')+'">'+medal+'</td>';
+    h += '<td style="font-weight:600">'+d.duet_name+' <span style="font-size:10px;color:#475569">'+(isOpen?'▼':'▶')+'</span></td>';
+    h += '<td style="font-size:12px;color:#94a3b8">'+d.players+'</td>';
+    h += '<td class="text-right" style="color:#94a3b8">'+(d.autumn_pts||0)+'</td>';
+    h += '<td class="text-right" style="color:#94a3b8">'+(d.spring_pts||0)+'</td>';
+    h += '<td class="text-right" style="font-weight:800;font-size:15px">'+(d.total_pts||0)+'</td>';
+
+    const rc = d.rank_change || 0;
+    let changeHtml = '';
+    if (rc > 0) changeHtml = '<span style="color:#10b981">▲'+rc+'</span>';
+    else if (rc < 0) changeHtml = '<span style="color:#ef4444">▼'+Math.abs(rc)+'</span>';
+    else changeHtml = '<span style="color:#64748b">–</span>';
+    h += '<td class="text-center">'+changeHtml+'</td>';
+    h += '</tr>';
+
+    if (isOpen) {{
+      h += '<tr><td colspan="7" style="padding:8px 16px;background:#0f172a">';
+      h += '<div style="font-size:13px;line-height:1.8">';
+      const t1sum = (d.team1_autumn||0) + (d.team1_spring||0);
+      const t2sum = (d.team2_autumn||0) + (d.team2_spring||0);
+      h += '<div style="display:flex;justify-content:space-between;max-width:500px">';
+      h += '<span style="font-weight:600">'+d.team1_name+'</span>';
+      h += '<span style="color:#94a3b8">'+d.team1_autumn+' + '+d.team1_spring+' = <b>'+t1sum+'</b></span>';
+      h += '</div>';
+      h += '<div style="display:flex;justify-content:space-between;max-width:500px">';
+      h += '<span style="font-weight:600">'+d.team2_name+'</span>';
+      h += '<span style="color:#94a3b8">'+d.team2_autumn+' + '+d.team2_spring+' = <b>'+t2sum+'</b></span>';
+      h += '</div>';
+      h += '</div>';
+      h += '</td></tr>';
+    }}
+  }});
+
+  h += '</tbody></table></div>';
+  return h;
+}}
+
 function renderTeams() {{
   if (!LEAGUE_TEAMS.length) return '<div class="empty-msg">Brak danych o drużynach ligi</div>';
 
   let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Liga CMF</h2><div class="line"></div></div>';
+
+  // View toggle
+  h += '<div class="view-toggle" style="display:flex;gap:8px;margin-bottom:16px">';
+  h += '<button class="view-btn'+(currentTeamsView==='teams'?' active':'')+'" data-view="teams" style="padding:6px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:'+(currentTeamsView==='teams'?'#3b82f6':'#1e293b')+';color:'+(currentTeamsView==='teams'?'#fff':'#94a3b8')+'">👥 Drużyny</button>';
+  h += '<button class="view-btn'+(currentTeamsView==='duets'?' active':'')+'" data-view="duets" style="padding:6px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:'+(currentTeamsView==='duets'?'#3b82f6':'#1e293b')+';color:'+(currentTeamsView==='duets'?'#fff':'#94a3b8')+'">👫 Duety</button>';
+  h += '</div>';
+
+  if (currentTeamsView === 'duets') return h + renderDuets();
 
   // Helpers for squad table
   const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
@@ -3596,6 +3684,21 @@ function render() {{
       render();
     }};
   }});
+  // Duet row click handlers (expand/collapse)
+  document.querySelectorAll('tr[data-duetname]').forEach(el => {{
+    el.onclick = () => {{
+      const name = decodeURIComponent(el.dataset.duetname);
+      selectedDuet = selectedDuet === name ? '' : name;
+      render();
+    }};
+  }});
+  // View toggle (Drużyny / Duety)
+  document.querySelectorAll('.view-btn').forEach(btn => {{
+    btn.onclick = () => {{
+      currentTeamsView = btn.dataset.view;
+      render();
+    }};
+  }});
   // FDR sort handlers
   document.querySelectorAll('.fdr-sort-btn').forEach(b => {{
     b.classList.toggle('active', b.dataset.fdrsort === fdrSort);
@@ -4058,6 +4161,70 @@ def main():
         except Exception as e:
             print(f"   ⚠️  Błąd ładowania danych jesiennych: {e}")
 
+    # Duety — oblicz punkty z danych drużyn
+    duets_data = []
+    duets_file = os.path.join(script_dir, "duets.json")
+    duets_prev_file = os.path.join(script_dir, "duets_prev_ranking.json")
+    if os.path.exists(duets_file) and league_teams_detail:
+        try:
+            with open(duets_file, "r", encoding="utf-8") as f:
+                duets_config = json.load(f)
+
+            # Buduj lookup: normalize(display_name) → dane drużyny
+            team_lookup = {}
+            for t in league_teams_detail:
+                key = normalize_team_name(t.get("display_name", t["slug"].replace("-", " ")))
+                team_lookup[key] = t
+
+            for d in duets_config:
+                k1 = normalize_team_name(d["team1"])
+                k2 = normalize_team_name(d["team2"])
+                t1 = team_lookup.get(k1, {})
+                t2 = team_lookup.get(k2, {})
+                autumn_pts = (t1.get("autumn_pts", 0) or 0) + (t2.get("autumn_pts", 0) or 0)
+                spring_pts = (t1.get("spring_pts", 0) or 0) + (t2.get("spring_pts", 0) or 0)
+                total_pts = autumn_pts + spring_pts
+                duets_data.append({
+                    "duet_name": d["duet_name"],
+                    "players": d["players"],
+                    "team1_name": t1.get("display_name", d["team1"]),
+                    "team1_autumn": t1.get("autumn_pts", 0) or 0,
+                    "team1_spring": t1.get("spring_pts", 0) or 0,
+                    "team2_name": t2.get("display_name", d["team2"]),
+                    "team2_autumn": t2.get("autumn_pts", 0) or 0,
+                    "team2_spring": t2.get("spring_pts", 0) or 0,
+                    "autumn_pts": autumn_pts,
+                    "spring_pts": spring_pts,
+                    "total_pts": total_pts,
+                    "rank_change": 0,
+                })
+
+            duets_data.sort(key=lambda x: x["total_pts"], reverse=True)
+
+            # Wczytaj poprzedni ranking duetów
+            duets_prev_ranking = {}
+            if os.path.exists(duets_prev_file):
+                try:
+                    with open(duets_prev_file, "r", encoding="utf-8") as f:
+                        duets_prev_ranking = json.load(f)
+                except Exception:
+                    pass
+
+            current_duets_ranking = {}
+            for i, d in enumerate(duets_data):
+                pos = i + 1
+                key = normalize_team_name(d["duet_name"])
+                current_duets_ranking[key] = pos
+                prev_pos = duets_prev_ranking.get(key)
+                d["rank_change"] = (prev_pos - pos) if prev_pos is not None else 0
+
+            with open(duets_prev_file, "w", encoding="utf-8") as f:
+                json.dump(current_duets_ranking, f, ensure_ascii=False, indent=2)
+
+            print(f"   ✅ Przygotowano {len(duets_data)} duetów")
+        except Exception as e:
+            print(f"   ⚠️  Błąd ładowania duetów: {e}")
+
     # Wczytaj wytunowane parametry dla dashboardu (mogły zostać właśnie zaktualizowane)
     tuned_params_file = os.path.join(OUTPUT_DIR, "tuned_params.json")
     tuned_params = None
@@ -4079,6 +4246,7 @@ def main():
         league_teams_count=len(league_teams) if LEAGUE_SLUG and league_teams else 0,
         league_rosters=league_rosters,
         league_teams_detail=league_teams_detail,
+        duets_data=duets_data,
         fixtures_data=fixtures_data,
         ekstra_stats=ekstra_stats,
         fdr_data=fdr_data,
