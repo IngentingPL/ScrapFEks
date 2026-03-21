@@ -13,6 +13,7 @@ Użycie:
 Autor: Wygenerowane przez Claude dla Piotra
 """
 
+import base64
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -64,7 +65,6 @@ def cryptojs_aes_encrypt(plaintext: str, passphrase: str) -> str:
     cipher = AES.new(key, AES.MODE_CBC, iv)
     ciphertext = cipher.encrypt(pad(plaintext.encode("utf-8"), AES.block_size))
 
-    import base64
     result = base64.b64encode(b"Salted__" + salt + ciphertext).decode("utf-8")
     return result
 
@@ -195,9 +195,6 @@ def login(session: requests.Session) -> bool:
             },
             timeout=30,
         )
-        print(f"   Token create status: {resp.status_code}")
-        print(f"   Token create response: {resp.text[:300]}")
-
         if resp.status_code != 200:
             print(f"   ❌ Błąd tworzenia tokenu connect")
             return True  # kontynuuj bez cookies
@@ -206,9 +203,7 @@ def login(session: requests.Session) -> bool:
         connect_hash = create_data.get("token") or create_data.get("hash") or create_data.get("code")
 
         if not connect_hash:
-            # Może cała odpowiedź to hash?
-            print(f"   DEBUG create_data keys: {list(create_data.keys()) if isinstance(create_data, dict) else type(create_data)}")
-            print(f"   DEBUG create_data: {json.dumps(create_data)[:500]}")
+            print("   ⚠️  Brak connect_hash w odpowiedzi token/create")
             return True
 
         print(f"   ✅ Connect hash: {str(connect_hash)[:50]}...")
@@ -231,9 +226,7 @@ def login(session: requests.Session) -> bool:
 
         # Najpierw GET na stronę z fałszywym PHPSESSID — wymusza PHP backend
         session.cookies.set("PHPSESSID", "init_session_000", domain="fantasy.ekstraklasa.org")
-        init_resp = session.get(BASE_URL, timeout=15)
-        print(f"   Init GET / status: {init_resp.status_code}, cookies: {dict(session.cookies)}")
-        print(f"   Init Set-Cookie: {init_resp.headers.get('Set-Cookie', 'brak')}")
+        session.get(BASE_URL, timeout=15)
 
         # Teraz GET /connect z hashem
         resp = session.get(
@@ -246,12 +239,6 @@ def login(session: requests.Session) -> bool:
             timeout=30,
             allow_redirects=True,
         )
-        print(f"   Connect status: {resp.status_code}, cookies: {dict(session.cookies)}")
-        print(f"   Connect Set-Cookie: {resp.headers.get('Set-Cookie', 'brak')}")
-        print(f"   Connect all headers: {dict(resp.headers)}")
-        print(f"   Connect history (redirects): {[r.status_code for r in resp.history]}")
-        for i, r in enumerate(resp.history):
-            print(f"   Redirect {i}: {r.status_code} → {r.headers.get('Location', '?')}, Set-Cookie: {r.headers.get('Set-Cookie', 'brak')}")
 
         if not dict(session.cookies).get("PHPSESSID"):
             print("   ⚠️  /connect nie ustawiło PHPSESSID")
@@ -280,8 +267,6 @@ def login(session: requests.Session) -> bool:
             timeout=30,
             allow_redirects=True,
         )
-        print(f"   Login SSO status: {resp.status_code}, resp: {resp.text[:150]}")
-
         # Przywróć oryginalne headers sesji
         session.headers.clear()
         session.headers.update(saved_headers)
@@ -427,8 +412,6 @@ def get_user_team_slug(session: requests.Session) -> str:
             },
             timeout=15,
         )
-        print(f"   DEBUG ranking-list: HTTP {resp.status_code}, "
-              f"CT: {resp.headers.get('Content-Type','?')[:50]}")
         if resp.status_code == 200:
             data = resp.json()
             for team in data.get("data", []):
@@ -562,20 +545,8 @@ def get_player_ids_from_transfers(session: requests.Session, slug: str) -> list[
                             "team": p.get("team", ""),
                             "status": p.get("status", ""),
                         })
-                if not players:
-                    print(f"   DEBUG JSON keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
-                    print(f"   DEBUG JSON preview: {str(data)[:300]}")
             if not players:
                 players = _parse_html_attrs(resp.text) or _parse_js_blocks(resp.text)
-            if not players:
-                # Debug — pokaż co faktycznie zwrócił serwer
-                preview = resp.text[:500].replace('\n', ' ')
-                print(f"   DEBUG transfer-info body: {preview}")
-                all_pushes = re.findall(r'(\$?\w+(?:\.\$?\w+)*)\.push\(\{', resp.text)
-                if all_pushes:
-                    print(f"   DEBUG push() patterns w transfer-info: {set(all_pushes)}")
-        else:
-            print(f"   DEBUG transfer-info body: {resp.text[:300]}")
     except Exception as e:
         print(f"   ⚠️  Błąd transfer-info: {e}")
 
@@ -588,17 +559,8 @@ def get_player_ids_from_transfers(session: requests.Session, slug: str) -> list[
                 cookies=cookies,
                 timeout=30,
             )
-            print(f"   user-team/view HTTP {resp.status_code}, "
-                  f"Content-Type: {resp.headers.get('Content-Type', '?')[:60]}")
             if resp.status_code == 200:
                 players = _parse_html_attrs(resp.text) or _parse_js_blocks(resp.text)
-                # DEBUG: pokaż jakie wzorce push() są obecne
-                if not players:
-                    all_pushes = re.findall(r'(\$?\w+(?:\.\$?\w+)*)\.push\(\{', resp.text)
-                    if all_pushes:
-                        print(f"   DEBUG push() patterns: {set(all_pushes)}")
-                    else:
-                        print(f"   DEBUG: brak push() patterns, długość HTML: {len(resp.text)}")
         except Exception as e:
             print(f"   ⚠️  Błąd user-team/view: {e}")
 
@@ -1072,12 +1034,6 @@ def scrape_stats_page(session: requests.Session) -> list[dict]:
                 cookies=cookies,
                 timeout=30,
             )
-            if pos == 1:  # DEBUG: raz na pierwszej pozycji
-                print(f"   DEBUG /stats?pos={pos}: HTTP {resp.status_code}, "
-                      f"CT: {resp.headers.get('Content-Type','?')[:50]}, "
-                      f"len: {len(resp.text)}")
-                preview = resp.text[:400].replace('\n', ' ')
-                print(f"   DEBUG /stats HTML: {preview}")
             if resp.status_code == 200:
                 soup = BeautifulSoup(resp.text, "lxml")
                 players = soup.select("[data-player-id]")
