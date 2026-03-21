@@ -4090,6 +4090,68 @@ def main():
         filename=dashboard_file,
     )
 
+    # ============================================================
+    # DISCORD NOTIFICATIONS
+    # Wysyłamy powiadomienia PRZED kolejką (pre-round) i PO kolejce (post-round).
+    # Logika timingowa jest w discord_notify.py — tutaj tylko sprawdzamy warunki
+    # i przekazujemy odpowiednie dane.
+    # Jeśli DISCORD_WEBHOOK_URL nie jest ustawiony → pomijamy bez błędu.
+    # ============================================================
+    from discord_notify import (
+        send_pre_round,
+        send_post_round,
+        should_send_pre_round,
+        should_send_post_round,
+    )
+
+    webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
+    if webhook_url:
+        # Numer następnej (jeszcze nierozgranej) kolejki — z danych FDR
+        discord_next_gw = fdr_data["gameweeks"][0] if fdr_data.get("gameweeks") else None
+
+        # PRE-ROUND: wyślij dzień przed pierwszym meczem kolejki
+        if (
+            discord_next_gw
+            and predictions_data
+            and should_send_pre_round(discord_next_gw, fixtures_data)
+        ):
+            send_pre_round(
+                predictions=predictions_data,
+                players_data=players,
+                webhook_url=webhook_url,
+                round_number=discord_next_gw,
+                fixtures=fixtures_data,
+            )
+
+        # POST-ROUND: wyślij dzień po ostatnim meczu kolejki.
+        # Wzbogacamy league_teams o display_name z league_teams_detail jeśli dostępne,
+        # żeby Discord pokazywał ładne nazwy drużyn zamiast slugów.
+        if current_round and should_send_post_round(current_round, fixtures_data):
+            # Buduj mapę slug → display_name z wzbogaconych danych (może być puste)
+            display_name_map = {
+                t.get("slug", ""): t.get("display_name", "")
+                for t in league_teams_detail
+                if t.get("display_name")
+            }
+            # Dodaj display_name do danych ligi (kopia, żeby nie modyfikować oryginału)
+            discord_league = []
+            for t in (league_teams or []):
+                entry = dict(t)
+                slug = entry.get("slug", "")
+                if slug in display_name_map:
+                    entry["display_name"] = display_name_map[slug]
+                discord_league.append(entry)
+
+            send_post_round(
+                league_data=discord_league,
+                players_data=players,
+                accuracy_data=accuracy_data,
+                webhook_url=webhook_url,
+                round_number=current_round,
+            )
+    else:
+        print("  ℹ️  DISCORD_WEBHOOK_URL nie ustawiony — pomijam powiadomienia Discord")
+
     print(f"\n{'='*50}")
     print(f"✅ Gotowe! Pliki zapisane w katalogu: {OUTPUT_DIR}/")
     print(f"   - {os.path.basename(json_file)} (pełne dane JSON)")
