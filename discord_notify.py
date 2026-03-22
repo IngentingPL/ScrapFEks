@@ -339,7 +339,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
         },
     }
 
-    success = _send_embed(webhook_url, embed, content="@FantasyEkstraklasa")
+    success = _send_embed(webhook_url, embed, content="<@&1262764454404296759>")
 
     if success:
         # Zaktualizuj log — ta kolejka pre-round jest już wysłana
@@ -520,7 +520,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
         },
     }
 
-    success = _send_embed(webhook_url, embed, content="@FantasyEkstraklasa")
+    success = _send_embed(webhook_url, embed, content="<@&1262764454404296759>")
 
     if success:
         # Zaktualizuj log — ta kolejka post-round jest już wysłana
