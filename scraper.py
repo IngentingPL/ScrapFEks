@@ -4134,16 +4134,25 @@ def main():
             # Sortuj po total_pts malejąco
             league_teams_detail.sort(key=lambda x: x["total_pts"], reverse=True)
 
-            # Wczytaj poprzedni ranking
-            prev_ranking = {}
+            # Wczytaj ranking per-kolejka (format: {"round_N": {team: pos}})
+            rankings_by_round = {}
             if os.path.exists(hockey_prev_file):
                 try:
                     with open(hockey_prev_file, "r", encoding="utf-8") as f:
-                        prev_ranking = json.load(f)
+                        loaded = json.load(f)
+                    # Migracja ze starego formatu {team: pos} do nowego {round_N: {team: pos}}
+                    if loaded and not any(k.startswith("round_") for k in loaded):
+                        pass  # stary format — ignorujemy, zaczynamy od nowa
+                    else:
+                        rankings_by_round = loaded
                 except Exception:
                     pass
 
-            # Oblicz rank_change vs. poprzednie uruchomienie
+            # Pobierz ranking poprzedniej kolejki do porównania
+            prev_round_key = f"round_{current_round - 1}" if current_round and current_round > 1 else None
+            prev_ranking = rankings_by_round.get(prev_round_key, {}) if prev_round_key else {}
+
+            # Oblicz rank_change vs. poprzednia kolejka
             current_ranking = {}
             for i, t in enumerate(league_teams_detail):
                 combined_pos = i + 1
@@ -4153,9 +4162,11 @@ def main():
                 t["rank_change"] = (prev_pos - combined_pos) if prev_pos is not None else 0
                 t["hockey_pos"] = combined_pos
 
-            # Zapisz aktualny ranking do pliku
+            # Zapisz aktualny ranking dla bieżącej kolejki
+            if current_round:
+                rankings_by_round[f"round_{current_round}"] = current_ranking
             with open(hockey_prev_file, "w", encoding="utf-8") as f:
-                json.dump(current_ranking, f, ensure_ascii=False, indent=2)
+                json.dump(rankings_by_round, f, ensure_ascii=False, indent=2)
 
             print(f"   ✅ Przygotowano {len(league_teams_detail)} drużyn do klasyfikacji łącznej")
         except Exception as e:
@@ -4201,14 +4212,22 @@ def main():
 
             duets_data.sort(key=lambda x: x["total_pts"], reverse=True)
 
-            # Wczytaj poprzedni ranking duetów
-            duets_prev_ranking = {}
+            # Wczytaj ranking duetów per-kolejka (format: {"round_N": {duet: pos}})
+            duets_rankings_by_round = {}
             if os.path.exists(duets_prev_file):
                 try:
                     with open(duets_prev_file, "r", encoding="utf-8") as f:
-                        duets_prev_ranking = json.load(f)
+                        loaded_duets = json.load(f)
+                    # Migracja ze starego formatu {duet: pos} do nowego {round_N: {duet: pos}}
+                    if loaded_duets and not any(k.startswith("round_") for k in loaded_duets):
+                        pass  # stary format — ignorujemy
+                    else:
+                        duets_rankings_by_round = loaded_duets
                 except Exception:
                     pass
+
+            duets_prev_round_key = f"round_{current_round - 1}" if current_round and current_round > 1 else None
+            duets_prev_ranking = duets_rankings_by_round.get(duets_prev_round_key, {}) if duets_prev_round_key else {}
 
             current_duets_ranking = {}
             for i, d in enumerate(duets_data):
@@ -4218,8 +4237,10 @@ def main():
                 prev_pos = duets_prev_ranking.get(key)
                 d["rank_change"] = (prev_pos - pos) if prev_pos is not None else 0
 
+            if current_round:
+                duets_rankings_by_round[f"round_{current_round}"] = current_duets_ranking
             with open(duets_prev_file, "w", encoding="utf-8") as f:
-                json.dump(current_duets_ranking, f, ensure_ascii=False, indent=2)
+                json.dump(duets_rankings_by_round, f, ensure_ascii=False, indent=2)
 
             print(f"   ✅ Przygotowano {len(duets_data)} duetów")
         except Exception as e:
