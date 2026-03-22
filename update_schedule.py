@@ -91,6 +91,8 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
     Generuje cron triggery:
     1. 30 min po pierwszym meczu każdej kolejki (szybkie odświeżenie)
     2. 3h po każdym meczu (pełne odświeżenie)
+    3. Dzień przed pierwszym meczem kolejki o 20:00 (Discord pre-round)
+    4. Dzień po ostatnim meczu kolejki o 10:00 (Discord post-round)
 
     Deduplikuje identyczne czasy triggerów.
     Zwraca: [(label, match_local, trigger_utc, cron_str, round), ...]
@@ -100,13 +102,16 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
 
     sorted_matches = sorted(matches, key=lambda x: x["datetime"])
 
-    # 1. Pierwszy mecz per kolejka + 30 min
+    # Pierwszy i ostatni mecz per kolejka
     first_per_round = {}
+    last_per_round = {}
     for m in sorted_matches:
         rnd = m["round"]
         if rnd not in first_per_round:
             first_per_round[rnd] = m
+        last_per_round[rnd] = m  # nadpisujemy — ostatni wygrywa
 
+    # 1. Pierwszy mecz per kolejka + 30 min (szybkie odświeżenie po starcie kolejki)
     for rnd, m in sorted(first_per_round.items()):
         trigger_local = m["datetime"] + timedelta(minutes=30)
         trigger_utc = trigger_local.astimezone(TZ_UTC)
@@ -119,7 +124,7 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
             )
             crons.append(("start", m["datetime"], trigger_utc, cron, rnd))
 
-    # 2. Każdy mecz + 3h
+    # 2. Każdy mecz + 3h (pełne odświeżenie po meczu)
     for m in sorted_matches:
         trigger_local = m["datetime"] + timedelta(hours=TRIGGER_DELAY_HOURS)
         trigger_utc = trigger_local.astimezone(TZ_UTC)
@@ -132,6 +137,44 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
             f"{trigger_utc.day} {trigger_utc.month} *"
         )
         crons.append(("post", m["datetime"], trigger_utc, cron, m["round"]))
+
+    # 3. Dzień przed pierwszym meczem o 20:00 (Discord pre-round notification)
+    # Scraper sprawdzi warunek timingowy i wyśle prognozę na Discord
+    for rnd, m in sorted(first_per_round.items()):
+        first_day = m["datetime"].date()
+        notify_day = first_day - timedelta(days=1)
+        notify_local = datetime(
+            notify_day.year, notify_day.month, notify_day.day, 20, 0,
+            tzinfo=TZ_WARSAW,
+        )
+        trigger_utc = notify_local.astimezone(TZ_UTC)
+        key = (trigger_utc.month, trigger_utc.day, trigger_utc.hour, trigger_utc.minute)
+        if key not in seen:
+            seen.add(key)
+            cron = (
+                f"{trigger_utc.minute} {trigger_utc.hour} "
+                f"{trigger_utc.day} {trigger_utc.month} *"
+            )
+            crons.append(("discord_pre", notify_local, trigger_utc, cron, rnd))
+
+    # 4. Dzień po ostatnim meczu o 10:00 (Discord post-round notification)
+    # Scraper sprawdzi warunek timingowy i wyśle podsumowanie kolejki na Discord
+    for rnd, m in sorted(last_per_round.items()):
+        last_day = m["datetime"].date()
+        notify_day = last_day + timedelta(days=1)
+        notify_local = datetime(
+            notify_day.year, notify_day.month, notify_day.day, 10, 0,
+            tzinfo=TZ_WARSAW,
+        )
+        trigger_utc = notify_local.astimezone(TZ_UTC)
+        key = (trigger_utc.month, trigger_utc.day, trigger_utc.hour, trigger_utc.minute)
+        if key not in seen:
+            seen.add(key)
+            cron = (
+                f"{trigger_utc.minute} {trigger_utc.hour} "
+                f"{trigger_utc.day} {trigger_utc.month} *"
+            )
+            crons.append(("discord_post", notify_local, trigger_utc, cron, rnd))
 
     # Sortuj chronologicznie
     crons.sort(key=lambda x: x[2])
@@ -155,6 +198,16 @@ def update_workflow(workflow_path: str, crons: list[tuple]):
                     f"K{rnd} START {match_local.strftime('%d.%m')} "
                     f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
                     f"+30min {trigger_local.strftime('%H:%M')} {tz_name}"
+                )
+            elif label == "discord_pre":
+                comment = (
+                    f"K{rnd} DISCORD PRE {match_local.strftime('%d.%m')} "
+                    f"20:00 {tz_name} — prognoza przed kolejką"
+                )
+            elif label == "discord_post":
+                comment = (
+                    f"K{rnd} DISCORD POST {match_local.strftime('%d.%m')} "
+                    f"10:00 {tz_name} — podsumowanie po kolejce"
                 )
             else:
                 trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
@@ -204,15 +257,32 @@ def main():
         tz_name = match_local.strftime("%Z")
         if label == "start":
             trigger_local = match_local + timedelta(minutes=30)
-            tag = "START"
+            tag = "START       "
+            print(
+                f"   {tag} K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
+                f" → {trigger_local.strftime('%H:%M')} {tz_name}"
+                f" ({trigger_utc.strftime('%H:%M')} UTC)"
+            )
+        elif label == "discord_pre":
+            tag = "📣 DISC PRE  "
+            print(
+                f"   {tag} K{rnd} {match_local.strftime('%d.%m')} 20:00 {tz_name}"
+                f" ({trigger_utc.strftime('%H:%M')} UTC)"
+            )
+        elif label == "discord_post":
+            tag = "📣 DISC POST "
+            print(
+                f"   {tag} K{rnd} {match_local.strftime('%d.%m')} 10:00 {tz_name}"
+                f" ({trigger_utc.strftime('%H:%M')} UTC)"
+            )
         else:
             trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
-            tag = "     "
-        print(
-            f"   {tag} K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
-            f" → {trigger_local.strftime('%H:%M')} {tz_name}"
-            f" ({trigger_utc.strftime('%H:%M')} UTC)"
-        )
+            tag = "            "
+            print(
+                f"   {tag} K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
+                f" → {trigger_local.strftime('%H:%M')} {tz_name}"
+                f" ({trigger_utc.strftime('%H:%M')} UTC)"
+            )
 
     print(f"\n📝 Aktualizacja {WORKFLOW_FILE}...")
     update_workflow(WORKFLOW_FILE, crons)

@@ -77,17 +77,24 @@ def _save_sent_log(log):
 # FUNKCJE POMOCNICZE — wysyłanie requestów do Discord
 # ============================================================
 
-def _send_embed(webhook_url, embed):
+def _send_embed(webhook_url, embed, content=None):
     """
     Wysyła jeden Discord embed przez webhook URL.
 
-    Discord API oczekuje JSON: {"embeds": [{ ... dane embeda ... }]}
+    Discord API oczekuje JSON: {"embeds": [{ ... }], "content": "..."}
+    - "embeds" to lista kart z tytułem, kolorem i sekcjami
+    - "content" to zwykły tekst pojawiający się NAD embedem (np. wzmianki @)
+
     Zwraca True jeśli wysyłka się powiodła, False w przypadku błędu.
 
     📖 LEKCJA: urllib.request.Request pozwala zbudować dowolny HTTP request.
     Ustawiamy headers (nagłówki) żeby Discord wiedział, że wysyłamy JSON.
     """
-    payload = json.dumps({"embeds": [embed]}).encode("utf-8")
+    data = {"embeds": [embed]}
+    if content:
+        # content pojawia się nad embedem — tu wstawiamy @wzmianki
+        data["content"] = content
+    payload = json.dumps(data).encode("utf-8")
 
     req = urllib.request.Request(
         webhook_url,
@@ -332,7 +339,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
         },
     }
 
-    success = _send_embed(webhook_url, embed)
+    success = _send_embed(webhook_url, embed, content="@FantasyEkstraklasa")
 
     if success:
         # Zaktualizuj log — ta kolejka pre-round jest już wysłana
@@ -513,7 +520,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
         },
     }
 
-    success = _send_embed(webhook_url, embed)
+    success = _send_embed(webhook_url, embed, content="@FantasyEkstraklasa")
 
     if success:
         # Zaktualizuj log — ta kolejka post-round jest już wysłana
