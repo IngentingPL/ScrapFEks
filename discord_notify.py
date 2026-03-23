@@ -77,20 +77,30 @@ def _save_sent_log(log):
 # FUNKCJE POMOCNICZE — wysyłanie requestów do Discord
 # ============================================================
 
-def _send_embed(webhook_url, embed, content=None):
+def _send_embed(webhook_url, embed, content=None, embeds=None):
     """
-    Wysyła jeden Discord embed przez webhook URL.
+    Wysyła Discord embed(y) przez webhook URL.
 
     Discord API oczekuje JSON: {"embeds": [{ ... }], "content": "..."}
     - "embeds" to lista kart z tytułem, kolorem i sekcjami
     - "content" to zwykły tekst pojawiający się NAD embedem (np. wzmianki @)
+
+    Można podać 'embed' (jeden embed) albo 'embeds' (lista embedów).
+    Jeśli podano 'embeds', parametr 'embed' jest ignorowany.
+
+    📖 LEKCJA: Discord pozwala wysłać do 10 embedów w jednym requeście.
+    Dzięki temu możemy podzielić długą wiadomość na kilka kart
+    i wysłać je razem — wyświetlą się jako jedna wiadomość.
 
     Zwraca True jeśli wysyłka się powiodła, False w przypadku błędu.
 
     📖 LEKCJA: urllib.request.Request pozwala zbudować dowolny HTTP request.
     Ustawiamy headers (nagłówki) żeby Discord wiedział, że wysyłamy JSON.
     """
-    data = {"embeds": [embed]}
+    if embeds:
+        data = {"embeds": embeds}
+    else:
+        data = {"embeds": [embed]}
     if content:
         # content pojawia się nad embedem — tu wstawiamy @wzmianki
         data["content"] = content
@@ -329,28 +339,197 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
 
     top5_text = "\n".join(top5_lines)
 
-    # --- BUDUJ EMBED ---
-    embed = {
+    # --- SEKCJA 3: TOP PER POZYCJA ---
+    # 📖 LEKCJA: Grupujemy prognozy po pozycji i wybieramy najlepszego z każdej.
+    # dict.setdefault() tworzy klucz z wartością domyślną, jeśli go jeszcze nie ma.
+    pos_emoji = {"BR": "🧤", "OBR": "🛡️", "POM": "🎯", "NAP": "⚡"}
+    pos_order = ["BR", "OBR", "POM", "NAP"]  # Kolejność wyświetlania
+
+    best_per_pos = {}
+    for pred in predictions:
+        pos = pred.get("position", "")
+        pts = pred.get("predicted_points") or 0
+        if pos in pos_order and pts > 0:
+            if pos not in best_per_pos or pts > (best_per_pos[pos].get("predicted_points") or 0):
+                best_per_pos[pos] = pred
+
+    top_pos_text = ""
+    if best_per_pos:
+        top_pos_lines = []
+        for pos in pos_order:
+            if pos not in best_per_pos:
+                continue
+            p = best_per_pos[pos]
+            emoji = pos_emoji.get(pos, "")
+            name = p.get("name", "?").split()[-1]  # Tylko nazwisko
+            pts = p.get("predicted_points") or 0
+            opp = p.get("opponent_short") or p.get("next_opponent", "?")
+            home_str = "D" if p.get("is_home", True) else "W"
+            top_pos_lines.append(f"{emoji} {pos}:  {name} — {pts:.1f} pkt | vs {opp} ({home_str})")
+        top_pos_text = "\n".join(top_pos_lines)
+
+    # --- SEKCJA 4: DIFFERENTIAL PICK ---
+    # 📖 LEKCJA: "Differential" to gracz, którego mało kto ma w składzie (niski ownership),
+    # ale ma wysoką prognozę. Daje przewagę nad rywalami, bo punktuje "tylko u Ciebie".
+    diff_text = ""
+    for pred in predictions:
+        pts = pred.get("predicted_points") or 0
+        own = _parse_ownership_pct(pred.get("popularity_pct", "100%"))
+        if pts > 6 and own < 10:
+            pos = pred.get("position", "")
+            team = pred.get("team", "")
+            opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
+            home_str = "D" if pred.get("is_home", True) else "W"
+            diff_text = (
+                f"💎 **{pred.get('name', '?')}** ({pos}, {team}) — prognoza **{pts:.1f} pkt**\n"
+                f"   Ownership: {own:.0f}% · vs {opp} ({home_str})"
+            )
+            break  # Bierzemy pierwszego (najwyższa prognoza, bo lista jest posortowana)
+
+    # --- SEKCJA 5: UNIKAJ ---
+    # 📖 LEKCJA: Gracze z wysokim ownership i niską prognozą to "pułapki" —
+    # wielu graczy ich ma, ale model prognozuje im mało punktów.
+    # Jeśli ich unikniesz, a oni zawiodą — zyskujesz przewagę nad rywalami.
+    avoid_candidates = []
+    for pred in predictions:
+        own = _parse_ownership_pct(pred.get("popularity_pct", "0%"))
+        pts = pred.get("predicted_points") or 0
+        if own > 30 and pts > 0:
+            avoid_candidates.append(pred)
+
+    # Sortuj od najniższej prognozy — najgorsi na początku
+    avoid_candidates.sort(key=lambda x: x.get("predicted_points") or 0)
+    avoid_text = ""
+    if len(avoid_candidates) >= 2:
+        avoid_lines = []
+        for pred in avoid_candidates[:2]:
+            pos = pred.get("position", "")
+            name = pred.get("name", "?").split()[-1]  # Nazwisko
+            pts = pred.get("predicted_points") or 0
+            own = _parse_ownership_pct(pred.get("popularity_pct", "0%"))
+            opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
+            home_str = "D" if pred.get("is_home", True) else "W"
+            avoid_lines.append(
+                f"⚠️ {name} ({pos}) — {pts:.1f} pkt | Ownership: {own:.0f}% | vs {opp} ({home_str})"
+            )
+        avoid_text = "\n".join(avoid_lines)
+
+    # --- SEKCJA 6: MAPA FDR KOLEJKI ---
+    # 📖 LEKCJA: FDR (Fixture Difficulty Rating) mówi jak trudny jest mecz.
+    # Szukamy 2 najłatwiejszych i 2 najtrudniejszych meczów dla drużyn grających u siebie.
+    # Dane bierzemy z fixtures (terminarz) i prognoz (FDR).
+    fdr_map_text = ""
+    round_matches = fixtures.get("matches", {}).get(str(round_number), [])
+    if round_matches:
+        # Zbierz FDR per mecz — sumujemy atk+def rywala jako trudność
+        # 📖 LEKCJA: Niższy łączny FDR rywala = łatwiejszy mecz dla gospodarza
+        match_fdr = []
+        for m in round_matches:
+            home_team = m.get("home", "")
+            away_team = m.get("away", "")
+            # Szukaj FDR rywala (away team) w prognozach graczy z home_team
+            fdr_sum = None
+            for pred in predictions:
+                if pred.get("team") == home_team and pred.get("is_home"):
+                    atk = pred.get("fdr_atk_opponent") or pred.get("fdr_atk_team") or 3
+                    defn = pred.get("fdr_def_opponent") or pred.get("fdr_def_team") or 3
+                    fdr_sum = atk + defn
+                    break
+            if fdr_sum is not None:
+                home_str = "D" if True else "W"
+                match_fdr.append({
+                    "label": f"{home_team} vs {away_team} ({home_str})",
+                    "fdr": fdr_sum,
+                })
+
+        if len(match_fdr) >= 4:
+            match_fdr.sort(key=lambda x: x["fdr"])
+            easy = [m["label"] for m in match_fdr[:2]]
+            hard = [m["label"] for m in match_fdr[-2:]]
+            fdr_map_text = (
+                f"🟢 Łatwe:  {' · '.join(easy)}\n"
+                f"🔴 Trudne: {' · '.join(hard)}"
+            )
+
+    # --- SEKCJA 7: FORMA DRUŻYN ---
+    # 📖 LEKCJA: "Forma" to seria ostatnich wyników drużyny (W=wygrana, D=remis, L=przegrana).
+    # Nie mamy bezpośrednio tych danych, ale możemy je odtworzyć z danych graczy.
+    # Patrzymy na punkty zdobyte przez drużynę (średnia punktów graczy) per kolejka —
+    # ale to nie daje W/D/L. Pomijamy sekcję jeśli nie ma pewnych danych.
+    form_text = ""
+    # Sekcja formy wymaga danych o wynikach meczów, których nie ma w dostępnych danych.
+    # Zgodnie ze specyfikacją: "Jeśli dane do sekcji nie są dostępne → pomiń sekcję"
+
+    # --- BUDUJ EMBEDY ---
+    # 📖 LEKCJA: Discord embed ma limit 6000 znaków. Jeśli dodamy dużo sekcji,
+    # możemy przekroczyć limit. Rozwiązanie: dzielimy na dwa embedy w jednym requeście.
+    # Discord wyświetli oba jako jedną wiadomość.
+
+    # Zbierz wszystkie sekcje (fields) — podstawowe + nowe
+    fields_part1 = [
+        {"name": "👑 Captain Pick", "value": captain_text, "inline": False},
+        {"name": "🔮 Top 5 Prognoz", "value": top5_text, "inline": False},
+    ]
+    if top_pos_text:
+        fields_part1.append({"name": "🏅 Top per pozycja", "value": top_pos_text, "inline": False})
+    if diff_text:
+        fields_part1.append({"name": "💎 Differential pick", "value": diff_text, "inline": False})
+
+    fields_part2 = []
+    if avoid_text:
+        fields_part2.append({"name": "⚠️ Unikaj", "value": avoid_text, "inline": False})
+    if fdr_map_text:
+        fields_part2.append({"name": "📅 Mapa FDR kolejki", "value": fdr_map_text, "inline": False})
+    if form_text:
+        fields_part2.append({"name": "🔥 Forma drużyn", "value": form_text, "inline": False})
+
+    all_fields = fields_part1 + fields_part2
+
+    # Zmierz łączną długość tekstu w embedzie
+    # 📖 LEKCJA: Discord liczy znaki w: title + description + field.name + field.value
+    # + footer.text + author.name. Limit to 6000 znaków na embed.
+    def _embed_char_count(emb):
+        count = len(emb.get("title", ""))
+        count += len(emb.get("description", ""))
+        for f in emb.get("fields", []):
+            count += len(f.get("name", "")) + len(f.get("value", ""))
+        count += len(emb.get("footer", {}).get("text", ""))
+        return count
+
+    footer_obj = {"text": f"🔗 {DASHBOARD_URL} · {timestamp}"}
+
+    single_embed = {
         "title": f"🔮 ScrapFEks — Kolejka {round_number} Prognoza",
-        "color": 0x00BFFF,  # Cyan — odróżnia pre-round od post-round
-        "fields": [
-            {
-                "name": "👑 Captain Pick",
-                "value": captain_text,
-                "inline": False,
-            },
-            {
-                "name": "🔮 Top 5 Prognoz",
-                "value": top5_text,
-                "inline": False,
-            },
-        ],
-        "footer": {
-            "text": f"🔗 {DASHBOARD_URL} · {timestamp}",
-        },
+        "color": 0x00BFFF,
+        "fields": all_fields,
+        "footer": footer_obj,
     }
 
-    success = _send_embed(webhook_url, embed, content="<@&1262764454404296759>")
+    if _embed_char_count(single_embed) <= 5500:
+        # Mieści się w jednym embedzie — wysyłaj normalnie
+        success = _send_embed(webhook_url, single_embed, content="<@&1262764454404296759>")
+    else:
+        # 📖 LEKCJA: Podział na dwa embedy — Discord wyświetli je jako jedną wiadomość.
+        # Embed 1: Captain Pick + Top 5 + Top per pozycja + Differential
+        # Embed 2: Unikaj + Mapa FDR + Forma
+        embed1 = {
+            "title": f"🔮 ScrapFEks — Kolejka {round_number} Prognoza",
+            "color": 0x00BFFF,
+            "fields": fields_part1,
+        }
+        embed2 = {
+            "color": 0x00BFFF,
+            "fields": fields_part2,
+            "footer": footer_obj,
+        }
+        # Wyślij oba embedy w jednym requeście
+        embeds_list = [embed1]
+        if fields_part2:
+            embeds_list.append(embed2)
+        else:
+            # Brak sekcji w part2 — dodaj footer do embed1
+            embed1["footer"] = footer_obj
+        success = _send_embed(webhook_url, embed=None, content="<@&1262764454404296759>", embeds=embeds_list)
 
     if success:
         # Zaktualizuj log — ta kolejka pre-round jest już wysłana
