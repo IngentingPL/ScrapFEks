@@ -103,13 +103,21 @@ def _send_embed(webhook_url, embed, content=None):
         method="POST",
     )
 
+    # DEBUG: pokaż pierwsze/ostatnie znaki URL żeby wykryć literówki bez ujawniania tokenu
+    url_preview = webhook_url[:50] + "..." + webhook_url[-10:] if len(webhook_url) > 60 else webhook_url
+    print(f"  🔍 DEBUG webhook URL: {url_preview} (długość: {len(webhook_url)})")
+    print(f"  🔍 DEBUG payload: {len(payload)} bajtów")
+
     try:
         with urllib.request.urlopen(req, timeout=WEBHOOK_TIMEOUT) as resp:
             # Discord zwraca 204 No Content przy sukcesie
+            print(f"  🔍 DEBUG odpowiedź: HTTP {resp.status}")
             return resp.status in (200, 204)
     except urllib.error.HTTPError as e:
         # Błąd HTTP np. 401 (zły webhook), 429 (rate limit)
+        body = e.read().decode("utf-8", errors="replace")
         print(f"  ⚠️  Discord webhook HTTP błąd: {e.code} {e.reason}")
+        print(f"  🔍 DEBUG odpowiedź Discord: {body}")
         return False
     except urllib.error.URLError as e:
         # Błąd sieci — brak połączenia, timeout
