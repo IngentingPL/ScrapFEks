@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup
 import json
 import csv
 import time
+import threading
 import re
 import os
 import sys
@@ -617,31 +618,43 @@ def get_player_ids_from_ranking_squads(
         return []
     print(f"   Pobrano {len(slugs)} drużyn z rankingu")
 
-    # Scrapuj składy i zbieraj unikalne player_id
+    # Scrapuj składy równolegle i zbieraj unikalne player_id
     seen: set[str] = set()
     players: list[dict] = []
+    lock = threading.Lock()
+    completed_count = 0
 
-    for i, slug in enumerate(slugs):
-        try:
-            squad_data = scrape_team_squad(session, slug)
-            for p in squad_data.get("players", []):
-                pid = str(p.get("player_id") or "")
-                if pid and pid not in seen:
-                    seen.add(pid)
-                    players.append({
-                        "player_id": pid,
-                        "name": p.get("name", ""),
-                        "price": str(p.get("price", "")),
-                        "position_id": p.get("position_id", ""),
-                        "team": "",
-                        "status": p.get("status", ""),
-                    })
-            if (i + 1) % 50 == 0:
-                print(f"   Postęp: {i + 1}/{len(slugs)} drużyn, "
-                      f"{len(players)} unikalnych zawodników...")
-            time.sleep(REQUEST_DELAY)
-        except Exception as e:
-            print(f"   ⚠️  Błąd scraping {slug}: {e}")
+    def _fetch_squad(slug: str) -> list[dict]:
+        squad_data = scrape_team_squad(session, slug)
+        time.sleep(REQUEST_DELAY)
+        return squad_data.get("players", [])
+
+    with ThreadPoolExecutor(max_workers=WORKERS) as executor:
+        futures = {executor.submit(_fetch_squad, slug): slug for slug in slugs}
+        for future in as_completed(futures):
+            slug = futures[future]
+            try:
+                squad_players = future.result()
+                with lock:
+                    completed_count += 1
+                    done = completed_count
+                    for p in squad_players:
+                        pid = str(p.get("player_id") or "")
+                        if pid and pid not in seen:
+                            seen.add(pid)
+                            players.append({
+                                "player_id": pid,
+                                "name": p.get("name", ""),
+                                "price": str(p.get("price", "")),
+                                "position_id": p.get("position_id", ""),
+                                "team": "",
+                                "status": p.get("status", ""),
+                            })
+                if done % 50 == 0:
+                    print(f"   Postęp: {done}/{len(slugs)} drużyn, "
+                          f"{len(players)} unikalnych zawodników...")
+            except Exception as e:
+                print(f"   ⚠️  Błąd scraping {slug}: {e}")
 
     print(f"   ✅ Znaleziono {len(players)} unikalnych zawodników "
           f"z {len(slugs)} drużyn rankingu")
@@ -784,10 +797,13 @@ def parse_player_detail(html_content: str) -> dict:
 def fetch_player_detail(session: requests.Session, player_id: int) -> Optional[dict]:
     """
     Pobiera szczegóły zawodnika z endpointu /stats-player/{id}.
+    Thread-safe — używa requests.get() z cookies z sesji.
     """
     try:
-        resp = session.get(
+        resp = requests.get(
             f"{BASE_URL}/stats-player/{player_id}",
+            headers=HEADERS,
+            cookies=dict(session.cookies),
             timeout=15,
         )
         if resp.status_code != 200:
@@ -809,26 +825,37 @@ def fetch_player_detail(session: requests.Session, player_id: int) -> Optional[d
 
 
 def fetch_all_players(session: requests.Session, player_ids: list[int]) -> list[dict]:
-    """Pobiera dane wszystkich zawodników."""
-    players = []
+    """Pobiera dane wszystkich zawodników równolegle (ThreadPoolExecutor)."""
     total = len(player_ids)
+    print(f"\n📊 Pobieram szczegóły {total} zawodników ({WORKERS} workerów)...")
 
-    print(f"\n📊 Pobieram szczegóły {total} zawodników...")
-    for i, pid in enumerate(player_ids, 1):
+    results: list[Optional[dict]] = [None] * total
+    completed_count = 0
+    lock = threading.Lock()
+
+    def _fetch(idx: int, pid: int) -> tuple[int, Optional[dict]]:
         player = fetch_player_detail(session, pid)
-        if player and player.get("name"):
-            players.append(player)
-            name = player.get("name", "?")
-            team = player.get("team", "?")
-            pts = player.get("total_points", "?")
-            pop = player.get("popularity_pct", "?")
-            print(f"   [{i}/{total}] ✅ {name} ({team}) - {pts} pkt, popularność: {pop}")
-        else:
-            if i % 100 == 0:
-                print(f"   [{i}/{total}] ... skanowanie")
-
         time.sleep(REQUEST_DELAY)
+        return idx, player
 
+    with ThreadPoolExecutor(max_workers=WORKERS) as executor:
+        futures = {executor.submit(_fetch, i, pid): i for i, pid in enumerate(player_ids)}
+        for future in as_completed(futures):
+            idx, player = future.result()
+            results[idx] = player
+            with lock:
+                completed_count += 1
+                done = completed_count
+            if player and player.get("name"):
+                name = player.get("name", "?")
+                team = player.get("team", "?")
+                pts = player.get("total_points", "?")
+                pop = player.get("popularity_pct", "?")
+                print(f"   [{done}/{total}] ✅ {name} ({team}) - {pts} pkt, popularność: {pop}")
+            elif done % 100 == 0:
+                print(f"   [{done}/{total}] ... skanowanie")
+
+    players = [p for p in results if p and p.get("name")]
     print(f"\n   ✅ Pobrano dane {len(players)} zawodników")
     return players
 
