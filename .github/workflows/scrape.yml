@@ -34,6 +34,7 @@ on:
 
   # AUTO-SCHEDULE-START
   schedule:
+    - cron: '0 19 12 3 *'  # K25 DISCORD PRE 12.03 20:00 CET — prognoza przed kolejką
     - cron: '30 17 13 3 *'  # K25 START 13.03 mecz 18:00 CET → +30min 18:30 CET
     - cron: '0 20 13 3 *'  # K25 13.03 mecz 18:00 CET → +3h 21:00 CET
     - cron: '30 22 13 3 *'  # K25 13.03 mecz 20:30 CET → +3h 23:30 CET
@@ -44,6 +45,8 @@ on:
     - cron: '45 16 15 3 *'  # K25 15.03 mecz 14:45 CET → +3h 17:45 CET
     - cron: '30 19 15 3 *'  # K25 15.03 mecz 17:30 CET → +3h 20:30 CET
     - cron: '0 21 16 3 *'  # K25 16.03 mecz 19:00 CET → +3h 22:00 CET
+    - cron: '0 9 17 3 *'  # K25 DISCORD POST 17.03 10:00 CET — podsumowanie po kolejce
+    - cron: '0 19 19 3 *'  # K26 DISCORD PRE 19.03 20:00 CET — prognoza przed kolejką
     - cron: '30 17 20 3 *'  # K26 START 20.03 mecz 18:00 CET → +30min 18:30 CET
     - cron: '0 20 20 3 *'  # K26 20.03 mecz 18:00 CET → +3h 21:00 CET
     - cron: '30 22 20 3 *'  # K26 20.03 mecz 20:30 CET → +3h 23:30 CET
@@ -54,6 +57,8 @@ on:
     - cron: '45 16 22 3 *'  # K26 22.03 mecz 14:45 CET → +3h 17:45 CET
     - cron: '30 19 22 3 *'  # K26 22.03 mecz 17:30 CET → +3h 20:30 CET
     - cron: '15 22 22 3 *'  # K26 22.03 mecz 20:15 CET → +3h 23:15 CET
+    - cron: '0 9 23 3 *'  # K26 DISCORD POST 23.03 10:00 CET — podsumowanie po kolejce
+    - cron: '0 18 2 4 *'  # K27 DISCORD PRE 02.04 20:00 CEST — prognoza przed kolejką
     - cron: '30 16 3 4 *'  # K27 START 03.04 mecz 18:00 CEST → +30min 18:30 CEST
     - cron: '0 19 3 4 *'  # K27 03.04 mecz 18:00 CEST → +3h 21:00 CEST
     - cron: '30 21 3 4 *'  # K27 03.04 mecz 20:30 CEST → +3h 23:30 CEST
@@ -62,6 +67,8 @@ on:
     - cron: '30 18 4 4 *'  # K27 04.04 mecz 17:30 CEST → +3h 20:30 CEST
     - cron: '15 21 4 4 *'  # K27 04.04 mecz 20:15 CEST → +3h 23:15 CEST
     - cron: '0 20 5 4 *'  # K27 05.04 mecz 19:00 CEST → +3h 22:00 CEST
+    - cron: '0 8 6 4 *'  # K27 DISCORD POST 06.04 10:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 10 4 *'  # K28 DISCORD PRE 10.04 20:00 CEST — prognoza przed kolejką
     - cron: '15 13 11 4 *'  # K28 START 11.04 mecz 14:45 CEST → +30min 15:15 CEST
     - cron: '45 15 11 4 *'  # K28 11.04 mecz 14:45 CEST → +3h 17:45 CEST
     - cron: '30 18 11 4 *'  # K28 11.04 mecz 17:30 CEST → +3h 20:30 CEST
@@ -71,6 +78,8 @@ on:
     - cron: '30 18 12 4 *'  # K28 12.04 mecz 17:30 CEST → +3h 20:30 CEST
     - cron: '15 21 12 4 *'  # K28 12.04 mecz 20:15 CEST → +3h 23:15 CEST
     - cron: '0 20 13 4 *'  # K28 13.04 mecz 19:00 CEST → +3h 22:00 CEST
+    - cron: '0 8 14 4 *'  # K28 DISCORD POST 14.04 10:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 17 4 *'  # K29 DISCORD PRE 17.04 20:00 CEST — prognoza przed kolejką
     - cron: '30 16 18 4 *'  # K29 START 18.04 mecz 18:00 CEST → +30min 18:30 CEST
     - cron: '0 19 18 4 *'  # K29 18.04 mecz 18:00 CEST → +3h 21:00 CEST
     - cron: '30 21 18 4 *'  # K29 18.04 mecz 20:30 CEST → +3h 23:30 CEST
@@ -79,6 +88,8 @@ on:
     - cron: '30 18 19 4 *'  # K29 19.04 mecz 17:30 CEST → +3h 20:30 CEST
     - cron: '15 21 19 4 *'  # K29 19.04 mecz 20:15 CEST → +3h 23:15 CEST
     - cron: '0 20 20 4 *'  # K29 20.04 mecz 19:00 CEST → +3h 22:00 CEST
+    - cron: '0 8 21 4 *'  # K29 DISCORD POST 21.04 10:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 24 4 *'  # K30 DISCORD PRE 24.04 20:00 CEST — prognoza przed kolejką
     - cron: '15 13 25 4 *'  # K30 START 25.04 mecz 14:45 CEST → +30min 15:15 CEST
     - cron: '45 15 25 4 *'  # K30 25.04 mecz 14:45 CEST → +3h 17:45 CEST
     - cron: '30 18 25 4 *'  # K30 25.04 mecz 17:30 CEST → +3h 20:30 CEST
@@ -88,6 +99,8 @@ on:
     - cron: '30 18 26 4 *'  # K30 26.04 mecz 17:30 CEST → +3h 20:30 CEST
     - cron: '15 21 26 4 *'  # K30 26.04 mecz 20:15 CEST → +3h 23:15 CEST
     - cron: '0 20 27 4 *'  # K30 27.04 mecz 19:00 CEST → +3h 22:00 CEST
+    - cron: '0 8 28 4 *'  # K30 DISCORD POST 28.04 10:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 1 5 *'  # K31 DISCORD PRE 01.05 20:00 CEST — prognoza przed kolejką
     - cron: '15 13 2 5 *'  # K31 START 02.05 mecz 14:45 CEST → +30min 15:15 CEST
     - cron: '45 15 2 5 *'  # K31 02.05 mecz 14:45 CEST → +3h 17:45 CEST
     - cron: '30 18 2 5 *'  # K31 02.05 mecz 17:30 CEST → +3h 20:30 CEST
@@ -97,6 +110,8 @@ on:
     - cron: '30 18 3 5 *'  # K31 03.05 mecz 17:30 CEST → +3h 20:30 CEST
     - cron: '15 21 3 5 *'  # K31 03.05 mecz 20:15 CEST → +3h 23:15 CEST
     - cron: '0 20 4 5 *'  # K31 04.05 mecz 19:00 CEST → +3h 22:00 CEST
+    - cron: '0 8 5 5 *'  # K31 DISCORD POST 05.05 10:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 8 5 *'  # K32 DISCORD PRE 08.05 20:00 CEST — prognoza przed kolejką
     - cron: '30 16 9 5 *'  # K32 START 09.05 mecz 18:00 CEST → +30min 18:30 CEST
     - cron: '0 19 9 5 *'  # K32 09.05 mecz 18:00 CEST → +3h 21:00 CEST
     - cron: '15 21 9 5 *'  # K32 09.05 mecz 20:15 CEST → +3h 23:15 CEST
@@ -104,6 +119,8 @@ on:
     - cron: '30 18 10 5 *'  # K32 10.05 mecz 17:30 CEST → +3h 20:30 CEST
     - cron: '15 21 10 5 *'  # K32 10.05 mecz 20:15 CEST → +3h 23:15 CEST
     - cron: '0 20 11 5 *'  # K32 11.05 mecz 19:00 CEST → +3h 22:00 CEST
+    - cron: '0 8 12 5 *'  # K32 DISCORD POST 12.05 10:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 15 5 *'  # K33 DISCORD PRE 15.05 20:00 CEST — prognoza przed kolejką
     - cron: '30 16 16 5 *'  # K33 START 16.05 mecz 18:00 CEST → +30min 18:30 CEST
     - cron: '0 19 16 5 *'  # K33 16.05 mecz 18:00 CEST → +3h 21:00 CEST
     - cron: '30 21 16 5 *'  # K33 16.05 mecz 20:30 CEST → +3h 23:30 CEST
@@ -112,8 +129,11 @@ on:
     - cron: '30 18 17 5 *'  # K33 17.05 mecz 17:30 CEST → +3h 20:30 CEST
     - cron: '15 21 17 5 *'  # K33 17.05 mecz 20:15 CEST → +3h 23:15 CEST
     - cron: '0 20 18 5 *'  # K33 18.05 mecz 19:00 CEST → +3h 22:00 CEST
+    - cron: '0 8 19 5 *'  # K33 DISCORD POST 19.05 10:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 22 5 *'  # K34 DISCORD PRE 22.05 20:00 CEST — prognoza przed kolejką
     - cron: '0 16 23 5 *'  # K34 START 23.05 mecz 17:30 CEST → +30min 18:00 CEST
     - cron: '30 18 23 5 *'  # K34 23.05 mecz 17:30 CEST → +3h 20:30 CEST
+    - cron: '0 8 24 5 *'  # K34 DISCORD POST 24.05 10:00 CEST — podsumowanie po kolejce
   # AUTO-SCHEDULE-END
 
 jobs:
