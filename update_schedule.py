@@ -2,7 +2,7 @@
 """
 Parsuje terminarz.txt i aktualizuje schedule w scrape.yml.
 
-Dla każdego dnia meczowego bierze najpóźniejszy mecz, dodaje 3 godziny
+Dla każdego dnia meczowego bierze najpóźniejszy mecz, dodaje 2.5 godziny
 i generuje cron trigger w UTC.
 
 Użycie:
@@ -30,7 +30,7 @@ MONTHS_PL = {
 TZ_WARSAW = ZoneInfo("Europe/Warsaw")
 TZ_UTC = ZoneInfo("UTC")
 
-TRIGGER_DELAY_HOURS = 3
+TRIGGER_DELAY_HOURS = 2.5
 
 
 def parse_terminarz(filepath: str) -> list[dict]:
@@ -90,7 +90,7 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
     """
     Generuje cron triggery:
     1. 30 min po pierwszym meczu każdej kolejki (szybkie odświeżenie)
-    2. 3h po każdym meczu (pełne odświeżenie)
+    2. 2.5h po każdym meczu (pełne odświeżenie)
     3. Dzień przed pierwszym meczem kolejki o 20:00 (Discord pre-round)
     4. Dzień po ostatnim meczu kolejki o 10:00 (Discord post-round)
 
@@ -124,7 +124,7 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
             )
             crons.append(("start", m["datetime"], trigger_utc, cron, rnd))
 
-    # 2. Każdy mecz + 3h (pełne odświeżenie po meczu)
+    # 2. Każdy mecz + 2.5h (pełne odświeżenie po meczu)
     for m in sorted_matches:
         trigger_local = m["datetime"] + timedelta(hours=TRIGGER_DELAY_HOURS)
         trigger_utc = trigger_local.astimezone(TZ_UTC)
@@ -214,7 +214,7 @@ def update_workflow(workflow_path: str, crons: list[tuple]):
                 comment = (
                     f"K{rnd} {match_local.strftime('%d.%m')} "
                     f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
-                    f"+3h {trigger_local.strftime('%H:%M')} {tz_name}"
+                    f"+2.5h {trigger_local.strftime('%H:%M')} {tz_name}"
                 )
             lines.append(f"    - cron: '{cron}'  # {comment}")
     lines.append(MARKER_END)

@@ -138,7 +138,7 @@ Dzięki temu możesz porównać popularność zawodnika wśród najlepszych grac
 Scraper uruchamia się automatycznie na podstawie pliku `terminarz.txt`:
 
 - **+30 minut** po pierwszym meczu każdej kolejki — szybkie odświeżenie na start
-- **+3 godziny** po każdym meczu — pełne odświeżenie po zakończeniu
+- **+2.5 godziny** po każdym meczu — pełne odświeżenie po zakończeniu
 
 ### Jak działa aktualizacja harmonogramu
 
@@ -157,9 +157,9 @@ Możesz też uruchomić **Update Schedule** ręcznie z zakładki Actions.
 | Czas (CET) | Trigger |
 |---|---|
 | 18:30 | Start kolejki (+30 min po pierwszym meczu) |
-| 21:00 | +3h po meczu 18:00 |
-| 23:15 | +3h po meczu 20:15 |
-| 23:30 | +3h po meczu 20:30 |
+| 20:30 | +2.5h po meczu 18:00 |
+| 22:45 | +2.5h po meczu 20:15 |
+| 23:00 | +2.5h po meczu 20:30 |
 
 ### Format terminarz.txt
 
