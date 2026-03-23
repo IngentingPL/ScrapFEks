@@ -4364,6 +4364,7 @@ def main():
                 accuracy_data=accuracy_data,
                 webhook_url=webhook_url,
                 round_number=current_round,
+                league_teams_detail=league_teams_detail,
             )
     else:
         print("  ℹ️  DISCORD_WEBHOOK_URL nie ustawiony — pomijam powiadomienia Discord")

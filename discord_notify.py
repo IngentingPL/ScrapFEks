@@ -367,23 +367,28 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
 # FUNKCJA B: POST-ROUND — podsumowanie wyników ligi
 # ============================================================
 
-def send_post_round(league_data, players_data, accuracy_data, webhook_url, round_number):
+def send_post_round(league_data, players_data, accuracy_data, webhook_url, round_number,
+                     league_teams_detail=None):
     """
     Wysyła Discord embed z podsumowaniem PO kolejce.
 
     Sekcje embeda (każda jest opcjonalna):
-    1. 🏆 Top 3 drużyny ligi   — najlepsze drużyny w tej kolejce (wg last_points)
-    2. 💎 Zawodnik-niespodzianka — wysoki wynik + niski ownership (< 20%)
-    3. 🎯 Trafność prognozy     — MAE i przykłady trafień/pomyłek
+    1. 🏆 Top 3 drużyny ligi       — najlepsze drużyny w tej kolejce (wg last_points)
+    2. 💎 Zawodnik-niespodzianka   — wysoki wynik + niski ownership (< 20%)
+    3. 😤 Rozczarowanie kolejki    — niski wynik + wysoki ownership (> 40%)
+    4. ©️ Kapitanowie w lidze       — kogo każda drużyna wybrała na kapitana
+    5. 🎯 Trafność prognozy        — MAE i przykłady trafień/pomyłek
 
     Parametry:
-        league_data:   lista drużyn ligi prywatnej z fetch_league_teams()
-                       (każda drużyna ma pola: slug, last_points, total_points)
-        players_data:  pełna lista graczy z API (ma 'rounds' z punktami per kolejka,
-                       'popularity_pct' z globalnym ownership)
-        accuracy_data: wynik ewaluacji z evaluate_predictions() lub None
-        webhook_url:   URL Discord webhooka
-        round_number:  numer ZAKOŃCZONEJ kolejki
+        league_data:         lista drużyn ligi prywatnej z fetch_league_teams()
+                             (każda drużyna ma pola: slug, last_points, total_points)
+        players_data:        pełna lista graczy z API (ma 'rounds' z punktami per kolejka,
+                             'popularity_pct' z globalnym ownership)
+        accuracy_data:       wynik ewaluacji z evaluate_predictions() lub None
+        webhook_url:         URL Discord webhooka
+        round_number:        numer ZAKOŃCZONEJ kolejki
+        league_teams_detail: lista drużyn ligi z danymi składów (slug, rank, pts, players)
+                             — używana do sekcji kapitanów. Opcjonalna.
     """
     # Jeśli brak i danych ligi, i trafności — nie ma czego wysyłać
     if not league_data and not accuracy_data:
@@ -482,9 +487,139 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
         })
     # Jeśli brak gracza spełniającego kryteria — sekcja jest pomijana (spec: pomiń sekcję)
 
-    # --- SEKCJA 3: TRAFNOŚĆ PROGNOZY ---
+    # --- SEKCJA 3: ROZCZAROWANIE KOLEJKI ---
+    # Szukamy gracza z NAJNIŻSZYMI punktami (lub ujemnymi) w tej kolejce,
+    # który miał ownership > 40%. "Pułapka" = prawie wszyscy go mieli, a zawiódł.
+    disappointment = None
+    disappointment_pts = 999  # szukamy minimum, startujemy od dużej wartości
+
+    if players_data and round_number:
+        for player in players_data:
+            # Sprawdź globalny ownership — jeśli <= 40%, to nie "rozczarowanie"
+            own = _parse_ownership_pct(player.get("popularity_pct", "0%"))
+            if own <= 40.0:
+                continue
+
+            # Szukaj punktów tej kolejki
+            rounds = player.get("rounds", [])
+            for r in rounds:
+                if r.get("round") == round_number and r.get("played"):
+                    pts = r.get("points", 0) or 0
+                    if pts < disappointment_pts:
+                        disappointment_pts = pts
+                        disappointment = player
+                    break
+
+    if disappointment and disappointment_pts < 5:
+        # Pokazuj rozczarowanie tylko gdy punkty są naprawdę niskie (< 5)
+        pos_map_dis = {
+            "Bramkarz": "BR", "Obrońca": "OBR",
+            "Pomocnik": "POM", "Napastnik": "NAP",
+        }
+        pos = pos_map_dis.get(disappointment.get("position", ""), disappointment.get("position", ""))
+        team_name = disappointment.get("team", "")
+        own_str = disappointment.get("popularity_pct", "?")
+        # Oblicz ile drużyn z top 1000 go miało (przybliżenie: ownership% × 10)
+        own_pct = _parse_ownership_pct(own_str)
+        approx_count = int(own_pct * 10)  # top 1000 × ownership% = ile drużyn
+
+        dis_text = (
+            f"😤 **{disappointment.get('name', '?')}** ({pos}, {team_name}) — **{disappointment_pts} pkt**\n"
+            f"Ownership: {own_str} · Miało go ~{approx_count} z top 1000 drużyn"
+        )
+
+        fields.append({
+            "name": "😤 Rozczarowanie kolejki",
+            "value": dis_text,
+            "inline": False,
+        })
+
+    # --- SEKCJA 4: KAPITANOWIE W LIDZE ---
+    # Lista WSZYSTKICH drużyn z ligi prywatnej — kogo wybrały na kapitana
+    # i ile ten kapitan zdobył. Sortuj od najwyższych punktów kapitana.
+    #
+    # 📖 LEKCJA: Dane kapitanów pochodzą z league_teams_detail, które zawiera
+    # skład każdej drużyny (players) z flagą C=True dla kapitana.
+    # Punkty kapitana za konkretną kolejkę szukamy w players_data (rounds).
+    if league_teams_detail:
+        # Buduj lookup: player_id → punkty w tej kolejce
+        player_round_pts = {}
+        if players_data and round_number:
+            for player in players_data:
+                pid = str(player.get("player_id", ""))
+                if not pid:
+                    continue
+                for r in player.get("rounds", []):
+                    if r.get("round") == round_number and r.get("played"):
+                        player_round_pts[pid] = r.get("points", 0) or 0
+                        break
+
+        # Zbierz dane kapitanów z każdej drużyny
+        captain_entries = []
+        pos_map_cap = {
+            "Bramkarz": "BR", "Obrońca": "OBR",
+            "Pomocnik": "POM", "Napastnik": "NAP",
+        }
+        for team in league_teams_detail:
+            team_slug = team.get("slug", "")
+            # Szukaj display_name w league_data (wzbogacone dane)
+            display_name = ""
+            for ld in (league_data or []):
+                if ld.get("slug") == team_slug:
+                    display_name = ld.get("display_name", "")
+                    break
+            if not display_name:
+                display_name = team_slug.replace("-", " ").title()
+
+            # Znajdź kapitana w składzie drużyny
+            for p in team.get("players", []):
+                if p.get("C"):  # C=True oznacza kapitana
+                    cap_pid = str(p.get("pid", ""))
+                    cap_name = p.get("name", "?")
+                    cap_pos = pos_map_cap.get(p.get("pos", ""), p.get("pos", ""))
+                    cap_pts = player_round_pts.get(cap_pid, 0)
+                    captain_entries.append({
+                        "team_name": display_name,
+                        "cap_name": cap_name,
+                        "cap_pos": cap_pos,
+                        "cap_pts": cap_pts,
+                    })
+                    break  # Każda drużyna ma jednego kapitana
+
+        if captain_entries:
+            # Sortuj od najwyższych punktów kapitana do najniższych
+            captain_entries.sort(key=lambda c: c["cap_pts"], reverse=True)
+
+            # Emoji: ✅ przy najlepszym, ❌ przy najgorszym
+            best_pts = captain_entries[0]["cap_pts"]
+            worst_pts = captain_entries[-1]["cap_pts"]
+
+            cap_lines = []
+            for ce in captain_entries:
+                emoji = ""
+                if ce["cap_pts"] == best_pts and best_pts > worst_pts:
+                    emoji = " ✅"
+                elif ce["cap_pts"] == worst_pts and worst_pts < best_pts:
+                    emoji = " ❌"
+                cap_lines.append(
+                    f"**{ce['team_name']}**: {ce['cap_name']} ({ce['cap_pos']}) — "
+                    f"{ce['cap_pts']} pkt{emoji}"
+                )
+
+            # Discord embed field value max 1024 chars — dzielimy jeśli za długie
+            cap_text = "\n".join(cap_lines)
+            if len(cap_text) > 1024:
+                cap_text = cap_text[:1020] + "..."
+
+            fields.append({
+                "name": "©️ Kapitanowie w lidze",
+                "value": cap_text,
+                "inline": False,
+            })
+
+    # --- SEKCJA 5: TRAFNOŚĆ PROGNOZY ---
     # MAE (Mean Absolute Error) = średni błąd prognozy w punktach.
-    # Niższe MAE = lepszy model. Sekcja jest opcjonalna — brak danych = brak sekcji.
+    # Niższe MAE = lepszy model. Sekcja opcjonalna — brak danych accuracy = pomijamy.
     if accuracy_data:
         mae = accuracy_data.get("mae", "?")
 
