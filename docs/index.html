@@ -5,128 +5,220 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fantasy Ekstraklasa Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* Szybkie zastosowanie motywu przed renderowaniem — zapobiega migotaniu */
+(function(){if(localStorage.getItem('scrapfeks-theme')==='fantasy')document.documentElement.classList.add('theme-fantasy');})();
+</script>
 <style>
+/* =============================================
+   ZMIENNE CSS — MOTYW DOMYŚLNY (ciemny)
+   ============================================= */
+:root {
+  --font-stack: 'DM Sans', -apple-system, sans-serif;
+  --page-bg: linear-gradient(180deg, #0b1120 0%, #0f172a 100%);
+  /* Warstwy tła komponentów */
+  --bg-deep: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-raised: #334155;
+  --bg-muted: #475569;
+  /* Kolory tekstu */
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-on-accent: #0f172a;
+  /* Akcenty kolorystyczne */
+  --accent: #22d3ee;
+  --accent-gold: #fbbf24;
+  --accent-green: #10b981;
+  --accent-purple: #a78bfa;
+  --accent-red: #ef4444;
+  --accent-orange: #f59e0b;
+  --accent-blue: #3b82f6;
+  /* Nawigacja i taby */
+  --header-color: #e2e8f0;
+  --tabs-bg: transparent;
+  --tabs-border: #1e293b;
+  --tab-active-bg: #1e293b;
+  --tab-active-border: #22d3ee;
+  --tab-active-color: #e2e8f0;
+  --tab-inactive-color: #64748b;
+  /* Stopka */
+  --footer-color: #334155;
+  --footer-bg: transparent;
+}
+
+/* =============================================
+   MOTYW FANTASY EKSTRAKLASA
+   Aktywowany klasą `theme-fantasy` na <html>
+   ============================================= */
+html.theme-fantasy {
+  --font-stack: 'Segoe UI', 'Trebuchet MS', Tahoma, sans-serif;
+  --page-bg: linear-gradient(180deg, #0b1a3b 0%, #1e293b 280px, #f1f5f9 280px);
+  /* Tła odwrócone — jasne karty na tle gradientu */
+  --bg-deep: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-raised: #e2e8f0;
+  --bg-muted: #94a3b8;
+  /* Tekst ciemny na jasnym tle kart */
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --text-on-accent: #ffffff;
+  /* Akcenty w stylu fantasy.ekstraklasa.org */
+  --accent: #3b82f6;
+  --accent-gold: #f59e0b;
+  --accent-green: #22c55e;
+  --accent-purple: #a78bfa;
+  --accent-red: #ef4444;
+  --accent-orange: #f97316;
+  --accent-blue: #3b82f6;
+  /* Nawigacja — ciemna, kontrastuje z jasną treścią */
+  --header-color: #ffffff;
+  --tabs-bg: #102044;
+  --tabs-border: #1a3060;
+  --tab-active-bg: transparent;
+  --tab-active-border: #60a5fa;
+  --tab-active-color: #ffffff;
+  --tab-inactive-color: #94a3b8;
+  /* Stopka */
+  --footer-color: #94a3b8;
+  --footer-bg: #0b1a3b;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0b1120 0%, #0f172a 100%);
-  color: #e2e8f0;
-  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  font-family: var(--font-stack);
   padding: 24px 16px;
 }
 .container { max-width: 95vw; margin: 0 auto; }
+/* Nagłówek — kolor tekstu sterowany zmienną (biały w fantasy, jasny w ciemnym) */
 .header { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--header-color); }
+.header .sub { font-size: 12px; color: var(--text-muted); margin: 0; }
 .logo {
   width: 40px; height: 40px; border-radius: 10px;
   background: linear-gradient(135deg, #006847, #d92231);
   display: flex; align-items: center; justify-content: center; font-size: 20px;
 }
-.header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-.header .sub { font-size: 12px; color: #64748b; margin: 0; }
 .stats-row { display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; padding-bottom: 4px; flex-wrap: wrap; }
+/* Karty statystyk — białe w fantasy, ciemne w domyślnym */
 .stat-card {
-  background: #1e293b; border-radius: 10px; padding: 16px 20px;
+  background: var(--bg-surface); border-radius: 10px; padding: 16px 20px;
   min-width: 140px; flex-shrink: 0;
 }
 .stat-card .val { font-size: 24px; font-weight: 800; }
-.stat-card .label { font-size: 11px; color: #94a3b8; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }
-.stat-card .sub { font-size: 11px; color: #64748b; margin-top: 4px; }
-.accent-cyan { border-left: 3px solid #22d3ee; }
-.accent-cyan .val { color: #22d3ee; }
-.accent-gold { border-left: 3px solid #fbbf24; }
-.accent-gold .val { color: #fbbf24; }
-.accent-green { border-left: 3px solid #10b981; }
-.accent-green .val { color: #10b981; }
-.accent-purple { border-left: 3px solid #a78bfa; }
-.accent-purple .val { color: #a78bfa; }
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid #1e293b; flex-wrap: wrap; }
+.stat-card .label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }
+.stat-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+/* Kolorowe akcenty kart — używają zmiennych aby zmieniać się z motywem */
+.accent-cyan { border-left: 3px solid var(--accent); }
+.accent-cyan .val { color: var(--accent); }
+.accent-gold { border-left: 3px solid var(--accent-gold); }
+.accent-gold .val { color: var(--accent-gold); }
+.accent-green { border-left: 3px solid var(--accent-green); }
+.accent-green .val { color: var(--accent-green); }
+.accent-purple { border-left: 3px solid var(--accent-purple); }
+.accent-purple .val { color: var(--accent-purple); }
+/* Taby nawigacyjne */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--tabs-border); flex-wrap: wrap; background: var(--tabs-bg); }
 .tab {
   background: transparent; border: none; border-bottom: 2px solid transparent;
-  color: #64748b; padding: 10px 18px; font-size: 13px; font-weight: 600;
+  color: var(--tab-inactive-color); padding: 10px 18px; font-size: 13px; font-weight: 600;
   cursor: pointer; border-radius: 8px 8px 0 0; transition: all 0.2s;
   font-family: inherit;
 }
-.tab.active { background: #1e293b; border-bottom-color: #22d3ee; color: #e2e8f0; }
-.tab:hover { color: #e2e8f0; }
+.tab.active { background: var(--tab-active-bg); border-bottom-color: var(--tab-active-border); color: var(--tab-active-color); }
+.tab:hover { color: var(--tab-active-color); }
 .filters-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
 .pos-filters { display: flex; gap: 4px; align-items: center; }
+/* Przyciski pozycji zawodników */
 .pos-btn {
-  background: transparent; border: 1px solid #334155; color: #64748b;
+  background: transparent; border: 1px solid var(--bg-raised); color: var(--text-muted);
   padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
   border-radius: 6px; font-family: inherit; transition: all 0.15s;
 }
 .pos-btn.active { border-color: transparent; color: #0f172a; }
-.pos-btn.active[data-pos="ALL"] { background: #22d3ee; }
-.pos-btn.active[data-pos="BR"] { background: #f59e0b; }
-.pos-btn.active[data-pos="OBR"] { background: #3b82f6; }
-.pos-btn.active[data-pos="POM"] { background: #10b981; }
-.pos-btn.active[data-pos="NAP"] { background: #ef4444; }
-.scope-toggle { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
+.pos-btn.active[data-pos="ALL"] { background: var(--accent); }
+.pos-btn.active[data-pos="BR"] { background: var(--accent-orange); }
+.pos-btn.active[data-pos="OBR"] { background: var(--accent-blue); }
+.pos-btn.active[data-pos="POM"] { background: var(--accent-green); }
+.pos-btn.active[data-pos="NAP"] { background: var(--accent-red); }
+/* Przełącznik zakresu (Top 10 / Top 100 / Wszystkie / Liga) */
+.scope-toggle { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--bg-raised); }
 .scope-btn {
-  background: transparent; border: none; color: #64748b;
+  background: transparent; border: none; color: var(--text-muted);
   padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
   font-family: inherit; transition: all 0.15s;
 }
-.scope-btn.active { background: #22d3ee; color: #0f172a; }
+.scope-btn.active { background: var(--accent); color: var(--text-on-accent); }
+/* Tytuły sekcji */
 .section-title { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.section-title h2 { font-size: 16px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #e2e8f0; }
-.section-title .line { flex: 1; height: 1px; background: linear-gradient(90deg, #334155, transparent); }
-.data-table { background: #1e293b; border-radius: 12px; overflow: hidden; width: 100%; overflow-x: auto; }
+.section-title h2 { font-size: 16px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-primary); }
+.section-title .line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--bg-raised), transparent); }
+/* Tabela danych — karta z zaokrąglonymi rogami */
+.data-table { background: var(--bg-surface); border-radius: 12px; overflow: hidden; width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
-thead tr { background: #0f172a; }
+thead tr { background: var(--bg-deep); }
 th {
-  padding: 10px 14px; color: #64748b; font-weight: 600; font-size: 11px;
+  padding: 10px 14px; color: var(--text-muted); font-weight: 600; font-size: 11px;
   text-transform: uppercase; white-space: nowrap;
 }
 th.sortable { cursor: pointer; user-select: none; }
-th.sortable:hover { color: #94a3b8; }
-th.sortable[title] { cursor: help; border-bottom: 1px dashed #475569; }
-td { padding: 10px 14px; border-top: 1px solid #0f172a; white-space: nowrap; }
+th.sortable:hover { color: var(--text-secondary); }
+th.sortable[title] { cursor: help; border-bottom: 1px dashed var(--bg-muted); }
+td { padding: 10px 14px; border-top: 1px solid var(--bg-deep); white-space: nowrap; }
 tr.highlight { background: rgba(251,191,36,0.06); }
+/* Odznaki pozycji — ciemny tekst bo tło jest zawsze kolorowe */
 .pos-badge {
   display: inline-block; padding: 2px 8px; border-radius: 4px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #0f172a;
 }
-.pos-BR, .pos-1 { background: #f59e0b; }
-.pos-OBR, .pos-2 { background: #3b82f6; }
-.pos-POM, .pos-3 { background: #10b981; }
-.pos-NAP, .pos-4 { background: #ef4444; }
+.pos-BR, .pos-1 { background: var(--accent-orange); }
+.pos-OBR, .pos-2 { background: var(--accent-blue); }
+.pos-POM, .pos-3 { background: var(--accent-green); }
+.pos-NAP, .pos-4 { background: var(--accent-red); }
+/* Odznaka kapitana — złoty gradient */
 .captain-badge {
   display: inline-flex; align-items: center; justify-content: center;
   width: 20px; height: 20px; border-radius: 50%;
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
   color: #0f172a; font-size: 11px; font-weight: 800;
 }
 .bar-wrap { display: flex; align-items: center; gap: 8px; }
-.bar-bg { width: 80px; height: 6px; background: #0f172a; border-radius: 3px; overflow: hidden; }
+.bar-bg { width: 80px; height: 6px; background: var(--bg-deep); border-radius: 3px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-.bar-val { font-size: 13px; color: #94a3b8; min-width: 38px; text-align: right; }
+.bar-val { font-size: 13px; color: var(--text-secondary); min-width: 38px; text-align: right; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
-.footer { text-align: center; margin-top: 32px; color: #334155; font-size: 12px; }
+/* Stopka — kolor i tło sterowane zmiennymi */
+.footer { text-align: center; margin-top: 32px; color: var(--footer-color); font-size: 12px; background: var(--footer-bg); }
 .text-right { text-align: right; }
 .text-center { text-align: center; }
 .text-left { text-align: left; }
 .fw-700 { font-weight: 700; }
 .fw-600 { font-weight: 600; }
-.c-muted { color: #94a3b8; }
-.c-dim { color: #64748b; }
-.empty-msg { padding: 40px; text-align: center; color: #64748b; }
+.c-muted { color: var(--text-secondary); }
+.c-dim { color: var(--text-muted); }
+.empty-msg { padding: 40px; text-align: center; color: var(--text-muted); }
 .clickable { cursor: pointer; }
-.clickable:hover { color: #22d3ee; }
+.clickable:hover { color: var(--accent); }
+/* Chipsy składu (XI / kapitan / rezerwa) */
 .roster-chip {
   display: inline-flex; align-items: center; gap: 4px;
-  background: #1e293b; border: 1px solid #334155; border-radius: 6px;
-  padding: 3px 10px; font-size: 12px; color: #e2e8f0;
+  background: var(--bg-surface); border: 1px solid var(--bg-raised); border-radius: 6px;
+  padding: 3px 10px; font-size: 12px; color: var(--text-primary);
 }
 .roster-chip .rc-badge {
   font-size: 9px; font-weight: 800; border-radius: 3px; padding: 1px 4px;
 }
-.rc-cap { background: #fbbf24; color: #0f172a; }
-.rc-res { background: #475569; color: #e2e8f0; }
-.rc-xi { background: #22d3ee; color: #0f172a; }
+.rc-cap { background: var(--accent-gold); color: #0f172a; }
+.rc-res { background: var(--bg-muted); color: var(--text-primary); }
+.rc-xi { background: var(--accent); color: var(--text-on-accent); }
+/* Panel formy zawodnika — tło głębsze niż karta */
 .form-panel {
-  background: #0f172a; border: 1px solid #1e293b; border-radius: 8px;
+  background: var(--bg-deep); border: 1px solid var(--bg-raised); border-radius: 8px;
   padding: 12px 16px; display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;
 }
 .form-chart {
@@ -136,102 +228,107 @@ tr.highlight { background: rgba(251,191,36,0.06); }
   height: 24px; gap: 2px;
 }
 .form-chart.mini .form-bar { width: 8px; }
-.form-chart.mini .form-val { font-size: 8px; top: -12px; color: #94a3b8; font-weight: 500; }
+.form-chart.mini .form-val { font-size: 8px; top: -12px; color: var(--text-secondary); font-weight: 500; }
 .form-chart.mini .form-rnd { display: none; }
 .form-bar {
   width: 14px; border-radius: 3px 3px 0 0; min-height: 2px; position: relative;
   display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-start;
 }
 .form-bar .form-val {
-  position: absolute; top: -16px; font-size: 10px; color: #e2e8f0; font-weight: 600; white-space: nowrap;
+  position: absolute; top: -16px; font-size: 10px; color: var(--text-primary); font-weight: 600; white-space: nowrap;
 }
 .form-bar .form-rnd {
-  position: absolute; bottom: -16px; font-size: 9px; color: #64748b; white-space: nowrap;
+  position: absolute; bottom: -16px; font-size: 9px; color: var(--text-muted); white-space: nowrap;
 }
-.form-bar.not-played { opacity: 0.35; border: 1px dashed #475569; background: transparent !important; }
+.form-bar.not-played { opacity: 0.35; border: 1px dashed var(--bg-muted); background: transparent !important; }
 .form-avg {
   display: flex; flex-direction: column; align-items: center; margin-left: 8px;
 }
-.form-avg .fa-val { font-size: 20px; font-weight: 800; color: #22d3ee; }
-.form-avg .fa-lbl { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-avg .fa-val { font-size: 20px; font-weight: 800; color: var(--accent); }
+.form-avg .fa-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .detail-row td { padding: 0 !important; border-top: none !important; }
+/* Panel szczegółów drużyny/zawodnika */
 .detail-panel {
-  background: #0f172a; border: 1px solid #1e293b; border-radius: 8px;
+  background: var(--bg-deep); border: 1px solid var(--bg-raised); border-radius: 8px;
   padding: 12px 16px; margin: 4px 0 8px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;
 }
 .detail-section { display: flex; flex-direction: column; gap: 4px; }
-.detail-section .ds-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.detail-section .ds-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+/* Lista drużyn w Lidze CMF */
 .team-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
-.team-list-item { background: #1e293b; border: 1px solid #334155; border-radius: 8px; }
-.team-list-item.active { border-color: #22d3ee; }
+.team-list-item { background: var(--bg-surface); border: 1px solid var(--bg-raised); border-radius: 8px; }
+.team-list-item.active { border-color: var(--accent); }
 .team-list-header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background 0.15s; }
-.team-list-header:hover { background: #334155; }
-.team-list-rank { font-size: 13px; font-weight: 800; color: #22d3ee; min-width: 32px; }
-.team-list-name { font-size: 14px; font-weight: 700; color: #e2e8f0; flex: 1; text-transform: capitalize; }
-.team-list-pts { font-size: 12px; color: #94a3b8; font-weight: 600; }
-.team-list-count { font-size: 11px; color: #64748b; }
-.team-list-arrow { font-size: 10px; color: #64748b; margin-left: 4px; }
+.team-list-header:hover { background: var(--bg-raised); }
+.team-list-rank { font-size: 13px; font-weight: 800; color: var(--accent); min-width: 32px; }
+.team-list-name { font-size: 14px; font-weight: 700; color: var(--text-primary); flex: 1; text-transform: capitalize; }
+.team-list-pts { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+.team-list-count { font-size: 11px; color: var(--text-muted); }
+.team-list-arrow { font-size: 10px; color: var(--text-muted); margin-left: 4px; }
 .diff-badge {
   display: inline-block; font-size: 12px; font-weight: 700; border-radius: 4px;
   padding: 2px 8px; min-width: 48px; text-align: center;
 }
+/* Kolory różnic punktowych — semantyczne, nie zmieniają się z motywem */
 .diff-pos { background: rgba(16,185,129,0.15); color: #10b981; }
 .diff-neg { background: rgba(239,68,68,0.15); color: #ef4444; }
-.diff-zero { background: rgba(100,116,139,0.15); color: #94a3b8; }
+.diff-zero { background: rgba(100,116,139,0.15); color: var(--text-secondary); }
 .team-header {
   display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;
 }
-.team-stat { font-size: 13px; color: #94a3b8; }
-.team-stat b { color: #e2e8f0; }
-/* Fixture Ticker */
+.team-stat { font-size: 13px; color: var(--text-secondary); }
+.team-stat b { color: var(--text-primary); }
+/* Terminarz meczowy */
 .ft-table { border-collapse: collapse; width: 100%; font-size: 13px; }
-.ft-table th { padding: 6px 4px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }
+.ft-table th { padding: 6px 4px; text-align: center; font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--bg-raised); }
 .ft-table th.ft-round { min-width: 80px; }
-.ft-table td { padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }
+.ft-table td { padding: 5px 4px; text-align: center; border-bottom: 1px solid var(--bg-raised); }
 .ft-table td.ft-team { text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; cursor: pointer; }
-.ft-table td.ft-team:hover { color: #22d3ee; }
+.ft-table td.ft-team:hover { color: var(--accent); }
 .ft-cell { border-radius: 4px; padding: 4px 6px; font-weight: 600; font-size: 12px; display: inline-block; min-width: 52px; text-align: center; }
 .ft-cell .ft-ha { font-size: 10px; font-weight: 400; opacity: 0.7; }
 .ft-cell-dual { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 68px; }
-.ft-cell-team { font-size: 11px; font-weight: 600; color: #e2e8f0; white-space: nowrap; }
+.ft-cell-team { font-size: 11px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
 .ft-cell-team .ft-ha { font-size: 10px; font-weight: 400; opacity: 0.7; }
 .ft-cell-vals { display: flex; gap: 2px; }
 .ft-val { border-radius: 3px; padding: 2px 5px; font-weight: 700; font-size: 10px; min-width: 28px; text-align: center; }
-.ft-legend { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; }
+.ft-legend { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap; }
 .ft-legend-item { display: flex; align-items: center; gap: 4px; }
 .ft-legend-swatch { width: 16px; height: 16px; border-radius: 3px; }
-/* Rating modal */
+/* Modal ocen zawodników */
 .ft-modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-.ft-modal { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px 32px; min-width: 340px; max-width: 90vw; position: relative; }
+.ft-modal { background: var(--bg-surface); border: 1px solid var(--bg-raised); border-radius: 12px; padding: 24px 32px; min-width: 340px; max-width: 90vw; position: relative; }
 .ft-modal h3 { margin: 0 0 16px; font-size: 18px; }
-.ft-modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }
-.ft-modal-close:hover { color: #e2e8f0; }
-/* FDR tiles */
+.ft-modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 20px; cursor: pointer; }
+.ft-modal-close:hover { color: var(--text-primary); }
+/* Tabela FDR (trudność meczów) */
 .fdr-table { border-collapse: collapse; width: 100%; font-size: 13px; }
-.fdr-table th { padding: 8px 6px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }
-.fdr-table td { padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }
+.fdr-table th { padding: 8px 6px; text-align: center; font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--bg-raised); }
+.fdr-table td { padding: 5px 4px; text-align: center; border-bottom: 1px solid var(--bg-raised); }
 .fdr-table td.fdr-team { text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; }
 .fdr-sum { font-weight: 800; font-size: 15px; }
-.fdr-legend { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; }
+.fdr-legend { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap; }
 .fdr-legend-item { display: flex; align-items: center; gap: 5px; }
+/* Kafelki FDR — kwadraciki 24×24px z border-radius 6px w fantasy, 20×20px w domyślnym */
 .fdr-legend-swatch { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
 .fdr-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 80px; }
-.fdr-cell-team { font-size: 12px; font-weight: 600; color: #e2e8f0; white-space: nowrap; }
+.fdr-cell-team { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
 .fdr-cell-team .fdr-ha { font-size: 10px; font-weight: 400; opacity: 0.7; }
 .fdr-cell-vals { display: flex; gap: 3px; }
 .fdr-mini { border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: 700; min-width: 36px; text-align: center; display: inline-flex; align-items: center; gap: 2px; }
 .fdr-mini .fdr-lbl { font-size: 8px; font-weight: 600; opacity: 0.8; letter-spacing: 0.3px; }
-/* Transfers tab */
+/* Zakładka Transfery */
 .transfers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 768px) { .transfers-grid { grid-template-columns: 1fr; } }
 .transfers-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .transfers-header h3 { font-size: 14px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
 .tr-filters-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
-.tr-gw-badge { background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 4px 12px; font-size: 12px; color: #94a3b8; font-weight: 600; }
-.price-up { color: #10b981; font-size: 11px; font-weight: 700; }
-.price-down { color: #ef4444; font-size: 11px; font-weight: 700; }
-.price-neutral { color: #64748b; font-size: 11px; }
-/* Predictions tab */
+.tr-gw-badge { background: var(--bg-surface); border: 1px solid var(--bg-raised); border-radius: 6px; padding: 4px 12px; font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+/* Kolory cen — semantyczne */
+.price-up { color: var(--accent-green); font-size: 11px; font-weight: 700; }
+.price-down { color: var(--accent-red); font-size: 11px; font-weight: 700; }
+.price-neutral { color: var(--text-muted); font-size: 11px; }
+/* Zakładka Prognoza */
 .pred-val {
   font-size: 18px; font-weight: 800; padding: 4px 10px; border-radius: 6px;
   display: inline-block; min-width: 48px; text-align: center;
@@ -248,16 +345,99 @@ tr.highlight { background: rgba(251,191,36,0.06); }
   display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px;
   border-radius: 10px; letter-spacing: 0.3px;
 }
+/* Kolory pewności prognozy — semantyczne, nie zmieniają się z motywem */
 .pred-conf-high { background: rgba(16,185,129,0.2); color: #10b981; }
 .pred-conf-medium { background: rgba(251,191,36,0.2); color: #fbbf24; }
 .pred-conf-low { background: rgba(239,68,68,0.2); color: #ef4444; }
-.pred-conf-insufficient { background: rgba(100,116,139,0.2); color: #94a3b8; }
+.pred-conf-insufficient { background: rgba(100,116,139,0.2); color: var(--text-secondary); }
 .pred-legend {
-  background: #1e293b; border-radius: 8px; padding: 12px 16px;
-  margin-bottom: 16px; font-size: 12px; color: #94a3b8; line-height: 1.8;
+  background: var(--bg-surface); border-radius: 8px; padding: 12px 16px;
+  margin-bottom: 16px; font-size: 12px; color: var(--text-secondary); line-height: 1.8;
 }
-.pred-legend b { color: #e2e8f0; }
+.pred-legend b { color: var(--text-primary); }
 .pred-filters { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+
+/* =============================================
+   DODATKOWE STYLE DLA MOTYWU FANTASY
+   Strukturalne zmiany niemożliwe przez same zmienne
+   ============================================= */
+
+/* Taby — zaokrąglone tło granatowe */
+html.theme-fantasy .tabs {
+  padding: 8px 4px 0;
+  border-radius: 8px 8px 0 0;
+  margin-top: 4px;
+}
+
+/* Karty statystyk — cień oddzielający od ciemnego tła */
+html.theme-fantasy .stat-card {
+  box-shadow: 0 2px 12px rgba(11,26,59,0.15);
+}
+
+/* Tabele danych — cień jak przy kartach */
+html.theme-fantasy .data-table {
+  box-shadow: 0 2px 12px rgba(11,26,59,0.08);
+}
+
+/* Nagłówek tabeli w fantasy — linia zamiast ciemnego tła */
+html.theme-fantasy thead tr {
+  background: var(--bg-surface);
+}
+html.theme-fantasy thead tr th {
+  border-bottom: 2px solid #0b1a3b;
+  color: #0b1a3b;
+}
+
+/* Alternujące wiersze w tabelach */
+html.theme-fantasy tbody tr:nth-child(even) {
+  background: #f1f5f9;
+}
+
+/* Stopka — ciemna, zaokrąglona */
+html.theme-fantasy .footer {
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+/* Wyróżnienie własnej drużyny w Lidze CMF */
+html.theme-fantasy .team-list-item.active .team-list-header {
+  background: #dbeafe;
+}
+
+/* FDR kafelki — większe w fantasy */
+html.theme-fantasy .fdr-legend-swatch {
+  width: 24px; height: 24px; border-radius: 6px;
+}
+
+/* Przycisk przełącznika motywu */
+.theme-toggle-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: var(--text-muted);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 20px;
+  font-family: inherit;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.theme-toggle-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.5);
+}
+html.theme-fantasy .theme-toggle-btn {
+  color: #94a3b8;
+  border-color: rgba(255,255,255,0.3);
+}
+html.theme-fantasy .theme-toggle-btn:hover {
+  background: rgba(255,255,255,0.15);
+  color: #ffffff;
+}
 </style>
 </head>
 <body>
@@ -268,6 +448,7 @@ tr.highlight { background: rgba(251,191,36,0.06); }
       <h1>Fantasy Ekstraklasa</h1>
       <p class="sub">Dashboard · 2026-03-23 11:53</p>
     </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" title="Przełącz motyw">🌐 Fantasy</button>
   </div>
   <div class="stats-row">
     <div class="stat-card accent-cyan">
@@ -1545,6 +1726,42 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
 document.querySelectorAll('.pos-btn').forEach(b => b.addEventListener('click', () => { pos = b.dataset.pos; render(); }));
 document.querySelectorAll('.scope-btn').forEach(b => b.addEventListener('click', () => { scope = b.dataset.scope; render(); }));
 render();
+</script>
+<script>
+/* =============================================
+   PRZEŁĄCZNIK MOTYWU — Fantasy Ekstraklasa
+   Zapisuje wybór w localStorage pod kluczem 'scrapfeks-theme'
+   ============================================= */
+(function() {
+  var KEY = 'scrapfeks-theme';
+  var btn = document.getElementById('theme-toggle-btn');
+  if (!btn) return;
+
+  /* Zastosuj motyw i zaktualizuj etykietę przycisku */
+  function applyTheme(theme) {
+    if (theme === 'fantasy') {
+      document.documentElement.classList.add('theme-fantasy');
+      btn.textContent = '🌑 Ciemny';
+      btn.title = 'Przełącz na motyw ciemny';
+    } else {
+      document.documentElement.classList.remove('theme-fantasy');
+      btn.textContent = '🌐 Fantasy';
+      btn.title = 'Przełącz na motyw Fantasy Ekstraklasa';
+    }
+  }
+
+  /* Wczytaj i zastosuj zapisany motyw */
+  var saved = localStorage.getItem(KEY) || 'default';
+  applyTheme(saved);
+
+  /* Obsługa kliknięcia — przełącz i zapisz */
+  btn.addEventListener('click', function() {
+    var current = document.documentElement.classList.contains('theme-fantasy') ? 'fantasy' : 'default';
+    var next = current === 'fantasy' ? 'default' : 'fantasy';
+    localStorage.setItem(KEY, next);
+    applyTheme(next);
+  });
+})();
 </script>
 </body>
 </html>
