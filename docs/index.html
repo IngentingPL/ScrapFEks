@@ -73,8 +73,8 @@ html.theme-fantasy {
   --accent-red: #dc2626;
   --accent-orange: #d97706;
   --accent-blue: #2563eb;
-  /* Nawigacja — taby na białym tle, aktywny tab ciemny */
-  --header-color: #ffffff;
+  /* Nawigacja — nagłówek na jasnym tle, ciemny tekst */
+  --header-color: #0b1a3b;
   --tabs-bg: #ffffff;
   --tabs-border: #e5e7eb;
   --tab-active-bg: transparent;
@@ -363,32 +363,9 @@ tr.highlight { background: rgba(251,191,36,0.06); }
    Wzorowane na fantasy.ekstraklasa.org
    ============================================= */
 
-/* Tło strony — jasny szary, reset body padding */
+/* Tło strony — jasny szary, taki sam padding jak w motywie ciemnym */
 html.theme-fantasy body {
   background: #f0f2f5;
-  padding: 0;
-}
-
-/* Kontener — własny padding zamiast body */
-html.theme-fantasy .container {
-  padding: 0 20px 24px;
-}
-
-/* Wąski nagłówek — ciemny granat, rozciągnięty do krawędzi kontenera */
-html.theme-fantasy .header {
-  background: #0b1a3b;
-  padding: 12px 20px;
-  margin: 0 -20px 0;
-  border-radius: 0;
-}
-html.theme-fantasy .header h1 {
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 20px;
-  color: #ffffff;
-}
-html.theme-fantasy .header .sub {
-  color: #94a3b8;
 }
 
 /* Taby główne — białe tło, granatowy podkreślnik aktywnego */
@@ -527,13 +504,10 @@ html.theme-fantasy .fdr-legend-swatch {
   width: 24px; height: 24px; border-radius: 6px;
 }
 
-/* Stopka — ciemna, rozciągnięta do krawędzi kontenera */
+/* Stopka — ciemna, zaokrąglona */
 html.theme-fantasy .footer {
-  background: #0b1a3b;
-  color: #9ca3af;
-  padding: 14px 20px;
-  margin: 24px -20px 0;
-  border-radius: 0;
+  padding: 12px 20px;
+  border-radius: 8px;
 }
 
 /* Przycisk przełącznika motywu — bazowy styl (ciemne tło) */
