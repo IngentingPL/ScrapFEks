@@ -48,40 +48,41 @@
 }
 
 /* =============================================
-   MOTYW FANTASY EKSTRAKLASA
+   MOTYW FANTASY EKSTRAKLASA — JASNY
+   Wzorowany na fantasy.ekstraklasa.org
    Aktywowany klasą `theme-fantasy` na <html>
    ============================================= */
 html.theme-fantasy {
   --font-stack: 'Segoe UI', 'Trebuchet MS', Tahoma, sans-serif;
-  --page-bg: linear-gradient(180deg, #0b1a3b 0%, #1e293b 280px, #f1f5f9 280px);
-  /* Tła odwrócone — jasne karty na tle gradientu */
-  --bg-deep: #f1f5f9;
+  --page-bg: #f0f2f5;
+  /* Tła jasne — biała karta, szare wgłębienia */
+  --bg-deep: #f8f9fa;
   --bg-surface: #ffffff;
-  --bg-raised: #e2e8f0;
-  --bg-muted: #94a3b8;
-  /* Tekst ciemny na jasnym tle kart */
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --bg-raised: #e5e7eb;
+  --bg-muted: #9ca3af;
+  /* Tekst ciemny na jasnym tle */
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
   --text-on-accent: #ffffff;
-  /* Akcenty w stylu fantasy.ekstraklasa.org */
-  --accent: #3b82f6;
-  --accent-gold: #f59e0b;
-  --accent-green: #22c55e;
-  --accent-purple: #a78bfa;
-  --accent-red: #ef4444;
-  --accent-orange: #f97316;
-  --accent-blue: #3b82f6;
-  /* Nawigacja — ciemna, kontrastuje z jasną treścią */
+  /* Akcenty granatowo-niebieskie, zgodne z FE */
+  --accent: #1a3a6b;
+  --accent-gold: #d97706;
+  --accent-green: #16a34a;
+  --accent-purple: #7c3aed;
+  --accent-red: #dc2626;
+  --accent-orange: #d97706;
+  --accent-blue: #2563eb;
+  /* Nawigacja — taby na białym tle, aktywny tab ciemny */
   --header-color: #ffffff;
-  --tabs-bg: #102044;
-  --tabs-border: #1a3060;
+  --tabs-bg: #ffffff;
+  --tabs-border: #e5e7eb;
   --tab-active-bg: transparent;
-  --tab-active-border: #60a5fa;
-  --tab-active-color: #ffffff;
-  --tab-inactive-color: #94a3b8;
+  --tab-active-border: #1a3a6b;
+  --tab-active-color: #0b1a3b;
+  --tab-inactive-color: #6b7280;
   /* Stopka */
-  --footer-color: #94a3b8;
+  --footer-color: #9ca3af;
   --footer-bg: #0b1a3b;
 }
 
@@ -358,58 +359,184 @@ tr.highlight { background: rgba(251,191,36,0.06); }
 .pred-filters { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
 
 /* =============================================
-   DODATKOWE STYLE DLA MOTYWU FANTASY
-   Strukturalne zmiany niemożliwe przez same zmienne
+   DODATKOWE STYLE DLA MOTYWU FANTASY — JASNY
+   Wzorowane na fantasy.ekstraklasa.org
    ============================================= */
 
-/* Taby — zaokrąglone tło granatowe */
+/* Tło strony — jasny szary, reset body padding */
+html.theme-fantasy body {
+  background: #f0f2f5;
+  padding: 0;
+}
+
+/* Kontener — własny padding zamiast body */
+html.theme-fantasy .container {
+  padding: 0 20px 24px;
+}
+
+/* Wąski nagłówek — ciemny granat, rozciągnięty do krawędzi kontenera */
+html.theme-fantasy .header {
+  background: #0b1a3b;
+  padding: 12px 20px;
+  margin: 0 -20px 0;
+  border-radius: 0;
+}
+html.theme-fantasy .header h1 {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 20px;
+  color: #ffffff;
+}
+html.theme-fantasy .header .sub {
+  color: #94a3b8;
+}
+
+/* Taby główne — białe tło, granatowy podkreślnik aktywnego */
 html.theme-fantasy .tabs {
-  padding: 8px 4px 0;
-  border-radius: 8px 8px 0 0;
-  margin-top: 4px;
+  background: #ffffff;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  border-bottom: 2px solid #e5e7eb;
+}
+html.theme-fantasy .tab {
+  border-radius: 0;
+  padding: 12px 20px;
+  font-size: 13px;
+}
+html.theme-fantasy .tab:hover {
+  background: #f8f9fa;
+  color: #0b1a3b;
+}
+html.theme-fantasy .tab.active {
+  border-bottom-width: 3px;
+  margin-bottom: -2px;
+  font-weight: 700;
 }
 
-/* Karty statystyk — cień oddzielający od ciemnego tła */
+/* Sub-taby (Top 10 / Top 100 / Wszystkie / Liga) — pill shape jak na FE */
+html.theme-fantasy .scope-toggle {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  gap: 4px;
+  overflow: visible;
+}
+html.theme-fantasy .scope-btn {
+  border-radius: 20px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #6b7280;
+  padding: 5px 14px;
+}
+html.theme-fantasy .scope-btn:hover {
+  border-color: #1a3a6b;
+  color: #0b1a3b;
+  background: #f0f2f5;
+}
+html.theme-fantasy .scope-btn.active {
+  background: #1a3a6b;
+  border-color: #1a3a6b;
+  color: #ffffff;
+}
+
+/* Filtry pozycji — białe z borderem, aktywny kolorowy */
+html.theme-fantasy .pos-btn {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+html.theme-fantasy .pos-btn:hover {
+  border-color: #1a3a6b;
+  color: #0b1a3b;
+  background: #f8f9fa;
+}
+html.theme-fantasy .pos-btn.active { color: #ffffff; }
+html.theme-fantasy .pos-btn.active[data-pos="ALL"] { background: #1a3a6b; border-color: #1a3a6b; }
+html.theme-fantasy .pos-btn.active[data-pos="BR"]  { background: #d97706; border-color: #d97706; }
+html.theme-fantasy .pos-btn.active[data-pos="OBR"] { background: #2563eb; border-color: #2563eb; }
+html.theme-fantasy .pos-btn.active[data-pos="POM"] { background: #16a34a; border-color: #16a34a; }
+html.theme-fantasy .pos-btn.active[data-pos="NAP"] { background: #dc2626; border-color: #dc2626; }
+
+/* Karty statystyk — białe z cienkim borderem, bez cienia */
 html.theme-fantasy .stat-card {
-  box-shadow: 0 2px 12px rgba(11,26,59,0.15);
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
 }
 
-/* Tabele danych — cień jak przy kartach */
+/* Tabele danych — białe z borderem */
 html.theme-fantasy .data-table {
-  box-shadow: 0 2px 12px rgba(11,26,59,0.08);
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
 }
 
-/* Nagłówek tabeli w fantasy — linia zamiast ciemnego tła */
+/* Nagłówek tabeli — jasny szary, granatowa linia, ciemny tekst */
 html.theme-fantasy thead tr {
-  background: var(--bg-surface);
+  background: #f8f9fa;
 }
 html.theme-fantasy thead tr th {
-  border-bottom: 2px solid #0b1a3b;
+  border-bottom: 1px solid #d1d5db;
   color: #0b1a3b;
 }
 
-/* Alternujące wiersze w tabelach */
+/* Wiersze tabeli — białe, separator szary, BEZ alternacji */
 html.theme-fantasy tbody tr:nth-child(even) {
-  background: #f1f5f9;
+  background: transparent;
+}
+html.theme-fantasy td {
+  border-top-color: #e5e7eb;
 }
 
-/* Stopka — ciemna, zaokrąglona */
-html.theme-fantasy .footer {
-  padding: 12px 16px;
-  border-radius: 8px;
+/* Tytuły sekcji — granatowe */
+html.theme-fantasy .section-title h2 {
+  color: #0b1a3b;
 }
 
-/* Wyróżnienie własnej drużyny w Lidze CMF */
+/* Progress bar — tło widoczne na jasnym tle */
+html.theme-fantasy .bar-bg {
+  background: #e5e7eb;
+}
+
+/* Panele formy i szczegółów — jasny szary */
+html.theme-fantasy .form-panel {
+  background: #f8f9fa;
+  border-color: #e5e7eb;
+}
+html.theme-fantasy .detail-panel {
+  background: #f8f9fa;
+  border-color: #e5e7eb;
+}
+
+/* Hover w liście drużyn */
+html.theme-fantasy .team-list-header:hover {
+  background: #f0f2f5;
+}
+
+/* Wyróżnienie własnej drużyny */
 html.theme-fantasy .team-list-item.active .team-list-header {
   background: #dbeafe;
 }
 
-/* FDR kafelki — większe w fantasy */
+/* pred-fdr-used — widoczne na białym tle */
+html.theme-fantasy .pred-fdr-used {
+  background: rgba(26,58,107,0.08);
+}
+
+/* FDR kafelki — nieco większe */
 html.theme-fantasy .fdr-legend-swatch {
   width: 24px; height: 24px; border-radius: 6px;
 }
 
-/* Przycisk przełącznika motywu */
+/* Stopka — ciemna, rozciągnięta do krawędzi kontenera */
+html.theme-fantasy .footer {
+  background: #0b1a3b;
+  color: #9ca3af;
+  padding: 14px 20px;
+  margin: 24px -20px 0;
+  border-radius: 0;
+}
+
+/* Przycisk przełącznika motywu — bazowy styl (ciemne tło) */
 .theme-toggle-btn {
   margin-left: auto;
   background: transparent;
@@ -430,9 +557,10 @@ html.theme-fantasy .fdr-legend-swatch {
   color: var(--text-primary);
   border-color: rgba(255,255,255,0.5);
 }
+/* Przycisk motywu na ciemnym nagłówku fantasy */
 html.theme-fantasy .theme-toggle-btn {
   color: #94a3b8;
-  border-color: rgba(255,255,255,0.3);
+  border-color: rgba(255,255,255,0.35);
 }
 html.theme-fantasy .theme-toggle-btn:hover {
   background: rgba(255,255,255,0.15);
