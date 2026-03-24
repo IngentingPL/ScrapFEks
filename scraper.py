@@ -2217,9 +2217,8 @@ body {{
 .container {{ max-width: 95vw; margin: 0 auto; }}
 .header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }}
 .logo {{
-  width: 40px; height: 40px; border-radius: 10px;
-  background: linear-gradient(135deg, #006847, #d92231);
-  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  width: 48px; height: 48px; border-radius: 10px;
+  object-fit: contain;
 }}
 .header h1 {{ font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }}
 .header .sub {{ font-size: 12px; color: #64748b; margin: 0; }}
@@ -2463,7 +2462,7 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 <body>
 <div class="container">
   <div class="header">
-    <div class="logo">⚽</div>
+    <img src="logo.PNG" alt="ScrapFEks" class="logo">
     <div>
       <h1>Fantasy Ekstraklasa</h1>
       <p class="sub">Dashboard · {timestamp}</p>
