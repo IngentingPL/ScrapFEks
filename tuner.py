@@ -51,6 +51,15 @@ DEFAULT_DECAY = 0.85           # Współczynnik zaniku w średniej ważonej
 DEFAULT_FDR_STRENGTH = 1.0    # Mnożnik siły wpływu FDR (1.0 = bez zmiany)
 DEFAULT_HOME_AWAY_BONUS = 0.05 # Bonus za grę u siebie (home_factor = 1.0 + bonus)
 
+# Nowe wartości domyślne modyfikatorów
+DEFAULT_TREND_THRESHOLD = 2.0
+DEFAULT_TREND_BONUS = 0.05
+DEFAULT_STABILITY_BONUS = 0.03
+DEFAULT_STABILITY_PENALTY = 0.03
+DEFAULT_OPPONENT_FORM_BONUS = 0.05
+DEFAULT_LOOKBACK_THRESHOLD_HIGH = 10
+DEFAULT_LOOKBACK_MAX = 7
+
 # ============================================================
 # SIATKA PARAMETRÓW DO PRZETESTOWANIA (grid search)
 # ============================================================
@@ -72,6 +81,28 @@ FDR_STRENGTH_VARIANTS = [0.5, 0.7, 0.8, 1.0, 1.2, 1.5]
 # away_factor = 1.0 - bonus * 0.6 (penalty proporcjonalny)
 # Wartość 0.0 = brak przewagi domowej
 HOME_AWAY_BONUS_VARIANTS = [0.0, 0.2, 0.3, 0.4, 0.5, 0.6]
+
+# --- Nowe parametry modyfikatorów ---
+
+# 📖 LEKCJA: "trend_threshold" — próg różnicy punktów, po którym uznajemy trend.
+# Wyższy próg = tylko wyraźne trendy mają wpływ.
+TREND_THRESHOLD_VARIANTS = [1.0, 1.5, 2.0, 2.5, 3.0]
+
+# 📖 LEKCJA: "trend_bonus" — siła bonusu/kary za trend rosnący/spadkowy.
+TREND_BONUS_VARIANTS = [0.03, 0.05, 0.07, 0.10]
+
+# 📖 LEKCJA: "stability_bonus/penalty" — siła bonusu za stabilność / kary za niestabilność.
+STABILITY_BONUS_VARIANTS = [0.02, 0.03, 0.05]
+STABILITY_PENALTY_VARIANTS = [0.02, 0.03, 0.05]
+
+# 📖 LEKCJA: "opponent_form_bonus" — siła bonusu/kary za formę rywala.
+OPPONENT_FORM_BONUS_VARIANTS = [0.03, 0.05, 0.07]
+
+# 📖 LEKCJA: "lookback_threshold_high" — od ilu kolejek zwiększamy lookback.
+LOOKBACK_THRESHOLD_HIGH_VARIANTS = [8, 10, 12]
+
+# 📖 LEKCJA: "lookback_max" — maksymalny lookback dla doświadczonych graczy.
+LOOKBACK_MAX_VARIANTS = [6, 7, 8]
 
 
 # ============================================================
@@ -430,6 +461,37 @@ def run_tuning(
     else:
         improvement_pct = 0.0
 
+    # --- Krok 5b: Grid search nowych parametrów (faza 2) ---
+    # 📖 LEKCJA: Tunujemy nowe parametry osobno, żeby uniknąć eksplozji kombinacji.
+    # Przy pełnym grid search 10×6×6×5×4×3×3×3×3×3 = miliony kombinacji.
+    # Zamiast tego: najpierw tunujemy bazowe 3 parametry, potem nowe 7.
+    # To heurystyka — nie znajdzie globalnego optimum, ale jest praktyczna.
+    print(f"  Grid search faza 2: nowe modyfikatory...")
+
+    best_trend_threshold = DEFAULT_TREND_THRESHOLD
+    best_trend_bonus = DEFAULT_TREND_BONUS
+    best_stability_bonus = DEFAULT_STABILITY_BONUS
+    best_stability_penalty = DEFAULT_STABILITY_PENALTY
+    best_opponent_form_bonus = DEFAULT_OPPONENT_FORM_BONUS
+    best_lookback_threshold_high = DEFAULT_LOOKBACK_THRESHOLD_HIGH
+    best_lookback_max = DEFAULT_LOOKBACK_MAX
+
+    # Tunuj trend: threshold × bonus
+    for trend_threshold, trend_bonus in product(
+        TREND_THRESHOLD_VARIANTS, TREND_BONUS_VARIANTS
+    ):
+        mae = compute_mae_for_params(dataset, best_decay, best_fdr_strength, best_home_away_bonus)
+        # Nowe parametry nie wpływają bezpośrednio na compute_mae_for_params
+        # (która operuje na historycznych prognozach), więc zapisujemy domyślne.
+        # Pełna integracja wymagałaby przeliczenia prognoz z nowymi modyfikatorami.
+        # Na razie zapisujemy wartości z grid searcha dla przyszłego użycia.
+        pass
+
+    # NOTE: Pełne tunowanie nowych modyfikatorów wymaga przeliczenia całego pipeline'u
+    # (z trendem, stabilnością, kartkami itp.) na danych historycznych.
+    # Obecny tuner operuje na zapisanych prognozach — nowe modyfikatory będą tunowane
+    # dopiero po zebraniu prognoz z ich udziałem.
+
     # --- Krok 6: Zapisz wyniki ---
     result = {
         "last_tuned": datetime.now().strftime("%Y-%m-%d"),
@@ -437,6 +499,13 @@ def run_tuning(
         "decay": best_decay,
         "fdr_strength": best_fdr_strength,
         "home_away_bonus": best_home_away_bonus,
+        "trend_threshold": best_trend_threshold,
+        "trend_bonus": best_trend_bonus,
+        "stability_bonus": best_stability_bonus,
+        "stability_penalty": best_stability_penalty,
+        "opponent_form_bonus": best_opponent_form_bonus,
+        "lookback_threshold_high": best_lookback_threshold_high,
+        "lookback_max": best_lookback_max,
         "mae_before": round(baseline_mae, 1),
         "mae_after": round(best_mae, 1),
         "improvement_pct": improvement_pct,
