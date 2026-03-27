@@ -16,6 +16,7 @@ Kluczowe koncepty użyte tutaj:
 
 import json
 import os
+from statistics import stdev
 
 # ============================================================
 # WCZYTYWANIE WYTUNOWANYCH PARAMETRÓW (auto-tuning)
@@ -51,6 +52,15 @@ _TUNED = _load_tuned_params()
 _DEFAULT_DECAY = _TUNED.get("decay", 0.85) if _TUNED else 0.85
 _DEFAULT_FDR_STRENGTH = _TUNED.get("fdr_strength", 1.0) if _TUNED else 1.0
 _DEFAULT_HOME_AWAY_BONUS = _TUNED.get("home_away_bonus", 0.05) if _TUNED else 0.05
+
+# Nowe parametry modyfikatorów (wytunowane jeśli dostępne, w przeciwnym razie domyślne)
+_DEFAULT_TREND_THRESHOLD = _TUNED.get("trend_threshold", 2.0) if _TUNED else 2.0
+_DEFAULT_TREND_BONUS = _TUNED.get("trend_bonus", 0.05) if _TUNED else 0.05
+_DEFAULT_STABILITY_BONUS = _TUNED.get("stability_bonus", 0.03) if _TUNED else 0.03
+_DEFAULT_STABILITY_PENALTY = _TUNED.get("stability_penalty", 0.03) if _TUNED else 0.03
+_DEFAULT_OPPONENT_FORM_BONUS = _TUNED.get("opponent_form_bonus", 0.05) if _TUNED else 0.05
+_DEFAULT_LOOKBACK_THRESHOLD_HIGH = _TUNED.get("lookback_threshold_high", 10) if _TUNED else 10
+_DEFAULT_LOOKBACK_MAX = _TUNED.get("lookback_max", 7) if _TUNED else 7
 
 if _TUNED:
     print(
@@ -234,6 +244,256 @@ def get_home_away_factor(is_home):
 
 
 # ============================================================
+# NOWE MODYFIKATORY (trend, stabilność, clean sheet, forma rywala, kartki, lookback)
+# ============================================================
+
+def get_trend_modifier(recent_points):
+    """
+    Wykrywa czy gracz jest w trendzie ROSNĄCYM czy SPADKOWYM.
+
+    📖 LEKCJA: "Trend" to kierunek zmian w czasie.
+    Zamiast patrzeć na średnią (która mówi "ile zwykle"), patrzymy
+    na ZMIANĘ — czy jest lepiej czy gorzej niż było.
+    To jak w szkole: średnia 4.0 nie mówi, czy uczeń się poprawia
+    czy pogarsza. Trend tak.
+
+    Logika:
+    - Punkty są posortowane od najnowszej do najstarszej
+    - Odwracamy kolejność (od najstarszej do najnowszej) żeby policzyć trend
+    - Średnia z 2 najnowszych MINUS średnia z 2 najstarszych = kierunek zmiany
+    - Różnica > threshold → trend rosnący → bonus
+    - Różnica < -threshold → trend spadkowy → kara
+
+    Parametry:
+        recent_points: lista punktów [najnowsza, ..., najstarsza]
+
+    Zwraca:
+        float — modyfikator (np. 1.05 = bonus za trend rosnący)
+    """
+    if len(recent_points) < 4:
+        return 1.0
+
+    # Odwróć: od najstarszej do najnowszej
+    chronological = list(reversed(recent_points))
+
+    # Średnia z 2 najstarszych vs 2 najnowszych
+    old_avg = (chronological[0] + chronological[1]) / 2
+    new_avg = (chronological[-1] + chronological[-2]) / 2
+    diff = new_avg - old_avg
+
+    threshold = _DEFAULT_TREND_THRESHOLD
+    bonus = _DEFAULT_TREND_BONUS
+
+    if diff > threshold:
+        return 1.0 + bonus   # Trend rosnący
+    elif diff < -threshold:
+        return 1.0 - bonus   # Trend spadkowy
+    else:
+        return 1.0            # Neutralny
+
+
+def get_stability_modifier(recent_points):
+    """
+    Ocenia stabilność gracza na podstawie zmienności jego punktów.
+
+    📖 LEKCJA: "Odchylenie standardowe" (std) mierzy jak bardzo
+    wartości odbiegają od średniej. Małe std = wartości blisko średniej.
+    "Współczynnik zmienności" (CV) to std/średnia — pozwala porównywać
+    zmienność graczy z różnymi średnimi (gracz z śr. 2 i std 1
+    jest bardziej niestabilny niż gracz z śr. 10 i std 1).
+
+    Gracz z punktami [5,5,5,5,5] jest bardziej przewidywalny niż [1,1,1,1,15].
+    Stabilny gracz → pewniejsza prognoza → drobny bonus.
+    Niestabilny gracz → prognoza mniej wiarygodna → drobna kara.
+
+    Parametry:
+        recent_points: lista punktów z ostatnich kolejek
+
+    Zwraca:
+        float — modyfikator (1.03 = stabilny, 0.97 = niestabilny, 1.0 = pomiędzy)
+    """
+    if len(recent_points) < 2:
+        return 1.0
+
+    avg = sum(recent_points) / len(recent_points)
+    if avg <= 0:
+        return 1.0
+
+    # Oblicz odchylenie standardowe (moduł statistics)
+    try:
+        std = stdev(recent_points)
+    except Exception:
+        return 1.0
+
+    # Współczynnik zmienności = std / średnia
+    cv = std / avg
+
+    if cv < 0.3:
+        return 1.0 + _DEFAULT_STABILITY_BONUS    # Stabilny → bonus
+    elif cv > 0.8:
+        return 1.0 - _DEFAULT_STABILITY_PENALTY   # Niestabilny → kara
+    else:
+        return 1.0
+
+
+def get_clean_sheet_modifier(player, fdr_atk_opponent):
+    """
+    Bonus clean sheet dla obrońców i bramkarzy.
+
+    📖 LEKCJA: "Clean sheet" to mecz bez straty gola.
+    W fantasy piłce obrońcy i bramkarze dostają za to bonus punktowy.
+    Im więcej clean sheetów drużyna ma, tym bardziej prawdopodobne,
+    że następny mecz też będzie bez straty gola — szczególnie
+    przeciwko słabemu rywalowi.
+
+    Dane o clean sheetach NIE SĄ dostępne w projekcie (brak pola clean_sheet
+    ani goals_conceded w danych kolejek). Używamy FDR ATK rywala jako proxy:
+    jeśli rywal ma słaby atak → większa szansa na clean sheet.
+
+    Stosowany TYLKO dla pozycji OBR i BR.
+
+    Parametry:
+        player: dict z danymi gracza (musi zawierać "position")
+        fdr_atk_opponent: FDR ofensywny rywala (1-5)
+
+    Zwraca:
+        float — modyfikator (np. 1.05 = bonus za słaby atak rywala)
+    """
+    position = player.get("position", "POM")
+
+    # Stosuj TYLKO dla obrońców i bramkarzy
+    if position not in ("OBR", "BR"):
+        return 1.0
+
+    # TODO: dodać scraping clean sheetów dla lepszej dokładności
+    # Brak danych o clean sheetach — używamy FDR ATK rywala jako proxy
+    if fdr_atk_opponent <= 2:
+        return 1.05  # Rywal ze słabym atakiem → bonus CS
+    elif fdr_atk_opponent >= 4:
+        return 0.97  # Rywal z silnym atakiem → mniejsza szansa na CS
+    else:
+        return 1.0
+
+
+def get_opponent_form_modifier(opponent_team, team_form_data):
+    """
+    Modyfikator bazujący na aktualnej formie rywala z ostatnich meczów.
+
+    📖 LEKCJA: Statyczne FDR mówi "Raków jest ogólnie silny".
+    Ale co jeśli Raków przegrał 4 z 5 ostatnich meczów? Forma rywala
+    zmienia się w sezonie. Ten modyfikator łapie te zmiany —
+    to jak sprawdzanie "aktualnej pogody" zamiast "średniej rocznej".
+
+    Parametry:
+        opponent_team: nazwa drużyny rywala
+        team_form_data: dict z danymi o formie drużyn (None jeśli brak)
+
+    Zwraca:
+        float — modyfikator (1.05 = rywal w dołku, 0.95 = rywal w formie)
+    """
+    # TODO: dodać scraping formy drużyn dla dynamicznego FDR
+    # Brak danych o formie drużyn w projekcie — pomijamy modyfikator
+    if not team_form_data:
+        return 1.0
+
+    form = team_form_data.get(opponent_team)
+    if not form:
+        return 1.0
+
+    # Oblicz win rate z ostatnich 5 meczów
+    recent = form.get("recent_results", [])[:5]
+    if not recent:
+        return 1.0
+
+    wins = sum(1 for r in recent if r == "W")
+    win_rate = wins / len(recent)
+
+    bonus = _DEFAULT_OPPONENT_FORM_BONUS
+
+    if win_rate > 0.6:
+        return 1.0 - bonus   # Rywal w formie → kara
+    elif win_rate < 0.3:
+        return 1.0 + bonus   # Rywal w dołku → bonus
+    else:
+        return 1.0
+
+
+def get_dynamic_lookback(played_rounds_count):
+    """
+    Oblicza dynamiczny lookback na podstawie liczby rozegranych kolejek.
+
+    📖 LEKCJA: Im więcej danych mamy, tym lepiej możemy prognozować.
+    Ale za dużo starych danych "rozmywa" aktualną formę.
+    Dynamiczny lookback to kompromis: więcej danych = patrzymy trochę dalej,
+    ale wagi decay i tak faworyzują nowsze mecze.
+
+    Logika:
+    - ≥ 10 kolejek → lookback = 7 (więcej danych = stabilniejsza średnia)
+    - 5-9 kolejek → lookback = 5 (domyślnie)
+    - 2-4 kolejki → lookback = ilość dostępnych kolejek
+
+    Parametry:
+        played_rounds_count: ile kolejek gracz rozegrał
+
+    Zwraca:
+        int — lookback (ile kolejek brać pod uwagę)
+    """
+    threshold_high = _DEFAULT_LOOKBACK_THRESHOLD_HIGH
+    lookback_max = _DEFAULT_LOOKBACK_MAX
+
+    if played_rounds_count >= threshold_high:
+        return lookback_max
+    elif played_rounds_count >= 5:
+        return DEFAULT_LOOKBACK  # 5
+    else:
+        return played_rounds_count  # 2-4: tyle ile mamy
+
+
+def get_card_risk_modifier(recent_rounds):
+    """
+    Kara za ryzyko związane z kartkami (żółte i czerwone).
+
+    📖 LEKCJA: W piłce po kumulacji żółtych kartek gracz dostaje
+    automatyczną pauzę. Gracz, który często dostaje kartki, to ryzyko —
+    może nie zagrać w następnym meczu. To jak sprawdzanie "historii
+    mandatów" przed pożyczeniem komuś samochodu.
+
+    Dane o kartkach SĄ dostępne w projekcie (pola yellow_cards i red_cards
+    w danych kolejek).
+
+    Logika:
+    - Czerwona w ostatnim meczu → ×0.0 (pauzuje — nie gra!)
+    - ≥ 3 żółte w 5 meczach → ×0.92 (ryzyko pauzy + agresywna gra)
+    - 2 żółte w 5 meczach → ×0.96
+    - Inaczej → ×1.0
+
+    Parametry:
+        recent_rounds: lista dict z danymi kolejek (z polami yellow_cards, red_cards)
+
+    Zwraca:
+        float — modyfikator (0.0 = pauzuje, 0.92 = duże ryzyko, 1.0 = OK)
+    """
+    if not recent_rounds:
+        return 1.0
+
+    # Sprawdź czerwoną kartkę w ostatnim meczu (recent_rounds[0] = najnowszy)
+    last_round = recent_rounds[0]
+    if last_round.get("red_cards", 0) > 0:
+        return 0.0  # Czerwona → pauzuje
+
+    # Policz żółte kartki z ostatnich 5 meczów
+    last_5 = recent_rounds[:5]
+    yellow_count = sum(r.get("yellow_cards", 0) for r in last_5)
+
+    if yellow_count >= 3:
+        return 0.92  # Duże ryzyko pauzy
+    elif yellow_count >= 2:
+        return 0.96  # Umiarkowane ryzyko
+    else:
+        return 1.0
+
+
+# ============================================================
 # GŁÓWNA FUNKCJA PREDYKCJI
 # ============================================================
 
@@ -280,8 +540,9 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     # Sortuj od najnowszej kolejki
     played_rounds.sort(key=lambda r: r.get("round", 0), reverse=True)
 
-    # Weź ostatnich N
-    recent_rounds = played_rounds[:lookback]
+    # Dynamiczny lookback — im więcej danych, tym dalej patrzymy
+    dynamic_lookback = get_dynamic_lookback(len(played_rounds))
+    recent_rounds = played_rounds[:dynamic_lookback]
 
     if len(recent_rounds) < MIN_ROUNDS_FOR_PREDICTION:
         return {
@@ -312,8 +573,17 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     is_home = next_fixture.get("is_home", False)
     ha_factor = get_home_away_factor(is_home)
 
-    # --- Krok 6: Końcowa prognoza ---
+    # --- Krok 6: Końcowa prognoza (istniejący pipeline) ---
     predicted = base_avg * fdr_mod * min_factor * ha_factor
+
+    # --- Krok 7: Nowe modyfikatory ---
+    trend_mod = get_trend_modifier(recent_points)
+    stability_mod = get_stability_modifier(recent_points)
+    cs_mod = get_clean_sheet_modifier(player, opponent_fdr["atk"])
+    opp_form_mod = get_opponent_form_modifier(opponent, None)  # Brak danych o formie drużyn
+    card_mod = get_card_risk_modifier(recent_rounds)
+
+    predicted = predicted * trend_mod * stability_mod * cs_mod * opp_form_mod * card_mod
 
     # Zaokrąglij do 1 miejsca po przecinku
     predicted = round(predicted, 1)
@@ -326,6 +596,25 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     else:
         confidence = "low"
 
+    # Buduj detail string — pokazuj tylko modyfikatory ≠ 1.0 żeby nie zaśmiecać
+    detail_parts = [
+        f"Śr. {round(base_avg, 1)}",
+        f"× FDR {round(fdr_mod, 2)}",
+        f"× min {round(min_factor, 2)}",
+        f"× {'dom' if is_home else 'wyjazd'} {round(ha_factor, 2)}",
+    ]
+    if trend_mod != 1.0:
+        detail_parts.append(f"× trend {round(trend_mod, 2)}")
+    if stability_mod != 1.0:
+        detail_parts.append(f"× stab {round(stability_mod, 2)}")
+    if cs_mod != 1.0:
+        detail_parts.append(f"× CS {round(cs_mod, 2)}")
+    if opp_form_mod != 1.0:
+        detail_parts.append(f"× forma_ryw {round(opp_form_mod, 2)}")
+    if card_mod != 1.0:
+        detail_parts.append(f"× kartki {round(card_mod, 2)}")
+    detail_parts.append(f"= {predicted}")
+
     return {
         "predicted_points": predicted,
         "base_avg": round(base_avg, 1),
@@ -334,14 +623,16 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         "fdr_def_opponent": opponent_fdr["def"],
         "minutes_factor": round(min_factor, 2),
         "home_away_factor": round(ha_factor, 2),
+        "trend_modifier": round(trend_mod, 2),
+        "stability_modifier": round(stability_mod, 2),
+        "cs_modifier": round(cs_mod, 2),
+        "opponent_form_modifier": round(opp_form_mod, 2),
+        "card_risk_modifier": round(card_mod, 2),
         "avg_minutes": round(avg_minutes, 0),
         "rounds_used": len(recent_rounds),
+        "dynamic_lookback": dynamic_lookback,
         "confidence": confidence,
-        "detail": (
-            f"Śr. {round(base_avg, 1)} × FDR {round(fdr_mod, 2)} "
-            f"× min {round(min_factor, 2)} × {'dom' if is_home else 'wyjazd'} "
-            f"{round(ha_factor, 2)} = {predicted}"
-        ),
+        "detail": " ".join(detail_parts),
     }
 
 
@@ -410,11 +701,11 @@ if __name__ == "__main__":
         "position": "NAP",
         "total_points": 45,
         "rounds": [
-            {"round": 20, "played": True, "points": 10, "minutes": 90},
-            {"round": 19, "played": True, "points": 3, "minutes": 90},
-            {"round": 18, "played": True, "points": 5, "minutes": 78},
-            {"round": 17, "played": True, "points": 8, "minutes": 90},
-            {"round": 16, "played": True, "points": 2, "minutes": 85},
+            {"round": 20, "played": True, "points": 10, "minutes": 90, "yellow_cards": 1, "red_cards": 0},
+            {"round": 19, "played": True, "points": 3, "minutes": 90, "yellow_cards": 0, "red_cards": 0},
+            {"round": 18, "played": True, "points": 5, "minutes": 78, "yellow_cards": 1, "red_cards": 0},
+            {"round": 17, "played": True, "points": 8, "minutes": 90, "yellow_cards": 0, "red_cards": 0},
+            {"round": 16, "played": True, "points": 2, "minutes": 85, "yellow_cards": 1, "red_cards": 0},
         ]
     }
 
@@ -430,6 +721,9 @@ if __name__ == "__main__":
     result = predict_points(test_player, test_fdr, {"opponent": "GKS", "is_home": True})
     print(f"  Prognoza: {result['predicted_points']} pkt")
     print(f"  Szczegóły: {result['detail']}")
+    print(f"  Nowe modyfikatory: trend={result['trend_modifier']}, stab={result['stability_modifier']}, "
+          f"CS={result['cs_modifier']}, forma_ryw={result['opponent_form_modifier']}, "
+          f"kartki={result['card_risk_modifier']}, lookback={result['dynamic_lookback']}")
     print()
 
     # Test 2: Napastnik vs silna obrona (Raków)
@@ -444,4 +738,106 @@ if __name__ == "__main__":
     print("=== Test 3: OBR vs Legia (silny atak, dom) ===")
     result = predict_points(test_defender, test_fdr, {"opponent": "Legia", "is_home": True})
     print(f"  Prognoza: {result['predicted_points']} pkt")
+    print(f"  Szczegóły: {result['detail']}")
+    print()
+
+    # ============================================================
+    # TESTY NOWYCH MODYFIKATORÓW
+    # ============================================================
+
+    print("=" * 60)
+    print("TESTY NOWYCH MODYFIKATORÓW")
+    print("=" * 60)
+
+    # --- Test trend_modifier ---
+    print("\n--- Test: get_trend_modifier ---")
+    # Trend rosnący: stare [2, 3] → nowe [8, 10] → diff = 9 - 2.5 = 6.5 > 2.0
+    rising = [10, 8, 3, 2]  # najnowsza do najstarszej
+    print(f"  Rosnący {rising}: {get_trend_modifier(rising)}")  # Oczekiwane: 1.05
+
+    # Trend spadkowy: stare [8, 10] → nowe [2, 3] → diff = 2.5 - 9 = -6.5 < -2.0
+    falling = [2, 3, 8, 10]
+    print(f"  Spadkowy {falling}: {get_trend_modifier(falling)}")  # Oczekiwane: 0.95
+
+    # Neutralny: [5, 5, 5, 5]
+    neutral = [5, 5, 5, 5]
+    print(f"  Neutralny {neutral}: {get_trend_modifier(neutral)}")  # Oczekiwane: 1.0
+
+    # Za mało danych: [5, 5, 5]
+    short = [5, 5, 5]
+    print(f"  Za mało danych {short}: {get_trend_modifier(short)}")  # Oczekiwane: 1.0
+
+    # --- Test stability_modifier ---
+    print("\n--- Test: get_stability_modifier ---")
+    stable = [5, 5, 5, 5, 5]
+    print(f"  Stabilny {stable}: {get_stability_modifier(stable)}")  # Oczekiwane: 1.03
+
+    unstable = [1, 1, 1, 1, 15]
+    print(f"  Niestabilny {unstable}: {get_stability_modifier(unstable)}")  # Oczekiwane: 0.97
+
+    medium_var = [3, 5, 7, 4, 6]
+    print(f"  Średni {medium_var}: {get_stability_modifier(medium_var)}")  # Oczekiwane: 1.0
+
+    # --- Test clean_sheet_modifier ---
+    print("\n--- Test: get_clean_sheet_modifier ---")
+    defender = {"position": "OBR"}
+    keeper = {"position": "BR"}
+    forward = {"position": "NAP"}
+    print(f"  OBR vs słaby atak (FDR=1): {get_clean_sheet_modifier(defender, 1)}")  # 1.05
+    print(f"  BR vs słaby atak (FDR=2): {get_clean_sheet_modifier(keeper, 2)}")    # 1.05
+    print(f"  OBR vs silny atak (FDR=4): {get_clean_sheet_modifier(defender, 4)}")  # 0.97
+    print(f"  NAP (nie dotyczy): {get_clean_sheet_modifier(forward, 1)}")           # 1.0
+
+    # --- Test opponent_form_modifier ---
+    print("\n--- Test: get_opponent_form_modifier ---")
+    print(f"  Brak danych (None): {get_opponent_form_modifier('Raków', None)}")  # 1.0
+
+    # --- Test dynamic_lookback ---
+    print("\n--- Test: get_dynamic_lookback ---")
+    print(f"  12 kolejek: lookback={get_dynamic_lookback(12)}")  # 7
+    print(f"  7 kolejek: lookback={get_dynamic_lookback(7)}")    # 5
+    print(f"  3 kolejki: lookback={get_dynamic_lookback(3)}")    # 3
+
+    # --- Test card_risk_modifier ---
+    print("\n--- Test: get_card_risk_modifier ---")
+    # 3 żółte w 5 meczach
+    rounds_3y = [
+        {"yellow_cards": 1, "red_cards": 0},
+        {"yellow_cards": 0, "red_cards": 0},
+        {"yellow_cards": 1, "red_cards": 0},
+        {"yellow_cards": 0, "red_cards": 0},
+        {"yellow_cards": 1, "red_cards": 0},
+    ]
+    print(f"  3 żółte/5 meczów: {get_card_risk_modifier(rounds_3y)}")  # 0.92
+
+    # Czerwona w ostatnim meczu
+    rounds_red = [
+        {"yellow_cards": 0, "red_cards": 1},
+        {"yellow_cards": 0, "red_cards": 0},
+    ]
+    print(f"  Czerwona ostatni mecz: {get_card_risk_modifier(rounds_red)}")  # 0.0
+
+    # Brak kartek
+    rounds_clean = [
+        {"yellow_cards": 0, "red_cards": 0},
+        {"yellow_cards": 0, "red_cards": 0},
+    ]
+    print(f"  Brak kartek: {get_card_risk_modifier(rounds_clean)}")  # 1.0
+
+    # --- Test integracji: gracz z 12 kolejkami (dynamiczny lookback = 7) ---
+    print("\n--- Test: Gracz z 12 kolejkami (lookback dynamiczny) ---")
+    big_player = {
+        "player_id": 999,
+        "name": "Doświadczony Gracz",
+        "team": "Lech",
+        "position": "POM",
+        "total_points": 80,
+        "rounds": [
+            {"round": i, "played": True, "points": 5 + (i % 3), "minutes": 90,
+             "yellow_cards": 0, "red_cards": 0}
+            for i in range(1, 13)
+        ]
+    }
+    result = predict_points(big_player, test_fdr, {"opponent": "GKS", "is_home": True})
+    print(f"  Prognoza: {result['predicted_points']} pkt (lookback={result['dynamic_lookback']})")
     print(f"  Szczegóły: {result['detail']}")
