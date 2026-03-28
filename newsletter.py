@@ -447,3 +447,29 @@ def load_newsletter_history() -> list:
             return json.load(f)
     except (json.JSONDecodeError, IOError):
         return []
+
+
+# ============================================================
+# CLI — test klucza Gemini API
+# ============================================================
+# Użycie:
+#   GEMINI_API_KEY=twoj_klucz python newsletter.py
+#
+# Wysyła krótki testowy prompt do Gemini i wyświetla odpowiedź.
+# NIE wysyła nic na Discord, NIE zapisuje do archiwum.
+
+if __name__ == "__main__":
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        print("❌ Ustaw zmienną GEMINI_API_KEY, np.:")
+        print("   GEMINI_API_KEY=AIza... python newsletter.py")
+        raise SystemExit(1)
+
+    print("🔑 Testuję klucz Gemini API...")
+    test_prompt = "Odpowiedz jednym zdaniem po polsku: Czy działa połączenie z Gemini API?"
+    result = call_gemini(test_prompt, api_key)
+
+    if result:
+        print(f"✅ Klucz działa! Odpowiedź Gemini:\n   {result.strip()}")
+    else:
+        print("❌ Brak odpowiedzi — sprawdź klucz lub logi powyżej.")
