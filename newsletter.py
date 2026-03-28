@@ -3,11 +3,11 @@ newsletter.py — Newsletter AI (Gemini) dla ScrapFEks
 =====================================================
 
 Po każdej kolejce generuje krótki komentarz po polsku na bazie danych z ScrapFEks.
-Używa Gemini API (gemini-2.0-flash) przez urllib.request — BEZ zewnętrznych bibliotek.
+Używa Gemini API (gemini-2.5-flash) przez urllib.request — BEZ zewnętrznych bibliotek.
 
 📖 LEKCJA: API (Application Programming Interface) to sposób komunikacji między
 programami. Wysyłasz JSON z pytaniem → dostajesz JSON z odpowiedzią.
-Gemini API jest darmowe do ~15 requestów/minutę (model gemini-2.0-flash).
+Gemini API jest darmowe do ~15 requestów/minutę (model gemini-2.5-flash).
 
 Autor: Wygenerowane przez Claude dla Piotra
 """
@@ -99,7 +99,7 @@ def call_gemini(prompt: str, api_key: str):
     tam WYSYŁALIŚMY treść do wyświetlenia, tu PYTAMY o wygenerowanie treści.
     Gemini endpoint przyjmuje JSON z "contents" i zwraca JSON z "candidates".
 
-    Używamy modelu gemini-2.0-flash — szybki i darmowy (~15 req/min).
+    Używamy modelu gemini-2.5-flash — szybki i darmowy (~15 req/min).
 
     Zwraca:
         str — tekst odpowiedzi Gemini
@@ -107,7 +107,7 @@ def call_gemini(prompt: str, api_key: str):
     """
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-2.0-flash:generateContent?key={api_key}"
+        f"gemini-2.5-flash:generateContent?key={api_key}"
     )
 
     payload = {
@@ -423,7 +423,7 @@ def _save_newsletter(round_number, text: str) -> None:
         "round": round_number,
         "date": date.today().isoformat(),
         "text": text,
-        "model": "gemini-2.0-flash",
+        "model": "gemini-2.5-flash",
     }
     history.append(entry)
 
