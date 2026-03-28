@@ -539,6 +539,116 @@ html.theme-fantasy .theme-toggle-btn:hover {
   background: rgba(255,255,255,0.15);
   color: #ffffff;
 }
+/* ============================================================
+   📖 PORÓWNYWARKA ZAWODNIKÓW — style
+   Sekcje: wybór, karty, tabela statystyk, wykres formy, FDR
+   Używa CSS custom properties aby działać w obu motywach.
+   ============================================================ */
+.cmp-search-wrap {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;
+}
+.cmp-search-box {
+  position: relative; flex: 1; min-width: 200px;
+}
+.cmp-search-input {
+  width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--bg-raised);
+  background: var(--bg-deep); color: var(--text-primary); font-size: 14px; font-family: inherit;
+  outline: none; transition: border-color 0.2s;
+}
+.cmp-search-input:focus { border-color: var(--accent); }
+.cmp-search-input::placeholder { color: var(--text-muted); }
+/* 📖 Autouzupełnianie — lista podpowiedzi pod polem wyszukiwania */
+.cmp-autocomplete {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  background: var(--bg-surface); border: 1px solid var(--bg-raised); border-radius: 8px;
+  max-height: 220px; overflow-y: auto; display: none; margin-top: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+.cmp-autocomplete.visible { display: block; }
+.cmp-ac-item {
+  padding: 8px 14px; cursor: pointer; font-size: 13px; display: flex;
+  align-items: center; gap: 8px; transition: background 0.1s;
+}
+.cmp-ac-item:hover { background: var(--bg-raised); }
+.cmp-ac-item .cmp-ac-team { color: var(--text-muted); font-size: 11px; }
+.cmp-clear-btn {
+  background: var(--bg-raised); border: none; color: var(--text-secondary); padding: 8px 16px;
+  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
+}
+.cmp-clear-btn:hover { background: var(--bg-muted); color: var(--text-primary); }
+.cmp-selected-chips {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.cmp-chip {
+  display: inline-flex; align-items: center; gap: 6px; background: var(--bg-surface);
+  border: 1px solid var(--bg-raised); border-radius: 20px; padding: 4px 12px 4px 8px;
+  font-size: 13px; color: var(--text-primary); animation: cmpChipIn 0.2s ease;
+}
+@keyframes cmpChipIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.cmp-chip-remove {
+  background: none; border: none; color: var(--text-muted); cursor: pointer;
+  font-size: 16px; line-height: 1; padding: 0 2px; transition: color 0.15s;
+}
+.cmp-chip-remove:hover { color: var(--accent-red); }
+/* 📖 Karty zawodników — obok siebie, responsywne */
+.cmp-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px; margin-bottom: 24px;
+}
+.cmp-card {
+  background: var(--bg-surface); border-radius: 12px; padding: 20px;
+  border-top: 3px solid var(--accent); animation: cmpChipIn 0.3s ease;
+}
+.cmp-card:nth-child(2) { border-top-color: var(--accent-gold); }
+.cmp-card:nth-child(3) { border-top-color: var(--accent-purple); }
+.cmp-card-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.cmp-card-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+.cmp-card-stats { display: flex; flex-direction: column; gap: 6px; }
+.cmp-card-stat {
+  display: flex; justify-content: space-between; font-size: 13px;
+  padding: 4px 0; border-bottom: 1px solid var(--bg-deep);
+}
+.cmp-card-stat .cmp-stat-label { color: var(--text-muted); }
+.cmp-card-stat .cmp-stat-val { font-weight: 700; color: var(--text-primary); }
+/* 📖 Tabela porównania — podświetlenie najlepszej wartości */
+.cmp-table { background: var(--bg-surface); border-radius: 12px; overflow: hidden; margin-bottom: 24px; overflow-x: auto; }
+.cmp-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cmp-table th { padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 600; background: var(--bg-deep); }
+.cmp-table td { padding: 10px 14px; border-top: 1px solid var(--bg-deep); text-align: center; }
+.cmp-table td:first-child { text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 12px; }
+.cmp-table td.cmp-best { background: rgba(16,185,129,0.12); color: #10b981; font-weight: 800; }
+/* 📖 Wykres formy — SVG, jedna linia per zawodnik */
+.cmp-chart-wrap {
+  background: var(--bg-surface); border-radius: 12px; padding: 20px; margin-bottom: 24px;
+}
+.cmp-chart-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+.cmp-chart-legend {
+  display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; flex-wrap: wrap;
+}
+.cmp-chart-legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+.cmp-chart-legend-swatch { width: 16px; height: 3px; border-radius: 2px; }
+.cmp-chart svg { display: block; width: 100%; }
+/* 📖 Siatka FDR — kolorowe kafelki jak w zakładce Terminarz */
+.cmp-fdr-wrap {
+  background: var(--bg-surface); border-radius: 12px; padding: 20px; overflow-x: auto;
+}
+.cmp-fdr-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+.cmp-fdr-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.cmp-fdr-table th { padding: 8px 10px; font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; border-bottom: 2px solid var(--bg-raised); }
+.cmp-fdr-table td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--bg-deep); }
+.cmp-fdr-cell {
+  display: inline-flex; align-items: center; gap: 4px; border-radius: 4px;
+  padding: 3px 8px; font-weight: 700; font-size: 12px;
+}
+.cmp-fdr-cell .cmp-fdr-ha { font-size: 9px; font-weight: 400; opacity: 0.7; }
+.cmp-empty {
+  text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 15px;
+}
+.cmp-empty-icon { font-size: 48px; margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -576,7 +686,7 @@ html.theme-fantasy .theme-toggle-btn:hover {
       <button class='tab' data-tab='fixtures'>📅 Terminarz</button>
       <button class='tab' data-tab='transfers'>🔄 Transfery</button>
       <button class='tab' data-tab='predictions'>🔮 Prognoza</button>
-      
+      <button class="tab" data-tab="compare">⚖️ Porównanie</button>
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       <div class='scope-toggle'><button class='scope-btn' data-scope='top10'>🏆 Top 10</button><button class='scope-btn' data-scope='top100'>🥈 Top 100</button><button class='scope-btn' data-scope='all'>📊 Wszystkie (1000)</button><button class='scope-btn' data-scope='league'>🏅 Discord Fmforumcmf</button></div>
@@ -594,6 +704,7 @@ html.theme-fantasy .theme-toggle-btn:hover {
     <div id="tab-transfers" class="tab-content"></div>
     <div id="tab-predictions" class="tab-content"></div>
     <div id="tab-accuracy" class="tab-content"></div>
+    <div id="tab-compare" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · 2026-03-23 11:53</div>
 </div>
@@ -620,6 +731,8 @@ let tab = 'players', pos = 'ALL', scope = 'top10';
 let selectedTeam = '';
 let selectedDuet = '';
 let currentTeamsView = 'teams';
+// 📖 Stan porównywarki — tablica player_id wybranych zawodników (max 3)
+let cmpSelected = [];
 let sorts = {
   players: {col:'total_points', dir:'desc'},
   teams: {col:'_pos_order', dir:'asc'},
@@ -1746,6 +1859,259 @@ function renderAccuracy() {
   return h;
 }
 
+// ============================================================
+// 📖 PORÓWNYWARKA ZAWODNIKÓW
+// Pozwala wybrać 2-3 graczy i porównać ich obok siebie:
+// karty, tabela statystyk, wykres formy (SVG), siatka FDR.
+// ============================================================
+
+// 📖 Kolory przypisane do pozycji w kartach — stałe, czytelne
+const CMP_COLORS = ['#22d3ee', '#fbbf24', '#a78bfa'];
+
+function cmpAddPlayer(id) {
+  if (cmpSelected.length >= 3) return;
+  if (cmpSelected.includes(id)) return;
+  cmpSelected.push(id);
+  render();
+}
+function cmpRemovePlayer(id) {
+  cmpSelected = cmpSelected.filter(x => x !== id);
+  render();
+}
+function cmpClear() {
+  cmpSelected = [];
+  render();
+}
+
+function renderComparison() {
+  // 📖 Łączymy dane z PLAYERS i PREDICTIONS — PLAYERS mają formę i cenę,
+  // PREDICTIONS mają prognozę, FDR, średnią minut itp.
+  const allPlayers = PLAYERS.map(p => {
+    const pred = PREDICTIONS.find(pr => pr.player_id === p.player_id) || {};
+    return {...p, ...pred, _src: p};
+  });
+
+  let h = '<div class="section-title"><span style="font-size:22px">⚖️</span><h2>Porównanie zawodników</h2><div class="line"></div></div>';
+
+  // --- Pole wyszukiwania ---
+  h += '<div class="cmp-search-wrap">';
+  h += '<div class="cmp-search-box">';
+  h += '<input class="cmp-search-input" id="cmpSearchInput" type="text" placeholder="Wpisz imię zawodnika… (min 2, max 3)" autocomplete="off">';
+  h += '<div class="cmp-autocomplete" id="cmpAutocomplete"></div>';
+  h += '</div>';
+  h += '<button class="cmp-clear-btn" onclick="cmpClear()">Wyczyść</button>';
+  h += '</div>';
+
+  // --- Chipy wybranych zawodników ---
+  if (cmpSelected.length) {
+    h += '<div class="cmp-selected-chips">';
+    cmpSelected.forEach((id, i) => {
+      const p = allPlayers.find(x => x.player_id === id);
+      if (!p) return;
+      const pk = POS_ID[p.position] || p.position || '';
+      h += '<div class="cmp-chip" style="border-color:'+CMP_COLORS[i]+'">';
+      h += posBadge(p.position) + ' <strong>' + p.name + '</strong> <span style="color:var(--text-muted);font-size:11px">(' + p.team + ')</span>';
+      h += '<button class="cmp-chip-remove" onclick="cmpRemovePlayer('+id+')">×</button>';
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+
+  // Jeśli mniej niż 2 zawodników — pokaż instrukcję
+  if (cmpSelected.length < 2) {
+    h += '<div class="cmp-empty"><div class="cmp-empty-icon">⚖️</div>';
+    h += 'Wybierz <strong>2 lub 3</strong> zawodników aby zobaczyć porównanie.<br>';
+    h += '<span style="font-size:13px;color:var(--text-muted)">Zacznij wpisywać nazwisko w polu powyżej.</span></div>';
+    return h;
+  }
+
+  // --- Zbierz dane wybranych graczy ---
+  const selected = cmpSelected.map((id, i) => {
+    const p = allPlayers.find(x => x.player_id === id);
+    return p ? {...p, _color: CMP_COLORS[i]} : null;
+  }).filter(Boolean);
+
+  if (selected.length < 2) return h + '<div class="cmp-empty">Nie znaleziono danych dla wybranych zawodników.</div>';
+
+  // === SEKCJA A: Karty zawodników ===
+  h += '<div class="cmp-cards">';
+  selected.forEach((p, i) => {
+    const pk = POS_ID[p.position] || p.position || '';
+    const played = (p.form || []).filter(f => f.p);
+    const formAvg = played.length ? (played.reduce((s,f) => s + f.pts, 0) / played.length).toFixed(1) : '—';
+    const predPts = p.predicted_points != null ? p.predicted_points.toFixed(1) : '—';
+    // 📖 Następny rywal z FDR — szukamy w FDR_DATA
+    const teamFdr = (FDR_DATA.teams || []).find(t => t.name === p.team);
+    const nextFix = teamFdr ? (teamFdr.fixtures || [])[0] : null;
+    const nextOpp = nextFix ? nextFix.opponent_short : (p.next_opponent || '—');
+    const nextFdrAtk = nextFix ? nextFix.atk : (p.fdr_atk_opponent || 3);
+    const nextFdrDef = nextFix ? nextFix.def : (p.fdr_def_opponent || 3);
+    // 📖 FDR uśredniony do jednej wartości (zależy od pozycji)
+    const isAttacker = (pk === 'NAP' || pk === 'POM');
+    const mainFdr = isAttacker ? nextFdrDef : nextFdrAtk;
+    const fdrC = FDR_COLORS[mainFdr] || FDR_COLORS[3];
+    const isHome = nextFix ? nextFix.home : p.is_home;
+    const haLabel = isHome ? '(D)' : '(W)';
+
+    h += '<div class="cmp-card" style="border-top-color:'+CMP_COLORS[i]+'">';
+    h += '<div class="cmp-card-name">' + p.name + '</div>';
+    h += '<div class="cmp-card-meta">' + posBadge(p.position) + ' · ' + p.team + '</div>';
+    h += '<div class="cmp-card-stats">';
+    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Cena</span><span class="cmp-stat-val">' + (p.price || 0).toFixed(1) + 'M</span></div>';
+    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Łączne pkt</span><span class="cmp-stat-val">' + (p.total_points || 0) + '</span></div>';
+    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Średnia (forma)</span><span class="cmp-stat-val">' + formAvg + '</span></div>';
+    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Prognoza</span><span class="cmp-stat-val" style="color:var(--accent)">' + predPts + '</span></div>';
+    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Następny rywal</span><span class="cmp-stat-val">';
+    h += '<span class="cmp-fdr-cell" style="background:'+fdrC.bg+';color:'+fdrC.fg+'">' + nextOpp + ' <span class="cmp-fdr-ha">' + haLabel + '</span></span>';
+    h += '</span></div>';
+    h += '</div></div>';
+  });
+  h += '</div>';
+
+  // === SEKCJA B: Tabela statystyk ===
+  // 📖 Definicje wierszy: [label, getter, mode]
+  // mode: 'higher'=wyższe lepsze, 'lower'=niższe lepsze, 'neutral'=bez podświetlenia
+  const rows = [
+    ['Łączne pkt', p => p.total_points || 0, 'higher'],
+    ['Cena', p => p.price || 0, 'lower'],
+    ['Pkt/Cena', p => p.points_per_price || 0, 'higher'],
+    ['Średnia (forma)', p => { const played = (p.form||[]).filter(f=>f.p); return played.length ? played.reduce((s,f)=>s+f.pts,0)/played.length : 0; }, 'higher'],
+    ['Prognoza', p => p.predicted_points || 0, 'higher'],
+    ['Śr. minut', p => p.avg_minutes || 0, 'higher'],
+    ['Popularność', p => parseFloat((p.popularity_pct||'0').replace('%','')) || 0, 'neutral'],
+    ['Pewność prognozy', p => ({high:3,medium:2,low:1})[p.confidence] || 0, 'higher'],
+  ];
+
+  h += '<div class="cmp-table"><table>';
+  h += '<thead><tr><th style="text-align:left">Statystyka</th>';
+  selected.forEach((p,i) => { h += '<th style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + '</th>'; });
+  h += '</tr></thead><tbody>';
+
+  rows.forEach(([label, getter, mode]) => {
+    const vals = selected.map(p => getter(p));
+    // 📖 Znajdź najlepszą wartość — zależy od mode
+    let bestIdx = -1;
+    if (mode !== 'neutral') {
+      let best = mode === 'lower' ? Infinity : -Infinity;
+      vals.forEach((v, i) => {
+        if ((mode === 'higher' && v > best) || (mode === 'lower' && v < best)) { best = v; bestIdx = i; }
+      });
+    }
+    h += '<tr><td>' + label + '</td>';
+    vals.forEach((v, i) => {
+      let display = v;
+      // Formatowanie
+      if (label === 'Cena') display = v.toFixed(1) + 'M';
+      else if (label === 'Pkt/Cena' || label === 'Średnia (forma)' || label === 'Prognoza' || label === 'Śr. minut') display = v.toFixed(1);
+      else if (label === 'Popularność') display = v.toFixed(0) + '%';
+      else if (label === 'Pewność prognozy') display = ['—','Low','Medium','High'][v] || '—';
+      const isBest = bestIdx !== -1 && v === vals[bestIdx] && mode !== 'neutral';
+      h += '<td' + (isBest ? ' class="cmp-best"' : '') + '>' + display + '</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+
+  // === SEKCJA C: Wykres formy (SVG) ===
+  // 📖 Zbieramy punkty z formy, rysujemy linie SVG bez zewnętrznych bibliotek
+  h += '<div class="cmp-chart-wrap">';
+  h += '<div class="cmp-chart-title">📈 Forma — ostatnie kolejki</div>';
+  h += '<div class="cmp-chart-legend">';
+  selected.forEach((p,i) => {
+    h += '<div class="cmp-chart-legend-item"><span class="cmp-chart-legend-swatch" style="background:'+CMP_COLORS[i]+'"></span>' + p.name.split(' ').pop() + '</div>';
+  });
+  h += '</div>';
+
+  // Zbierz wszystkie unikalne kolejki
+  const allRounds = new Set();
+  selected.forEach(p => (p.form || []).forEach(f => allRounds.add(f.r)));
+  const rounds = [...allRounds].sort((a,b) => a - b);
+
+  if (rounds.length >= 2) {
+    const svgW = 500, svgH = 180, padL = 40, padR = 20, padT = 20, padB = 30;
+    const chartW = svgW - padL - padR, chartH = svgH - padT - padB;
+    let maxPts = 0;
+    selected.forEach(p => (p.form||[]).forEach(f => { if (f.p && f.pts > maxPts) maxPts = f.pts; }));
+    if (maxPts === 0) maxPts = 10;
+    maxPts = Math.ceil(maxPts * 1.15); // 📖 Trochę marginesu na górze
+
+    const xScale = (idx) => padL + (idx / (rounds.length - 1)) * chartW;
+    const yScale = (pts) => padT + chartH - (pts / maxPts) * chartH;
+
+    h += '<div class="cmp-chart"><svg viewBox="0 0 '+svgW+' '+svgH+'" preserveAspectRatio="xMidYMid meet">';
+
+    // Siatka Y
+    for (let g = 0; g <= 4; g++) {
+      const yVal = Math.round(maxPts / 4 * g);
+      const y = yScale(yVal);
+      h += '<line x1="'+padL+'" y1="'+y+'" x2="'+(svgW-padR)+'" y2="'+y+'" stroke="var(--bg-raised)" stroke-width="0.5"/>';
+      h += '<text x="'+(padL-6)+'" y="'+(y+4)+'" fill="var(--text-muted)" font-size="10" text-anchor="end">'+yVal+'</text>';
+    }
+
+    // Etykiety X (numery kolejek)
+    rounds.forEach((r, idx) => {
+      h += '<text x="'+xScale(idx)+'" y="'+(svgH-6)+'" fill="var(--text-muted)" font-size="10" text-anchor="middle">'+r+'</text>';
+    });
+
+    // Linie per gracz
+    selected.forEach((p, pi) => {
+      const form = p.form || [];
+      const points = [];
+      rounds.forEach((r, idx) => {
+        const f = form.find(ff => ff.r === r);
+        if (f && f.p) points.push({x: xScale(idx), y: yScale(f.pts), pts: f.pts});
+      });
+      if (points.length < 2) return;
+      // 📖 Polyline — łączna linia z punktami
+      const lineStr = points.map(pt => pt.x+','+pt.y).join(' ');
+      h += '<polyline points="'+lineStr+'" fill="none" stroke="'+CMP_COLORS[pi]+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
+      // Kropki
+      points.forEach(pt => {
+        h += '<circle cx="'+pt.x+'" cy="'+pt.y+'" r="4" fill="'+CMP_COLORS[pi]+'" stroke="var(--bg-surface)" stroke-width="2"/>';
+        h += '<text x="'+pt.x+'" y="'+(pt.y-8)+'" fill="'+CMP_COLORS[pi]+'" font-size="9" font-weight="700" text-anchor="middle">'+pt.pts+'</text>';
+      });
+    });
+
+    h += '</svg></div>';
+  } else {
+    h += '<div style="color:var(--text-muted);text-align:center;padding:20px">Za mało danych o formie.</div>';
+  }
+  h += '</div>';
+
+  // === SEKCJA D: FDR następne kolejki ===
+  const fdrTeams = FDR_DATA.teams || [];
+  const fdrGws = FDR_DATA.gameweeks || [];
+  if (fdrGws.length) {
+    h += '<div class="cmp-fdr-wrap">';
+    h += '<div class="cmp-fdr-title">📅 Trudność najbliższych meczów (FDR)</div>';
+    h += '<div class="cmp-fdr-table"><table><thead><tr><th style="text-align:left">Kolejka</th>';
+    selected.forEach((p,i) => { h += '<th style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + ' (' + (fdrTeams.find(t=>t.name===p.team)||{}).short + ')</th>'; });
+    h += '</tr></thead><tbody>';
+
+    fdrGws.forEach(gw => {
+      h += '<tr><td style="text-align:left;font-weight:700;color:var(--text-secondary)">' + gw + '</td>';
+      selected.forEach((p, pi) => {
+        const teamFdr = fdrTeams.find(t => t.name === p.team);
+        const fix = teamFdr ? (teamFdr.fixtures || []).find(f => f.gw === gw) : null;
+        if (fix) {
+          const pk = POS_ID[p.position] || p.position || '';
+          const isAtk = (pk === 'NAP' || pk === 'POM');
+          const mainFdr = isAtk ? fix.def : fix.atk;
+          const c = FDR_COLORS[mainFdr] || FDR_COLORS[3];
+          const ha = fix.home ? '(D)' : '(W)';
+          h += '<td><span class="cmp-fdr-cell" style="background:'+c.bg+';color:'+c.fg+'">' + fix.opponent_short + ' <span class="cmp-fdr-ha">' + ha + '</span></span></td>';
+        } else {
+          h += '<td style="color:var(--bg-muted)">—</td>';
+        }
+      });
+      h += '</tr>';
+    });
+    h += '</tbody></table></div></div>';
+  }
+
+  return h;
+}
+
 function render() {
   document.getElementById('tab-players').innerHTML = tab === 'players' ? renderPlayers() : '';
   document.getElementById('tab-teams').innerHTML = tab === 'teams' ? renderTeams() : '';
@@ -1757,6 +2123,8 @@ function render() {
   if (prEl) prEl.innerHTML = tab === 'predictions' ? renderPredictions() : '';
   const acEl = document.getElementById('tab-accuracy');
   if (acEl) acEl.innerHTML = tab === 'accuracy' ? renderAccuracy() : '';
+  const cmpEl = document.getElementById('tab-compare');
+  if (cmpEl) cmpEl.innerHTML = tab === 'compare' ? renderComparison() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
@@ -1821,6 +2189,46 @@ function render() {
       if (t) fdrShowModal(t.name);
     };
   });
+  // 📖 Autouzupełnianie w porównywarce — nasłuchuje na wpisywanie tekstu
+  // i wyświetla listę pasujących zawodników
+  const cmpInput = document.getElementById('cmpSearchInput');
+  const cmpAc = document.getElementById('cmpAutocomplete');
+  if (cmpInput && cmpAc) {
+    cmpInput.value = '';
+    cmpInput.oninput = () => {
+      const q = cmpInput.value.trim().toLowerCase();
+      if (q.length < 2) { cmpAc.classList.remove('visible'); cmpAc.innerHTML = ''; return; }
+      // 📖 Szukamy w PLAYERS — filtrujemy po nazwisku, drużynie
+      const matches = PLAYERS.filter(p =>
+        !cmpSelected.includes(p.player_id) &&
+        (p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q))
+      ).slice(0, 8);
+      if (!matches.length) { cmpAc.classList.remove('visible'); cmpAc.innerHTML = ''; return; }
+      let acH = '';
+      matches.forEach(p => {
+        acH += '<div class="cmp-ac-item" data-cmpid="'+p.player_id+'">';
+        acH += posBadge(p.position) + ' <strong>' + p.name + '</strong>';
+        acH += '<span class="cmp-ac-team">' + p.team + ' · ' + (p.price||0).toFixed(1) + 'M · ' + (p.total_points||0) + 'pkt</span>';
+        acH += '</div>';
+      });
+      cmpAc.innerHTML = acH;
+      cmpAc.classList.add('visible');
+      // Klik na element listy
+      cmpAc.querySelectorAll('.cmp-ac-item').forEach(el => {
+        el.onclick = () => {
+          cmpAddPlayer(parseInt(el.dataset.cmpid));
+          cmpAc.classList.remove('visible');
+          cmpAc.innerHTML = '';
+        };
+      });
+    };
+    // Zamknij autocomplete po kliknięciu poza
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.cmp-search-box')) {
+        cmpAc.classList.remove('visible');
+      }
+    });
+  }
 }
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { tab = t.dataset.tab; render(); }));
