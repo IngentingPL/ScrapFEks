@@ -2426,6 +2426,29 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .fdr-cell-vals {{ display: flex; gap: 3px; }}
 .fdr-mini {{ border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: 700; min-width: 36px; text-align: center; display: inline-flex; align-items: center; gap: 2px; }}
 .fdr-mini .fdr-lbl {{ font-size: 8px; font-weight: 600; opacity: 0.8; letter-spacing: 0.3px; }}
+/* Fixture Planner */
+.fp-section {{ margin-top: 32px; border-top: 2px solid #334155; padding-top: 24px; }}
+.fp-controls {{ display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }}
+.fp-controls label {{ font-size: 12px; color: #94a3b8; font-weight: 600; }}
+.fp-controls select {{ background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-family: inherit; cursor: pointer; }}
+.fp-mode-btns {{ display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }}
+.fp-mode-btn {{ background: transparent; border: none; color: #64748b; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }}
+.fp-mode-btn.active {{ background: #22d3ee; color: #0f172a; }}
+.fp-table {{ border-collapse: collapse; width: 100%; font-size: 13px; }}
+.fp-table th {{ padding: 8px 6px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; cursor: pointer; user-select: none; }}
+.fp-table th:hover {{ color: #e2e8f0; }}
+.fp-table th.fp-sorted {{ color: #22d3ee; }}
+.fp-table td {{ padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }}
+.fp-table td.fp-team-cell {{ text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; cursor: pointer; }}
+.fp-table td.fp-team-cell:hover {{ color: #22d3ee; }}
+.fp-table td.fp-team-cell.fp-selected {{ background: rgba(34,211,238,0.12); color: #22d3ee; }}
+.fp-tile {{ border-radius: 4px; padding: 4px 6px; font-weight: 600; font-size: 11px; display: inline-block; min-width: 56px; text-align: center; }}
+.fp-tile .fp-ha {{ font-size: 9px; font-weight: 400; opacity: 0.7; }}
+.fp-avg-cell {{ font-weight: 800; font-size: 14px; }}
+.fp-rotation {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #e2e8f0; line-height: 1.6; }}
+.fp-rotation .fp-rot-label {{ font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }}
+.fp-summary {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px 18px; margin-top: 16px; font-size: 13px; line-height: 2; color: #e2e8f0; }}
+.fp-summary-line {{ display: flex; align-items: center; gap: 6px; }}
 /* Transfers tab */
 .transfers-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
 @media (max-width: 768px) {{ .transfers-grid {{ grid-template-columns: 1fr; }} }}
@@ -3362,6 +3385,254 @@ function renderFixtures() {{
 
   h += '</tbody></table></div>';
   window._fdrTeams = teams;
+
+  // 📋 Fixture Planner — sekcja dodana POD istniejącą siatką FDR
+  h += renderFixturePlanner();
+
+  return h;
+}}
+
+// ============ Fixture Planner ============
+// 📖 LEKCJA: Fixture Planner pomaga planować transfery na kilka kolejek do przodu.
+// Pokazuje które drużyny mają najłatwiejszy terminarz w wybranym zakresie,
+// co pomaga w decyzjach transferowych — kupujesz zawodników z łatwym kalendarzem.
+
+let fpMode = 'mix';        // 'atk' | 'def' | 'mix' — perspektywa pozycyjna
+let fpSortCol = 'avg';     // kolumna sortowania: 'team','avg','sum','easy','hard' lub 'gwNN'
+let fpSortDir = 'asc';     // kierunek sortowania
+let fpGwFrom = 0;           // gameweek start (0 = auto)
+let fpGwTo = 0;             // gameweek end (0 = auto)
+let fpSelected = [];         // max 2 drużyny do rotation pair
+
+function fpGetFdr(fixture, mode) {{
+  // 📖 ATK mode: patrzymy na DEF rywala (słaba obrona = łatwo strzelić)
+  // DEF mode: patrzymy na ATK rywala (słaby atak = mało stracimy)
+  // MIX: średnia obu
+  if (!fixture || !fixture.opponent) return 3;
+  if (mode === 'atk') return fixture.def;
+  if (mode === 'def') return fixture.atk;
+  return Math.round((fixture.atk + fixture.def) / 2);
+}}
+
+function renderFixturePlanner() {{
+  const fdrTeams = FDR_DATA.teams || [];
+  const gws = FDR_DATA.gameweeks || [];
+  if (!gws.length || !fdrTeams.length) return '';
+
+  // Ustaw domyślne zakresy jeśli jeszcze nie ustawione
+  if (fpGwFrom === 0) fpGwFrom = gws[0];
+  if (fpGwTo === 0) fpGwTo = gws[gws.length - 1];
+
+  // Waliduj zakres
+  if (fpGwFrom < gws[0]) fpGwFrom = gws[0];
+  if (fpGwTo > gws[gws.length - 1]) fpGwTo = gws[gws.length - 1];
+  if (fpGwFrom > fpGwTo) fpGwFrom = fpGwTo;
+
+  const selectedGws = gws.filter(g => g >= fpGwFrom && g <= fpGwTo);
+  if (!selectedGws.length) return '';
+
+  let h = '<div class="fp-section">';
+  h += '<div class="section-title"><span style="font-size:22px">📋</span><h2>Fixture Planner</h2><div class="line"></div></div>';
+  h += '<div style="margin-bottom:12px;font-size:12px;color:#64748b;line-height:1.6">';
+  h += 'Planuj transfery na kilka kolejek do przodu. Wybierz zakres i perspektywę pozycyjną, aby znaleźć drużyny z najłatwiejszym terminarzem.';
+  h += '</div>';
+
+  // Kontrolki: zakres kolejek + tryb pozycyjny
+  h += '<div class="fp-controls">';
+  h += '<label>Od kolejki:</label>';
+  h += '<select class="fp-gw-from">';
+  gws.forEach(g => {{ h += '<option value="'+g+'"'+(g===fpGwFrom?' selected':'')+'>K'+g+'</option>'; }});
+  h += '</select>';
+  h += '<label>Do kolejki:</label>';
+  h += '<select class="fp-gw-to">';
+  gws.forEach(g => {{ h += '<option value="'+g+'"'+(g===fpGwTo?' selected':'')+'>K'+g+'</option>'; }});
+  h += '</select>';
+
+  // 📖 Tryb pozycyjny: ATK (dla napastników/pomocników), DEF (dla obrońców/bramkarzy), MIX (średnia)
+  h += '<div class="fp-mode-btns">';
+  h += '<button class="fp-mode-btn'+(fpMode==='atk'?' active':'')+'" data-fpmode="atk">ATK</button>';
+  h += '<button class="fp-mode-btn'+(fpMode==='def'?' active':'')+'" data-fpmode="def">DEF</button>';
+  h += '<button class="fp-mode-btn'+(fpMode==='mix'?' active':'')+'" data-fpmode="mix">MIX</button>';
+  h += '</div>';
+  h += '</div>';
+
+  // Oblicz dane planera dla każdej drużyny
+  const planData = fdrTeams.map(team => {{
+    const fixturesInRange = selectedGws.map(gw => {{
+      const f = team.fixtures.find(fx => fx.gw === gw);
+      return f || null;
+    }});
+    const fdrValues = fixturesInRange.map(f => fpGetFdr(f, fpMode));
+    const sum = fdrValues.reduce((a, b) => a + b, 0);
+    const avg = fdrValues.length ? sum / fdrValues.length : 3;
+    const easy = fdrValues.filter(v => v <= 2).length;
+    const hard = fdrValues.filter(v => v >= 4).length;
+    return {{
+      name: team.name,
+      short: team.short,
+      fixtures: fixturesInRange,
+      fdrValues: fdrValues,
+      sum: sum,
+      avg: avg,
+      easy: easy,
+      hard: hard,
+    }};
+  }});
+
+  // Sortowanie
+  const sortFns = {{
+    'team': (a, b) => a.name.localeCompare(b.name, 'pl'),
+    'avg': (a, b) => a.avg - b.avg,
+    'sum': (a, b) => a.sum - b.sum,
+    'easy': (a, b) => b.easy - a.easy,
+    'hard': (a, b) => a.hard - b.hard,
+  }};
+  // Sortowanie po kolumnie kolejki: gwNN
+  let sortFn = sortFns[fpSortCol];
+  if (!sortFn && fpSortCol.startsWith('gw')) {{
+    const gwIdx = selectedGws.indexOf(parseInt(fpSortCol.substring(2)));
+    if (gwIdx >= 0) sortFn = (a, b) => a.fdrValues[gwIdx] - b.fdrValues[gwIdx];
+  }}
+  if (!sortFn) sortFn = sortFns['avg'];
+  planData.sort((a, b) => {{
+    const v = sortFn(a, b);
+    return fpSortDir === 'desc' ? -v : v;
+  }});
+
+  // Nagłówek sortowania — helper
+  function thClass(col) {{ return fpSortCol === col ? ' fp-sorted' : ''; }}
+  function thArrow(col) {{ return fpSortCol === col ? (fpSortDir === 'asc' ? ' ↑' : ' ↓') : ''; }}
+
+  // Tabela planera
+  h += '<div class="data-table" style="overflow-x:auto"><table class="fp-table"><thead><tr>';
+  h += '<th class="fp-sort'+thClass('team')+'" data-fpcol="team" style="text-align:left;min-width:80px">Drużyna'+thArrow('team')+'</th>';
+  selectedGws.forEach(gw => {{
+    h += '<th class="fp-sort'+thClass('gw'+gw)+'" data-fpcol="gw'+gw+'" style="min-width:68px">K'+gw+thArrow('gw'+gw)+'</th>';
+  }});
+  h += '<th class="fp-sort'+thClass('sum')+'" data-fpcol="sum" style="min-width:52px">Σ FDR'+thArrow('sum')+'</th>';
+  h += '<th class="fp-sort'+thClass('avg')+'" data-fpcol="avg" style="min-width:52px">Śr.'+thArrow('avg')+'</th>';
+  h += '<th class="fp-sort'+thClass('easy')+'" data-fpcol="easy" style="min-width:52px">Łatwych'+thArrow('easy')+'</th>';
+  h += '<th class="fp-sort'+thClass('hard')+'" data-fpcol="hard" style="min-width:52px">Trudnych'+thArrow('hard')+'</th>';
+  h += '</tr></thead><tbody>';
+
+  planData.forEach((team, ti) => {{
+    const isSelected = fpSelected.includes(team.name);
+    h += '<tr>';
+    h += '<td class="fp-team-cell'+(isSelected ? ' fp-selected' : '')+'" data-fpteam="'+team.name+'">';
+    h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(ti+1)+'</span> '+team.short+'</td>';
+
+    // Kafelki FDR per kolejka
+    team.fixtures.forEach((f, fi) => {{
+      if (!f || !f.opponent) {{
+        h += '<td>—</td>';
+        return;
+      }}
+      const fdr = team.fdrValues[fi];
+      const c = FDR_COLORS[fdr] || FDR_COLORS[3];
+      const ha = f.home ? 'D' : 'W';
+      h += '<td title="'+f.opponent+' ('+(f.home?'dom':'wyjazd')+') '+f.date+'">';
+      h += '<span class="fp-tile" style="background:'+c.bg+';color:'+c.fg+'">'+f.opponent_short+' <span class="fp-ha">('+ha+')</span></span>';
+      h += '</td>';
+    }});
+
+    // Suma FDR
+    h += '<td><span class="fdr-sum" style="color:'+(team.avg<=2.5?'#10b981':team.avg<=3.5?'#94a3b8':'#ef4444')+'">'+team.sum+'</span></td>';
+
+    // Średnia FDR (kolorowana)
+    const avgColor = team.avg < 2.5 ? '#10b981' : team.avg > 3.5 ? '#ef4444' : '#94a3b8';
+    h += '<td><span class="fp-avg-cell" style="color:'+avgColor+'">'+team.avg.toFixed(1)+'</span></td>';
+
+    // Łatwych / Trudnych
+    h += '<td style="color:#10b981;font-weight:700">'+team.easy+'</td>';
+    h += '<td style="color:#ef4444;font-weight:700">'+team.hard+'</td>';
+
+    h += '</tr>';
+  }});
+
+  h += '</tbody></table></div>';
+
+  // 📖 LEKCJA: "Rotation pair" — dwie drużyny z uzupełniającymi się terminarzami.
+  // Jeśli Lech ma trudny mecz w K28 ale Pogoń łatwy, i odwrotnie w K29 —
+  // to świetna para do rotacji obrońców/bramkarzy. Zawsze masz kogoś z łatwym meczem.
+  if (fpSelected.length === 2) {{
+    const t1 = planData.find(t => t.name === fpSelected[0]);
+    const t2 = planData.find(t => t.name === fpSelected[1]);
+    if (t1 && t2) {{
+      let bothEasy = 0;   // obie łatwy — marnowanie slota
+      let coverage = 0;   // przynajmniej jedna łatwy
+      const totalGws = selectedGws.length;
+      for (let i = 0; i < totalGws; i++) {{
+        const e1 = t1.fdrValues[i] <= 2;
+        const e2 = t2.fdrValues[i] <= 2;
+        if (e1 && e2) bothEasy++;
+        if (e1 || e2) coverage++;
+      }}
+      h += '<div class="fp-rotation">';
+      h += '<div class="fp-rot-label">🔄 Rotation Pair: '+t1.short+' + '+t2.short+'</div>';
+      h += '<div>Pokrycie: <b style="color:#22d3ee">'+coverage+'/'+totalGws+'</b> kolejek (przynajmniej jedna drużyna z łatwym meczem)</div>';
+      h += '<div>Marnowanie: <b style="color:#fbbf24">'+bothEasy+'/'+totalGws+'</b> kolejek (obie mają łatwy mecz jednocześnie)</div>';
+      const score = totalGws > 0 ? Math.round(coverage / totalGws * 100) : 0;
+      const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#fbbf24' : '#ef4444';
+      h += '<div style="margin-top:6px">Wynik rotacji: <b style="color:'+scoreColor+'">'+score+'%</b></div>';
+      h += '</div>';
+    }}
+  }} else if (fpSelected.length === 1) {{
+    h += '<div class="fp-rotation"><div class="fp-rot-label">🔄 Rotation Pair</div>';
+    h += '<div style="color:#64748b">Kliknij drugą drużynę, aby zobaczyć wynik rotacji</div></div>';
+  }}
+
+  // 📖 Szybki widok "Najlepsze drużyny na X kolejek" — podsumowanie
+  // Sortujemy osobno wg ATK (DEF rywali), DEF (ATK rywali), i ogólnie najtrudniejsze
+  const atkRanked = fdrTeams.map(team => {{
+    const vals = selectedGws.map(gw => {{
+      const f = team.fixtures.find(fx => fx.gw === gw);
+      return fpGetFdr(f, 'atk');
+    }});
+    return {{ short: team.short, avg: vals.reduce((a,b)=>a+b,0) / (vals.length||1) }};
+  }}).sort((a,b) => a.avg - b.avg);
+
+  const defRanked = fdrTeams.map(team => {{
+    const vals = selectedGws.map(gw => {{
+      const f = team.fixtures.find(fx => fx.gw === gw);
+      return fpGetFdr(f, 'def');
+    }});
+    return {{ short: team.short, avg: vals.reduce((a,b)=>a+b,0) / (vals.length||1) }};
+  }}).sort((a,b) => a.avg - b.avg);
+
+  const hardRanked = [...atkRanked].sort((a,b) => b.avg - a.avg);
+
+  // Najlepsza para rotacyjna — brute-force po wszystkich parach
+  let bestPair = {{ t1: '', t2: '', coverage: 0 }};
+  for (let i = 0; i < planData.length; i++) {{
+    for (let j = i + 1; j < planData.length; j++) {{
+      let cov = 0;
+      for (let k = 0; k < selectedGws.length; k++) {{
+        if (planData[i].fdrValues[k] <= 2 || planData[j].fdrValues[k] <= 2) cov++;
+      }}
+      if (cov > bestPair.coverage) {{
+        bestPair = {{ t1: planData[i].short, t2: planData[j].short, coverage: cov }};
+      }}
+    }}
+  }}
+
+  h += '<div class="fp-summary">';
+  h += '<div class="fp-summary-line"><span>🟢</span> <b>Najłatwiejszy (ATK):</b> ';
+  h += atkRanked.slice(0,3).map(t => t.short+' (śr. '+t.avg.toFixed(1)+')').join(' — ');
+  h += '</div>';
+  h += '<div class="fp-summary-line"><span>🟢</span> <b>Najłatwiejszy (DEF):</b> ';
+  h += defRanked.slice(0,3).map(t => t.short+' (śr. '+t.avg.toFixed(1)+')').join(' — ');
+  h += '</div>';
+  h += '<div class="fp-summary-line"><span>🔴</span> <b>Najtrudniejszy:</b> ';
+  h += hardRanked.slice(0,3).map(t => t.short+' (śr. '+t.avg.toFixed(1)+')').join(' — ');
+  h += '</div>';
+  if (bestPair.t1) {{
+    h += '<div class="fp-summary-line"><span>🔄</span> <b>Najlepsza para rotacyjna:</b> ';
+    h += bestPair.t1+' + '+bestPair.t2+' (pokrycie '+bestPair.coverage+'/'+selectedGws.length+')';
+    h += '</div>';
+  }}
+  h += '</div>';
+
+  h += '</div>';  // end fp-section
   return h;
 }}
 
@@ -4461,6 +4732,33 @@ function render() {{
       const teams = window._fdrTeams || [];
       const t = teams[parseInt(td.dataset.fdrteam)];
       if (t) fdrShowModal(t.name);
+    }};
+  }});
+  // Fixture Planner handlers
+  const fpFrom = document.querySelector('.fp-gw-from');
+  const fpTo = document.querySelector('.fp-gw-to');
+  if (fpFrom) fpFrom.onchange = () => {{ fpGwFrom = parseInt(fpFrom.value); render(); }};
+  if (fpTo) fpTo.onchange = () => {{ fpGwTo = parseInt(fpTo.value); render(); }};
+  document.querySelectorAll('.fp-mode-btn').forEach(b => {{
+    b.onclick = () => {{ fpMode = b.dataset.fpmode; render(); }};
+  }});
+  document.querySelectorAll('.fp-sort').forEach(th => {{
+    th.onclick = () => {{
+      const col = th.dataset.fpcol;
+      if (fpSortCol === col) fpSortDir = fpSortDir === 'asc' ? 'desc' : 'asc';
+      else {{ fpSortCol = col; fpSortDir = col === 'team' ? 'asc' : 'asc'; }}
+      render();
+    }};
+  }});
+  // 📖 Klik na drużynę w planerze — zaznacza do rotation pair (max 2)
+  document.querySelectorAll('.fp-team-cell').forEach(td => {{
+    td.onclick = () => {{
+      const name = td.dataset.fpteam;
+      const idx = fpSelected.indexOf(name);
+      if (idx >= 0) {{ fpSelected.splice(idx, 1); }}
+      else if (fpSelected.length < 2) {{ fpSelected.push(name); }}
+      else {{ fpSelected = [name]; }}
+      render();
     }};
   }});
   // 📖 Autouzupełnianie w porównywarce — nasłuchuje na wpisywanie tekstu
