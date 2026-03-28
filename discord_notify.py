@@ -547,7 +547,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
 # ============================================================
 
 def send_post_round(league_data, players_data, accuracy_data, webhook_url, round_number,
-                     league_teams_detail=None):
+                     league_teams_detail=None, newsletter_text=None):
     """
     Wysyła Discord embed z podsumowaniem PO kolejce.
 
@@ -845,7 +845,29 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
         },
     }
 
-    success = _send_embed(webhook_url, embed, content="<@&1262764454404296759>")
+    # --- NEWSLETTER EMBED (opcjonalny) ---
+    # Jeśli Gemini wygenerował tekst, dodajemy go jako drugi embed w tej samej wiadomości.
+    # Złoty kolor (0xF0B232) odróżnia newsletter od zielonego podsumowania i cyjanowej prognozy.
+    #
+    # 📖 LEKCJA: Discord pozwala wysłać do 10 embedów w jednej wiadomości.
+    # Odbiorcy widzą je jako jedną wiadomość, jeden po drugim.
+    if newsletter_text:
+        newsletter_embed = {
+            "title": f"📰 ScrapFEks Weekly — Kolejka {round_number}",
+            "color": 0xF0B232,  # Złoty — wyróżnia newsletter
+            "description": newsletter_text,
+            "footer": {
+                "text": "Wygenerowano przez Gemini AI · Dane mogą nie oddawać pełnego obrazu",
+            },
+        }
+        success = _send_embed(
+            webhook_url,
+            embed=None,
+            content="<@&1262764454404296759>",
+            embeds=[embed, newsletter_embed],
+        )
+    else:
+        success = _send_embed(webhook_url, embed, content="<@&1262764454404296759>")
 
     if success:
         # Zaktualizuj log — ta kolejka post-round jest już wysłana
