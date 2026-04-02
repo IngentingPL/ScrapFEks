@@ -4210,7 +4210,7 @@ function renderSeason() {{
   }});
 
   // Linie drużyn
-  // Budujemy dane per drużyna: [{x, y, round, team, position, total_points}]
+  // Budujemy dane per drużyna: [{{x, y, round, team, position, total_points}}]
   const teamLines = {{}};
   visibleTeams.forEach(team => {{
     teamLines[team] = [];
