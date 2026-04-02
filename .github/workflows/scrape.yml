@@ -70,6 +70,18 @@ on:
     - cron: '0 18 19 4 *'  # K29 19.04 mecz 17:30 CEST → +2.5h 20:00 CEST
     - cron: '30 19 20 4 *'  # K29 20.04 mecz 19:00 CEST → +2.5h 21:30 CEST
     - cron: '0 8 21 4 *'  # K29 DISCORD POST 21.04 10:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 23 4 *'  # K30 DISCORD PRE 23.04 20:00 CEST — prognoza przed kolejką
+    - cron: '30 16 24 4 *'  # K30 START 24.04 mecz 18:00 CEST → +30min 18:30 CEST
+    - cron: '30 18 24 4 *'  # K30 24.04 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 24 4 *'  # K30 24.04 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 25 4 *'  # K30 25.04 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 25 4 *'  # K30 25.04 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 25 4 *'  # K30 25.04 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '45 12 26 4 *'  # K30 26.04 mecz 12:15 CEST → +2.5h 14:45 CEST
+    - cron: '15 15 26 4 *'  # K30 26.04 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 26 4 *'  # K30 26.04 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '30 19 27 4 *'  # K30 27.04 mecz 19:00 CEST → +2.5h 21:30 CEST
+    - cron: '0 8 28 4 *'  # K30 DISCORD POST 28.04 10:00 CEST — podsumowanie po kolejce
   # AUTO-SCHEDULE-END
 
 jobs:
