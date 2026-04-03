@@ -2053,6 +2053,7 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
     matches_by_round = {}
     teams_set = set()
     current_round = None
+    current_round_date = ""
 
     with open(filepath, "r", encoding="utf-8") as f:
         for line in f:
@@ -2064,6 +2065,11 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                 current_round = int(round_match.group(1))
                 if current_round not in matches_by_round:
                     matches_by_round[current_round] = []
+                header_date = re.search(r"(\d{1,2})[–\-]\d*\s+(\w+)", line[len(round_match.group(0)):])
+                if header_date:
+                    month = MONTHS_PL.get(header_date.group(2))
+                    if month:
+                        current_round_date = f"{int(header_date.group(1)):02d}.{month:02d}"
                 continue
             date_match = re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})\s*$", line)
             if date_match and current_round:
@@ -2072,9 +2078,8 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                 month = MONTHS_PL.get(month_name)
                 if not month:
                     continue
-                # Wyciągnij drużyny
                 teams_part = line[:date_match.start()].strip()
-                parts = re.split(r'\t+-\t+', teams_part)
+                parts = re.split(r'	+-	+', teams_part)
                 if len(parts) != 2:
                     parts = re.split(r'\s+-\s+', teams_part)
                 if len(parts) == 2:
@@ -2087,15 +2092,26 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                         "away": away,
                         "date": f"{day:02d}.{month:02d}",
                     })
+            elif current_round and ("–" in line or " - " in line):
+                parts = re.split(r'\s*[–-]\s*', line, maxsplit=1)
+                if len(parts) == 2:
+                    home = parts[0].strip()
+                    away = parts[1].strip()
+                    if home and away and len(home) > 2 and not re.match(r'^\d', home):
+                        teams_set.add(home)
+                        teams_set.add(away)
+                        matches_by_round[current_round].append({
+                            "home": home,
+                            "away": away,
+                            "date": current_round_date,
+                        })
 
     teams = sorted(teams_set)
-    # Buduj skróty — użyj zdefiniowanych lub generuj z pierwszych 3 liter
     abbrevs = {}
     for t in teams:
         abbrevs[t] = TEAM_ABBREVS.get(t, t[:3].upper())
 
     rounds = sorted(matches_by_round.keys())
-    # Konwertuj klucze na string dla JSON
     matches_json = {str(r): matches_by_round[r] for r in rounds}
 
     return {
@@ -2104,11 +2120,6 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
         "teams": teams,
         "abbrevs": abbrevs,
     }
-
-
-# DASHBOARD HTML
-# ============================================================
-
 def generate_dashboard_html(
     summary_data: list[dict],
     tiers: dict,
