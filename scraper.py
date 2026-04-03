@@ -5086,7 +5086,12 @@ def main():
     ekstra_stats = fetch_ekstraklasa_table()
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
-    fdr_data = compute_fdr(ekstra_stats, fixtures_data, current_round=current_round)
+    remaining_rounds = len([r for r in fixtures_data.get("rounds", []) if r > (current_round or 0)])
+fdr_data = compute_fdr(
+    ekstra_stats, fixtures_data,
+    current_round=current_round,
+    num_rounds=max(remaining_rounds, 6)
+)
 
     # 8.8 Prognoza punktów (predictor)
     predictions_data = []
