@@ -5087,7 +5087,7 @@ def main():
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
     remaining_rounds = len([r for r in fixtures_data.get("rounds", []) if r > (current_round or 0)])
-fdr_data = compute_fdr(
+    fdr_data = compute_fdr(
         ekstra_stats, fixtures_data,
         current_round=current_round,
         num_rounds=max(remaining_rounds, 6)
