@@ -2092,7 +2092,7 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                         "away": away,
                         "date": f"{day:02d}.{month:02d}",
                     })
-            elif current_round and ("–" in line or " - " in line):
+            elif current_round and ("–" in line or " - " in line or "\t-\t" in line):
                 parts = re.split(r'\s*[–-]\s*', line, maxsplit=1)
                 if len(parts) == 2:
                     home = parts[0].strip()
