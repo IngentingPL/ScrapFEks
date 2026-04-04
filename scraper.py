@@ -5097,7 +5097,7 @@ def main():
     ekstra_stats = fetch_ekstraklasa_table()
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
-    remaining_rounds = len([r for r in fixtures_data.get("rounds", []) if r > (current_round or 0)])
+    remaining_rounds = len([r for r in fixtures_data.get("rounds", []) if r >= (current_round or 0)])
     fdr_data = compute_fdr(
         ekstra_stats, fixtures_data,
         current_round=current_round,
