@@ -1,0 +1,166 @@
+player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr_modifier,minutes_factor,home_away_factor,avg_minutes,confidence,detail
+2780,Aleksandar Ćirković,Lechia Gdańsk,POM,Wisła Płock,False,7.1,7.6,0.96,1.0,0.97,85.0,high,Śr. 7.6 × FDR 0.96 × min 1.0 × wyjazd 0.97 = 7.1
+1192,Erik Janža,Górnik Zabrze,OBR,Legia Warszawa,False,6.5,5.1,1.2,1.0,0.97,88.0,high,Śr. 5.1 × FDR 1.2 × min 1.0 × wyjazd 0.97 × trend 1.05 × CS 1.05 = 6.5
+827,Mateusz Grzybek,Zagłębie Lubin,OBR,Radomiak Radom,True,6.4,7.6,0.9,1.0,1.05,80.0,high,Śr. 7.6 × FDR 0.9 × min 1.0 × dom 1.05 × trend 0.95 × stab 0.97 × CS 0.97 = 6.4
+480,Bartosz Nowak,GKS Katowice,POM,Lech Poznań,False,6.0,6.4,0.98,1.0,0.97,89.0,high,Śr. 6.4 × FDR 0.98 × min 1.0 × wyjazd 0.97 = 6.0
+1573,Antonio Milić,Lech Poznań,OBR,GKS Katowice,True,5.9,6.1,1.0,1.0,1.05,90.0,high,Śr. 6.1 × FDR 1.0 × min 1.0 × dom 1.05 × trend 0.95 × kartki 0.96 = 5.9
+2698,Leo Bengtsson,Lech Poznań,POM,GKS Katowice,True,5.7,5.8,1.0,0.9,1.05,76.0,high,Śr. 5.8 × FDR 1.0 × min 0.9 × dom 1.05 × trend 1.05 = 5.7
+166,Rafał Janicki,Górnik Zabrze,OBR,Legia Warszawa,False,5.4,4.2,1.2,1.0,0.97,90.0,high,Śr. 4.2 × FDR 1.2 × min 1.0 × wyjazd 0.97 × trend 1.05 × CS 1.05 = 5.4
+2225,Fran Álvarez,Widzew Łódź,POM,Bruk-Bet Termalica Nieciecza,True,5.4,4.9,1.16,0.9,1.05,78.0,high,Śr. 4.9 × FDR 1.16 × min 0.9 × dom 1.05 = 5.4
+2671,Karol Czubak,Motor Lublin,NAP,Raków Częstochowa,True,5.4,5.7,0.9,1.0,1.05,82.0,high,Śr. 5.7 × FDR 0.9 × min 1.0 × dom 1.05 = 5.4
+2234,Ali Gholizadeh,Lech Poznań,POM,GKS Katowice,True,5.2,5.8,1.0,0.9,1.05,75.0,high,Śr. 5.8 × FDR 1.0 × min 0.9 × dom 1.05 × trend 0.95 = 5.2
+2794,Lukáš Sadílek,Górnik Zabrze,POM,Legia Warszawa,False,5.2,6.1,0.96,0.9,0.97,70.0,high,Śr. 6.1 × FDR 0.96 × min 0.9 × wyjazd 0.97 × trend 1.05 × stab 0.97 = 5.2
+2408,Rifet Kapić,Lechia Gdańsk,POM,Wisła Płock,False,5.1,5.5,0.96,1.0,0.97,90.0,high,Śr. 5.5 × FDR 0.96 × min 1.0 × wyjazd 0.97 = 5.1
+2423,Mbaye N'Diaye,Motor Lublin,POM,Raków Częstochowa,True,5.1,6.3,0.94,0.9,1.05,76.0,high,Śr. 6.3 × FDR 0.94 × min 0.9 × dom 1.05 × kartki 0.92 = 5.1
+2481,Ajdin Hasić,Cracovia,POM,Arka Gdynia,True,5.1,4.4,1.2,0.9,1.05,73.0,high,Śr. 4.4 × FDR 1.2 × min 0.9 × dom 1.05 × trend 1.05 × stab 0.97 = 5.1
+1918,Paweł Olkowski,Górnik Zabrze,OBR,Legia Warszawa,False,5.0,4.3,1.2,0.9,0.97,74.0,high,Śr. 4.3 × FDR 1.2 × min 0.9 × wyjazd 0.97 × trend 1.05 × CS 1.05 = 5.0
+2450,Ivan Brkić,Motor Lublin,BR,Raków Częstochowa,True,5.0,5.0,1.0,1.0,1.05,90.0,high,Śr. 5.0 × FDR 1.0 × min 1.0 × dom 1.05 × trend 0.95 = 5.0
+2603,Oscar Kubiak,Arka Gdynia,POM,Cracovia,False,4.9,5.3,0.96,1.0,0.97,81.0,high,Śr. 5.3 × FDR 0.96 × min 1.0 × wyjazd 0.97 = 4.9
+184,Rafał Wolski,Radomiak Radom,POM,Zagłębie Lubin,False,4.8,5.5,0.9,1.0,0.97,81.0,high,Śr. 5.5 × FDR 0.9 × min 1.0 × wyjazd 0.97 × trend 1.05 × kartki 0.96 = 4.8
+2191,Radovan Pankov,Legia Warszawa,OBR,Górnik Zabrze,True,4.8,5.2,0.9,1.0,1.05,89.0,high,Śr. 5.2 × FDR 0.9 × min 1.0 × dom 1.05 × CS 0.97 = 4.8
+415,Michał Marcjanik,Arka Gdynia,OBR,Cracovia,False,4.7,4.0,1.2,1.0,0.97,90.0,high,Śr. 4.0 × FDR 1.2 × min 1.0 × wyjazd 0.97 × trend 0.95 × CS 1.05 = 4.7
+951,Arkadiusz Jędrych,GKS Katowice,OBR,Lech Poznań,False,4.7,6.2,0.8,1.0,0.97,90.0,high,Śr. 6.2 × FDR 0.8 × min 1.0 × wyjazd 0.97 × CS 0.97 = 4.7
+1010,Jorge Félix Garcia,Piast Gliwice,POM,Pogoń Szczecin,True,4.7,4.6,1.06,0.9,1.05,60.0,high,Śr. 4.6 × FDR 1.06 × min 0.9 × dom 1.05 × trend 1.05 × stab 0.97 = 4.7
+2281,Sebastian Kerk,Arka Gdynia,POM,Cracovia,False,4.7,5.1,0.96,1.0,0.97,87.0,high,Śr. 5.1 × FDR 0.96 × min 1.0 × wyjazd 0.97 = 4.7
+2417,Filip Luberecki,Motor Lublin,OBR,Raków Częstochowa,True,4.7,4.7,1.0,1.0,1.05,82.0,high,Śr. 4.7 × FDR 1.0 × min 1.0 × dom 1.05 × trend 0.95 = 4.7
+1475,Mikael Ishak,Lech Poznań,NAP,GKS Katowice,True,4.4,4.7,1.0,0.9,1.05,71.0,high,Śr. 4.7 × FDR 1.0 × min 0.9 × dom 1.05 = 4.4
+2747,Hugo Vallejo,Piast Gliwice,POM,Pogoń Szczecin,True,4.4,4.5,1.06,0.9,1.05,77.0,high,Śr. 4.5 × FDR 1.06 × min 0.9 × dom 1.05 × stab 0.97 = 4.4
+2411,Tomáš Bobček,Lechia Gdańsk,NAP,Wisła Płock,False,4.3,5.5,0.8,1.0,0.97,84.0,high,Śr. 5.5 × FDR 0.8 × min 1.0 × wyjazd 0.97 × trend 1.05 × stab 0.97 = 4.3
+992,Przemysław Wiśniewski,Widzew Łódź,OBR,Bruk-Bet Termalica Nieciecza,True,4.2,3.4,1.1,1.0,1.05,90.0,high,Śr. 3.4 × FDR 1.1 × min 1.0 × dom 1.05 × CS 1.05 = 4.2
+2756,Alex Paulsen,Lechia Gdańsk,BR,Wisła Płock,False,4.2,3.4,1.2,1.0,0.97,90.0,high,Śr. 3.4 × FDR 1.2 × min 1.0 × wyjazd 0.97 × CS 1.05 = 4.2
+2779,Deni Jurić,Wisła Płock,NAP,Lechia Gdańsk,True,4.2,4.7,1.2,0.7,1.05,57.0,high,Śr. 4.7 × FDR 1.2 × min 0.7 × dom 1.05 × trend 1.05 × stab 0.97 = 4.2
+1345,Dawid Kocyła,Arka Gdynia,OBR,Cracovia,False,4.1,4.1,1.2,0.9,0.97,67.0,high,Śr. 4.1 × FDR 1.2 × min 0.9 × wyjazd 0.97 × trend 0.95 × stab 0.97 × CS 1.05 = 4.1
+1757,Bartosz Mrozek,Lech Poznań,BR,GKS Katowice,True,4.1,4.0,1.0,1.0,1.05,90.0,high,Śr. 4.0 × FDR 1.0 × min 1.0 × dom 1.05 × stab 0.97 = 4.1
+2163,Marcel Pięczek,Korona Kielce,OBR,Jagiellonia Białystok,True,4.1,4.6,0.9,1.0,1.05,90.0,high,Śr. 4.6 × FDR 0.9 × min 1.0 × dom 1.05 × stab 0.97 × CS 0.97 = 4.1
+994,Lukas Klemenz,GKS Katowice,OBR,Lech Poznań,False,4.0,5.3,0.8,1.0,0.97,82.0,high,Śr. 5.3 × FDR 0.8 × min 1.0 × wyjazd 0.97 × trend 1.05 × stab 0.97 × CS 0.97 = 4.0
+1931,Steve Kapuadi,Widzew Łódź,OBR,Bruk-Bet Termalica Nieciecza,True,4.0,3.5,1.1,0.9,1.05,66.0,high,Śr. 3.5 × FDR 1.1 × min 0.9 × dom 1.05 × trend 1.05 × CS 1.05 = 4.0
+2424,Bartosz Wolski,Motor Lublin,POM,Raków Częstochowa,True,4.0,4.1,0.94,1.0,1.05,89.0,high,Śr. 4.1 × FDR 0.94 × min 1.0 × dom 1.05 = 4.0
+2817,Emil Kornvig,Widzew Łódź,POM,Bruk-Bet Termalica Nieciecza,True,4.0,3.3,1.16,1.0,1.05,87.0,high,Śr. 3.3 × FDR 1.16 × min 1.0 × dom 1.05 = 4.0
+2708,Mileta Rajović,Legia Warszawa,NAP,Górnik Zabrze,True,3.9,5.1,0.8,0.9,1.05,62.0,high,Śr. 5.1 × FDR 0.8 × min 0.9 × dom 1.05 × trend 1.05 × stab 0.97 = 3.9
+2805,Otto Hindrich,Legia Warszawa,BR,Górnik Zabrze,True,3.9,4.3,0.9,1.0,1.05,90.0,high,Śr. 4.3 × FDR 0.9 × min 1.0 × dom 1.05 × CS 0.97 = 3.9
+1341,Fran Tudor,Raków Częstochowa,OBR,Motor Lublin,False,3.8,4.1,1.0,1.0,0.97,90.0,high,Śr. 4.1 × FDR 1.0 × min 1.0 × wyjazd 0.97 × trend 0.95 = 3.8
+1747,Igor Drapiński,Piast Gliwice,OBR,Pogoń Szczecin,True,3.8,3.6,1.0,1.0,1.05,90.0,high,Śr. 3.6 × FDR 1.0 × min 1.0 × dom 1.05 = 3.8
+2801,Bartłomiej Drągowski,Widzew Łódź,BR,Bruk-Bet Termalica Nieciecza,True,3.8,3.3,1.1,1.0,1.05,90.0,high,Śr. 3.3 × FDR 1.1 × min 1.0 × dom 1.05 × CS 1.05 × kartki 0.96 = 3.8
+633,Mateusz Wdowiak,GKS Katowice,POM,Lech Poznań,False,3.7,4.4,0.98,0.9,0.97,70.0,high,Śr. 4.4 × FDR 0.98 × min 0.9 × wyjazd 0.97 = 3.7
+2406,Maksym Chłań,Górnik Zabrze,POM,Legia Warszawa,False,3.7,4.2,0.96,0.9,0.97,77.0,high,Śr. 4.2 × FDR 0.96 × min 0.9 × wyjazd 0.97 × trend 1.05 = 3.7
+2679,Paul Mukairu,Pogoń Szczecin,POM,Piast Gliwice,False,3.7,3.6,1.04,1.0,0.97,89.0,high,Śr. 3.6 × FDR 1.04 × min 1.0 × wyjazd 0.97 = 3.7
+791,Dawid Błanik,Korona Kielce,POM,Jagiellonia Białystok,True,3.6,5.3,0.9,0.7,1.05,58.0,high,Śr. 5.3 × FDR 0.9 × min 0.7 × dom 1.05 × trend 1.05 × stab 0.97 = 3.6
+813,Mateusz Żyro,Widzew Łódź,OBR,Bruk-Bet Termalica Nieciecza,True,3.6,3.3,1.1,0.9,1.05,63.0,high,Śr. 3.3 × FDR 1.1 × min 0.9 × dom 1.05 × CS 1.05 = 3.6
+1712,Joel Pereira,Lech Poznań,OBR,GKS Katowice,True,3.6,3.7,1.0,0.9,1.05,65.0,high,Śr. 3.7 × FDR 1.0 × min 0.9 × dom 1.05 × trend 1.05 = 3.6
+2123,Michał Gurgul,Lech Poznań,OBR,GKS Katowice,True,3.6,3.6,1.0,1.0,1.05,81.0,high,Śr. 3.6 × FDR 1.0 × min 1.0 × dom 1.05 × trend 0.95 = 3.6
+2717,Pablo Rodríguez,Lech Poznań,POM,GKS Katowice,True,3.6,3.8,1.0,0.9,1.05,66.0,high,Śr. 3.8 × FDR 1.0 × min 0.9 × dom 1.05 = 3.6
+701,Patryk Kun,Legia Warszawa,OBR,Górnik Zabrze,True,3.5,3.8,0.9,1.0,1.05,86.0,high,Śr. 3.8 × FDR 0.9 × min 1.0 × dom 1.05 × CS 0.97 = 3.5
+1435,Rafał Strączek,GKS Katowice,BR,Lech Poznań,False,3.5,4.6,0.8,1.0,0.97,90.0,high,Śr. 4.6 × FDR 0.8 × min 1.0 × wyjazd 0.97 × CS 0.97 = 3.5
+2477,Marcel Reguła,Zagłębie Lubin,POM,Radomiak Radom,True,3.5,3.3,1.02,1.0,1.05,80.0,high,Śr. 3.3 × FDR 1.02 × min 1.0 × dom 1.05 = 3.5
+2676,Emmanuel Twumasi,Piast Gliwice,OBR,Pogoń Szczecin,True,3.5,3.3,1.0,1.0,1.05,81.0,high,Śr. 3.3 × FDR 1.0 × min 1.0 × dom 1.05 × trend 1.05 × stab 0.97 = 3.5
+2415,Marek Bartoš,Motor Lublin,OBR,Raków Częstochowa,True,3.4,3.6,1.0,0.9,1.05,76.0,high,Śr. 3.6 × FDR 1.0 × min 0.9 × dom 1.05 = 3.4
+587,Patryk Dziczek,Piast Gliwice,POM,Pogoń Szczecin,True,3.3,2.9,1.06,1.0,1.05,90.0,high,Śr. 2.9 × FDR 1.06 × min 1.0 × dom 1.05 × stab 1.03 = 3.3
+1795,Sławomir Abramowicz,Jagiellonia Białystok,BR,Korona Kielce,False,3.3,3.0,1.1,1.0,0.97,90.0,high,Śr. 3.0 × FDR 1.1 × min 1.0 × wyjazd 0.97 × stab 0.97 × CS 1.05 = 3.3
+2367,Wojciech Mońka,Lech Poznań,OBR,GKS Katowice,True,3.3,3.0,1.0,1.0,1.05,90.0,high,Śr. 3.0 × FDR 1.0 × min 1.0 × dom 1.05 × trend 1.05 = 3.3
+2571,Gustaw Henriksson,Cracovia,OBR,Arka Gdynia,True,3.3,2.7,1.2,1.0,1.05,81.0,high,Śr. 2.7 × FDR 1.2 × min 1.0 × dom 1.05 × stab 0.97 × CS 1.05 × kartki 0.96 = 3.3
+830,Serafin Szota,Arka Gdynia,OBR,Cracovia,False,3.2,2.7,1.2,1.0,0.97,83.0,high,Śr. 2.7 × FDR 1.2 × min 1.0 × wyjazd 0.97 × stab 0.97 × CS 1.05 = 3.2
+2110,Camilo Mena,Lechia Gdańsk,POM,Wisła Płock,False,3.2,4.1,0.96,0.9,0.97,78.0,high,Śr. 4.1 × FDR 0.96 × min 0.9 × wyjazd 0.97 × trend 0.95 × stab 0.97 = 3.2
+2476,Jonatan Braut Brunes,Raków Częstochowa,NAP,Motor Lublin,False,3.2,3.6,1.1,0.9,0.97,78.0,high,Śr. 3.6 × FDR 1.1 × min 0.9 × wyjazd 0.97 × trend 0.95 × stab 0.97 = 3.2
+303,Mariusz Stępiński,Korona Kielce,NAP,Jagiellonia Białystok,True,3.1,3.1,0.9,1.0,1.05,83.0,high,Śr. 3.1 × FDR 0.9 × min 1.0 × dom 1.05 × trend 1.05 = 3.1
+765,Jesús Imaz,Jagiellonia Białystok,POM,Korona Kielce,False,3.1,3.2,0.98,1.0,0.97,89.0,high,Śr. 3.2 × FDR 0.98 × min 1.0 × wyjazd 0.97 = 3.1
+774,Sebastian Bergier,Widzew Łódź,NAP,Bruk-Bet Termalica Nieciecza,True,3.1,2.7,1.2,0.9,1.05,66.0,high,Śr. 2.7 × FDR 1.2 × min 0.9 × dom 1.05 = 3.1
+2775,Fábio Ronaldo,Motor Lublin,POM,Raków Częstochowa,True,3.0,3.3,0.94,0.9,1.05,74.0,high,Śr. 3.3 × FDR 0.94 × min 0.9 × dom 1.05 = 3.0
+563,Marcin Wasielewski,GKS Katowice,OBR,Lech Poznań,False,2.9,3.9,0.8,1.0,0.97,89.0,high,Śr. 3.9 × FDR 0.8 × min 1.0 × wyjazd 0.97 × CS 0.97 = 2.9
+1430,Damian Hilbrycht,Bruk-Bet Termalica Nieciecza,OBR,Widzew Łódź,False,2.9,2.4,1.2,1.0,0.97,87.0,high,Śr. 2.4 × FDR 1.2 × min 1.0 × wyjazd 0.97 × trend 1.05 × stab 0.97 × CS 1.05 × kartki 0.96 = 2.9
+1569,Oskar Wójcik,Cracovia,OBR,Arka Gdynia,True,2.9,2.4,1.2,1.0,1.05,90.0,high,Śr. 2.4 × FDR 1.2 × min 1.0 × dom 1.05 × trend 1.05 × stab 0.97 × CS 1.05 × kartki 0.92 = 2.9
+2053,Sebastian Madejski,Cracovia,BR,Arka Gdynia,True,2.9,2.3,1.2,1.0,1.05,90.0,high,Śr. 2.3 × FDR 1.2 × min 1.0 × dom 1.05 × stab 0.97 × CS 1.05 = 2.9
+2444,Marcel Krajewski,Widzew Łódź,OBR,Bruk-Bet Termalica Nieciecza,True,2.9,3.5,1.1,0.7,1.05,57.0,high,Śr. 3.5 × FDR 1.1 × min 0.7 × dom 1.05 × stab 0.97 × CS 1.05 = 2.9
+2577,Josip Ćorluka,Zagłębie Lubin,OBR,Radomiak Radom,True,2.9,3.5,0.9,1.0,1.05,85.0,high,Śr. 3.5 × FDR 0.9 × min 1.0 × dom 1.05 × trend 0.95 × stab 0.97 × CS 0.97 = 2.9
+346,Vladislavs Gutkovskis,Arka Gdynia,NAP,Cracovia,False,2.8,4.0,0.8,0.9,0.97,60.0,high,Śr. 4.0 × FDR 0.8 × min 0.9 × wyjazd 0.97 = 2.8
+1539,Iván López,Raków Częstochowa,POM,Motor Lublin,False,2.8,4.1,1.06,0.7,0.97,58.0,high,Śr. 4.1 × FDR 1.06 × min 0.7 × wyjazd 0.97 × trend 0.95 = 2.8
+991,Tomasz Neugebauer,Lechia Gdańsk,POM,Wisła Płock,False,2.7,4.0,0.96,0.7,0.97,44.0,high,Śr. 4.0 × FDR 0.96 × min 0.7 × wyjazd 0.97 × trend 1.05 × stab 0.97 = 2.7
+1280,Damian Michalski,Zagłębie Lubin,OBR,Radomiak Radom,True,2.7,3.2,0.9,1.0,1.05,90.0,high,Śr. 3.2 × FDR 0.9 × min 1.0 × dom 1.05 × trend 0.95 × stab 0.97 × CS 0.97 = 2.7
+1363,Bartłomiej Wdowik,Jagiellonia Białystok,OBR,Korona Kielce,False,2.6,2.6,1.1,0.9,0.97,72.0,high,Śr. 2.6 × FDR 1.1 × min 0.9 × wyjazd 0.97 × CS 1.05 = 2.6
+1540,Norbert Wojtuszek,Jagiellonia Białystok,OBR,Korona Kielce,False,2.6,2.6,1.1,0.9,0.97,75.0,high,Śr. 2.6 × FDR 1.1 × min 0.9 × wyjazd 0.97 × CS 1.05 = 2.6
+2719,Leandro Sanca,Piast Gliwice,POM,Pogoń Szczecin,True,2.6,3.4,1.06,0.7,1.05,40.0,high,Śr. 3.4 × FDR 1.06 × min 0.7 × dom 1.05 = 2.6
+1299,Jean Carlos Silva,Raków Częstochowa,OBR,Motor Lublin,False,2.5,3.0,1.0,0.9,0.97,75.0,high,Śr. 3.0 × FDR 1.0 × min 0.9 × wyjazd 0.97 × trend 0.95 = 2.5
+1411,Rafał Leszczyński,Wisła Płock,BR,Lechia Gdańsk,True,2.5,3.1,0.8,1.0,1.05,90.0,high,Śr. 3.1 × FDR 0.8 × min 1.0 × dom 1.05 × trend 1.05 × stab 0.97 × CS 0.97 = 2.5
+1880,Ilja Szkurin,GKS Katowice,NAP,Lech Poznań,False,2.5,3.4,1.1,0.7,0.97,47.0,high,Śr. 3.4 × FDR 1.1 × min 0.7 × wyjazd 0.97 = 2.5
+2286,Valentin Cojocaru,Pogoń Szczecin,BR,Piast Gliwice,False,2.5,2.2,1.1,1.0,0.97,90.0,high,Śr. 2.2 × FDR 1.1 × min 1.0 × wyjazd 0.97 × CS 1.05 = 2.5
+2562,Bartosz Mazurek,Jagiellonia Białystok,POM,Korona Kielce,False,2.5,2.9,0.98,0.9,0.97,72.0,high,Śr. 2.9 × FDR 0.98 × min 0.9 × wyjazd 0.97 = 2.5
+2668,Tamar Svetlin,Korona Kielce,POM,Jagiellonia Białystok,True,2.5,2.6,0.9,1.0,1.05,90.0,high,Śr. 2.6 × FDR 0.9 × min 1.0 × dom 1.05 = 2.5
+2669,Matus Vojtko,Lechia Gdańsk,OBR,Wisła Płock,False,2.5,2.2,1.2,1.0,0.97,90.0,high,Śr. 2.2 × FDR 1.2 × min 1.0 × wyjazd 0.97 × CS 1.05 × kartki 0.96 = 2.5
+2688,Dion Gallapeni,Wisła Płock,OBR,Lechia Gdańsk,True,2.5,4.6,0.8,0.7,1.05,46.0,medium,Śr. 4.6 × FDR 0.8 × min 0.7 × dom 1.05 × stab 0.97 × CS 0.97 = 2.5
+2752,Slobodan Rubežić,Korona Kielce,OBR,Jagiellonia Białystok,True,2.5,3.0,0.9,1.0,1.05,81.0,high,Śr. 3.0 × FDR 0.9 × min 1.0 × dom 1.05 × stab 0.97 × CS 0.97 × kartki 0.96 = 2.5
+2826,Levente Szabó,Zagłębie Lubin,NAP,Radomiak Radom,True,2.4,3.0,1.1,0.7,1.05,53.0,high,Śr. 3.0 × FDR 1.1 × min 0.7 × dom 1.05 = 2.4
+1168,Patryk Makuch,Raków Częstochowa,NAP,Motor Lublin,False,2.3,3.0,1.1,0.7,0.97,53.0,high,Śr. 3.0 × FDR 1.1 × min 0.7 × wyjazd 0.97 = 2.3
+1400,Xavier Dziekoński,Korona Kielce,BR,Jagiellonia Białystok,True,2.3,2.6,0.9,1.0,1.05,90.0,high,Śr. 2.6 × FDR 0.9 × min 1.0 × dom 1.05 × stab 0.97 × CS 0.97 = 2.3
+1909,Rafał Adamski,Legia Warszawa,NAP,Górnik Zabrze,True,2.3,3.1,0.8,0.9,1.05,78.0,high,Śr. 3.1 × FDR 0.8 × min 0.9 × dom 1.05 = 2.3
+2526,Sondre Liseth,Górnik Zabrze,NAP,Legia Warszawa,False,2.3,3.0,0.8,1.0,0.97,83.0,high,Śr. 3.0 × FDR 0.8 × min 1.0 × wyjazd 0.97 = 2.3
+2551,Gierman Barkowskij,Piast Gliwice,NAP,Pogoń Szczecin,True,2.3,2.2,1.1,0.9,1.05,69.0,high,Śr. 2.2 × FDR 1.1 × min 0.9 × dom 1.05 = 2.3
+1001,Karol Szymański,Piast Gliwice,BR,Pogoń Szczecin,True,2.2,2.1,1.0,1.0,1.05,90.0,medium,Śr. 2.1 × FDR 1.0 × min 1.0 × dom 1.05 × stab 0.97 = 2.2
+1782,Roque Júnior Maurides,Radomiak Radom,NAP,Zagłębie Lubin,False,2.2,2.8,0.9,0.9,0.97,72.0,high,Śr. 2.8 × FDR 0.9 × min 0.9 × wyjazd 0.97 = 2.2
+2032,Oskar Leśniak,Piast Gliwice,POM,Pogoń Szczecin,True,2.2,2.8,1.06,0.7,1.05,32.0,high,Śr. 2.8 × FDR 1.06 × min 0.7 × dom 1.05 = 2.2
+2763,Brahim Traoré,Cracovia,OBR,Arka Gdynia,True,2.2,1.8,1.2,1.0,1.05,89.0,high,Śr. 1.8 × FDR 1.2 × min 1.0 × dom 1.05 × trend 0.95 × stab 0.97 × CS 1.05 = 2.2
+130,Jasmin Burić,Zagłębie Lubin,BR,Radomiak Radom,True,2.1,2.5,0.9,1.0,1.05,90.0,high,Śr. 2.5 × FDR 0.9 × min 1.0 × dom 1.05 × trend 0.95 × stab 0.97 × CS 0.97 = 2.1
+632,Wiktor Nowak,Wisła Płock,POM,Lechia Gdańsk,True,2.1,2.0,1.04,1.0,1.05,90.0,high,Śr. 2.0 × FDR 1.04 × min 1.0 × dom 1.05 × kartki 0.96 = 2.1
+1794,Kamil Grosicki,Pogoń Szczecin,POM,Piast Gliwice,False,2.1,2.4,1.04,0.9,0.97,61.0,high,Śr. 2.4 × FDR 1.04 × min 0.9 × wyjazd 0.97 × trend 0.95 = 2.1
+1928,Stratos Svarnas,Raków Częstochowa,OBR,Motor Lublin,False,2.1,3.3,1.0,0.7,0.97,52.0,high,Śr. 3.3 × FDR 1.0 × min 0.7 × wyjazd 0.97 × stab 0.97 = 2.1
+2430,Jean-Pierre Nsame,Legia Warszawa,NAP,Górnik Zabrze,True,2.1,3.7,0.8,0.7,1.05,49.0,medium,Śr. 3.7 × FDR 0.8 × min 0.7 × dom 1.05 × stab 0.97 = 2.1
+2505,Dimítrios Keramítsis,Pogoń Szczecin,OBR,Piast Gliwice,False,2.1,2.1,1.1,1.0,0.97,90.0,high,Śr. 2.1 × FDR 1.1 × min 1.0 × wyjazd 0.97 × trend 0.95 × stab 0.97 × CS 1.05 × kartki 0.96 = 2.1
+860,Wiktor Długosz,Korona Kielce,OBR,Jagiellonia Białystok,True,2.0,2.2,0.9,1.0,1.05,84.0,high,Śr. 2.2 × FDR 0.9 × min 1.0 × dom 1.05 × stab 0.97 × CS 0.97 = 2.0
+1360,Kacper Chodyna,Legia Warszawa,POM,Górnik Zabrze,True,1.9,3.2,0.84,0.7,1.05,57.0,high,Śr. 3.2 × FDR 0.84 × min 0.7 × dom 1.05 × trend 0.95 = 1.9
+1853,Bogdan Racovițan,Raków Częstochowa,OBR,Motor Lublin,False,1.9,2.0,1.0,1.0,0.97,86.0,high,Śr. 2.0 × FDR 1.0 × min 1.0 × wyjazd 0.97 × stab 0.97 = 1.9
+2498,Patrik Wålemark,Lech Poznań,POM,GKS Katowice,True,1.9,2.6,1.0,0.7,1.05,41.0,high,Śr. 2.6 × FDR 1.0 × min 0.7 × dom 1.05 = 1.9
+2205,Afimico Pululu,Jagiellonia Białystok,NAP,Korona Kielce,False,1.7,2.2,0.9,0.9,0.97,70.0,high,Śr. 2.2 × FDR 0.9 × min 0.9 × wyjazd 0.97 × stab 0.97 = 1.7
+2287,Oliwier Zych,Raków Częstochowa,BR,Motor Lublin,False,1.7,2.1,1.0,0.9,0.97,77.0,high,Śr. 2.1 × FDR 1.0 × min 0.9 × wyjazd 0.97 × stab 0.97 = 1.7
+86,Taras Romanczuk,Jagiellonia Białystok,POM,Korona Kielce,False,1.4,1.6,0.98,0.9,0.97,76.0,high,Śr. 1.6 × FDR 0.98 × min 0.9 × wyjazd 0.97 = 1.4
+1625,Nazarij Rusyn,Arka Gdynia,NAP,Cracovia,False,1.4,2.8,0.8,0.7,0.97,48.0,high,Śr. 2.8 × FDR 0.8 × min 0.7 × wyjazd 0.97 × trend 0.95 × stab 0.97 = 1.4
+1225,Jan Grzesik,Radomiak Radom,OBR,Zagłębie Lubin,False,1.3,1.5,0.9,1.0,0.97,81.0,high,Śr. 1.5 × FDR 0.9 × min 1.0 × wyjazd 0.97 × CS 0.97 = 1.3
+2071,Leonárdo Koútris,Pogoń Szczecin,OBR,Piast Gliwice,False,1.3,1.8,1.1,0.7,0.97,36.0,high,Śr. 1.8 × FDR 1.1 × min 0.7 × wyjazd 0.97 × trend 0.95 × stab 0.97 × CS 1.05 = 1.3
+2047,Dawid Kurminowski,Lechia Gdańsk,NAP,Wisła Płock,False,1.2,2.2,0.8,0.7,0.97,43.0,high,Śr. 2.2 × FDR 0.8 × min 0.7 × wyjazd 0.97 = 1.2
+2588,Mauro Perković,Cracovia,OBR,Arka Gdynia,True,1.2,1.0,1.2,0.9,1.05,78.0,high,Śr. 1.0 × FDR 1.2 × min 0.9 × dom 1.05 × stab 0.97 × CS 1.05 = 1.2
+256,Jakub Czerwiński,Piast Gliwice,OBR,Pogoń Szczecin,True,1.1,1.1,1.0,1.0,1.05,88.0,high,Śr. 1.1 × FDR 1.0 × min 1.0 × dom 1.05 × stab 0.97 = 1.1
+1623,Filip Borowski,Piast Gliwice,OBR,Pogoń Szczecin,True,1.1,1.5,1.0,0.7,1.05,35.0,high,Śr. 1.5 × FDR 1.0 × min 0.7 × dom 1.05 = 1.1
+2727,Natan Ława,Pogoń Szczecin,POM,Piast Gliwice,False,1.1,1.6,1.04,0.7,0.97,37.0,medium,Śr. 1.6 × FDR 1.04 × min 0.7 × wyjazd 0.97 = 1.1
+2189,Adrián Diéguez,Radomiak Radom,OBR,Zagłębie Lubin,False,1.0,1.2,0.9,1.0,0.97,90.0,high,Śr. 1.2 × FDR 0.9 × min 1.0 × wyjazd 0.97 × CS 0.97 × kartki 0.96 = 1.0
+2768,Antonio Čolak,Legia Warszawa,NAP,Górnik Zabrze,True,0.9,3.1,0.8,0.4,1.05,23.0,high,Śr. 3.1 × FDR 0.8 × min 0.4 × dom 1.05 × trend 0.95 × stab 0.97 = 0.9
+2560,Konrad Ciszek,Korona Kielce,OBR,Jagiellonia Białystok,True,0.8,1.0,0.9,0.9,1.05,75.0,medium,Śr. 1.0 × FDR 0.9 × min 0.9 × dom 1.05 × stab 1.03 × CS 0.97 = 0.8
+2789,Jakub Kokosiński,GKS Katowice,NAP,Lech Poznań,False,0.7,1.7,1.1,0.4,0.97,8.0,medium,Śr. 1.7 × FDR 1.1 × min 0.4 × wyjazd 0.97 = 0.7
+2502,Andréas Katsantónis,Piast Gliwice,NAP,Pogoń Szczecin,True,0.5,1.2,1.1,0.4,1.05,25.0,high,Śr. 1.2 × FDR 1.1 × min 0.4 × dom 1.05 × stab 0.97 = 0.5
+2827,Jakub Ligocki,Zagłębie Lubin,POM,Radomiak Radom,True,0.4,1.0,1.02,0.4,1.05,22.0,medium,Śr. 1.0 × FDR 1.02 × min 0.4 × dom 1.05 × stab 1.03 = 0.4
+1097,Kacper Krzepisz,Arka Gdynia,BR,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+1407,Radosław Seweryś,Korona Kielce,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2240,Michał Niedbała,Korona Kielce,BR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2250,Dawid Rychta,Piast Gliwice,BR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2263,Kacper Kucharczyk,Korona Kielce,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2283,Kamil Glik,Cracovia,OBR,Arka Gdynia,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek)
+2293,Radosław Turek,Korona Kielce,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2366,Konrad Golonka,Cracovia,BR,Arka Gdynia,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2374,Patryk Szczuka,GKS Katowice,BR,Lech Poznań,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2376,Łukasz Trepka,GKS Katowice,OBR,Lech Poznań,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2468,Krystian Harciński,Radomiak Radom,BR,Zagłębie Lubin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2475,Jakub Grzejszczak,Widzew Łódź,OBR,Bruk-Bet Termalica Nieciecza,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2491,Maciej Wojciechowski,Pogoń Szczecin,POM,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2514,Borys Jesionowski,Lechia Gdańsk,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2530,Franciszek Lewandowski,Motor Lublin,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek)
+2552,Konstantínos Sotiríou,Korona Kielce,OBR,Jagiellonia Białystok,True,0.0,2.7,0.9,0.9,1.05,77.0,high,Śr. 2.7 × FDR 0.9 × min 0.9 × dom 1.05 × trend 0.95 × stab 0.97 × CS 0.97 × kartki 0.0 = 0.0
+2555,Nikodem Stachowicz,Widzew Łódź,POM,Bruk-Bet Termalica Nieciecza,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2561,Michał Mikielewicz,Korona Kielce,BR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2598,Adam Matysek,Zagłębie Lubin,BR,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2600,Radosław Szafrański,Górnik Zabrze,OBR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2608,Volodymyr Vereshchak,Arka Gdynia,OBR,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2623,Eric Topór,Bruk-Bet Termalica Nieciecza,BR,Widzew Łódź,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2643,Filip Zając,Wisła Płock,OBR,Lechia Gdańsk,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2696,Mateusz Głowiński,Korona Kielce,NAP,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2701,Kacper Plichta,Motor Lublin,NAP,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2705,Stanisław Pruszkowski,Wisła Płock,BR,Lechia Gdańsk,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2706,Patryk Kukulski,Motor Lublin,BR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2736,Cyprian Popielec,Zagłębie Lubin,POM,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2739,Konrad Cymerys,Cracovia,BR,Arka Gdynia,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2741,Alex Peškovič,Pogoń Szczecin,BR,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2750,Rafał Jakubowski,Pogoń Szczecin,OBR,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2751,Kacper Stanowski,Pogoń Szczecin,NAP,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2754,Oskar Klat,Wisła Płock,BR,Lechia Gdańsk,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2764,Dorian Sinkiewicz,Lechia Gdańsk,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2786,Antoni Bałabuch,Górnik Zabrze,BR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2790,Michał Kaczorowski,Lechia Gdańsk,BR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2824,Adam Żabicki,Radomiak Radom,POM,Zagłębie Lubin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2829,Maciej Urbański,Zagłębie Lubin,OBR,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2832,Jakub Grelich,Piast Gliwice,BR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
+2850,Oskar Markiewicz,Radomiak Radom,OBR,Zagłębie Lubin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek)
