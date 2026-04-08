@@ -2909,7 +2909,7 @@ function renderPlayers() {{
   }}
   h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
   h += '<th class="text-center" style="min-width:80px">Forma</th>';
-  h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek przed obecną)">Średnia'+arrow('players','_form_avg')+'</th>';
+  h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów z ostatnich 5 kolejek uwzględnionych w formie">Średnia'+arrow('players','_form_avg')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct" title="Oficjalny % popularności z API Fantasy Ekstraklasa — procent WSZYSTKICH graczy fantasy, którzy mają tego zawodnika w składzie">Pop.'+arrow('players','popularity_pct')+'</th>';
   if (hasOwn) {{
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad" style="min-width:100px" title="% drużyn z wybranego zakresu (Top 10/100/Wszystkie/Liga), które mają tego zawodnika w składzie">W składzie'+arrow('players','_own_squad')+'</th>';
@@ -4936,10 +4936,15 @@ def main():
         price = p.get("price", 0) or 0
         ppp = round(pts / price, 2) if price > 0 else 0
 
-        # Forma: 5 kolejek PRZED obecną kolejką (w tym nierozegrane)
-        rounds = p.get("rounds", [])
-        before_current = [r for r in rounds if r.get("round", 0) < current_round] if current_round else rounds
-        last5 = before_current[-5:] if before_current else []
+        # Forma: ostatnie 5 kolejek uwzględnionych w formie
+        # - tryb domyślny (TARGET_ROUND is None): do bieżącej kolejki włącznie
+        # - tryb historyczny (TARGET_ROUND ustawiony): tylko kolejki przed analizowaną
+        rounds = sorted(p.get("rounds", []), key=lambda r: r.get("round", 0))
+        if TARGET_ROUND is None:
+            eligible_rounds = [r for r in rounds if r.get("round", 0) <= current_round] if current_round else rounds
+        else:
+            eligible_rounds = [r for r in rounds if r.get("round", 0) < current_round] if current_round else rounds
+        last5 = eligible_rounds[-5:] if eligible_rounds else []
         form = [{"r": r.get("round", 0), "pts": r.get("points", 0) if r.get("played") else 0, "p": bool(r.get("played"))} for r in last5]
 
         summary_data.append({
@@ -5074,10 +5079,15 @@ def main():
                 "R": p.get("is_reserve", False),
                 "form": [],
             })
-            # Dodaj formę — 5 kolejek przed obecną kolejką (w tym nierozegrane)
-            pr = full.get("rounds", [])
-            before_current = [r for r in pr if r.get("round", 0) < current_round] if current_round else pr
-            last5 = before_current[-5:] if before_current else []
+            # Dodaj formę — ostatnie 5 kolejek uwzględnionych w formie
+            # - tryb domyślny (TARGET_ROUND is None): do bieżącej kolejki włącznie
+            # - tryb historyczny (TARGET_ROUND ustawiony): tylko kolejki przed analizowaną
+            pr = sorted(full.get("rounds", []), key=lambda r: r.get("round", 0))
+            if TARGET_ROUND is None:
+                eligible_rounds = [r for r in pr if r.get("round", 0) <= current_round] if current_round else pr
+            else:
+                eligible_rounds = [r for r in pr if r.get("round", 0) < current_round] if current_round else pr
+            last5 = eligible_rounds[-5:] if eligible_rounds else []
             team_players[-1]["form"] = [{"r": r.get("round", 0), "pts": r.get("points", 0) if r.get("played") else 0, "p": bool(r.get("played"))} for r in last5]
 
         league_teams_detail.append({
