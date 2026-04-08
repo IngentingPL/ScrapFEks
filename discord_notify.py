@@ -830,47 +830,216 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
             "inline": False,
         })
 
+
     # Jeśli żadna sekcja nie ma danych — nie wysyłaj pustego embeda
     if not fields:
         print("  ℹ️  Discord post-round: wszystkie sekcje puste — pomijam")
         return False
 
-    # --- BUDUJ EMBED ---
-    embed = {
-        "title": f"📊 ScrapFEks — Kolejka {round_number} Podsumowanie",
-        "color": 0x23A55A,  # Zielony — odróżnia post-round od pre-round (cyan)
-        "fields": fields,
-        "footer": {
-            "text": f"🔗 {DASHBOARD_URL} · {timestamp}",
-        },
+    def _split_long_text(text, max_len=3900):
+        """
+        Dzieli długi tekst na kawałki <= max_len.
+        Priorytet cięcia: podwójny newline, newline, spacja, a na końcu twarde cięcie.
+        Dzięki temu żaden fragment newslettera nie przekroczy limitu Discorda.
+        """
+        if text is None:
+            return []
+        remaining = str(text).strip()
+        if not remaining:
+            return []
+
+        parts = []
+        while len(remaining) > max_len:
+            cut = remaining.rfind("\n\n", 0, max_len)
+            if cut == -1:
+                cut = remaining.rfind("\n", 0, max_len)
+            if cut == -1:
+                cut = remaining.rfind(" ", 0, max_len)
+            if cut == -1 or cut < int(max_len * 0.5):
+                cut = max_len
+            parts.append(remaining[:cut].strip())
+            remaining = remaining[cut:].strip()
+
+        if remaining:
+            parts.append(remaining)
+        return parts
+
+
+    def _embed_char_count(emb):
+        """Przybliżone liczenie znaków w embedzie (limit Discorda ~6000)."""
+        count = len(emb.get("title", ""))
+        count += len(emb.get("description", ""))
+        count += len(emb.get("footer", {}).get("text", ""))
+        count += len(emb.get("author", {}).get("name", ""))
+        for f in emb.get("fields", []):
+            count += len(f.get("name", ""))
+            count += len(f.get("value", ""))
+        return count
+
+
+    def _normalize_fields(fields_list, field_value_limit=1000):
+        """
+        Pilnuje limitu pojedynczego field.value (Discord: 1024).
+        Jeśli wartość jest dłuższa, dzieli ją na kilka pól kontynuacji.
+        """
+        normalized = []
+        for field in fields_list or []:
+            name = str(field.get("name", "") or "").strip()[:256] or "Sekcja"
+            value = str(field.get("value", "") or "").strip()
+            inline = bool(field.get("inline", False))
+
+            if len(value) <= field_value_limit:
+                normalized.append({"name": name, "value": value or "—", "inline": inline})
+                continue
+
+            value_parts = _split_long_text(value, max_len=field_value_limit)
+            for idx, part in enumerate(value_parts, start=1):
+                if idx == 1:
+                    part_name = name
+                else:
+                    suffix = f" (cd. {idx})"
+                    part_name = (name[: max(1, 256 - len(suffix))] + suffix).strip()
+                normalized.append({"name": part_name, "value": part or "—", "inline": inline})
+        return normalized
+
+
+    def _split_fields_into_embeds(base_title, color, fields_list, footer, description=None,
+                                  max_chars=5500, max_fields=25):
+        """
+        Buduje 1..N embedów z listy fields tak, żeby:
+        - każdy embed mieścił się w limicie znaków,
+        - każdy embed miał max 25 pól.
+        Wysyłamy je potem osobno, więc żaden fragment nie zostanie ucięty przez łączny limit wiadomości.
+        """
+        normalized_fields = _normalize_fields(fields_list)
+        embeds = []
+        current_fields = []
+
+        def make_embed(fields_chunk, is_last=False, force_title=None):
+            emb = {
+                "color": color,
+                "fields": fields_chunk,
+            }
+            title_to_use = force_title if force_title is not None else base_title
+            if title_to_use:
+                emb["title"] = title_to_use
+            if description:
+                emb["description"] = description
+            if is_last and footer:
+                emb["footer"] = footer
+            return emb
+
+        if not normalized_fields:
+            return [make_embed([], is_last=True)]
+
+        for field in normalized_fields:
+            candidate_fields = current_fields + [field]
+            title_for_candidate = base_title if not embeds else f"{base_title} (cd.)"
+            candidate = make_embed(candidate_fields, is_last=False, force_title=title_for_candidate)
+
+            too_many_fields = len(candidate_fields) > max_fields
+            too_many_chars = _embed_char_count(candidate) > max_chars
+
+            if current_fields and (too_many_fields or too_many_chars):
+                title_for_current = base_title if not embeds else f"{base_title} (cd.)"
+                embeds.append(make_embed(current_fields, is_last=False, force_title=title_for_current))
+                current_fields = [field]
+            else:
+                current_fields = candidate_fields
+
+        if current_fields:
+            title_for_last = base_title if not embeds else f"{base_title} (cd.)"
+            embeds.append(make_embed(current_fields, is_last=True, force_title=title_for_last))
+        elif embeds:
+            embeds[-1]["footer"] = footer
+
+        if embeds and footer and "footer" not in embeds[-1]:
+            embeds[-1]["footer"] = footer
+
+        return embeds
+
+
+    # --- BUDUJ GŁÓWNY EMBED / EMBEDY ---
+    footer_obj = {
+        "text": f"🔗 {DASHBOARD_URL} · {timestamp}",
     }
 
-    # --- NEWSLETTER EMBED (opcjonalny) ---
-    # Jeśli Gemini wygenerował tekst, dodajemy go jako drugi embed w tej samej wiadomości.
-    # Złoty kolor (0xF0B232) odróżnia newsletter od zielonego podsumowania i cyjanowej prognozy.
-    #
-    # 📖 LEKCJA: Discord pozwala wysłać do 10 embedów w jednej wiadomości.
-    # Odbiorcy widzą je jako jedną wiadomość, jeden po drugim.
+    base_title = f"📊 ScrapFEks — Kolejka {round_number} Podsumowanie"
+    main_embeds = _split_fields_into_embeds(
+        base_title=base_title,
+        color=0x23A55A,
+        fields_list=fields,
+        footer=footer_obj,
+        description=None,
+        max_chars=5500,
+        max_fields=25,
+    )
+
+    # --- BUDUJ NEWSLETTER EMBEDY (opcjonalnie) ---
+    newsletter_embeds = []
     if newsletter_text:
-        newsletter_embed = {
-            "title": f"📰 ScrapFEks Weekly — Kolejka {round_number}",
-            "color": 0xF0B232,  # Złoty — wyróżnia newsletter
-            "description": newsletter_text,
-            "footer": {
-                "text": "Wygenerowano przez Gemini AI · Dane mogą nie oddawać pełnego obrazu",
-            },
-        }
-        success = _send_embed(
-            webhook_url,
-            embed=None,
-            content="<@&1262764454404296759>",
-            embeds=[embed, newsletter_embed],
+        cleaned = str(newsletter_text).strip()
+
+        # Usuń powtarzający się nagłówek jeśli model już go dodał.
+        for header in [
+            "📰 Newsletter",
+            "Newsletter",
+            "## Newsletter",
+            "📋 Newsletter",
+            "📌 Newsletter",
+        ]:
+            if cleaned.lower().startswith(header.lower()):
+                cleaned = cleaned[len(header):].lstrip("\n :-")
+                break
+
+        if cleaned:
+            newsletter_parts = _split_long_text(cleaned, max_len=3900)
+            print(f"  🔎 Newsletter długość: {len(cleaned)} znaków")
+            print(f"  🔎 Newsletter części: {len(newsletter_parts)} | długości: {[len(p) for p in newsletter_parts]}")
+
+            total_parts = len(newsletter_parts)
+            for idx, part in enumerate(newsletter_parts, start=1):
+                title = (
+                    f"📰 ScrapFEks Weekly — Kolejka {round_number}"
+                    if total_parts == 1
+                    else f"📰 ScrapFEks Weekly — Kolejka {round_number} ({idx}/{total_parts})"
+                )
+                emb = {
+                    "title": title,
+                    "color": 0xF0B232,
+                    "description": part,
+                    "footer": {
+                        "text": "Wygenerowano przez Gemini AI · Dane mogą nie oddawać pełnego obrazu",
+                    },
+                }
+                newsletter_embeds.append(emb)
+
+    # --- WYŚLIJ WSZYSTKO BEZPIECZNIE ---
+    # Każdy embed wysyłamy jako osobną wiadomość webhooka.
+    # Dzięki temu nie wpadamy w łączny limit 6000 znaków dla wielu embedów w JEDNEJ wiadomości.
+    embeds_to_send = main_embeds + newsletter_embeds
+    if not embeds_to_send:
+        print("  ℹ️  Discord post-round: brak gotowych embedów do wysłania — pomijam")
+        return False
+
+    success = True
+    mention_content = "<@&1262764454404296759>"
+    for idx, emb in enumerate(embeds_to_send, start=1):
+        emb_chars = _embed_char_count(emb)
+        print(
+            f"  🔎 Wysyłam embed {idx}/{len(embeds_to_send)} | "
+            f"title='{emb.get('title', '')}' | chars={emb_chars} | fields={len(emb.get('fields', []))}"
         )
-    else:
-        success = _send_embed(webhook_url, embed, content="<@&1262764454404296759>")
+
+        content = mention_content if idx == 1 else None
+        ok = _send_embed(webhook_url, emb, content=content)
+        success = success and ok
+
+        if not ok:
+            print(f"  ⚠️  Błąd podczas wysyłania embeda {idx}/{len(embeds_to_send)} — przerywam dalszą wysyłkę")
+            break
 
     if success:
-        # Zaktualizuj log — ta kolejka post-round jest już wysłana
         sent_log["post_round"] = round_number
         _save_sent_log(sent_log)
         print(f"  ✅ Discord post-round K{round_number} wysłany pomyślnie!")
