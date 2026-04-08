@@ -157,13 +157,13 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
             )
             crons.append(("discord_pre", notify_local, trigger_utc, cron, rnd))
 
-    # 4. Dzień po ostatnim meczu o 10:00 (Discord post-round notification)
+    # 4. Dzień po ostatnim meczu o 12:00 (Discord post-round notification)
     # Scraper sprawdzi warunek timingowy i wyśle podsumowanie kolejki na Discord
     for rnd, m in sorted(last_per_round.items()):
         last_day = m["datetime"].date()
         notify_day = last_day + timedelta(days=1)
         notify_local = datetime(
-            notify_day.year, notify_day.month, notify_day.day, 10, 0,
+            notify_day.year, notify_day.month, notify_day.day, 12, 0,
             tzinfo=TZ_WARSAW,
         )
         trigger_utc = notify_local.astimezone(TZ_UTC)
@@ -207,7 +207,7 @@ def update_workflow(workflow_path: str, crons: list[tuple]):
             elif label == "discord_post":
                 comment = (
                     f"K{rnd} DISCORD POST {match_local.strftime('%d.%m')} "
-                    f"10:00 {tz_name} — podsumowanie po kolejce"
+                    f"12:00 {tz_name} — podsumowanie po kolejce"
                 )
             else:
                 trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
