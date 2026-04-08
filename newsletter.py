@@ -25,63 +25,78 @@ NEWSLETTER_HISTORY_FILE = os.path.join(OUTPUT_DIR, "newsletter_history.json")
 # Timeout dla requestu do Gemini API (sekundy)
 GEMINI_TIMEOUT = 30
 
-# Maksymalna długość newslettera (znaki) — Discord embed description limit
+# Maksymalna długość newslettera zwracanego dalej do Discorda.
 MAX_NEWSLETTER_CHARS = 1500
+
+# Ustawienia Gemini — wersja diagnostyczna
+GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MAX_OUTPUT_TOKENS = 2200
+GEMINI_THINKING_BUDGET = 0  # 0 = wyłącz thinking dla newslettera
+NEWSLETTER_END_MARKER = "### KONIEC NEWSLETTERA ###"
 
 
 # ============================================================
 # FUNKCJA GŁÓWNA
 # ============================================================
 
+
 def generate_newsletter(round_data: dict, api_key: str):
     """
     Generuje newsletter AI po zakończeniu kolejki.
 
-    Zbiera dane z round_data, wysyła prompt do Gemini API,
-    zapisuje wynik do archiwum (newsletter_history.json)
-    i zwraca tekst do umieszczenia w Discord embedzie.
-
-    📖 LEKCJA: Funkcja "defensywna" — każdy błąd (API, dane, zapis)
-    jest przechwytywany i logowany, ale NIGDY nie przerywa pipeline'u.
-
-    Parametry:
-        round_data: dict z danymi kolejki (patrz _build_context)
-        api_key:    klucz Gemini API (z GEMINI_API_KEY)
-
-    Zwraca:
-        str — tekst newslettera (max 1500 znaków)
-        None — jeśli cokolwiek poszło nie tak
+    Wersja diagnostyczna:
+    - loguje finish_reason i usageMetadata,
+    - wykrywa podejrzanie urwaną odpowiedź,
+    - robi jedną próbę awaryjną krótszym promptem.
     """
     if not api_key:
         print("  ℹ️  Newsletter: brak GEMINI_API_KEY — pomijam")
         return None
 
     round_number = round_data.get("round_number")
-    print(f"\n📰 Newsletter: generuję dla kolejki {round_number}...")
+    print()
+    print(f"📰 Newsletter: generuję dla kolejki {round_number}...")
 
     try:
         context = _build_context(round_data)
         prompt = _build_prompt(round_number, context)
-        text = call_gemini(prompt, api_key)
+        result = call_gemini(prompt, api_key, label="primary")
     except Exception as e:
         print(f"  ⚠️  Newsletter: błąd generowania — {e}")
         return None
 
-    if not text or not text.strip():
+    text = (result.get("text") or "").strip()
+
+    if _should_retry_newsletter(result, text):
+        print("  ⚠️  Newsletter: odpowiedź wygląda na urwaną lub niepełną — retry krótszym promptem")
+        try:
+            retry_prompt = _build_retry_prompt(round_number, context)
+            retry_result = call_gemini(retry_prompt, api_key, label="retry")
+            retry_text = (retry_result.get("text") or "").strip()
+            if retry_text and not _should_retry_newsletter(retry_result, retry_text):
+                result = retry_result
+                text = retry_text
+                print("  ✅ Newsletter: retry dał pełniejszą odpowiedź — używam retry")
+            elif retry_text and len(retry_text) > len(text):
+                result = retry_result
+                text = retry_text
+                print("  ℹ️  Newsletter: retry nadal nieidealny, ale dłuższy — używam retry")
+        except Exception as e:
+            print(f"  ⚠️  Newsletter: błąd retry — {e}")
+
+    text = (text or "").strip()
+    if not text:
         print("  ⚠️  Newsletter: Gemini zwrócił pusty tekst — pomijam")
         return None
 
-    # Obetnij do MAX_NEWSLETTER_CHARS jeśli za długi
     if len(text) > MAX_NEWSLETTER_CHARS:
-        text = text[:MAX_NEWSLETTER_CHARS - 1] + "…"
+        text = text[:MAX_NEWSLETTER_CHARS - 1].rstrip() + "…"
         print(f"  ℹ️  Newsletter: obcięto do {MAX_NEWSLETTER_CHARS} znaków")
 
-    # Zapisz do archiwum
     try:
         _save_newsletter(round_number, text)
     except Exception as e:
         print(f"  ⚠️  Newsletter: błąd zapisu do archiwum — {e}")
-        # Błąd zapisu nie blokuje zwrócenia tekstu
 
     print(f"  ✅ Newsletter wygenerowany ({len(text)} znaków)")
     return text
@@ -91,30 +106,30 @@ def generate_newsletter(round_data: dict, api_key: str):
 # GEMINI API CALL
 # ============================================================
 
-def call_gemini(prompt: str, api_key: str):
+
+def call_gemini(prompt: str, api_key: str, label: str = "primary") -> dict:
     """
-    Wysyła prompt do Gemini API i zwraca odpowiedź.
+    Wysyła prompt do Gemini API i zwraca słownik z tekstem i diagnostyką.
 
-    📖 LEKCJA: To samo co Discord webhook, ale w drugą stronę —
-    tam WYSYŁALIŚMY treść do wyświetlenia, tu PYTAMY o wygenerowanie treści.
-    Gemini endpoint przyjmuje JSON z "contents" i zwraca JSON z "candidates".
-
-    Używamy modelu gemini-2.5-flash — szybki i darmowy (~15 req/min).
-
-    Zwraca:
-        str — tekst odpowiedzi Gemini
-        None — przy błędzie (HTTP, timeout, parsowanie)
+    Najważniejsze poprawki:
+    - wyłącza thinkingBudget dla Gemini 2.5 Flash,
+    - zwiększa maxOutputTokens,
+    - łączy tekst ze wszystkich części odpowiedzi (parts),
+    - loguje finishReason i usageMetadata.
     """
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-2.5-flash:generateContent?key={api_key}"
+        f"{GEMINI_MODEL}:generateContent?key={api_key}"
     )
 
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.8,       # kreatywność (0.0=sztywny, 1.0=kreatywny)
-            "maxOutputTokens": 1500,  # max długość odpowiedzi w tokenach
+            "temperature": 0.7,
+            "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
+            "thinkingConfig": {
+                "thinkingBudget": GEMINI_THINKING_BUDGET,
+            },
         },
     }
 
@@ -131,21 +146,144 @@ def call_gemini(prompt: str, api_key: str):
             result = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", errors="replace")
-        print(f"  ⚠️  Gemini API HTTP błąd: {e.code} {e.reason} — {body[:200]}")
-        return None
+        print(f"  ⚠️  Gemini API HTTP błąd ({label}): {e.code} {e.reason} — {body[:400]}")
+        return {
+            "text": None,
+            "finish_reason": None,
+            "usage_metadata": {},
+            "marker_present": False,
+            "candidate_parts_count": 0,
+            "error": f"HTTP {e.code}",
+            "raw": None,
+        }
     except urllib.error.URLError as e:
-        print(f"  ⚠️  Gemini API błąd połączenia: {e.reason}")
-        return None
+        print(f"  ⚠️  Gemini API błąd połączenia ({label}): {e.reason}")
+        return {
+            "text": None,
+            "finish_reason": None,
+            "usage_metadata": {},
+            "marker_present": False,
+            "candidate_parts_count": 0,
+            "error": str(e.reason),
+            "raw": None,
+        }
     except Exception as e:
-        print(f"  ⚠️  Gemini API nieoczekiwany błąd: {e}")
-        return None
+        print(f"  ⚠️  Gemini API nieoczekiwany błąd ({label}): {e}")
+        return {
+            "text": None,
+            "finish_reason": None,
+            "usage_metadata": {},
+            "marker_present": False,
+            "candidate_parts_count": 0,
+            "error": str(e),
+            "raw": None,
+        }
 
-    # Odpowiedź Gemini: result["candidates"][0]["content"]["parts"][0]["text"]
-    try:
-        return result["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError, TypeError) as e:
-        print(f"  ⚠️  Gemini API: nieoczekiwana struktura odpowiedzi — {e}")
-        return None
+    parsed = _parse_gemini_result(result)
+    _log_gemini_debug(parsed, label=label)
+    return parsed
+
+def _parse_gemini_result(result: dict) -> dict:
+    """Parsuje odpowiedź Gemini i składa tekst ze wszystkich części odpowiedzi."""
+    candidates = result.get("candidates") or []
+    candidate = candidates[0] if candidates else {}
+    finish_reason = candidate.get("finishReason") or candidate.get("finish_reason")
+    usage_metadata = result.get("usageMetadata") or result.get("usage_metadata") or {}
+    model_version = result.get("modelVersion") or result.get("model_version")
+
+    parts = ((candidate.get("content") or {}).get("parts") or [])
+
+    visible_text_parts = []
+    all_text_parts = []
+    for part in parts:
+        part_text = part.get("text")
+        if not part_text:
+            continue
+        all_text_parts.append(part_text)
+        if not part.get("thought"):
+            visible_text_parts.append(part_text)
+
+    text = "\n".join(visible_text_parts).strip()
+    if not text:
+        text = "\n".join(all_text_parts).strip()
+
+    marker_present = NEWSLETTER_END_MARKER in text
+    if marker_present:
+        text = text.replace(NEWSLETTER_END_MARKER, "").strip()
+
+    return {
+        "text": text,
+        "finish_reason": finish_reason,
+        "usage_metadata": usage_metadata,
+        "marker_present": marker_present,
+        "candidate_parts_count": len(parts),
+        "model_version": model_version,
+        "raw": result,
+    }
+
+
+def _looks_like_truncated_text(text: str) -> bool:
+    """Heurystyka: tekst wygląda na urwany, jeśli nie kończy się pełnym zdaniem."""
+    if not text:
+        return True
+    stripped = text.strip()
+    if not stripped:
+        return True
+    return not stripped.endswith((".", "!", "?", "…", "”", '"'))
+
+
+def _should_retry_newsletter(result: dict, text: str) -> bool:
+    """Decyduje, czy warto zrobić retry po diagnozie odpowiedzi Gemini."""
+    finish_reason = (result.get("finish_reason") or "").upper()
+    if finish_reason == "MAX_TOKENS":
+        return True
+    if not result.get("marker_present"):
+        return True
+    if _looks_like_truncated_text(text):
+        return True
+    return False
+
+
+def _log_gemini_debug(parsed: dict, label: str = "primary") -> None:
+    """Wypisuje pełną diagnostykę odpowiedzi Gemini w logach CI."""
+    text = (parsed.get("text") or "")
+    usage = parsed.get("usage_metadata") or {}
+
+    print(f"  === GEMINI DEBUG ({label}) START ===")
+    print(f"  model_version: {parsed.get('model_version')}")
+    print(f"  finish_reason: {parsed.get('finish_reason')}")
+    print(f"  candidate_parts_count: {parsed.get('candidate_parts_count')}")
+    print(f"  marker_present: {parsed.get('marker_present')}")
+    print(f"  newsletter_text_length: {len(text)}")
+    print(f"  newsletter_text_ending: {repr(text[-200:])}")
+    print(f"  prompt_token_count: {usage.get('promptTokenCount')}")
+    print(f"  candidates_token_count: {usage.get('candidatesTokenCount')}")
+    print(f"  thoughts_token_count: {usage.get('thoughtsTokenCount')}")
+    print(f"  total_token_count: {usage.get('totalTokenCount')}")
+    print(f"  === GEMINI DEBUG ({label}) END ===")
+
+
+def _build_retry_prompt(round_number, context: dict) -> str:
+    """Krótszy prompt retry: mniej swobody, większa szansa na domknięcie tekstu."""
+    context_json = json.dumps(context, ensure_ascii=False, indent=2)
+    return f"""Jesteś komentatorem Fantasy Ekstraklasa. Napisz bardzo krótki newsletter po polsku po kolejce {round_number}.
+
+DANE Z KOLEJKI:
+{context_json}
+
+Napisz dokładnie 4 sekcje:
+🔥 CO SIĘ DZIAŁO
+🏆 WYŚCIG O TYTUŁ
+💡 CO DALEJ
+🎲 CIEKAWOSTKA
+
+ZASADY:
+- Każda sekcja: maksymalnie 2 krótkie zdania.
+- Używaj tylko podanych danych.
+- Nie dodawaj wstępu ani zakończenia.
+- Zakończ pełnym ostatnim zdaniem.
+- Na samym końcu dopisz dokładnie: {NEWSLETTER_END_MARKER}
+"""
 
 
 # ============================================================
@@ -365,6 +503,7 @@ def _collect_captains(league_teams_detail, players_data, round_number, league_da
 # PROMPT DLA GEMINI
 # ============================================================
 
+
 def _build_prompt(round_number, context: dict) -> str:
     """Buduje precyzyjny prompt dla Gemini z danymi kolejki."""
     context_json = json.dumps(context, ensure_ascii=False, indent=2)
@@ -381,15 +520,17 @@ NAPISZ NEWSLETTER W 4 SEKCJACH (każda 2-3 zdania max):
 
 3. 💡 CO DALEJ — rekomendacje transferowe na następną kolejkę. Kogo warto kupić? Kogo sprzedać? Oprzyj się na prognozach i FDR. Podaj 1-2 konkretne nazwiska.
 
-4. 🎲 CIEKAWOSTKA — jeden zaskakujący fakt z danych, śmieszne zestawienie, lub komentarz z przymrużeniem oka. Może porównanie, rekord, albo statystyka która nikogo by nie napadła. Bądź kreatywny.
+4. 🎲 CIEKAWOSTKA — jeden zaskakujący fakt z danych, śmieszne zestawienie, lub komentarz z przymrużeniem oka.
 
 ZASADY:
-- Pisz po polsku, naturalnym językiem — jak komentator sportowy, nie robot
-- MAX 800 znaków łącznie (Discord ma limity)
-- Używaj emoji oszczędnie
-- Nie wymyślaj danych — korzystaj TYLKO z podanych
-- Każdą sekcję zacznij od nagłówka emoji (🔥, 🏆, 💡, 🎲)
-- Nie dodawaj wstępu ani zakończenia — od razu sekcje
+- Pisz po polsku, naturalnym językiem — jak komentator sportowy, nie robot.
+- Celuj w 700-900 znaków łącznie.
+- Używaj emoji oszczędnie.
+- Nie wymyślaj danych — korzystaj TYLKO z podanych.
+- Każdą sekcję zacznij od nagłówka emoji (🔥, 🏆, 💡, 🎲).
+- Nie dodawaj wstępu ani zakończenia — od razu sekcje.
+- Zakończ pełnym ostatnim zdaniem.
+- Na samym końcu dopisz dokładnie: {NEWSLETTER_END_MARKER}
 """
 
 
@@ -423,7 +564,7 @@ def _save_newsletter(round_number, text: str) -> None:
         "round": round_number,
         "date": date.today().isoformat(),
         "text": text,
-        "model": "gemini-2.5-flash",
+        "model": GEMINI_MODEL,
     }
     history.append(entry)
 
