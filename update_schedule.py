@@ -157,6 +157,21 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
             )
             crons.append(("discord_pre", notify_local, trigger_utc, cron, rnd))
 
+    # 3.5. Godzinę po pierwszym meczu (Discord captains notification)
+    for rnd, m in sorted(first_per_round.items()):
+        first_dt = m["datetime"]
+        notify_dt = first_dt + timedelta(hours=1)
+        notify_local = notify_dt.astimezone(TZ_WARSAW)
+        trigger_utc = notify_local.astimezone(TZ_UTC)
+        key = (trigger_utc.month, trigger_utc.day, trigger_utc.hour, trigger_utc.minute)
+        if key not in seen:
+            seen.add(key)
+            cron = (
+                f"{trigger_utc.minute} {trigger_utc.hour} "
+                f"{trigger_utc.day} {trigger_utc.month} *"
+            )
+            crons.append(("discord_captains", notify_local, trigger_utc, cron, rnd))
+
     # 4. Dzień po ostatnim meczu o 12:00 (Discord post-round notification)
     # Scraper sprawdzi warunek timingowy i wyśle podsumowanie kolejki na Discord
     for rnd, m in sorted(last_per_round.items()):
@@ -208,6 +223,11 @@ def update_workflow(workflow_path: str, crons: list[tuple]):
                 comment = (
                     f"K{rnd} DISCORD POST {match_local.strftime('%d.%m')} "
                     f"12:00 {tz_name} — podsumowanie po kolejce"
+                )
+            elif label == "discord_captains":
+                comment = (
+                    f"K{rnd} DISCORD CAPTAINS {match_local.strftime('%d.%m')} "
+                    f"{match_local.strftime('%H:%M')} {tz_name} — podsumowanie kapitanów"
                 )
             else:
                 trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
@@ -273,6 +293,12 @@ def main():
             tag = "📣 DISC POST "
             print(
                 f"   {tag} K{rnd} {match_local.strftime('%d.%m')} 10:00 {tz_name}"
+                f" ({trigger_utc.strftime('%H:%M')} UTC)"
+            )
+        elif label == "discord_captains":
+            tag = "👑 DISC CAPT "
+            print(
+                f"   {tag} K{rnd} {match_local.strftime('%d.%m')} {match_local.strftime('%H:%M')} {tz_name}"
                 f" ({trigger_utc.strftime('%H:%M')} UTC)"
             )
         else:

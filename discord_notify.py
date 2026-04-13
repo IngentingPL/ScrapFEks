@@ -46,19 +46,19 @@ def _load_sent_log():
     """
     Wczytuje log wysłanych postów Discord z pliku JSON.
 
-    Zwraca słownik {"pre_round": N, "post_round": M}.
+    Zwraca słownik {"pre_round": N, "post_round": M, "captains_round": K}.
     Jeśli plik nie istnieje (pierwsze uruchomienie) — zwraca zera.
 
     📖 LEKCJA: Zaczynamy od 0, bo żadna kolejka nie była jeszcze obsłużona.
     """
     if not os.path.exists(DISCORD_SENT_FILE):
-        return {"pre_round": 0, "post_round": 0}
+        return {"pre_round": 0, "post_round": 0, "captains_round": 0}
     try:
         with open(DISCORD_SENT_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, IOError):
         # Jeśli plik jest uszkodzony — zacznij od nowa
-        return {"pre_round": 0, "post_round": 0}
+        return {"pre_round": 0, "post_round": 0, "captains_round": 0}
 
 
 def _save_sent_log(log):
@@ -323,6 +323,28 @@ def should_send_post_round(round_number, fixtures_data):
         return False
     today = date.today()
     return today == last_date + timedelta(days=1)
+
+
+def should_send_captains_summary(round_number, fixtures_data):
+    """
+    Sprawdza czy DZIŚ należy wysłać captains_summary dla podanej kolejki.
+
+    Warunek: dzisiejsza data == dzień pierwszego meczu kolejki.
+    (wysyłane godzinę po rozpoczęciu pierwszego meczu)
+
+    Parametry:
+        round_number: numer kolejki (np. 27)
+        fixtures_data: dane terminarza z parse_terminarz()
+
+    Zwraca True/False.
+    """
+    if not round_number:
+        return False
+    first_date, _ = _get_round_date_range(fixtures_data, round_number)
+    if not first_date:
+        return False
+    today = date.today()
+    return today == first_date
 
 
 # ============================================================
@@ -971,5 +993,91 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
         print(f"  ✅ Discord post-round K{round_number} wysłany pomyślnie!")
     else:
         print(f"  ⚠️  Discord post-round K{round_number} — wysyłka nieudana")
+
+    return success
+
+
+def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round_number):
+    """
+    Wysyła Discord embed z podsumowaniem kapitanów CMF League.
+
+    Wysyłane godzinę po rozpoczęciu pierwszego meczu w kolejce.
+    Sekcje embeda:
+    1. Nagłówek: "Gameweek X!"
+    2. Lista kapitanów posortowana według pozycji w tabeli CMF
+
+    Parametry:
+        league_teams_detail: lista drużyn z składami (slug, players z C=True)
+        cmf_standings: słownik {slug: pozycja} z tabeli CMF (jesień+wiosna)
+        webhook_url: URL Discord webhooka
+        round_number: numer kolejki
+    """
+    if not league_teams_detail:
+        print("  ℹ️  Discord captains: brak danych drużyn — pomijam")
+        return False
+
+    sent_log = _load_sent_log()
+    if sent_log.get("captains_round", 0) >= round_number:
+        print(f"  ℹ️  Discord captains K{round_number} już wysłany — pomijam duplikat")
+        return False
+
+    print(f"\n📣 Discord: przygotowuję captains embed dla kolejki {round_number}...")
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    pos_map = {
+        "1": "BR", "2": "OBR", "3": "POM", "4": "NAP",
+        "Bramkarz": "BR", "Obrońca": "OBR", "Pomocnik": "POM", "Napastnik": "NAP",
+    }
+
+    captain_entries = []
+    for team in league_teams_detail:
+        team_slug = team.get("slug", "")
+        cmf_pos = cmf_standings.get(team_slug, 999)
+        cap_name = "?"
+        vice_name = "?"
+
+        for p in team.get("players", []):
+            if p.get("C"):
+                cap_name = p.get("name", "?")
+            if p.get("VC") or p.get("S"):
+                vice_name = p.get("name", "?")
+
+        display_name = team_slug.replace("-", " ").title()
+        captain_entries.append({
+            "position": cmf_pos,
+            "team_name": display_name,
+            "cap_name": cap_name,
+            "vice_name": vice_name,
+        })
+
+    if not captain_entries:
+        print("  ℹ️  Discord captains: brak kapitanów — pomijam")
+        return False
+
+    captain_entries.sort(key=lambda x: x["position"])
+
+    lines = []
+    for i, ce in enumerate(captain_entries, start=1):
+        line = f"{i}. {ce['team_name']} - {ce['cap_name']} ({ce['vice_name']})"
+        lines.append(line)
+
+    captains_text = "Captains:\n" + "\n".join(lines)
+
+    embed = {
+        "title": f"🏆 Gameweek {round_number}!",
+        "color": 0xFF6B00,
+        "description": captains_text,
+        "footer": {"text": f"🔗 {DASHBOARD_URL} · {timestamp}"},
+    }
+
+    success = _send_embed(webhook_url, embed, content="<@&1262764454404296759>")
+
+    if success:
+        sent_log["captains_round"] = round_number
+        _save_sent_log(sent_log)
+        print(f"  ✅ Discord captains K{round_number} wysłany pomyślnie!")
+    else:
+        print(f"  ⚠️  Discord captains K{round_number} — wysyłka nieudana")
 
     return success

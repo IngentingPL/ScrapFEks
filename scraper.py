@@ -2237,7 +2237,9 @@ body {{
   font-family: 'DM Sans', -apple-system, sans-serif;
   padding: 24px 16px;
 }}
-.container {{ max-width: 95vw; margin: 0 auto; }}
+.container {{ max-width: 1400px; margin: 0 auto; padding: 0 16px; }}
+@media (max-width: 768px) {{ .container {{ max-width: 100%; padding: 0 12px; }} }}
+@media (min-width: 2000px) {{ .container {{ max-width: 1600px; }} }}
 .header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }}
 .logo {{
   width: 48px; height: 48px; border-radius: 10px;
@@ -2248,8 +2250,9 @@ body {{
 .stats-row {{ display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; padding-bottom: 4px; flex-wrap: wrap; }}
 .stat-card {{
   background: #1e293b; border-radius: 10px; padding: 16px 20px;
-  min-width: 140px; flex-shrink: 0;
+  flex: 1 1 calc(25% - 12px); min-width: 140px; max-width: 250px;
 }}
+@media (max-width: 768px) {{ .stat-card {{ flex: 1 1 calc(50% - 12px); min-width: 120px; }} }}
 .stat-card .val {{ font-size: 24px; font-weight: 800; }}
 .stat-card .label {{ font-size: 11px; color: #94a3b8; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }}
 .stat-card .sub {{ font-size: 11px; color: #64748b; margin-top: 4px; }}
@@ -5314,6 +5317,15 @@ def main():
                 t["rank_change"] = (prev_pos - combined_pos) if prev_pos is not None else 0
                 t["hockey_pos"] = combined_pos
 
+            # Zbuduj słownik slug → pozycja sumaryczna (jesień+wiosna) dla league_rosters
+            league_standings = {t["slug"]: t.get("hockey_pos", combined_pos) for t in league_teams_detail}
+
+            # Zaktualizuj pozycje w league_rosters na sumaryczne (jesień+wiosna)
+            for pid, teams in league_rosters.items():
+                for t in teams:
+                    team_slug = t.get("team", "")
+                    t["pos"] = league_standings.get(team_slug, t.get("pos", 999))
+
             # Zapisz aktualny ranking dla bieżącej kolejki
             if current_round:
                 rankings_by_round[f"round_{current_round}"] = current_ranking
@@ -5457,14 +5469,40 @@ def main():
     from discord_notify import (
         send_pre_round,
         send_post_round,
+        send_captains_summary,
         should_send_pre_round,
         should_send_post_round,
+        should_send_captains_summary,
     )
 
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
     if webhook_url:
         # Numer następnej (jeszcze nierozgranej) kolejki — z danych FDR
         discord_next_gw = fdr_data["gameweeks"][0] if fdr_data.get("gameweeks") else None
+        # Numer bieżącej (ostatniej rozegranej) kolejki
+        current_round = int(os.environ.get("TARGET_ROUND", 0))
+        if not current_round and fixtures_data.get("rounds"):
+            all_rounds = sorted(fixtures_data.get("rounds", []), reverse=True)
+            if all_rounds:
+                current_round = all_rounds[0]
+
+        # CAPTAINS: wyślij godzinę po pierwszym meczu kolejki
+        if (
+            current_round
+            and league_teams_detail
+            and should_send_captains_summary(current_round, fixtures_data)
+        ):
+            cmf_standings = {}
+            for t in league_teams:
+                slug = t.get("slug", "")
+                pos = t.get("position") or t.get("pos") or 999
+                cmf_standings[slug] = pos
+            send_captains_summary(
+                league_teams_detail=league_teams_detail,
+                cmf_standings=cmf_standings,
+                webhook_url=webhook_url,
+                round_number=current_round,
+            )
 
         # PRE-ROUND: wyślij dzień przed pierwszym meczem kolejki
         if (
