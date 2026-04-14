@@ -134,6 +134,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
+          # Pull latest changes to avoid push conflicts
+          git pull --rebase origin main
+          
           mkdir -p docs
           cp output/dashboard.html docs/index.html
           
