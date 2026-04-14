@@ -134,7 +134,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Pull latest changes to avoid push conflicts
+          # Discard any local changes and pull latest to avoid push conflicts
+          git reset --hard origin/main
           git pull --rebase origin main
           
           mkdir -p docs
