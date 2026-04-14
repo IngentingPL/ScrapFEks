@@ -34,6 +34,19 @@ on:
 
   # AUTO-SCHEDULE-START
   schedule:
+    - cron: '0 18 9 4 *'  # K28 DISCORD PRE 09.04 20:00 CEST — prognoza przed kolejką
+    - cron: '0 16 10 4 *'  # K28 START 10.04 mecz 17:30 CEST → +30min 18:00 CEST
+    - cron: '30 16 10 4 *'  # K28 DISCORD CAPTAINS 10.04 18:30 CEST — podsumowanie kapitanów
+    - cron: '0 18 10 4 *'  # K28 10.04 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '0 21 10 4 *'  # K28 10.04 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 11 4 *'  # K28 11.04 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 11 4 *'  # K28 11.04 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 11 4 *'  # K28 11.04 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '45 12 12 4 *'  # K28 12.04 mecz 12:15 CEST → +2.5h 14:45 CEST
+    - cron: '15 15 12 4 *'  # K28 12.04 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 12 4 *'  # K28 12.04 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '30 19 13 4 *'  # K28 13.04 mecz 19:00 CEST → +2.5h 21:30 CEST
+    - cron: '0 10 14 4 *'  # K28 DISCORD POST 14.04 12:00 CEST — podsumowanie po kolejce
     - cron: '0 18 16 4 *'  # K29 DISCORD PRE 16.04 20:00 CEST — prognoza przed kolejką
     - cron: '30 16 17 4 *'  # K29 START 17.04 mecz 18:00 CEST → +30min 18:30 CEST
     - cron: '0 17 17 4 *'  # K29 DISCORD CAPTAINS 17.04 19:00 CEST — podsumowanie kapitanów
