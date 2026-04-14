@@ -5479,9 +5479,8 @@ def main():
     if webhook_url:
         # Numer następnej (jeszcze nierozgranej) kolejki — z danych FDR
         discord_next_gw = fdr_data["gameweeks"][0] if fdr_data.get("gameweeks") else None
-        # Numer bieżącej (ostatniej rozegranej) kolejki
-        target_round_raw = os.environ.get("TARGET_ROUND", "0")
-        current_round = int(target_round_raw) if target_round_raw and target_round_raw.strip().isdigit() else 0
+        # Numer bieżącej (ostatniej rozegranej) kolejki — use the one already computed from player data
+        # not from fixtures_data which only contains future rounds
         if not current_round and fixtures_data.get("rounds"):
             all_rounds = sorted(fixtures_data.get("rounds", []), reverse=True)
             if all_rounds:
