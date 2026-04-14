@@ -5480,7 +5480,8 @@ def main():
         # Numer następnej (jeszcze nierozgranej) kolejki — z danych FDR
         discord_next_gw = fdr_data["gameweeks"][0] if fdr_data.get("gameweeks") else None
         # Numer bieżącej (ostatniej rozegranej) kolejki
-        current_round = int(os.environ.get("TARGET_ROUND", 0))
+        target_round_raw = os.environ.get("TARGET_ROUND", "0")
+        current_round = int(target_round_raw) if target_round_raw and target_round_raw.strip().isdigit() else 0
         if not current_round and fixtures_data.get("rounds"):
             all_rounds = sorted(fixtures_data.get("rounds", []), reverse=True)
             if all_rounds:
