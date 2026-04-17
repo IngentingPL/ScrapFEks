@@ -3,10 +3,12 @@ discord_notify.py
 Proste wysyłanie powiadomień Discord + wsparcie dla prognoz AI przed kolejką
 (rabbti i Tlinf)
 """
+
 import json
 import os
 import urllib.request
 import urllib.error
+from typing import List, Optional
 
 WEBHOOK_TIMEOUT = 10
 
@@ -26,36 +28,46 @@ def _send_content(webhook_url: str, content: str) -> bool:
         return False
 
 
-def _split_text(text: str, max_len: int = 1900):
-    parts = []
+def _split_text(text: str, max_len: int = 1900) -> List[str]:
+    parts: List[str] = []
     remaining = text.strip()
+
     while len(remaining) > max_len:
-        cut = remaining.rfind("
-", 0, max_len)
+        cut = remaining.rfind("\n", 0, max_len)
         if cut == -1:
             cut = max_len
         parts.append(remaining[:cut].strip())
         remaining = remaining[cut:].strip()
+
     if remaining:
         parts.append(remaining)
+
     return parts
 
 
-def _send_ai_section(webhook_url: str, title: str, text: str):
+def _send_ai_section(
+    webhook_url: str,
+    title: str,
+    text: Optional[str],
+) -> None:
     if not text:
         return
+
     parts = _split_text(text)
     for i, part in enumerate(parts, start=1):
-        header = title if len(parts) == 1 else f"{title} ({i}/{len(parts)})"
-        _send_content(webhook_url, f"{header}
-{part}")
+        if len(parts) == 1:
+            header = title
+        else:
+            header = f"{title} ({i}/{len(parts)})"
+
+        _send_content(webhook_url, f"{header}\n{part}")
 
 
 def send_pre_round(
     round_number: int,
-    rabbti_text: str | None,
-    tlinf_text: str | None,
-):
+    rabbti_text: Optional[str],
+    tlinf_text: Optional[str],
+) -> None:
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
     if not webhook_url:
         print("Brak DISCORD_WEBHOOK_URL")
