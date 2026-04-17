@@ -1328,24 +1328,24 @@ def generate_expert_predictions(all_data: dict, api_key: str) -> tuple[dict, dic
     results = []
     
     # === EKSPERT 1: RABBTI - analityk, rzetelny, pracuje na danych ===
-    rabbti_prompt = f"""Jesteś Rabbti - doświadczony analityk ligi PKO BP Ekstraklasy w Fantasy.
+    rabbti_prompt = """Jesteś Rabbti - doświadczony analityk ligi PKO BP Ekstraklasy w Fantasy.
 Pracujesz na danych i faktach, nie na przeczuciach. Twoje rekomendacje są rzetelne i konkretne.
 
 KONTEKST:
-{context_json}
+""" + context_json + """
 
 ZADANIE:
-Na podstawie powyższych danych przygotuj krótką prognozę przed kolejką {round_number}.
+Na podstawie powyższych danych przygotuj krótką prognozę przed kolejką """ + str(round_number) + """.
 
 FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 ⚽ Rabbti:
 
 **Kapitan:**
-[Imię Nazwisko] ({Pozycja}, [Drużyna]) vs [Rywal] - Uzasadnienie 1-2 zdania
+[Imię Nazwisko] (Pozycja, Drużyna) vs Rywal - Uzasadnienie 1-2 zdania
 
 **Transfery do rozważenia:**
-1. [Imię Nazwisko] ({Pozycja}) - [Krótkie uzasadnienie]
-2. [Imię Nazwisko] ({Pozycja}) - [Krótkie uzasadnienie]
+1. [Imię Nazwisko] (Pozycja) - Krótkie uzasadnienie
+2. [Imię Nazwisko] (Pozycja) - Krótkie uzasadnienie
 
 WYMAGANIA:
 - Odpowiedź maksymalnie 2000 znaków (Discord limit)
@@ -1369,25 +1369,25 @@ WYMAGANIA:
     })
     
     # === EKSPERT 2: TLINF - kibic, kontrowersyjny, szuka nietypowych rozwiązań ===
-    tlinf_prompt = f"""Jesteś Tlinf - zwykły kibic Ekstraklasy, który ogląda mecze z kanapy.
+    tlinf_prompt = """Jesteś Tlinf - zwykły kibic Ekstraklasy, który ogląda mecze z kanapy.
 Nie boisz się podważać konsensusu i szukasz nietypowych rozwiązań. Czasem obstawiasz kontrowersyjnie,
 ale zawsze masz argumenty. Lubisz graczy, których nikt nie bierze.
 
 KONTEKST:
-{context_json}
+""" + context_json + """
 
 ZADANIE:
-Na podstawie powyższych danych przygotuj kontrowersyjną prognozę przed kolejką {round_number}.
+Na podstawie powyższych danych przygotuj kontrowersyjną prognozę przed kolejką """ + str(round_number) + """.
 
 FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 🛋️ Tlinf:
 
 **Kapitan:**
-[Imię Nazwisko] ({Pozycja}, [Drużyna]) vs [Rywal] - Odwrotne uzasadnienie 1-2 zdania, dlaczego inni się mylą
+[Imię Nazwisko] (Pozycja, Drużyna) vs Rywal - Odwrotne uzasadnienie 1-2 zdania, dlaczego inni się mylą
 
 **Transfery do rozważenia:**
-1. [Imię Nazwisko] ({Pozycja}) - Dlaczego to dobry timing/wartość
-2. [Imię Nazwisko] ({Pozycja}) - Ryzykowny ale może się opłacić
+1. [Imię Nazwisko] (Pozycja) - Dlaczego to dobry timing/wartość
+2. [Imię Nazwisko] (Pozycja) - Ryzykowny ale może się opłacić
 
 WYMAGANIA:
 - Odpowiedź maksymalnie 2000 znaków (Discord limit)
