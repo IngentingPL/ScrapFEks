@@ -5506,20 +5506,7 @@ def main():
             )
 
         # PRE-ROUND: wyślij dzień przed pierwszym meczem kolejki
-        # === DIAGNOSTYKA ===
-        print(f"\n🔍 DIAGNOSTYKA PRE-ROUND:")
-        print(f"   discord_next_gw: {discord_next_gw}")
-        print(f"   predictions_data: {bool(predictions_data)}")
-        print(f"   fixtures_data rounds: {fixtures_data.get('rounds', [])[:5] if fixtures_data else 'EMPTY'}")
-        if discord_next_gw:
-            from datetime import date
-            from discord_notify import _get_round_date_range
-            first_date, _ = _get_round_date_range(fixtures_data, discord_next_gw)
-            print(f"   first_date of round {discord_next_gw}: {first_date}")
-            print(f"   today: {date.today()}")
-            print(f"   should_send_pre_round: {should_send_pre_round(discord_next_gw, fixtures_data)}")
-        # === KONIEC DIAGNOSTYKI ===
-        
+        # (lub w dzień meczu jako okno ratunkowe)
         if (
             discord_next_gw
             and predictions_data
@@ -5536,16 +5523,6 @@ def main():
             # Prognozy eksperckie (Rabbti + Tlinf) — wysyłane zaraz po pre-match
             # Próbujemy nawet jeśli Liga CMF nie jest skonfigurowana
             gemini_key = os.environ.get("GEMINI_API_KEY")
-            
-            # === DIAGNOSTYKA ===
-            print(f"\n🔍 DIAGNOSTYKA PRZED send_expert_predictions:")
-            print(f"   discord_next_gw: {discord_next_gw}")
-            print(f"   predictions_data exists: {predictions_data is not None}")
-            print(f"   predictions_data length: {len(predictions_data) if predictions_data else 0}")
-            print(f"   gemini_key exists: {gemini_key is not None}")
-            print(f"   gemini_key length: {len(gemini_key) if gemini_key else 0}")
-            # === KONIEC DIAGNOSTYKI ===
-            
             if gemini_key:
                 # Buduj mapę slug → display_name dla ładniejszych nazw drużyn
                 display_name_map = {
