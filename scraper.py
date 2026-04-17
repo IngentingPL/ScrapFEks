@@ -5520,10 +5520,16 @@ def main():
                 fixtures=fixtures_data,
             )
 
-            # Prognozy eksperckie (Rabbti + Tlinf) — wysyłane zaraz po pre-match
-            # Próbujemy nawet jeśli Liga CMF nie jest skonfigurowana
+            # Prognozy eksperckie (Rabbti + Tlinf) — wysyłane TYLKO w dzień przed meczem
+            # (nie w dzień meczu, bo wtedy wysyła się też captains summary)
+            from datetime import date
+            from discord_notify import _get_round_date_range
+            first_date, _ = _get_round_date_range(fixtures_data, discord_next_gw)
+            is_day_before = date.today() == (first_date - __import__('datetime').timedelta(days=1)) if first_date else False
+            
+            # Tylko dzień przed meczem (nie w dzień meczu!)
             gemini_key = os.environ.get("GEMINI_API_KEY")
-            if gemini_key:
+            if gemini_key and is_day_before:
                 # Buduj mapę slug → display_name dla ładniejszych nazw drużyn
                 display_name_map = {
                     t.get("slug", ""): t.get("display_name", "")
