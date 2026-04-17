@@ -1423,6 +1423,15 @@ def send_expert_predictions(all_data: dict, webhook_url: str, api_key: str, roun
         api_key: klucz Gemini API
         round_number: numer kolejki
     """
+    # === DIAGNOSTYKA ===
+    print(f"\n🔍 DIAGNOSTYKA send_expert_predictions:")
+    print(f"   round_number: {round_number}")
+    print(f"   webhook_url: {webhook_url[:50]}..." if webhook_url and len(webhook_url) > 50 else f"   webhook_url: {webhook_url}")
+    print(f"   api_key: {'USTAWIONY' if api_key else 'BRAK'}")
+    print(f"   all_data keys: {list(all_data.keys()) if all_data else 'EMPTY'}")
+    print(f"   predictions_data count: {len(all_data.get('predictions_data', [])) if all_data else 0}")
+    # === KONIEC DIAGNOSTYKI ===
+    
     # Generuj prognozy przez Gemini
     rabbti, tlinf = generate_expert_predictions(all_data, api_key)
     
