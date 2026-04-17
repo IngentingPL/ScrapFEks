@@ -147,9 +147,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Discard any local changes and pull latest to avoid push conflicts
-          git reset --hard origin/main
-          git pull --rebase origin main
+          # Pull latest changes without resetting local modifications
+          git fetch origin
+          git rebase origin/main || true
           
           mkdir -p docs
           cp output/dashboard.html docs/index.html

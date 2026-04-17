@@ -1101,51 +1101,69 @@ GEMINI_THINKING_BUDGET = 0
 
 def _call_gemini_expert(prompt: str, api_key: str, label: str = "expert") -> dict:
     """
-    Wywołuje Gemini API dla prognoz eksperckich.
+    Wywołuje Gemini API dla prognoz eksperckich z retry.
     
     Zwraca dict z 'text' (treść odpowiedzi) i 'error' (opis błędu lub None).
     """
-    url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{GEMINI_MODEL}:generateContent?key={api_key}"
-    )
+    import time
+    import random
     
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
-            "thinkingConfig": {
-                "thinkingBudget": GEMINI_THINKING_BUDGET,
+    max_retries = 3
+    last_error = None
+    
+    for attempt in range(max_retries):
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{GEMINI_MODEL}:generateContent?key={api_key}"
+        )
+        
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.7,
+                "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
+                "thinkingConfig": {
+                    "thinkingBudget": GEMINI_THINKING_BUDGET,
+                },
             },
-        },
-    }
+        }
+        
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        
+        try:
+            with urllib.request.urlopen(req, timeout=GEMINI_TIMEOUT) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                # Wyciągnij tekst z odpowiedzi
+                text = ""
+                candidates = result.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    text = "".join(p.get("text", "") for p in parts)
+                if text:
+                    return {"text": text, "error": None}
+                else:
+                    last_error = "Pusta odpowiedź od Gemini"
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", errors="replace")
+            last_error = f"HTTP {e.code}: {body[:200]}"
+        except urllib.error.URLError as e:
+            last_error = f"URL error: {e.reason}"
+        except Exception as e:
+            last_error = str(e)
+        
+        # Retry z exponential backoff
+        if attempt < max_retries - 1:
+            wait_time = (2 ** attempt) + random.uniform(0.5, 1.5)
+            print(f"  ⚠️  {label}: próba {attempt + 1} nieudana, retry za {wait_time:.1f}s...")
+            time.sleep(wait_time)
     
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    
-    try:
-        with urllib.request.urlopen(req, timeout=GEMINI_TIMEOUT) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-            # Wyciągnij tekst z odpowiedzi
-            text = ""
-            candidates = result.get("candidates", [])
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                text = "".join(p.get("text", "") for p in parts)
-            return {"text": text, "error": None}
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace")
-        return {"text": "", "error": f"HTTP {e.code}: {body[:200]}"}
-    except urllib.error.URLError as e:
-        return {"text": "", "error": f"URL error: {e.reason}"}
-    except Exception as e:
-        return {"text": "", "error": str(e)}
+    return {"text": "", "error": last_error}
 
 
 def _build_expert_context(all_data: dict) -> dict:
