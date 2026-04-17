@@ -14,7 +14,7 @@ def call_gemini(prompt: str, system: str, temperature: float) -> str:
     if not api_key:
         return "(Brak GEMINI_API_KEY — tekst testowy)"
 
-    model = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/"
         f"{model}:generateContent?key={api_key}"
