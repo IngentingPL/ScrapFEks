@@ -1032,7 +1032,12 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
         "Bramkarz": "BR", "Obrońca": "OBR", "Pomocnik": "POM", "Napastnik": "NAP",
     }
 
+    # ZMIANA 1: POMIŃ drużyny bez kapitana (cap_name != "?")
+    # ZMIANA 2: sortuj według cmf_standings (tabela sumaryczna jesień+wiosna)
+    # - ujemne wartości w cmf_standings oznaczają więcej punktów = wyższa pozycja
     captain_entries = []
+    captain_counts = {}  # {cap_name: liczba drużyn}
+
     for team in league_teams_detail:
         team_slug = team.get("slug", "")
         cmf_pos = cmf_standings.get(team_slug, 999)
@@ -1045,6 +1050,10 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
             if p.get("VC") or p.get("S"):
                 vice_name = p.get("name", "?")
 
+        # POMIŃ drużyny bez kapitana - zmiana #1
+        if cap_name == "?":
+            continue
+
         display_name = team_slug.replace("-", " ").title()
         captain_entries.append({
             "position": cmf_pos,
@@ -1052,6 +1061,10 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
             "cap_name": cap_name,
             "vice_name": vice_name,
         })
+
+        # Zlicz unikalnych kapitanów - zmiana #3
+        if cap_name != "?":
+            captain_counts[cap_name] = captain_counts.get(cap_name, 0) + 1
 
     if not captain_entries:
         print("  ℹ️  Discord captains: brak kapitanów — pomijam")
@@ -1074,6 +1087,28 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
     }
 
     success = _send_embed(webhook_url, embed, content="<@&1262764454404296759>")
+
+    # ZMIANA 3: Dodaj zestawienie kapitanów na końcu wiadomości
+    # Lista unikalnych kapitanów posortowana malejąco według liczby drużyn
+    if success and captain_counts:
+        # Sortuj: najpierw po liczbie drużyn (malejąco), potem alfabetycznie
+        sorted_captains = sorted(
+            captain_counts.items(),
+            key=lambda x: (-x[1], x[0])  # -x[1] = malejąco, x[0] = alfabetycznie
+        )
+        cap_summary_lines = [f"{name} x{count}" for name, count in sorted_captains]
+        cap_summary_text = "Kapitanowie:\n" + "\n".join(cap_summary_lines)
+
+        # Sprawdź limit 2000 znaków - jeśli za długa, podziel na części
+        if len(cap_summary_text) > 1900:
+            cap_parts = _split_text_for_content(cap_summary_text, max_len=1900)
+            for idx, part in enumerate(cap_parts, start=1):
+                header = f"Kapitanowie ({idx}/{len(cap_parts)}):\n" if len(cap_parts) > 1 else "Kapitanowie:\n"
+                ok = _send_content(webhook_url, header + part)
+                if not ok:
+                    break
+        else:
+            _send_content(webhook_url, cap_summary_text)
 
     if success:
         sent_log["captains_round"] = round_number

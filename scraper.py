@@ -5493,11 +5493,13 @@ def main():
             and league_teams_detail
             and should_send_captains_summary(current_round, fixtures_data)
         ):
+            # Zmiana: używamy total_points (tabela sumaryczna jesień+wiosna) do sortowania
+            # Zamiast pozycji z kolejki wiosennej (position/pos)
             cmf_standings = {}
             for t in league_teams:
                 slug = t.get("slug", "")
-                pos = t.get("position") or t.get("pos") or 999
-                cmf_standings[slug] = pos
+                total_pts = t.get("total_points", 0) or 0
+                cmf_standings[slug] = -total_pts  # ujemne żeby sortować rosnąco = najwięcej punktów = najwyżej
             send_captains_summary(
                 league_teams_detail=league_teams_detail,
                 cmf_standings=cmf_standings,
