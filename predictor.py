@@ -554,6 +554,8 @@ def get_extra_stats_modifier(
     - POM: xG/90 → 0.05, Podania kluczowe/90 → 0.05
     - OBR/DF: Dośrodkowania celne/90 → 0.05, xG/90 → 0.03
     - BR/GK: brak zmian
+    
+    Jeśli brak danych statystycznych → zwróć 1.0 (neutralny modyfikator)
     """
     # Mapuj pełne nazwy pozycji na skróty
     pos_map = {"Bramkarz": "BR", "Obrońca": "OBR", "Pomocnik": "POM", "Napastnik": "NAP"}
@@ -563,33 +565,47 @@ def get_extra_stats_modifier(
     if pos == "BR":
         return 1.0
     
-    # Pobierz statystyki per 90
-    xg = player.get("xg_per90") or 0
-    shots_on_target = player.get("shots_on_target_per90") or 0
-    key_passes = player.get("key_passes_per90") or 0
-    crosses_accurate = player.get("crosses_accurate_per90") or 0
+    # Sprawdź czy mamy jakiekolwiek dane statystyczne
+    # Pobierz statystyki per 90 - używamy .get() z domyślną wartością None
+    xg = player.get("xg_per90")
+    shots_on_target = player.get("shots_on_target_per90")
+    key_passes = player.get("key_passes_per90")
+    crosses_accurate = player.get("crosses_accurate_per90")
     
-    # Pobierz średnie dla pozycji
-    xg_avgs = pos_stats.get("xg_per90", {})
-    shots_avgs = pos_stats.get("shots_on_target_per90", {})
-    key_passes_avgs = pos_stats.get("key_passes_per90", {})
-    crosses_avgs = pos_stats.get("crosses_accurate_per90", {})
+    # Jeśli WSZYSTkie statystyki są None lub 0, nie modyfikujemy (brak danych)
+    if (not xg or xg == 0) and (not shots_on_target or shots_on_target == 0) and \
+       (not key_passes or key_passes == 0) and (not crosses_accurate or crosses_accurate == 0):
+        return 1.0
+    
+    # Pobierz średnie dla pozycji z pos_stats (lub puste dict jeśli brak)
+    xg_avgs = pos_stats.get("xg_per90", {}) if pos_stats else {}
+    shots_avgs = pos_stats.get("shots_on_target_per90", {}) if pos_stats else {}
+    key_passes_avgs = pos_stats.get("key_passes_per90", {}) if pos_stats else {}
+    crosses_avgs = pos_stats.get("crosses_accurate_per90", {}) if pos_stats else {}
+    
+    # Zamień None na 0 dla bezpieczeństwa
+    xg = xg or 0
+    shots_on_target = shots_on_target or 0
+    key_passes = key_passes or 0
+    crosses_accurate = crosses_accurate or 0
     
     # Oblicz mnożnik na podstawie pozycji
     modifier = 1.0
     
     if pos in ("NAP", "NAP"):
         # Napastnicy: xG/90 (waga 0.10) + Strzały celne/90 (waga 0.05)
-        xg_avg = xg_avgs.get(pos, xg_avgs.get("NAP", 0.3))  # fallback do 0.3
+        xg_avg = xg_avgs.get(pos)
+        if xg_avg is None or xg_avg == 0:
+            xg_avg = 0.3  # fallback do 0.3 jeśli brak średniej
         if xg_avg > 0 and xg > 0:
             xg_ratio = xg / xg_avg
-            # Oblicz mnożnik z wagą 0.10
             xg_mod = 1.0 + 0.10 * (xg_ratio - 1.0)
-            # Ogranicz do zakresu
             xg_mod = max(0.85, min(1.15, xg_mod))
             modifier *= xg_mod
         
-        shots_avg = shots_avgs.get(pos, shots_avgs.get("NAP", 1.0))
+        shots_avg = shots_avgs.get(pos)
+        if shots_avg is None or shots_avg == 0:
+            shots_avg = 1.0
         if shots_avg > 0 and shots_on_target > 0:
             shots_ratio = shots_on_target / shots_avg
             shots_mod = 1.0 + 0.05 * (shots_ratio - 1.0)
@@ -598,14 +614,18 @@ def get_extra_stats_modifier(
     
     elif pos == "POM":
         # Pomocnicy: xG/90 (waga 0.05) + Podania kluczowe/90 (waga 0.05)
-        xg_avg = xg_avgs.get(pos, xg_avgs.get("POM", 0.15))
+        xg_avg = xg_avgs.get(pos)
+        if xg_avg is None or xg_avg == 0:
+            xg_avg = 0.15
         if xg_avg > 0 and xg > 0:
             xg_ratio = xg / xg_avg
             xg_mod = 1.0 + 0.05 * (xg_ratio - 1.0)
             xg_mod = max(0.85, min(1.15, xg_mod))
             modifier *= xg_mod
         
-        kp_avg = key_passes_avgs.get(pos, key_passes_avgs.get("POM", 0.8))
+        kp_avg = key_passes_avgs.get(pos)
+        if kp_avg is None or kp_avg == 0:
+            kp_avg = 0.8
         if kp_avg > 0 and key_passes > 0:
             kp_ratio = key_passes / kp_avg
             kp_mod = 1.0 + 0.05 * (kp_ratio - 1.0)
@@ -614,14 +634,18 @@ def get_extra_stats_modifier(
     
     elif pos == "OBR":
         # Obrońcy: Dośrodkowania celne/90 (waga 0.05) + xG/90 (waga 0.03)
-        crosses_avg = crosses_avgs.get(pos, crosses_avgs.get("OBR", 0.3))
+        crosses_avg = crosses_avgs.get(pos)
+        if crosses_avg is None or crosses_avg == 0:
+            crosses_avg = 0.3
         if crosses_avg > 0 and crosses_accurate > 0:
             crosses_ratio = crosses_accurate / crosses_avg
             crosses_mod = 1.0 + 0.05 * (crosses_ratio - 1.0)
             crosses_mod = max(0.85, min(1.15, crosses_mod))
             modifier *= crosses_mod
         
-        xg_avg = xg_avgs.get(pos, xg_avgs.get("OBR", 0.05))
+        xg_avg = xg_avgs.get(pos)
+        if xg_avg is None or xg_avg == 0:
+            xg_avg = 0.05
         if xg_avg > 0 and xg > 0:
             xg_ratio = xg / xg_avg
             xg_mod = 1.0 + 0.03 * (xg_ratio - 1.0)
@@ -694,6 +718,12 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
 
     # --- Krok 2: Średnia ważona punktów ---
     base_avg = weighted_average(recent_points, decay=decay)
+    
+    # Jeśli base_avg = 0 ale gracz zagrał mecze, użyj minimalnej wartości
+    # żeby modyfikator (nawet ×0) nie dawał 0 pkt
+    played_count = len([r for r in recent_rounds if r.get("played")])
+    if base_avg == 0 and played_count > 0:
+        base_avg = 0.5  # minimalna wartość bazowa dla aktywnych graczy
 
     # --- Krok 3: Modyfikator FDR ---
     opponent = next_fixture.get("opponent", "")
