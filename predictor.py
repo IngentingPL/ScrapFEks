@@ -743,6 +743,15 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         avg_minutes = sum(recent_minutes) / len(recent_minutes) if recent_minutes else 0
     else:
         avg_minutes = 0
+    
+    # Jeśli avg_minutes = 0 (nie grał w ostatnich 5), użyj średniej sezonowej
+    if avg_minutes == 0 and total_played > 0:
+        # Oblicz średnią sezonową
+        season_minutes = [r.get("minutes", 0) for r in rounds if r.get("played")]
+        if season_minutes:
+            avg_minutes = sum(season_minutes) / len(season_minutes)
+            print(f"   DEBUG: {player.get('name')}: używam sezonowych min={avg_minutes:.1f}")
+    
     min_factor = get_minutes_factor(avg_minutes)
 
     # --- Krok 5: Modyfikator dom/wyjazd ---
