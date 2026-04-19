@@ -1822,20 +1822,25 @@ def fetch_ekstraklasa_table() -> dict:
 # SCRAPING NOWYCH STATYSTYK Z EKSTRAKLASA.ORG
 # ============================================================
 
-# URL do statystyk indywidualnych (xG, strzały, podania, itp.)
-# Uwaga: strona ekstraklasa.org używa JavaScript do renderowania danych (SPA).
-# Stare URL nie działają (zwracają 404 lub pusty HTML).
-# Funkcja została zachowana jako szablon, ale nie pobiera danych bez JS renderera.
-# Dane można pobrać przez external API lub ręcznie.
-EXTRA_STATS_URLS = {
-    # Te URL nie działają bez JS - pozostawione dla dokumentacji
-    "xg": "https://www.ekstraklasa.org/statystyki/indywidualne/oczkiewane-gole",
-    "shots": "https://www.ekstraklasa.org/statystyki/indywidualne/strzaly",
-    "shots_on_target": "https://www.ekstraklasa.org/statystyki/indywidualne/strzaly-celne",
-    "key_passes": "https://www.ekstraklasa.org/statystyki/indywidualne/podania-kluczowe",
-    "crosses": "https://www.ekstraklasa.org/statystyki/indywidualne/dosrodkowania",
-    "crosses_accurate": "https://www.ekstraklasa.org/statystyki/indywidualne/dosrodkowania-celne",
+# API do statystyk indywidualnych (xG, strzały, podania, dośrodkowania)
+# Używa ukrytego API ekstraklasy (umpire-api.tisagroup.ch)
+# Wymaga tokena autoryzacyjnego (token jest w localStorage strony)
+EXTRA_STATS_API = "https://production-umpire-api.ekstraklasa.tisagroup.ch/api/v3/statistics"
+
+# Parametry filtrów dla API statystyk zawodników
+EXTRA_STATS_PARAMS = {
+    "filter[context_type_eq]": "CompetitionSeason",
+    "filter[resource_type_eq]": "SquadPlayer",
+    "filter[resource_status_eq]": "active",
+    "filter[context_id_eq]": "166",  # bieżąca sezona
+    "page[number]": "0",
+    "page[size]": "100",
+    "include": "resource,resource.squad.team.club",
 }
+
+# Token autoryzacyjny - pobrany z localStorage strony (może wymagać odświeżenia)
+# Token jest unikalny dla sesji przeglądarki, ale działa przez jakiś czas
+EXTRA_API_TOKEN = "548e70be68e804aad3f7f779f43129ae"  # przykładowy token
 
 
 def _fetch_extra_stat_page(url: str) -> list[dict]:
@@ -1940,25 +1945,137 @@ def _fetch_extra_stat_page(url: str) -> list[dict]:
 
 def fetch_extra_player_stats() -> dict:
     """
-    Pobiera rozszerzone statystyki zawodników z ekstraklasa.org.
+    Pobiera rozszerzone statystyki zawodników z ukrytego API ekstraklasy.
     
-    UWAGA: strona ekstraklasa.org wymaga JavaScript do renderowania danych (SPA).
-    Bez headless browser (Selenium/Playwright) nie można pobrać danych.
-    Funkcja zwraca pusty dict - modyfikator w predictor.py będzie neutralny (1.0).
+    API endpoint: production-umpire-api.ekstraklasa.tisagroup.ch/api/v3/statistics
+    Wymaga tokena autoryzacyjnego w headerze Authorization.
     
-    Alternatywne źródła danych:
-    - External API (jeśli dostępne)
-    - Ręczne pobieranie z Excel/CSV
-    - Inne źródło statystyk (np. understat.com dla xG)
+    Zwraca dict z statystykami: xg, shots, shots_on_target, key_passes, crosses, crosses_accurate
     """
-    print("\n📊 Pobieram rozszerzone statystyki z ekstraklasa.org...")
-    print("   ⚠️  UWAGA: strona używa JavaScript, dane NIE dostępne przez requests")
-    print("   ➜ Modyfikatory statystyczne będą neutralne (brak xG/strzałów/podań)")
+    print("\n📊 Pobieram rozszerzone statystyki z API ekstraklasy...")
     
-    # Zwróć pusty dict - predictor użyje mnożnika 1.0 (neutralny)
-    all_stats = {}
+    all_stats = {
+        "xg": {},
+        "shots": {},
+        "shots_on_target": {},
+        "key_passes": {},
+        "crosses": {},
+        "crosses_accurate": {},
+    }
     
-    # Usuwamy DEBUG printy - bez celu
+    try:
+        params = dict(EXTRA_STATS_PARAMS)
+        params["sort"] = "-values_expected_goals"  # sortuj po xG
+        
+        headers = {
+            "Authorization": EXTRA_API_TOKEN,
+            "Referer": "https://www.ekstraklasa.org/",
+        }
+        
+        resp = requests.get(EXTRA_STATS_API, params=params, headers=headers, timeout=30)
+        
+        if resp.status_code != 200:
+            print(f"   HTTP {resp.status_code} - spróbuję bez tokena")
+            # Fallback: użyj starej metody (pusta)
+            return all_stats
+        
+        data = resp.json()
+        items = data.get("data", [])
+        
+        if not items:
+            print("   Brak danych")
+            return all_stats
+        
+        # Build lookup z included
+        inc_map = {inc["id"]: inc for inc in data.get("included", [])}
+        
+        for item in items:
+            values = item.get("attributes", {}).get("values", {})
+            
+            # Pobierz ID zawodnika z relationships
+            rel = item.get("relationships", {})
+            player_id = rel.get("resource", {}).get("data", {}).get("id")
+            if not player_id:
+                continue
+            
+            # Pobierz dane zawodnika z included
+            player = inc_map.get(player_id, {})
+            p_attrs = player.get("attributes", {})
+            first_name = p_attrs.get("first_name", "")
+            last_name = p_attrs.get("last_name", "")
+            name = f"{first_name} {last_name}".strip()
+            
+            if not name:
+                continue
+            
+            # Pobierz drużynę (z relationships)
+            squad_rel = p_attrs.get("squad", {})
+            squad_id = squad_rel.get("id") if isinstance(squad_rel, dict) else None
+            if squad_id:
+                squad = inc_map.get(str(squad_id), {})
+                team_rel = squad.get("relationships", {}).get("team", {}).get("data", {})
+                team_id = team_rel.get("id") if team_rel else None
+                if team_id:
+                    team = inc_map.get(str(team_id), {})
+                    club_rel = team.get("relationships", {}).get("club", {}).get("data", {})
+                    club_id = club_rel.get("id") if club_rel else None
+                    if club_id:
+                        club = inc_map.get(str(club_id), {})
+                        team_name = club.get("attributes", {}).get("name", "")
+                    else:
+                        team_name = ""
+                else:
+                    team_name = ""
+            else:
+                team_name = ""
+            
+            # Suma minut do obliczenia per/90
+            minutes = int(values.get("minutes_played") or 0)
+            if minutes <= 0:
+                continue
+            
+            # Dodaj statystyki (jako sumy, nie per/90 - przeliczymy później)
+            # xG
+            xg = float(values.get("expected_goals") or 0)
+            if xg > 0:
+                all_stats["xg"][name] = xg
+            
+            # Strzały
+            shots = int(values.get("shots") or 0)
+            if shots > 0:
+                all_stats["shots"][name] = shots
+            
+            # Strzały celne
+            shots_ot = int(values.get("shots_on_target") or 0)
+            if shots_ot > 0:
+                all_stats["shots_on_target"][name] = shots_ot
+            
+            # Podania kluczowe
+            kp = int(values.get("key_passes") or 0)
+            if kp > 0:
+                all_stats["key_passes"][name] = kp
+            
+            # Dośrodkowania
+            crosses = int(values.get("crosses") or 0)
+            if crosses > 0:
+                all_stats["crosses"][name] = crosses
+            
+            # Dośrodkowania celne
+            crosses_acc = int(values.get("crosses_accurate") or 0)
+            if crosses_acc > 0:
+                all_stats["crosses_accurate"][name] = crosses_acc
+        
+        # Podsumowanie
+        print(f"   ✓ xG: {len(all_stats['xg'])} graczy")
+        print(f"   ✓ Strzały: {len(all_stats['shots'])}")
+        print(f"   ✓ Strzały celne: {len(all_stats['shots_on_target'])}")
+        print(f"   ✓ Podania kluczowe: {len(all_stats['key_passes'])}")
+        print(f"   ✓ Dośrodkowania: {len(all_stats['crosses'])}")
+        print(f"   ✓ Dośrodkowania celne: {len(all_stats['crosses_accurate'])}")
+        
+    except Exception as e:
+        print(f"   ⚠️  Błąd: {e}")
+    
     return all_stats
 
 
