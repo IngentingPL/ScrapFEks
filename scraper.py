@@ -2117,6 +2117,7 @@ def compute_player_stats_per90(
     
     # Normalizuj nazwy zawodników z fantasy (klucz: znormalizowana nazwa -> player_id)
     normalized_lookup = {}
+    fantasy_names_normalized = []  # do fuzzy matching
     for p in players_data:
         name = p.get("name", "")
         if name:
@@ -2125,24 +2126,42 @@ def compute_player_stats_per90(
             normalized_lookup[norm_name] = str(p.get("player_id", ""))
             # Zapisz też oryginalną nazwę (bez normalizacji)
             normalized_lookup[name.lower()] = str(p.get("player_id", ""))
+            # Zapisz do fuzzy matching (tylko last name)
+            last_name = norm_name.split()[-1] if norm_name else ""
+            if last_name:
+                fantasy_names_normalized.append((last_name, str(p.get("player_id", "")), name))
     
     # DEBUG: sprawdź dopasowanie i pokaż kilka przykładów
-    sample_matches = []
+    sample_matches = []  # dokładne dopasowania
+    fuzzy_matches = []  # fuzzy po last name
     sample_misses = []
+    
+    # Build last name lookup dla fuzzy matching
+    last_name_map = {}  # last_name -> [(player_id, full_name), ...]
+    for ln, pid, full in fantasy_names_normalized:
+        if ln not in last_name_map:
+            last_name_map[ln] = []
+        last_name_map[ln].append((pid, full))
+    
     for stat_name, stat_data in extra_stats.items():
         for raw_name in stat_data.keys():
             norm_name = _normalize_name(raw_name)
             player_id = normalized_lookup.get(norm_name) or normalized_lookup.get(raw_name.lower())
+            
             if player_id:
                 sample_matches.append((raw_name, player_id))
-                if len(sample_matches) >= 5:
-                    break
             else:
-                sample_misses.append(raw_name)
-                if len(sample_misses) >= 5:
-                    break
+                # Fuzzy matching: szukaj po ostatnim imieniu
+                api_last = norm_name.split()[-1] if norm_name else ""
+                if api_last and api_last in last_name_map:
+                    player_id = last_name_map[api_last][0][0]
+                    fuzzy_matches.append((raw_name, player_id, api_last))
+                else:
+                    sample_misses.append(raw_name)
     
-    print(f"   DEBUG: dopasowano {len(sample_matches)}, przykłady: {sample_matches[:3]}")
+    print(f"   DEBUG: dokładne {len(sample_matches)}, fuzzy {len(fuzzy_matches)}")
+    print(f"   DEBUG: przykłady dokładne: {sample_matches[:3]}")
+    print(f"   DEBUG: przykłady fuzzy: {fuzzy_matches[:3]}")
     print(f"   DEBUG: niedopasowane (pierwsze 5): {sample_misses[:5]}")
     
     # Przygotuj statystyki per 90 dla każdego zawodnika
@@ -2156,6 +2175,12 @@ def compute_player_stats_per90(
             # Normalizuj nazwę z ekstraklasa.org
             norm_name = _normalize_name(raw_name)
             player_id = normalized_lookup.get(norm_name) or normalized_lookup.get(raw_name.lower())
+            
+            # Fuzzy fallback: szukaj po last name
+            if not player_id:
+                api_last = norm_name.split()[-1] if norm_name else ""
+                if api_last and api_last in last_name_map:
+                    player_id = last_name_map[api_last][0][0]  # bierz pierwszy match
             
             if not player_id:
                 continue
