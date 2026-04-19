@@ -1817,6 +1817,224 @@ def fetch_ekstraklasa_table() -> dict:
         print(f"  ⚠️  Błąd scrapowania z 90minut.pl: {e}")
     return team_stats
 
+
+# ============================================================
+# SCRAPING NOWYCH STATYSTYK Z EKSTRAKLASA.ORG
+# ============================================================
+
+# URL do statystyk indywidualnych (xG, strzały, podania, itp.)
+# Format: {slug} zostanie zastąpiony przez konkretny wzorzec URL
+EXTRA_STATS_URLS = {
+    "xg": "https://www.ekstraklasa.org/statystyki/indywidualne/oczkiewane-gole",
+    "shots": "https://www.ekstraklasa.org/statystyki/indywidualne/strzaly",
+    "shots_on_target": "https://www.ekstraklasa.org/statystyki/indywidualne/strzaly-celne",
+    "key_passes": "https://www.ekstraklasa.org/statystyki/indywidualne/podania-kluczowe",
+    "crosses": "https://www.ekstraklasa.org/statystyki/indywidualne/dosrodkowania",
+    "crosses_accurate": "https://www.ekstraklasa.org/statystyki/indywidualne/dosrodkowania-celne",
+}
+
+
+def _fetch_extra_stat_page(url: str) -> list[dict]:
+    """
+    Pobiera dane z pojedynczej strony statystyk indywidualnych.
+    
+    Zwraca listę dict: {"name": "...", "team": "...", "value": numeric}
+    """
+    stats = []
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                        "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
+        }
+        resp = requests.get(url, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            return stats
+        
+        resp.encoding = "utf-8"
+        soup = BeautifulSoup(resp.text, "lxml")
+        
+        # Szukaj tabeli z danymi — struktura może się różnić w zależności od strony
+        # Typowe wzorce: tabela w <table> lub wiersze z klasą "player-row"
+        
+        # Metoda 1: szukaj tabeli z wierszami
+        table = soup.select_one("table.stats-table, table.table, table.data")
+        if table:
+            for row in table.select("tbody tr, tr"):
+                cells = row.select("td")
+                if len(cells) >= 3:
+                    # Sprawdź czy pierwsza komórka to pozycja (nie liczba)
+                    first_cell = cells[0].get_text(strip=True)
+                    if first_cell.isdigit():
+                        continue  # To pozycja w tabeli, nie nazwa gracza
+                    
+                    # Format: nazwa, drużyna, wartość (lub odwrotnie)
+                    # Spróbuj różne układy
+                    name = ""
+                    team = ""
+                    value = 0
+                    
+                    # Próba 1: nazwa | drużyna | wartość
+                    if len(cells) >= 3:
+                        name = cells[0].get_text(strip=True)
+                        team = cells[1].get_text(strip=True)
+                        value = _safe_float(cells[2].get_text(strip=True))
+                    
+                    # Próba 2: poz | nazwa | drużyna | wartość
+                    if len(cells) >= 4 and not name:
+                        name = cells[1].get_text(strip=True)
+                        team = cells[2].get_text(strip=True)
+                        value = _safe_float(cells[3].get_text(strip=True))
+                    
+                    if name and value > 0:
+                        stats.append({"name": name, "team": team, "value": value})
+        
+        # Metoda 2: szukaj elementów z danymi gracza (listy OL lub DIVy)
+        if not stats:
+            player_elements = soup.select(".player-row, .stat-row, [data-player]")
+            for el in player_elements:
+                name_el = el.select_one(".name, .player-name, [data-name]")
+                team_el = el.select_one(".team, .club")
+                value_el = el.select_one(".value, .stat-value, [data-value]")
+                
+                if name_el:
+                    name = name_el.get_text(strip=True)
+                    team = team_el.get_text(strip=True) if team_el else ""
+                    value = _safe_float(value_el.get_text(strip=True)) if value_el else 0
+                    
+                    if name and value > 0:
+                        stats.append({"name": name, "team": team, "value": value})
+        
+        # Metoda 3: fallback do OL z linkami do zawodników
+        if not stats:
+            player_links = soup.select("a[href*='/zawodnik/'], a[href*='/player/']")
+            for link in player_links[:50]:  # Ogranicz do 50
+                name = link.get_text(strip=True)
+                if not name:
+                    continue
+                # Szukaj wartości statystyki w sąsiednim elemencie
+                parent = link.find_parent("li") or link.find_parent("tr")
+                if not parent:
+                    continue
+                value_text = parent.get_text(strip=True)
+                # Wyciągnij liczbę z całego wiersza
+                value_match = re.search(r"(\d+[,.]?\d*)\s*$", value_text)
+                if value_match:
+                    value = _safe_float(value_match.group(1))
+                    if value > 0:
+                        stats.append({"name": name, "team": "", "value": value})
+        
+    except Exception as e:
+        print(f"    ⚠️  Błąd pobierania {url}: {e}")
+    
+    return stats
+
+
+def fetch_extra_player_stats() -> dict:
+    """
+    Pobiera rozszerzone statystyki zawodników z ekstraklasa.org.
+    
+    Zwraca dict: {stat_name: {player_name: value_per_90}}
+    Gdzie stat_name to: xg, shots, shots_on_target, key_passes, crosses, crosses_accurate
+    """
+    print("\n📊 Pobieram rozszerzone statystyki z ekstraklasa.org...")
+    
+    all_stats = {}  # stat -> {name: value}
+    
+    for stat_name, url in EXTRA_STATS_URLS.items():
+        print(f"   {stat_name}: {url.split('/')[-1]}...")
+        stat_data = _fetch_extra_stat_page(url)
+        
+        if stat_data:
+            # Mapuj po nazwie zawodnika
+            stat_dict = {row["name"]: row["value"] for row in stat_data}
+            all_stats[stat_name] = stat_dict
+            print(f"      pobrano {len(stat_dict)} zawodników")
+        else:
+            print(f"      brak danych")
+    
+    print(f"   ✓ Łącznie: {len(all_stats)} statystyk")
+    return all_stats
+
+
+def compute_player_stats_per90(
+    extra_stats: dict,
+    players_data: list[dict],
+    player_minutes: dict
+) -> list[dict]:
+    """
+    Przelicza statystyki na wartość per 90 minut i dopasowuje do danych zawodników.
+    
+    Parametry:
+        extra_stats: dict ze statystykami {stat: {name: value}}
+        players_data: lista zawodników z fantasy
+        player_minutes: dict {player_id: total_minutes}
+    
+    Zwraca:
+        Lista zawodników z nowymi polami: xg_per90, shots_per90, itp.
+    """
+    if not extra_stats or not players_data:
+        return players_data
+    
+    # Normalizuj nazwy zawodników z fantasy (klucz: znormalizowana nazwa -> player_id)
+    normalized_lookup = {}
+    for p in players_data:
+        name = p.get("name", "")
+        if name:
+            # Normalizuj: lowercase + usuń polskie znaki
+            norm_name = normalize_team_name(name)
+            normalized_lookup[norm_name] = str(p.get("player_id", ""))
+            # Zapisz też oryginalną nazwę
+            normalized_lookup[name.lower()] = str(p.get("player_id", ""))
+    
+    # Przygotuj statystyki per 90 dla każdego zawodnika
+    stats_per90 = {}  # player_id -> {stat: per90}
+    
+    for stat_name, stat_data in extra_stats.items():
+        if not stat_data:
+            continue
+        
+        for raw_name, raw_value in stat_data.items():
+            # Normalizuj nazwę z ekstraklasa.org
+            norm_name = normalize_team_name(raw_name)
+            player_id = normalized_lookup.get(norm_name) or normalized_lookup.get(raw_name.lower())
+            
+            if not player_id:
+                continue
+            
+            # Pobierz minuty
+            minutes = player_minutes.get(player_id, 0)
+            if minutes <= 0:
+                continue
+            
+            # Przelicz na 90 minut: (stat / minutes) * 90
+            per90 = round((raw_value / minutes) * 90, 2)
+            
+            if player_id not in stats_per90:
+                stats_per90[player_id] = {}
+            stats_per90[player_id][f"{stat_name}_per90"] = per90
+    
+    # Dodaj statystyki do danych zawodników
+    enriched_players = []
+    for p in players_data:
+        pid = str(p.get("player_id", ""))
+        extra = stats_per90.get(pid, {})
+        
+        # Dodaj nowe pola z wartościami domyślnymi (None jeśli brak danych)
+        enriched = dict(p)
+        enriched["xg_per90"] = extra.get("xg_per90")
+        enriched["shots_per90"] = extra.get("shots_per90")
+        enriched["shots_on_target_per90"] = extra.get("shots_on_target_per90")
+        enriched["key_passes_per90"] = extra.get("key_passes_per90")
+        enriched["crosses_per90"] = extra.get("crosses_per90")
+        enriched["crosses_accurate_per90"] = extra.get("crosses_accurate_per90")
+        
+        enriched_players.append(enriched)
+    
+    return enriched_players
+
+
 def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0, num_rounds: int = 6) -> dict:
     """Oblicza osobne wskaźniki ATK i DEF rywala (1-5) dla każdego meczu.
 
@@ -2771,6 +2989,26 @@ function posBadge(p) {{
   const k = POS_ID[p] || p;
   return '<span class="pos-badge pos-'+k+'">'+(POS_MAP[k]||POS_MAP[p]||p)+'</span>';
 }}
+// Przełączanie widoczności dodatkowych statystyk w tabeli zawodników
+let playersMoreStatsVisible = false;
+function togglePlayersMoreStats() {{
+  playersMoreStatsVisible = !playersMoreStatsVisible;
+  const cols = document.querySelectorAll('.players-more-col');
+  const btn = document.getElementById('players-more-stats-btn');
+  cols.forEach(c => {{
+    c.style.display = playersMoreStatsVisible ? '' : 'none';
+  }});
+  btn.textContent = playersMoreStatsVisible ? '-Stats' : '+Stats';
+  btn.style.color = playersMoreStatsVisible ? '#22d3ee' : '#64748b';
+}}
+// CSS dla ukrytych kolumn (theme fantasy)
+const style = document.createElement('style');
+style.textContent = `
+  .players-more-col { display: none; }
+  html.theme-fantasy .players-more-col { color: #333 !important; }
+  html.theme-fantasy .c-muted, html.theme-fantasy .c-dim { color: #666 !important; }
+`;
+document.head.appendChild(style);
 function arrow(tab, col) {{
   const s = sorts[tab];
   return s.col === col ? (s.dir === 'desc' ? ' ▼' : ' ▲') : '';
@@ -2914,6 +3152,15 @@ function renderPlayers() {{
   h += '<th class="text-center" style="min-width:80px">Forma</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów z ostatnich 5 kolejek uwzględnionych w formie">Średnia'+arrow('players','_form_avg')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct" title="Oficjalny % popularności z API Fantasy Ekstraklasa — procent WSZYSTKICH graczy fantasy, którzy mają tego zawodnika w składzie">Pop.'+arrow('players','popularity_pct')+'</th>';
+  // Nagłówki dodatkowych statystyk (ukryte domyślnie)
+  h += '<th class="text-right players-more-col" style="display:none" title="Oczekiwane gole (xG) na 90 minut">xG/90</th>';
+  h += '<th class="text-right players-more-col" style="display:none" title="Strzały na 90 minut">Strz/90</th>';
+  h += '<th class="text-right players-more-col" style="display:none" title="Strzały celne na 90 minut">StrzC/90</th>';
+  h += '<th class="text-right players-more-col" style="display:none" title="Podania kluczowe na 90 minut">PK/90</th>';
+  h += '<th class="text-right players-more-col" style="display:none" title="Dośrodkowania na 90 minut">Dośr/90</th>';
+  h += '<th class="text-right players-more-col" style="display:none" title="Dośrodkowania celne na 90 minut">DośrC/90</th>';
+  // Przycisk "Pokaż więcej statystyk" — opcjonalne kolumny
+  h += '<th class="text-center" id="players-more-stats-btn" style="cursor:pointer;background:#1e293b;color:#64748b;font-size:11px;padding:4px 8px" onclick="togglePlayersMoreStats()">+Stats</th>';
   if (hasOwn) {{
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad" style="min-width:100px" title="% drużyn z wybranego zakresu (Top 10/100/Wszystkie/Liga), które mają tego zawodnika w składzie">W składzie'+arrow('players','_own_squad')+'</th>';
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_starting" style="min-width:100px" title="% drużyn z wybranego zakresu, które mają tego zawodnika w Starting XI (nie na ławce)">Start XI'+arrow('players','_own_starting')+'</th>';
@@ -2958,6 +3205,13 @@ function renderPlayers() {{
     const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
     h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
+    // Nowe kolumny statystyk per 90 (ukryte domyślnie)
+    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.xg_per90 != null ? p.xg_per90.toFixed(2) : '—')+'</td>';
+    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.shots_per90 != null ? p.shots_per90.toFixed(2) : '—')+'</td>';
+    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.shots_on_target_per90 != null ? p.shots_on_target_per90.toFixed(2) : '—')+'</td>';
+    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.key_passes_per90 != null ? p.key_passes_per90.toFixed(2) : '—')+'</td>';
+    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.crosses_per90 != null ? p.crosses_per90.toFixed(2) : '—')+'</td>';
+    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.crosses_accurate_per90 != null ? p.crosses_accurate_per90.toFixed(2) : '—')+'</td>';
     if (hasOwn) {{
       const sq = p._own_squad, st = p._own_starting, cp = p._own_captain;
       h += '<td>'+(sq > 0 ? bar(sq, 100, '#10b981') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
@@ -4961,6 +5215,13 @@ def main():
             "popularity_pct": p.get("popularity_pct", ""),
             "stats_url": p.get("stats_url", ""),
             "form": form,
+            # Nowe statystyki per 90
+            "xg_per90": p.get("xg_per90"),
+            "shots_per90": p.get("shots_per90"),
+            "shots_on_target_per90": p.get("shots_on_target_per90"),
+            "key_passes_per90": p.get("key_passes_per90"),
+            "crosses_per90": p.get("crosses_per90"),
+            "crosses_accurate_per90": p.get("crosses_accurate_per90"),
         })
     summary_data.sort(key=lambda x: x.get("total_points", 0) or 0, reverse=True)
     csv_file = os.path.join(OUTPUT_DIR, f"fantasy_players_{timestamp}.csv")
@@ -5114,6 +5375,21 @@ def main():
 
     # 8.6 Scrapuj statystyki bramkowe z 90minut.pl
     ekstra_stats = fetch_ekstraklasa_table()
+
+    # 8.6b Pobierz rozszerzone statystyki zawodników z ekstraklasa.org
+    # (xG, strzały, podania kluczowe, dośrodkowania)
+    extra_player_stats = fetch_extra_player_stats()
+
+    # Oblicz sumę minut dla każdego zawodnika (do przeliczania na per 90)
+    player_minutes = {}
+    for p in players:
+        pid = str(p.get("player_id", ""))
+        total_mins = sum(r.get("minutes", 0) for r in p.get("rounds", []))
+        if total_mins > 0:
+            player_minutes[pid] = total_mins
+
+    # Wzbogać dane zawodników o statystyki per 90
+    players = compute_player_stats_per90(extra_player_stats, players, player_minutes)
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
     remaining_rounds = len([r for r in fixtures_data.get("rounds", []) if r >= (current_round or 0)])

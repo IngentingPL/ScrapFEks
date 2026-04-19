@@ -494,6 +494,144 @@ def get_card_risk_modifier(recent_rounds):
 
 
 # ============================================================
+# MODYFIKATOR ROZSZERZONYCH STATYSTYK (xG, strzały, podania, dośrodkowania)
+# ============================================================
+
+def _compute_position_stats(players: list[dict], stat_name: str) -> dict:
+    """
+    Oblicza średnie statystyki per 90 dla każdej pozycji.
+    
+    Zwraca: {"NAP": 0.35, "POM": 0.15, "OBR": 0.05, "BR": 0.01}
+    Gdzie wartość to średnia xG/90 (lub inna statystyka) dla zawodników na danej pozycji.
+    """
+    # Mapuj pełne nazwy pozycji na skróty
+    pos_map = {"Bramkarz": "BR", "Obrońca": "OBR", "Pomocnik": "POM", "Napastnik": "NAP"}
+    
+    position_sums: dict[str, float] = {}
+    position_counts: dict[str, int] = {}
+    
+    for p in players:
+        # Pobierz wartość statystyki per 90
+        stat_val = p.get(stat_name)
+        if stat_val is None or stat_val == 0:
+            continue
+        
+        raw_pos = p.get("position", "")
+        pos = pos_map.get(raw_pos, raw_pos)
+        
+        if pos not in position_sums:
+            position_sums[pos] = 0.0
+            position_counts[pos] = 0
+        
+        position_sums[pos] += stat_val
+        position_counts[pos] += 1
+    
+    # Oblicz średnie
+    position_avgs: dict[str, float] = {}
+    for pos, total in position_sums.items():
+        count = position_counts[pos]
+        if count > 0:
+            position_avgs[pos] = round(total / count, 3)
+    
+    return position_avgs
+
+
+def get_extra_stats_modifier(
+    player: dict,
+    position: str,
+    pos_stats: dict,
+) -> float:
+    """
+    Modyfikator bazujący na rozszerzonych statystykach zawodnika (xG, strzały, podania, dośrodkowania).
+    
+    Logika:
+    - Znormalizuj statystykę względem średniej dla danej pozycji w lidze
+    - Mnożnik = 1.0 + (waga * (wartość_gracza / średnia_pozycji - 1.0))
+    - Ogranicz mnożnik do zakresu 0.85 – 1.15
+    
+    Wagi według pozycji i statystyki:
+    - NAP/FW: xG/90 → 0.10, Strzały celne/90 → 0.05
+    - POM: xG/90 → 0.05, Podania kluczowe/90 → 0.05
+    - OBR/DF: Dośrodkowania celne/90 → 0.05, xG/90 → 0.03
+    - BR/GK: brak zmian
+    """
+    # Mapuj pełne nazwy pozycji na skróty
+    pos_map = {"Bramkarz": "BR", "Obrońca": "OBR", "Pomocnik": "POM", "Napastnik": "NAP"}
+    pos = pos_map.get(position, position)
+    
+    # Bramkarze: brak modyfikacji
+    if pos == "BR":
+        return 1.0
+    
+    # Pobierz statystyki per 90
+    xg = player.get("xg_per90") or 0
+    shots_on_target = player.get("shots_on_target_per90") or 0
+    key_passes = player.get("key_passes_per90") or 0
+    crosses_accurate = player.get("crosses_accurate_per90") or 0
+    
+    # Pobierz średnie dla pozycji
+    xg_avgs = pos_stats.get("xg_per90", {})
+    shots_avgs = pos_stats.get("shots_on_target_per90", {})
+    key_passes_avgs = pos_stats.get("key_passes_per90", {})
+    crosses_avgs = pos_stats.get("crosses_accurate_per90", {})
+    
+    # Oblicz mnożnik na podstawie pozycji
+    modifier = 1.0
+    
+    if pos in ("NAP", "NAP"):
+        # Napastnicy: xG/90 (waga 0.10) + Strzały celne/90 (waga 0.05)
+        xg_avg = xg_avgs.get(pos, xg_avgs.get("NAP", 0.3))  # fallback do 0.3
+        if xg_avg > 0 and xg > 0:
+            xg_ratio = xg / xg_avg
+            # Oblicz mnożnik z wagą 0.10
+            xg_mod = 1.0 + 0.10 * (xg_ratio - 1.0)
+            # Ogranicz do zakresu
+            xg_mod = max(0.85, min(1.15, xg_mod))
+            modifier *= xg_mod
+        
+        shots_avg = shots_avgs.get(pos, shots_avgs.get("NAP", 1.0))
+        if shots_avg > 0 and shots_on_target > 0:
+            shots_ratio = shots_on_target / shots_avg
+            shots_mod = 1.0 + 0.05 * (shots_ratio - 1.0)
+            shots_mod = max(0.85, min(1.15, shots_mod))
+            modifier *= shots_mod
+    
+    elif pos == "POM":
+        # Pomocnicy: xG/90 (waga 0.05) + Podania kluczowe/90 (waga 0.05)
+        xg_avg = xg_avgs.get(pos, xg_avgs.get("POM", 0.15))
+        if xg_avg > 0 and xg > 0:
+            xg_ratio = xg / xg_avg
+            xg_mod = 1.0 + 0.05 * (xg_ratio - 1.0)
+            xg_mod = max(0.85, min(1.15, xg_mod))
+            modifier *= xg_mod
+        
+        kp_avg = key_passes_avgs.get(pos, key_passes_avgs.get("POM", 0.8))
+        if kp_avg > 0 and key_passes > 0:
+            kp_ratio = key_passes / kp_avg
+            kp_mod = 1.0 + 0.05 * (kp_ratio - 1.0)
+            kp_mod = max(0.85, min(1.15, kp_mod))
+            modifier *= kp_mod
+    
+    elif pos == "OBR":
+        # Obrońcy: Dośrodkowania celne/90 (waga 0.05) + xG/90 (waga 0.03)
+        crosses_avg = crosses_avgs.get(pos, crosses_avgs.get("OBR", 0.3))
+        if crosses_avg > 0 and crosses_accurate > 0:
+            crosses_ratio = crosses_accurate / crosses_avg
+            crosses_mod = 1.0 + 0.05 * (crosses_ratio - 1.0)
+            crosses_mod = max(0.85, min(1.15, crosses_mod))
+            modifier *= crosses_mod
+        
+        xg_avg = xg_avgs.get(pos, xg_avgs.get("OBR", 0.05))
+        if xg_avg > 0 and xg > 0:
+            xg_ratio = xg / xg_avg
+            xg_mod = 1.0 + 0.03 * (xg_ratio - 1.0)
+            xg_mod = max(0.85, min(1.15, xg_mod))
+            modifier *= xg_mod
+    
+    return round(modifier, 3)
+
+
+# ============================================================
 # GŁÓWNA FUNKCJA PREDYKCJI
 # ============================================================
 
@@ -532,27 +670,29 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     position = player.get("position", "POM")
     rounds = player.get("rounds", [])
 
-    # --- Krok 1: Zbierz punkty z ostatnich N rozegranych kolejek ---
-    # 📖 LEKCJA: "List comprehension" — skrócony zapis pętli, który tworzy nową listę
-    # [wyrażenie FOR element IN lista IF warunek]
-    played_rounds = [r for r in rounds if r.get("played")]
+    # --- Krok 1: Zbierz WSZYSTKIE kolejki (włącznie z niegranymi, gdzie punkty = 0) ---
+    # Poprawka: ta sama logika co w zakładce "Zawodnicy" - uwzględniamy wszystkie kolejki,
+    # a dla niegranych meczy wstawiamy 0 punktów. Jest to średnia za ostatnie 5 kolejek
+    # liczona ze WSZYSTKICH meczów (tzn. mecze gdzie zawodnik nie grał liczą się jako 0).
 
-    # Sortuj od najnowszej kolejki
-    played_rounds.sort(key=lambda r: r.get("round", 0), reverse=True)
+    # Sortuj wszystkie kolejki od najnowszej
+    all_rounds = sorted(rounds, key=lambda r: r.get("round", 0), reverse=True)
 
-    # Dynamiczny lookback — im więcej danych, tym dalej patrzymy
-    dynamic_lookback = get_dynamic_lookback(len(played_rounds))
-    recent_rounds = played_rounds[:dynamic_lookback]
+    # Weź ostatnie 5 kolejek (lub mniej jeśli mniej dostępnych)
+    last_5_rounds = all_rounds[:5]
 
-    if len(recent_rounds) < MIN_ROUNDS_FOR_PREDICTION:
+    if len(last_5_rounds) < MIN_ROUNDS_FOR_PREDICTION:
         return {
             "predicted_points": None,
             "confidence": "insufficient_data",
-            "detail": f"Za mało danych ({len(recent_rounds)}/{MIN_ROUNDS_FOR_PREDICTION} kolejek)"
+            "detail": f"Za mało danych ({len(last_5_rounds)}/{MIN_ROUNDS_FOR_PREDICTION} kolejek)"
         }
 
+    # Dla każdej kolejki: jeśli gracz zagrał - użyj punktów, jeśli nie - użyj 0
+    recent_rounds = last_5_rounds
+    recent_points = [r.get("points", 0) if r.get("played") else 0 for r in recent_rounds]
+
     # --- Krok 2: Średnia ważona punktów ---
-    recent_points = [r.get("points", 0) for r in recent_rounds]
     base_avg = weighted_average(recent_points, decay=decay)
 
     # --- Krok 3: Modyfikator FDR ---
@@ -565,8 +705,13 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     )
 
     # --- Krok 4: Modyfikator minut ---
-    recent_minutes = [r.get("minutes", 0) for r in recent_rounds]
-    avg_minutes = sum(recent_minutes) / len(recent_minutes) if recent_minutes else 0
+    # Licz średnie minuty tylko z rozegranych meczów (tak jak wcześniej)
+    played_recent = [r for r in recent_rounds if r.get("played")]
+    if played_recent:
+        recent_minutes = [r.get("minutes", 0) for r in played_recent]
+        avg_minutes = sum(recent_minutes) / len(recent_minutes) if recent_minutes else 0
+    else:
+        avg_minutes = 0
     min_factor = get_minutes_factor(avg_minutes)
 
     # --- Krok 5: Modyfikator dom/wyjazd ---
@@ -630,7 +775,6 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         "card_risk_modifier": round(card_mod, 2),
         "avg_minutes": round(avg_minutes, 0),
         "rounds_used": len(recent_rounds),
-        "dynamic_lookback": dynamic_lookback,
         "confidence": confidence,
         "detail": " ".join(detail_parts),
     }
@@ -645,14 +789,23 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
     masz jedną funkcję dla jednego elementu, i drugą, która ją stosuje do wielu.
 
     Parametry:
-        players: lista graczy z fantasy_full JSON
+        players: lista graczy z fantasy_full JSON (mogą zawierać pola xg_per90, shots_on_target_per90, itp.)
         fdr_data: dict z FDR drużyn {"Lech": {"atk": 4, "def": 2}, ...}
         fixtures: dict z następnymi meczami {"Lech": {"opponent": "Legia", "is_home": True}, ...}
+        lookback: ile ostatnich kolejek brać pod uwagę (domyślnie 5)
 
     Zwraca:
         lista dictów z prognozami (posortowana od najwyższej prognozy)
     """
     predictions = []
+    
+    # Oblicz średnie statystyki per 90 dla każdej pozycji (do normalizacji mnożników)
+    pos_stats = {
+        "xg_per90": _compute_position_stats(players, "xg_per90"),
+        "shots_on_target_per90": _compute_position_stats(players, "shots_on_target_per90"),
+        "key_passes_per90": _compute_position_stats(players, "key_passes_per90"),
+        "crosses_accurate_per90": _compute_position_stats(players, "crosses_accurate_per90"),
+    }
 
     for player in players:
         team = player.get("team", "")
@@ -662,6 +815,25 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             continue  # Brak info o następnym meczu → pomijamy
 
         pred = predict_points(player, fdr_data, next_fix, lookback=lookback)
+        
+        # Sprawdź czy mamy rozszerzone statystyki
+        has_extra_stats = any(
+            player.get(f) is not None 
+            for f in ["xg_per90", "shots_on_target_per90", "key_passes_per90", "crosses_accurate_per90"]
+        )
+        
+        # Dodaj modyfikator rozszerzonych statystyk (jeśli są dostępne)
+        extra_stats_mod = 1.0
+        extra_stats_modifier = 1.0
+        if has_extra_stats:
+            position = player.get("position", "POM")
+            extra_stats_mod = get_extra_stats_modifier(player, position, pos_stats)
+            extra_stats_modifier = extra_stats_mod
+        
+        # Uwzględnij modyfikator w prognozie
+        if pred.get("predicted_points") is not None:
+            pred["predicted_points"] = round(pred["predicted_points"] * extra_stats_mod, 1)
+            pred["extra_stats_modifier"] = round(extra_stats_mod, 3)
 
         predictions.append({
             "player_id": player.get("player_id"),
