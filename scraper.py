@@ -1975,7 +1975,8 @@ def fetch_extra_player_stats() -> dict:
     
     try:
         params = dict(EXTRA_STATS_PARAMS)
-        params["sort"] = "-values_expected_goals"  # sortuj po xG
+        # Pobieramy WIELU zawodników - bez sortowania po xG żeby zwiększyć pokrycie
+        params["page[size]"] = "300"  # zwiększ limit do 300 zawodników
         
         headers = {
             "Authorization": EXTRA_API_TOKEN,
