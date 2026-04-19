@@ -44,6 +44,15 @@ def normalize_team_name(name: str) -> str:
     ascii_name = ascii_name.replace("ł", "l").replace("Ł", "L")
     return ascii_name.lower().strip()
 
+def _normalize_name(name: str) -> str:
+    """Normalizuj imię i nazwisko: lowercase + usuń polskie diakrytyki, zachowaj spację."""
+    if not name:
+        return ""
+    nfkd = unicodedata.normalize("NFKD", name)
+    ascii_name = "".join(c for c in nfkd if not unicodedata.combining(c))
+    ascii_name = ascii_name.replace("ł", "l").replace("Ł", "L")
+    return ascii_name.lower().strip()
+
 
 def cryptojs_aes_encrypt(plaintext: str, passphrase: str) -> str:
     """
@@ -2098,16 +2107,32 @@ def compute_player_stats_per90(
     if not extra_stats or not players_data:
         return players_data
     
+    # DEBUG: pokaż przykładowe nazwy z obu źródeł
+    fantasy_names = [p.get("name", "") for p in players_data[:10] if p.get("name")]
+    extra_names = list(extra_stats.get("xg", {}).keys())[:10] if extra_stats.get("xg") else []
+    print(f"   DEBUG Fantasy (pierwsze 5): {fantasy_names[:5]}")
+    print(f"   DEBUG Ekstraklasa (pierwsze 5): {extra_names[:5]}")
+    
     # Normalizuj nazwy zawodników z fantasy (klucz: znormalizowana nazwa -> player_id)
     normalized_lookup = {}
     for p in players_data:
         name = p.get("name", "")
         if name:
             # Normalizuj: lowercase + usuń polskie znaki
-            norm_name = normalize_team_name(name)
+            norm_name = _normalize_name(name)
             normalized_lookup[norm_name] = str(p.get("player_id", ""))
-            # Zapisz też oryginalną nazwę
+            # Zapisz też oryginalną nazwę (bez normalizacji)
             normalized_lookup[name.lower()] = str(p.get("player_id", ""))
+    
+    # DEBUG: sprawdź dopasowanie
+    matched = 0
+    for stat_name, stat_data in extra_stats.items():
+        for raw_name in stat_data.keys():
+            norm_name = _normalize_name(raw_name)
+            if norm_name in normalized_lookup or raw_name.lower() in normalized_lookup:
+                matched += 1
+                break
+    print(f"   DEBUG: dopasowano ~{matched} zawodników")
     
     # Przygotuj statystyki per 90 dla każdego zawodnika
     stats_per90 = {}  # player_id -> {stat: per90}
@@ -2118,7 +2143,7 @@ def compute_player_stats_per90(
         
         for raw_name, raw_value in stat_data.items():
             # Normalizuj nazwę z ekstraklasa.org
-            norm_name = normalize_team_name(raw_name)
+            norm_name = _normalize_name(raw_name)
             player_id = normalized_lookup.get(norm_name) or normalized_lookup.get(raw_name.lower())
             
             if not player_id:
