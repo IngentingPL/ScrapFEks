@@ -761,6 +761,12 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
 
     predicted = predicted * trend_mod * stability_mod * cs_mod * opp_form_mod * card_mod
 
+    # DEBUG: pokaż wszystkie modyfikatory i wynik
+    if player.get("name") == "Taras Romanczuk":
+        print(f"   DEBUG full: base={base_avg}, fdr={fdr_mod:.2f}, min={min_factor:.2f}, ha={ha_factor:.2f}")
+        print(f"   DEBUG full: trend={trend_mod:.2f}, stab={stability_mod:.2f}, cs={cs_mod:.2f}, opp={opp_form_mod:.2f}, card={card_mod:.2f}")
+        print(f"   DEBUG full: predicted={predicted}")
+
     # Zaokrąglij do 1 miejsca po przecinku
     predicted = round(predicted, 1)
 
