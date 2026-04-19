@@ -719,11 +719,12 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     # --- Krok 2: Średnia ważona punktów ---
     base_avg = weighted_average(recent_points, decay=decay)
     
-    # Jeśli base_avg = 0 ale gracz zagrał mecze, użyj minimalnej wartości
-    # żeby modyfikator (nawet ×0) nie dawał 0 pkt
-    played_count = len([r for r in recent_rounds if r.get("played")])
-    if base_avg == 0 and played_count > 0:
+    # Jeśli base_avg = 0 ale gracz w ogóle zagrał w sezonie, użyj minimalnej wartości
+    # sprawdzamy WSZYSTKIE kolejki, nie tylko last 5
+    total_played = len([r for r in rounds if r.get("played")])
+    if base_avg == 0 and total_played > 0:
         base_avg = 0.5  # minimalna wartość bazowa dla aktywnych graczy
+        print(f"   DEBUG: {player.get('name')}: base_avg fallback, total_played={total_played}")
 
     # --- Krok 3: Modyfikator FDR ---
     opponent = next_fixture.get("opponent", "")
