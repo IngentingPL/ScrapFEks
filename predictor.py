@@ -660,6 +660,13 @@ def get_extra_stats_modifier(
 # ============================================================
 
 def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, decay=None):
+    # DEBUG: pokaż wartości bazowe
+    rounds = player.get("rounds", [])
+    all_rounds = sorted(rounds, key=lambda r: r.get("round", 0), reverse=True)[:5]
+    recent_points = [r.get("points", 0) if r.get("played") else 0 for r in all_rounds]
+    if player.get("name") == "Taras Romanczuk":
+        print(f"   DEBUG pts: rounds={all_rounds}, pts={recent_points}")
+    
     """
     Prognozuje punkty zawodnika na następną kolejkę.
 
@@ -724,6 +731,10 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     played_count = len([r for r in recent_rounds if r.get("played")])
     if base_avg == 0 and played_count > 0:
         base_avg = 0.5  # minimalna wartość bazowa dla aktywnych graczy
+    
+    # DEBUG: pokaż base_avg
+    if player.get("name") == "Taras Romanczuk":
+        print(f"   DEBUG base: base_avg={base_avg}, fdr_mod={fdr_mod}")
 
     # --- Krok 3: Modyfikator FDR ---
     opponent = next_fixture.get("opponent", "")
