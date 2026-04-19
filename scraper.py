@@ -3003,7 +3003,7 @@ function togglePlayersMoreStats() {{
 }}
 // CSS dla ukrytych kolumn (theme fantasy)
 const style = document.createElement('style');
-style.textContent = '.players-more-col { display: none; }html.theme-fantasy .players-more-col { color: #333 !important; }html.theme-fantasy .c-muted, html.theme-fantasy .c-dim { color: #666 !important; }';
+style.textContent = '.players-more-col {{ display: none; }}html.theme-fantasy .players-more-col {{ color: #333 !important; }}html.theme-fantasy .c-muted, html.theme-fantasy .c-dim {{ color: #666 !important; }}';
 document.head.appendChild(style);
 function arrow(tab, col) {{
   const s = sorts[tab];
