@@ -5611,7 +5611,15 @@ def main():
             pp["position"] = pos_map.get(raw_pos, raw_pos)
             players_for_pred.append(pp)
 
+        # DEBUG: sprawdź dane przed predykcją
+        if players_for_pred:
+            sample = players_for_pred[0]
+            print(f"   DEBUG: pierwszy gracz do pred={sample.get('name')}, xg_per90={sample.get('xg_per90')}")
+        
         predictions_data = predict_all_players(players_for_pred, pred_fdr, pred_fixtures)
+        print(f"   DEBUG: predykcje={len(predictions_data)}")
+        if predictions_data:
+            print(f"   DEBUG: top3 pred: {[(p.get('name'), p.get('predicted_points')) for p in predictions_data[:3]]}")
 
         # Dodaj informacje o rywalu z FDR dla dashboardu
         fdr_by_team = {}
