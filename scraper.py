@@ -1962,6 +1962,7 @@ def fetch_extra_player_stats() -> dict:
     Zwraca dict z statystykami: xg, shots, shots_on_target, key_passes, crosses, crosses_accurate
     """
     print("\n📊 Pobieram rozszerzone statystyki z API ekstraklasy...")
+    print(f"   Token: {EXTRA_API_TOKEN[:20]}...")
     
     all_stats = {
         "xg": {},
@@ -2124,15 +2125,24 @@ def compute_player_stats_per90(
             # Zapisz też oryginalną nazwę (bez normalizacji)
             normalized_lookup[name.lower()] = str(p.get("player_id", ""))
     
-    # DEBUG: sprawdź dopasowanie
-    matched = 0
+    # DEBUG: sprawdź dopasowanie i pokaż kilka przykładów
+    sample_matches = []
+    sample_misses = []
     for stat_name, stat_data in extra_stats.items():
         for raw_name in stat_data.keys():
             norm_name = _normalize_name(raw_name)
-            if norm_name in normalized_lookup or raw_name.lower() in normalized_lookup:
-                matched += 1
-                break
-    print(f"   DEBUG: dopasowano ~{matched} zawodników")
+            player_id = normalized_lookup.get(norm_name) or normalized_lookup.get(raw_name.lower())
+            if player_id:
+                sample_matches.append((raw_name, player_id))
+                if len(sample_matches) >= 5:
+                    break
+            else:
+                sample_misses.append(raw_name)
+                if len(sample_misses) >= 5:
+                    break
+    
+    print(f"   DEBUG: dopasowano {len(sample_matches)}, przykłady: {sample_matches[:3]}")
+    print(f"   DEBUG: niedopasowane (pierwsze 5): {sample_misses[:5]}")
     
     # Przygotuj statystyki per 90 dla każdego zawodnika
     stats_per90 = {}  # player_id -> {stat: per90}
