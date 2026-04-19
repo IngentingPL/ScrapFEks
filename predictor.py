@@ -859,6 +859,9 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             position = player.get("position", "POM")
             extra_stats_mod = get_extra_stats_modifier(player, position, pos_stats)
             extra_stats_modifier = extra_stats_mod
+            # DEBUG: pokaż dla pierwszych 3 zawodników
+            if len(predictions) < 3:
+                print(f"   DEBUG pred: {player.get('name')}: xg={player.get('xg_per90')}, mod={extra_stats_mod:.3f}")
         
         # Uwzględnij modyfikator w prognozie
         if pred.get("predicted_points") is not None:
