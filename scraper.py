@@ -1823,8 +1823,12 @@ def fetch_ekstraklasa_table() -> dict:
 # ============================================================
 
 # URL do statystyk indywidualnych (xG, strzały, podania, itp.)
-# Format: {slug} zostanie zastąpiony przez konkretny wzorzec URL
+# Uwaga: strona ekstraklasa.org używa JavaScript do renderowania danych (SPA).
+# Stare URL nie działają (zwracają 404 lub pusty HTML).
+# Funkcja została zachowana jako szablon, ale nie pobiera danych bez JS renderera.
+# Dane można pobrać przez external API lub ręcznie.
 EXTRA_STATS_URLS = {
+    # Te URL nie działają bez JS - pozostawione dla dokumentacji
     "xg": "https://www.ekstraklasa.org/statystyki/indywidualne/oczkiewane-gole",
     "shots": "https://www.ekstraklasa.org/statystyki/indywidualne/strzaly",
     "shots_on_target": "https://www.ekstraklasa.org/statystyki/indywidualne/strzaly-celne",
@@ -1849,6 +1853,9 @@ def _fetch_extra_stat_page(url: str) -> list[dict]:
             "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
         }
         resp = requests.get(url, headers=headers, timeout=30)
+        # DEBUG: tymczasowy print statusu
+        print(f"    status={resp.status_code}, len={len(resp.text)}")
+        
         if resp.status_code != 200:
             return stats
         
@@ -1935,26 +1942,23 @@ def fetch_extra_player_stats() -> dict:
     """
     Pobiera rozszerzone statystyki zawodników z ekstraklasa.org.
     
-    Zwraca dict: {stat_name: {player_name: value_per_90}}
-    Gdzie stat_name to: xg, shots, shots_on_target, key_passes, crosses, crosses_accurate
+    UWAGA: strona ekstraklasa.org wymaga JavaScript do renderowania danych (SPA).
+    Bez headless browser (Selenium/Playwright) nie można pobrać danych.
+    Funkcja zwraca pusty dict - modyfikator w predictor.py będzie neutralny (1.0).
+    
+    Alternatywne źródła danych:
+    - External API (jeśli dostępne)
+    - Ręczne pobieranie z Excel/CSV
+    - Inne źródło statystyk (np. understat.com dla xG)
     """
     print("\n📊 Pobieram rozszerzone statystyki z ekstraklasa.org...")
+    print("   ⚠️  UWAGA: strona używa JavaScript, dane NIE dostępne przez requests")
+    print("   ➜ Modyfikatory statystyczne będą neutralne (brak xG/strzałów/podań)")
     
-    all_stats = {}  # stat -> {name: value}
+    # Zwróć pusty dict - predictor użyje mnożnika 1.0 (neutralny)
+    all_stats = {}
     
-    for stat_name, url in EXTRA_STATS_URLS.items():
-        print(f"   {stat_name}: {url.split('/')[-1]}...")
-        stat_data = _fetch_extra_stat_page(url)
-        
-        if stat_data:
-            # Mapuj po nazwie zawodnika
-            stat_dict = {row["name"]: row["value"] for row in stat_data}
-            all_stats[stat_name] = stat_dict
-            print(f"      pobrano {len(stat_dict)} zawodników")
-        else:
-            print(f"      brak danych")
-    
-    print(f"   ✓ Łącznie: {len(all_stats)} statystyk")
+    # Usuwamy DEBUG printy - bez celu
     return all_stats
 
 
