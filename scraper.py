@@ -2766,18 +2766,18 @@ tr.highlight {{ background: rgba(251,191,36,0.06); }}
 .c-dim {{ color: #949494; }}
 .empty-msg {{ padding: 40px; text-align: center; color: #949494; }}
 .clickable {{ cursor: pointer; }}
-.clickable:hover { color: #3860be; }
+.clickable:hover {{ color: #3860be; }}
 
 /* ============================================================
    MOTYW JASNY (theme-fantasy) — aktywowany klasą html.theme-fantasy
    ============================================================ */
 html.theme-fantasy {{ background: #f5f5f5; }}
-html.theme-fantasy body { background: #f5f5f5; color: #131313; }
+html.theme-fantasy body {{ background: #f5f5f5; color: #131313; }}
 
-html.theme-fantasy .header-left h1 { color: #131313; }
+html.theme-fantasy .header-left h1 {{ color: #131313; }}
 html.theme-fantasy .header .sub {{ color: #5a5a5a; }}
 html.theme-fantasy .theme-toggle {{ background: #ffffff; border-color: #309875; color: #309875; }}
-html.theme-fantasy .theme-toggle:hover { background: #309875; color: #ffffff; }
+html.theme-fantasy .theme-toggle:hover {{ background: #309875; color: #ffffff; }}
 
 html.theme-fantasy .stat-card {{ background: #ffffff; border-color: #e0e0e0; }}
 html.theme-fantasy .stat-card .val {{ color: #131313; }}
@@ -2786,21 +2786,21 @@ html.theme-fantasy .stat-card .sub {{ color: #5a5a5a; }}
 
 html.theme-fantasy .tab {{ color: #5a5a5a; }}
 html.theme-fantasy .tab.active {{ background: #ffffff; border-bottom-color: #309875; color: #131313; }}
-html.theme-fantasy .tab:hover { color: #3860be; }
+html.theme-fantasy .tab:hover {{ color: #3860be; }}
 
 html.theme-fantasy .pos-btn {{ border-color: #e0e0e0; color: #5a5a5a; }}
 html.theme-fantasy .pos-btn.active {{ color: #ffffff; }}
 html.theme-fantasy .scope-btn {{ color: #5a5a5a; }}
 html.theme-fantasy .scope-btn.active {{ background: #309875; }}
 
-html.theme-fantasy .section-title h2 { color: #131313; }
+html.theme-fantasy .section-title h2 {{ color: #131313; }}
 html.theme-fantasy .section-title .line {{ background: linear-gradient(90deg, #e0e0e0, transparent); }}
 
 html.theme-fantasy .data-table {{ background: #ffffff; border: 1px solid #e0e0e0; }}
-html.theme-fantasy thead tr { background: #f5f5f5; }
-html.theme-fantasy th { color: #5a5a5a; }
-html.theme-fantasy th.sortable:hover { color: #131313; }
-html.theme-fantasy td { border-top-color: #e0e0e0; }
+html.theme-fantasy thead tr {{ background: #f5f5f5; }}
+html.theme-fantasy th {{ color: #5a5a5a; }}
+html.theme-fantasy th.sortable:hover {{ color: #131313; }}
+html.theme-fantasy td {{ border-top-color: #e0e0e0; }}
 html.theme-fantasy tr.highlight {{ background: rgba(48,152,117,0.06); }}
 
 html.theme-fantasy .pos-badge {{ color: #131313; }}
@@ -2812,7 +2812,7 @@ html.theme-fantasy .footer {{ color: #5a5a5a; }}
 html.theme-fantasy .c-muted {{ color: #5a5a5a; }}
 html.theme-fantasy .c-dim {{ color: #5a5a5a; }}
 html.theme-fantasy .empty-msg {{ color: #5a5a5a; }}
-html.theme-fantasy .clickable:hover { color: #3860be; }
+html.theme-fantasy .clickable:hover {{ color: #3860be; }}
 
 /* Więcej komponentów dla obu motywów */
 .roster-chip {{
@@ -2851,7 +2851,7 @@ html.theme-fantasy .form-panel {{ background: #f5f5f5; border-color: #e0e0e0; }}
 html.theme-fantasy .form-avg .fa-val {{ color: #309875; }}
 html.theme-fantasy .form-avg .fa-lbl {{ color: #5a5a5a; }}
 
-.detail-row td { padding: 0 !important; border-top: none !important; }
+.detail-row td {{ padding: 0 !important; border-top: none !important; }}
 .detail-panel {{ background: #131313; border: 1px solid #2d2d2d; border-radius: 8px; padding: 12px 16px; margin: 4px 0 8px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }}
 html.theme-fantasy .detail-panel {{ background: #f5f5f5; border-color: #e0e0e0; }}
 
@@ -2866,8 +2866,8 @@ html.theme-fantasy .team-list-item {{ background: #ffffff; border-color: #e0e0e0
 html.theme-fantasy .team-list-item.active {{ border-color: #309875; }}
 
 .team-list-header {{ display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background 0.15s; }}
-.team-list-header:hover { background: #3cffd0; }
-html.theme-fantasy .team-list-header:hover { background: #309875; }
+.team-list-header:hover {{ background: #3cffd0; }}
+html.theme-fantasy .team-list-header:hover {{ background: #309875; }}
 .team-list-rank {{ font-size: 13px; font-weight: 800; color: #3cffd0; min-width: 32px; }}
 .team-list-name {{ font-size: 14px; font-weight: 700; color: #ffffff; flex: 1; text-transform: capitalize; }}
 .team-list-pts {{ font-size: 12px; color: #949494; font-weight: 600; }}
