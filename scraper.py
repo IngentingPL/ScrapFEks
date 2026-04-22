@@ -2876,6 +2876,104 @@ html.theme-fantasy .team-list-rank {{ color: #309875; }}
 html.theme-fantasy .team-list-name {{ color: #131313; }}
 html.theme-fantasy .team-list-pts {{ color: #5a5a5a; }}
 html.theme-fantasy .team-list-count {{ color: #5a5a5a; }}
+html.theme-fantasy .team-stat {{ color: #5a5a5a; }}
+html.theme-fantasy .team-stat b {{ color: #131313; }}
+html.theme-fantasy .team-list-arrow {{ color: #949494; }}
+html.theme-fantasy .diff-pos {{ background: rgba(16,185,129,0.1); }}
+html.theme-fantasy .diff-neg {{ background: rgba(239,68,68,0.1); }}
+html.theme-fantasy .diff-zero {{ background: rgba(100,116,139,0.1); }}
+
+/* Fixture Ticker - Light Theme */
+html.theme-fantasy .ft-table th {{ color: #5a5a5a; border-bottom-color: #e0e0e0; }}
+html.theme-fantasy .ft-table td {{ border-bottom-color: #e0e0e0; }}
+html.theme-fantasy .ft-table td.ft-team {{ color: #131313; }}
+html.theme-fantasy .ft-table td.ft-team:hover {{ color: #309875; }}
+html.theme-fantasy .ft-cell {{ background: #f5f5f5; color: #131313; }}
+html.theme-fantasy .ft-cell .ft-ha {{ opacity: 0.7; }}
+html.theme-fantasy .ft-cell-team {{ color: #131313; }}
+html.theme-fantasy .ft-cell-team .ft-ha {{ opacity: 0.7; }}
+html.theme-fantasy .ft-val {{ background: #e0e0e0; color: #131313; }}
+html.theme-fantasy .ft-legend {{ color: #5a5a5a; }}
+html.theme-fantasy .ft-legend-swatch {{ border: 1px solid #e0e0e0; }}
+
+/* Rating Modal - Light Theme */
+html.theme-fantasy .ft-modal-bg {{ background: rgba(0,0,0,0.4); }}
+html.theme-fantasy .ft-modal {{ background: #ffffff; border-color: #e0e0e0; }}
+html.theme-fantasy .ft-modal h3 {{ color: #131313; }}
+html.theme-fantasy .ft-modal-close {{ color: #5a5a5a; }}
+html.theme-fantasy .ft-modal-close:hover {{ color: #131313; }}
+
+/* FDR Tiles - Light Theme */
+html.theme-fantasy .fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0e0e0; }}
+html.theme-fantasy .fdr-table td {{ border-bottom-color: #e0e0e0; }}
+html.theme-fantasy .fdr-legend {{ color: #5a5a5a; }}
+html.theme-fantasy .fdr-cell-team {{ color: #131313; }}
+html.theme-fantasy .fdr-cell-team .fdr-ha {{ opacity: 0.7; }}
+html.theme-fantasy .fdr-mini {{ background: #e0e0e0; color: #131313; }}
+
+/* Fixture Planner - Light Theme */
+html.theme-fantasy .fp-section {{ border-top-color: #e0e0e0; }}
+html.theme-fantasy .fp-controls label {{ color: #5a5a5a; }}
+html.theme-fantasy .fp-controls select {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
+html.theme-fantasy .fp-mode-btns {{ border-color: #e0e0e0; }}
+html.theme-fantasy .fp-mode-btn {{ color: #5a5a5a; }}
+html.theme-fantasy .fp-mode-btn.active {{ background: #309875; color: #ffffff; }}
+html.theme-fantasy .fp-table th {{ color: #5a5a5a; border-bottom-color: #e0e0e0; }}
+html.theme-fantasy .fp-table th:hover {{ color: #131313; }}
+html.theme-fantasy .fp-table th.fp-sorted {{ color: #309875; }}
+html.theme-fantasy .fp-table td {{ border-bottom-color: #e0e0e0; }}
+html.theme-fantasy .fp-table td.fp-team-cell {{ color: #131313; }}
+html.theme-fantasy .fp-table td.fp-team-cell:hover {{ color: #309875; }}
+html.theme-fantasy .fp-table td.fp-team-cell.fp-selected {{ background: rgba(48,152,117,0.1); color: #309875; }}
+html.theme-fantasy .fp-tile {{ background: #f5f5f5; }}
+html.theme-fantasy .fp-rotation {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
+html.theme-fantasy .fp-rotation .fp-rot-label {{ color: #5a5a5a; }}
+html.theme-fantasy .fp-summary {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
+
+/* Transfers Tab - Light Theme */
+html.theme-fantasy .transfers-header h3 {{ color: #131313; }}
+html.theme-fantasy .tr-gw-badge {{ background: #f5f5f5; border-color: #e0e0e0; color: #5a5a5a; }}
+
+/* Predictions Tab - Light Theme */
+html.theme-fantasy .pred-val {{ background: #f5f5f5; color: #131313; }}
+html.theme-fantasy .pred-fdr-tile {{ background: #e0e0e0; color: #131313; }}
+html.theme-fantasy .pred-fdr-used {{ background: rgba(0,0,0,0.05); }}
+html.theme-fantasy .pred-legend {{ background: #f5f5f5; color: #5a5a5a; }}
+html.theme-fantasy .pred-legend b {{ color: #131313; }}
+
+/* Newsletter - Light Theme */
+html.theme-fantasy .nl-card {{ background: #ffffff; border-color: #e0e0e0; }}
+html.theme-fantasy .nl-round {{ color: #309875; }}
+html.theme-fantasy .nl-date {{ color: #949494; }}
+html.theme-fantasy .nl-model {{ color: #949494; }}
+html.theme-fantasy .nl-text {{ color: #131313; }}
+
+/* Season Tracker - Light Theme */
+html.theme-fantasy .season-wrap {{ background: #ffffff; border-color: #e0e0e0; }}
+html.theme-fantasy .season-btn {{ background: transparent; border: 1px solid #e0e0e0; color: #5a5a5a; }}
+html.theme-fantasy .season-btn.active {{ background: #309875; color: #ffffff; }}
+html.theme-fantasy .season-tooltip {{ background: #ffffff; border-color: #e0e0e0; color: #131313; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }}
+html.theme-fantasy .season-legend-item {{ color: #5a5a5a; }}
+html.theme-fantasy .trend-up {{ color: #10b981; }}
+html.theme-fantasy .trend-down {{ color: #ef4444; }}
+html.theme-fantasy .trend-flat {{ color: #949494; }}
+
+/* Compare Tab - Light Theme */
+html.theme-fantasy .cmp-search-input {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
+html.theme-fantasy .cmp-search-input:focus {{ border-color: #309875; }}
+html.theme-fantasy .cmp-search-input::placeholder {{ color: #949494; }}
+html.theme-fantasy .cmp-autocomplete {{ background: #ffffff; border-color: #e0e0e0; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }}
+html.theme-fantasy .cmp-ac-item {{ color: #131313; }}
+html.theme-fantasy .cmp-ac-item:hover {{ background: #f5f5f5; }}
+html.theme-fantasy .cmp-clear-btn {{ background: #e0e0e0; color: #5a5a5a; }}
+html.theme-fantasy .cmp-chip {{ background: #f5f5f5; border-color: #e0e0e0; color: #131313; }}
+html.theme-fantasy .cmp-table {{ background: #ffffff; }}
+html.theme-fantasy .cmp-table th {{ background: #f5f5f5; color: #5a5a5a; border-bottom-color: #e0e0e0; }}
+html.theme-fantasy .cmp-table td {{ color: #131313; border-top-color: #e0e0e0; }}
+html.theme-fantasy .cmp-rot-wrap {{ background: #ffffff; border-color: #e0e0e0; }}
+html.theme-fantasy .cmp-fdr-table {{ color: #131313; }}
+html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0e0e0; }}
+
 .team-list-arrow {{ font-size: 10px; color: #64748b; margin-left: 4px; }}
 .diff-badge {{
   display: inline-block; font-size: 12px; font-weight: 700; border-radius: 4px;
@@ -3503,6 +3601,12 @@ function diffBadge(pts, avg) {{
 function renderDuets() {{
   if (!DUETS_DATA.length) return '<div class="empty-msg">Brak danych o duetach</div>';
 
+  // Zmienne motywu dla kolorów (dark/light)
+  const isLight = document.documentElement.classList.contains('theme-fantasy');
+  const bgPanel = isLight ? '#f5f5f5' : '#0f172a';
+  const cMuted = isLight ? '#5a5a5a' : '#94a3b8';
+  const cLabel = isLight ? '#949494' : '#64748b';
+
   const dls = sorts.duets_list;
   function dlArrow(col) {{
     return dls.col === col ? (dls.dir === 'desc' ? ' ▼' : ' ▲') : '';
@@ -3577,12 +3681,18 @@ function renderDuets() {{
 function renderTeams() {{
   if (!LEAGUE_TEAMS.length) return '<div class="empty-msg">Brak danych o drużynach ligi</div>';
 
+  // Zmienne motywu dla kolorów (dark/light)
+  const isLight = document.documentElement.classList.contains('theme-fantasy');
+  const bgBtn = isLight ? '#ffffff' : '#1e293b';
+  const bgPanel = isLight ? '#f5f5f5' : '#0f172a';
+  const cMuted = isLight ? '#5a5a5a' : '#94a3b8';
+
   let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Liga CMF</h2><div class="line"></div></div>';
 
   // View toggle
   h += '<div class="view-toggle" style="display:flex;gap:8px;margin-bottom:16px">';
-  h += '<button class="view-btn'+(currentTeamsView==='teams'?' active':'')+'" data-view="teams" style="padding:6px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:'+(currentTeamsView==='teams'?'#3b82f6':'#1e293b')+';color:'+(currentTeamsView==='teams'?'#fff':'#94a3b8')+'">👥 Drużyny</button>';
-  h += '<button class="view-btn'+(currentTeamsView==='duets'?' active':'')+'" data-view="duets" style="padding:6px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:'+(currentTeamsView==='duets'?'#3b82f6':'#1e293b')+';color:'+(currentTeamsView==='duets'?'#fff':'#94a3b8')+'">👫 Duety</button>';
+  h += '<button class="view-btn'+(currentTeamsView==='teams'?' active':'')+'" data-view="teams" style="padding:6px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:'+(currentTeamsView==='teams'?'#3b82f6':bgBtn)+';color:'+(currentTeamsView==='teams'?'#fff':cMuted)+'">👥 Drużyny</button>';
+  h += '<button class="view-btn'+(currentTeamsView==='duets'?' active':'')+'" data-view="duets" style="padding:6px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:'+(currentTeamsView==='duets'?'#3b82f6':bgBtn)+';color:'+(currentTeamsView==='duets'?'#fff':cMuted)+'">👫 Duety</button>';
   h += '</div>';
 
   if (currentTeamsView === 'duets') return h + renderDuets();
