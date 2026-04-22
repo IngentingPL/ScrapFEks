@@ -3324,10 +3324,7 @@ const ACCURACY_HISTORY = {accuracy_json};
 const TUNED_PARAMS = {tuned_params_json};
 const LEAGUE_HISTORY = {league_history_json};
 const NEWSLETTER_DATA = {newsletter_json};
-// __JS_PLACEHOLDER__
-</script>
-
-const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
+ const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
   Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
 
@@ -5455,70 +5452,8 @@ render();
 </body>
 </html>'''
 
-    # Theme Toggle JS - wstawiony bezpośrednio żeby unikąć problemów z f-stringiem
-    theme_js = """
-    <script>
-    // Theme Toggle z localStorage
-    function toggleTheme() {
-      const html = document.documentElement;
-      const btn = document.querySelector('.theme-toggle');
-      const isLight = html.classList.contains('theme-fantasy');
-      if (isLight) {
-        html.classList.remove('theme-fantasy');
-        btn.textContent = '☀️ Light';
-        localStorage.setItem('theme', 'dark');
-      } else {
-        html.classList.add('theme-fantasy');
-        btn.textContent = '🌙 Dark';
-        localStorage.setItem('theme', 'light');
-      }
-    }
-    // Przywróć motyw po załadowaniu
-    (function() {
-      const theme = localStorage.getItem('theme');
-      const html = document.documentElement;
-      const btn = document.querySelector('.theme-toggle');
-      if (theme === 'light') {
-        html.classList.add('theme-fantasy');
-        btn.textContent = '🌙 Dark';
-      } else {
-        btn.textContent = '☀️ Light';
-      }
-    })();
-    </script>
-    """
-
-    # Theme toggle JS (bez znacznika script bo jest już w placeholderze)
-    theme_js = """
-    <script>
-    // Toggle z localStorage
-    function toggleTheme() {
-      const html = document.documentElement;
-      const btn = document.querySelector('.theme-toggle');
-      const isLight = html.classList.contains('theme-fantasy');
-      if (isLight) {
-        html.classList.remove('theme-fantasy');
-        btn.textContent = '☀️ Light';
-        localStorage.setItem('theme', 'dark');
-      } else {
-        html.classList.add('theme-fantasy');
-        btn.textContent = '🌙 Dark';
-        localStorage.setItem('theme', 'light');
-      }
-    }
-    // Przywróć motyw po załadowaniu
-    (function() {
-      const theme = localStorage.getItem('theme');
-      const html = document.documentElement;
-      const btn = document.querySelector('.theme-toggle');
-      if (theme === 'light') {
-        html.classList.add('theme-fantasy');
-        btn.textContent = '🌙 Dark';
-      } else {
-        btn.textContent = '☀️ Light';
-      }
-    })();
-<script>
+    # Theme toggle JS - z <script> bo wstawiamy w miejsce placeholderu
+    theme_js = """<script>
     // Toggle z localStorage
     function toggleTheme() {
       const html = document.documentElement;
@@ -5548,8 +5483,8 @@ render();
     })();
     </script>"""
 
-    # Wstaw theme JS w placeholder
-    html = html.replace('// __JS_PLACEHOLDER__', theme_js)
+    # Wstaw theme JS w placeholder (replace all occurrences)
+    html = html.replace('// __JS_PLACEHOLDER__', theme_js, 1)
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(html)
