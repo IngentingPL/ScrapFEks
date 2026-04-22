@@ -3227,11 +3227,11 @@ const LEAGUE_HISTORY = {league_history_json};
 const NEWSLETTER_DATA = {newsletter_json};
 // __JS_PLACEHOLDER__
 
-const POS_MAP = {BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'};
-const POS_ID = {'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
-  Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'};
+const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
+const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
+  Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
 
-let tab = 'players', pos = 'ALL', scope = '{default_scope}';
+let tab = 'players', pos = 'ALL', scope = '{{default_scope}}';
 let selectedTeam = '';
 let selectedDuet = '';
 let currentTeamsView = 'teams';
