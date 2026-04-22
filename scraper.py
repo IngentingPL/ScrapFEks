@@ -5378,6 +5378,7 @@ render();
 
     # Theme toggle JS (bez znacznika script bo jest już w placeholderze)
     theme_js = """
+    <script>
     // Toggle z localStorage
     function toggleTheme() {
       const html = document.documentElement;
@@ -5405,6 +5406,7 @@ render();
         btn.textContent = '☀️ Light';
       }
     })();
+</script>
     """
 
     with open(filename, "w", encoding="utf-8") as f:
