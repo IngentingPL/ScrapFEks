@@ -3211,6 +3211,7 @@ html.theme-fantasy .team-list-count {{ color: #5a5a5a; }}
 
 // __JS_PLACEHOLDER__
 
+<script>
 const DATA = {data_json};
 const PLAYERS = {players_json};
 const ROSTERS = {rosters_json};
@@ -3226,6 +3227,7 @@ const TUNED_PARAMS = {tuned_params_json};
 const LEAGUE_HISTORY = {league_history_json};
 const NEWSLETTER_DATA = {newsletter_json};
 // __JS_PLACEHOLDER__
+</script>
 
 const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
@@ -5406,11 +5408,41 @@ render();
         btn.textContent = '☀️ Light';
       }
     })();
-</script>
-    """
+<script>
+    // Toggle z localStorage
+    function toggleTheme() {
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle');
+      const isLight = html.classList.contains('theme-fantasy');
+      if (isLight) {
+        html.classList.remove('theme-fantasy');
+        btn.textContent = '☀️ Light';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        html.classList.add('theme-fantasy');
+        btn.textContent = '🌙 Dark';
+        localStorage.setItem('theme', 'light');
+      }
+    }
+    // Przywróć motyw po załadowaniu
+    (function() {
+      const theme = localStorage.getItem('theme');
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle');
+      if (theme === 'light') {
+        html.classList.add('theme-fantasy');
+        btn.textContent = '🌙 Dark';
+      } else {
+        btn.textContent = '☀️ Light';
+      }
+    })();
+    </script>"""
+
+    # Wstaw theme JS w placeholder
+    html = html.replace('// __JS_PLACEHOLDER__', theme_js)
 
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(html.replace('// __JS_PLACEHOLDER__', theme_js))
+        f.write(html)
     print(f"  📊 Dashboard: {filename}")
 
 
