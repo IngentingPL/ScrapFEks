@@ -3171,21 +3171,9 @@ function posBadge(p) {{
   const k = POS_ID[p] || p;
   return '<span class="pos-badge pos-'+k+'">'+(POS_MAP[k]||POS_MAP[p]||p)+'</span>';
 }}
-// Przełączanie widoczności dodatkowych statystyk w tabeli zawodników
-let playersMoreStatsVisible = false;
-function togglePlayersMoreStats() {{
-  playersMoreStatsVisible = !playersMoreStatsVisible;
-  const cols = document.querySelectorAll('.players-more-col');
-  const btn = document.getElementById('players-more-stats-btn');
-  cols.forEach(c => {{
-    c.style.display = playersMoreStatsVisible ? '' : 'none';
-  }});
-  btn.textContent = playersMoreStatsVisible ? '-Stats' : '+Stats';
-  btn.style.color = playersMoreStatsVisible ? '#22d3ee' : '#64748b';
-}}
 // CSS dla ukrytych kolumn (theme fantasy)
 const style = document.createElement('style');
-style.textContent = '.players-more-col {{ display: none; }}html.theme-fantasy .players-more-col {{ color: #333 !important; }}html.theme-fantasy .c-muted, html.theme-fantasy .c-dim {{ color: #666 !important; }}';
+style.textContent = 'html.theme-fantasy .c-muted, html.theme-fantasy .c-dim {{ color: #666 !important; }}';
 document.head.appendChild(style);
 function arrow(tab, col) {{
   const s = sorts[tab];
@@ -3330,15 +3318,6 @@ function renderPlayers() {{
   h += '<th class="text-center" style="min-width:80px">Forma</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów z ostatnich 5 kolejek uwzględnionych w formie">Średnia'+arrow('players','_form_avg')+'</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct" title="Oficjalny % popularności z API Fantasy Ekstraklasa — procent WSZYSTKICH graczy fantasy, którzy mają tego zawodnika w składzie">Pop.'+arrow('players','popularity_pct')+'</th>';
-  // Nagłówki dodatkowych statystyk (ukryte domyślnie)
-  h += '<th class="text-right players-more-col" style="display:none" title="Oczekiwane gole (xG) na 90 minut">xG/90</th>';
-  h += '<th class="text-right players-more-col" style="display:none" title="Strzały na 90 minut">Strz/90</th>';
-  h += '<th class="text-right players-more-col" style="display:none" title="Strzały celne na 90 minut">StrzC/90</th>';
-  h += '<th class="text-right players-more-col" style="display:none" title="Podania kluczowe na 90 minut">PK/90</th>';
-  h += '<th class="text-right players-more-col" style="display:none" title="Dośrodkowania na 90 minut">Dośr/90</th>';
-  h += '<th class="text-right players-more-col" style="display:none" title="Dośrodkowania celne na 90 minut">DośrC/90</th>';
-  // Przycisk "Pokaż więcej statystyk" — opcjonalne kolumny
-  h += '<th class="text-center" id="players-more-stats-btn" style="cursor:pointer;background:#1e293b;color:#64748b;font-size:11px;padding:4px 8px" onclick="togglePlayersMoreStats()">+Stats</th>';
   if (hasOwn) {{
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_squad" style="min-width:100px" title="% drużyn z wybranego zakresu (Top 10/100/Wszystkie/Liga), które mają tego zawodnika w składzie">W składzie'+arrow('players','_own_squad')+'</th>';
     h += '<th class="text-right sortable" data-tab="players" data-col="_own_starting" style="min-width:100px" title="% drużyn z wybranego zakresu, które mają tego zawodnika w Starting XI (nie na ławce)">Start XI'+arrow('players','_own_starting')+'</th>';
@@ -3383,13 +3362,6 @@ function renderPlayers() {{
     const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
     h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
-    // Nowe kolumny statystyk per 90 (ukryte domyślnie)
-    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.xg_per90 != null ? p.xg_per90.toFixed(2) : '—')+'</td>';
-    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.shots_per90 != null ? p.shots_per90.toFixed(2) : '—')+'</td>';
-    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.shots_on_target_per90 != null ? p.shots_on_target_per90.toFixed(2) : '—')+'</td>';
-    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.key_passes_per90 != null ? p.key_passes_per90.toFixed(2) : '—')+'</td>';
-    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.crosses_per90 != null ? p.crosses_per90.toFixed(2) : '—')+'</td>';
-    h += '<td class="text-right c-muted players-more-col" style="display:none;font-size:12px">'+(p.crosses_accurate_per90 != null ? p.crosses_accurate_per90.toFixed(2) : '—')+'</td>';
     if (hasOwn) {{
       const sq = p._own_squad, st = p._own_starting, cp = p._own_captain;
       h += '<td>'+(sq > 0 ? bar(sq, 100, '#10b981') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
