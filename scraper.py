@@ -3209,33 +3209,7 @@ html.theme-fantasy .team-list-count {{ color: #5a5a5a; }}
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
 
-// Theme Toggle z localStorage
-function toggleTheme() {{
-  const html = document.documentElement;
-  const btn = document.querySelector('.theme-toggle');
-  const isLight = html.classList.contains('theme-fantasy');
-  if (isLight) {{
-    html.classList.remove('theme-fantasy');
-    btn.textContent = '☀️ Light';
-    localStorage.setItem('theme', 'dark');
-  }} else {{
-    html.classList.add('theme-fantasy');
-    btn.textContent = '🌙 Dark';
-    localStorage.setItem('theme', 'light');
-  }}
-}}
-// Przywróć motyw po załadowaniu
-(function() {{
-  const theme = localStorage.getItem('theme');
-  const html = document.documentElement;
-  const btn = document.querySelector('.theme-toggle');
-  if (theme === 'light') {{
-    html.classList.add('theme-fantasy');
-    btn.textContent = '🌙 Dark';
-  }} else {{
-    btn.textContent = '☀️ Light';
-  }}
-}})();
+// __JS_PLACEHOLDER__
 
 const DATA = {data_json};
 const PLAYERS = {players_json};
@@ -3251,10 +3225,11 @@ const ACCURACY_HISTORY = {accuracy_json};
 const TUNED_PARAMS = {tuned_params_json};
 const LEAGUE_HISTORY = {league_history_json};
 const NEWSLETTER_DATA = {newsletter_json};
+// __JS_PLACEHOLDER__
 
-const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
-const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
-  Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
+const POS_MAP = {BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'};
+const POS_ID = {'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
+  Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'};
 
 let tab = 'players', pos = 'ALL', scope = '{default_scope}';
 let selectedTeam = '';
@@ -5368,8 +5343,72 @@ render();
 </body>
 </html>'''
 
+    # Theme Toggle JS - wstawiony bezpośrednio żeby unikąć problemów z f-stringiem
+    theme_js = """
+    <script>
+    // Theme Toggle z localStorage
+    function toggleTheme() {
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle');
+      const isLight = html.classList.contains('theme-fantasy');
+      if (isLight) {
+        html.classList.remove('theme-fantasy');
+        btn.textContent = '☀️ Light';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        html.classList.add('theme-fantasy');
+        btn.textContent = '🌙 Dark';
+        localStorage.setItem('theme', 'light');
+      }
+    }
+    // Przywróć motyw po załadowaniu
+    (function() {
+      const theme = localStorage.getItem('theme');
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle');
+      if (theme === 'light') {
+        html.classList.add('theme-fantasy');
+        btn.textContent = '🌙 Dark';
+      } else {
+        btn.textContent = '☀️ Light';
+      }
+    })();
+    </script>
+    """
+
+    # Theme toggle JS (bez znacznika script bo jest już w placeholderze)
+    theme_js = """
+    // Toggle z localStorage
+    function toggleTheme() {
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle');
+      const isLight = html.classList.contains('theme-fantasy');
+      if (isLight) {
+        html.classList.remove('theme-fantasy');
+        btn.textContent = '☀️ Light';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        html.classList.add('theme-fantasy');
+        btn.textContent = '🌙 Dark';
+        localStorage.setItem('theme', 'light');
+      }
+    }
+    // Przywróć motyw po załadowaniu
+    (function() {
+      const theme = localStorage.getItem('theme');
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle');
+      if (theme === 'light') {
+        html.classList.add('theme-fantasy');
+        btn.textContent = '🌙 Dark';
+      } else {
+        btn.textContent = '☀️ Light';
+      }
+    })();
+    """
+
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(html)
+        f.write(html.replace('// __JS_PLACEHOLDER__', theme_js))
     print(f"  📊 Dashboard: {filename}")
 
 
