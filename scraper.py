@@ -5700,6 +5700,7 @@ def main():
                 "team": slug,
                 "pos": rank,
                 "C": p.get("is_captain", False),
+                "VC": p.get("is_subcaptain", False),  # wicekapitan (subcaptain) — potrzebne do Discord captains summary
                 "R": p.get("is_reserve", False),
             }
             if pid not in league_rosters:
@@ -5715,6 +5716,7 @@ def main():
                 "pts": full.get("total_points", 0) or 0,
                 "price": full.get("price", 0) or p.get("price", 0),
                 "C": p.get("is_captain", False),
+                "VC": p.get("is_subcaptain", False),  # wicekapitan (subcaptain) — potrzebne do Discord captains summary
                 "R": p.get("is_reserve", False),
                 "form": [],
             })
@@ -5735,6 +5737,17 @@ def main():
             "pts": team_pts,
             "players": team_players,
         })
+    # DEBUG: pokaż strukturę danych pierwszej drużyny (kapitan i wicekapitan)
+    if league_teams_detail:
+        first = league_teams_detail[0]
+        cap_player = next((p for p in first["players"] if p.get("C")), None)
+        vice_player = next((p for p in first["players"] if p.get("VC")), None)
+        print(f"  🔍 DEBUG pierwsza drużyna: slug={first.get('slug', '?')}")
+        print(f"     kapitan: {cap_player['name'] if cap_player else 'BRAK'} (pid={cap_player.get('pid','?') if cap_player else '?'})")
+        print(f"     wicekapitan: {vice_player['name'] if vice_player else 'BRAK'} (pid={vice_player.get('pid','?') if vice_player else '?'})")
+        print(f"     graczy z C=True: {sum(1 for p in first['players'] if p.get('C'))}")
+        print(f"     graczy z VC=True: {sum(1 for p in first['players'] if p.get('VC'))}")
+
     # Sortuj po pozycji
     league_teams_detail.sort(key=lambda t: t.get("rank") or 999)
 
