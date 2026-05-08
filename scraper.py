@@ -5790,8 +5790,15 @@ def main():
     # 8.8 Prognoza punktów (predictor)
     predictions_data = []
     if fdr_data.get("teams") and fdr_data.get("gameweeks"):
-        # Znajdź pierwszą nierozgraną kolejkę
-        next_gw = fdr_data["gameweeks"][0]
+        # Znajdź pierwszą naprawdę nierozpoczętą kolejkę — pomijamy bieżącą,
+        # która może mieć przełożone mecze w przyszłości (np. K31 z meczami 13.05)
+        next_gw = None
+        for gw in fdr_data["gameweeks"]:
+            if not current_round or gw > current_round:
+                next_gw = gw
+                break
+        if not next_gw:
+            next_gw = fdr_data["gameweeks"][0]  # fallback
         next_matches = fixtures_data.get("matches", {}).get(str(next_gw), [])
 
         # Buduj fixtures w formacie predictora: {team: {opponent, is_home}}
@@ -6150,8 +6157,14 @@ def main():
 
     webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
     if webhook_url:
-        # Numer następnej (jeszcze nierozgranej) kolejki — z danych FDR
-        discord_next_gw = fdr_data["gameweeks"][0] if fdr_data.get("gameweeks") else None
+        # Numer następnej (jeszcze nierozpoczętej) kolejki — pomijamy bieżącą,
+        # która może mieć przełożone mecze w przyszłości (np. K31 z meczami 13.05)
+        discord_next_gw = None
+        if fdr_data.get("gameweeks"):
+            for gw in fdr_data["gameweeks"]:
+                if not current_round or gw > current_round:
+                    discord_next_gw = gw
+                    break
         # Numer bieżącej (ostatniej rozegranej) kolejki — use the one already computed from player data
         # not from fixtures_data which only contains future rounds
         if not current_round and fixtures_data.get("rounds"):
