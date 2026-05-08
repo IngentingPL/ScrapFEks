@@ -207,6 +207,19 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     position = player.get("position", "POM")
     rounds = player.get("rounds", [])
 
+    # --- Krok 0: Sprawdź dostępność zawodnika ---
+    # Jeśli zawodnik ma status niedostępności (kontuzja, zawieszenie, "nie zagra"),
+    # zwracamy prognozę 0 z flagą unavailable zamiast normalnej predykcji.
+    availability = player.get("availability_status")
+    if availability:
+        return {
+            "predicted_points": 0,
+            "unavailable": True,
+            "availability_reason": availability,
+            "confidence": "unavailable",
+            "detail": f"⛔ {availability} — zawodnik niedostępny"
+        }
+
     # --- Krok 1: Zbierz punkty z ostatnich N rozegranych kolejek ---
     # 📖 LEKCJA: "List comprehension" — skrócony zapis pętli, który tworzy nową listę
     # [wyrażenie FOR element IN lista IF warunek]
@@ -320,10 +333,15 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             **pred,  # 📖 ** "rozpakuje" dict — dodaje wszystkie klucze z pred do tego dicta
         })
 
-    # Sortuj od najwyższej prognozy
-    predictions.sort(key=lambda x: x.get("predicted_points") or 0, reverse=True)
+    # Sortuj: najpierw dostępni zawodnicy wg prognozy malejąco, potem niedostępni (prognoza 0)
+    # Niedostępni zawodnicy zawsze na końcu listy, niezależnie od sortowania
+    available = [p for p in predictions if not p.get("unavailable")]
+    unavailable = [p for p in predictions if p.get("unavailable")]
+    available.sort(key=lambda x: x.get("predicted_points") or 0, reverse=True)
+    # Niedostępnych zostawiamy w kolejności alfabetycznej
+    unavailable.sort(key=lambda x: x.get("name", "").lower())
 
-    return predictions
+    return available + unavailable
 
 
 # ============================================================

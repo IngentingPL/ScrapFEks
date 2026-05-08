@@ -800,6 +800,15 @@ def parse_player_detail(html_content: str) -> dict:
             player["stats_page_id"] = match.group(1)
             player["stats_url"] = f"{BASE_URL}{href}"
 
+    # --- Status dostępności (kontuzje, zawieszenia, "nie zagra") ---
+    # Szukamy <div class="info-NO_PLAY">Kontuzjowany</div>
+    # Jeśli div istnieje → zawodnik niedostępny, zapisujemy tekst statusu
+    # Jeśli div nie istnieje → zawodnik dostępny (ACTIVE, None)
+    no_play_el = soup.select_one(".info-NO_PLAY")
+    if no_play_el:
+        player["availability_status"] = no_play_el.get_text(strip=True)
+    # brak diva = brak statusu → domyślnie dostępny
+
     return player
 
 
@@ -3079,6 +3088,7 @@ html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0
 .pred-conf-medium {{ background: rgba(251,191,36,0.2); color: #fbbf24; }}
 .pred-conf-low {{ background: rgba(239,68,68,0.2); color: #ef4444; }}
 .pred-conf-insufficient {{ background: rgba(100,116,139,0.2); color: #94a3b8; }}
+.pred-conf-unavailable {{ background: rgba(239,68,68,0.15); color: #ef4444; }}
 .pred-legend {{
   background: #1e293b; border-radius: 8px; padding: 12px 16px;
   margin-bottom: 16px; font-size: 12px; color: #94a3b8; line-height: 1.8;
@@ -4349,6 +4359,15 @@ function renderPredictions() {{
   // Sort
   const s = sorts.predictions;
   data.sort((a, b) => {{
+    // Niedostępni zawodnicy ZAWSZE na końcu, niezależnie od sortowania
+    if (a.unavailable && !b.unavailable) return 1;
+    if (!a.unavailable && b.unavailable) return -1;
+    if (a.unavailable && b.unavailable) {{
+      // Wśród niedostępnych sortuj alfabetycznie
+      const an = (a.name || '').toLowerCase();
+      const bn = (b.name || '').toLowerCase();
+      return an < bn ? -1 : an > bn ? 1 : 0;
+    }}
     let av = a[s.col], bv = b[s.col];
     if (s.col === 'name' || s.col === 'team' || s.col === 'next_opponent') {{
       av = (av || '').toLowerCase(); bv = (bv || '').toLowerCase();
@@ -4395,6 +4414,7 @@ function renderPredictions() {{
       medium: {{emoji:'🟡', label:'medium', cls:'pred-conf-medium'}},
       low: {{emoji:'🔴', label:'low', cls:'pred-conf-low'}},
       insufficient_data: {{emoji:'⚪', label:'insuf.', cls:'pred-conf-insufficient'}},
+      unavailable: {{emoji:'⛔', label:'niedostępny', cls:'pred-conf-unavailable'}},
     }};
     const m = map[conf] || map.low;
     return '<span class="pred-confidence '+m.cls+'">'+m.emoji+' '+m.label+'</span>';
@@ -4446,10 +4466,14 @@ function renderPredictions() {{
     const avgMin = p.avg_minutes || 0;
     const baseAvg = p.base_avg || 0;
     const detail = p.detail || '';
+    const isUnavailable = p.unavailable === true;
+    const unavailableReason = p.availability_reason || '';
 
-    h += '<tr>';
+    // Wiersz dla niedostępnego zawodnika — przyciemniony, z markerem
+    const rowStyle = isUnavailable ? ' style="opacity:0.55"' : '';
+    h += '<tr'+rowStyle+'>';
     h += '<td class="c-muted fw-600">'+(i+1)+'</td>';
-    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+p.name+'</td>';
+    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+p.name+(isUnavailable ? ' <span style="font-size:11px;color:#ef4444">⛔ '+unavailableReason+'</span>' : '')+'</td>';
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
 
@@ -4462,8 +4486,12 @@ function renderPredictions() {{
     // Dom/Wyjazd
     h += '<td class="text-center">'+(p.is_home ? '🏠' : '✈️')+'</td>';
 
-    // Prognoza — pogrubiona, gradient
-    h += '<td class="text-right"><span class="pred-val" style="'+predGradient(pred)+'">'+pred.toFixed(1)+'</span></td>';
+    // Prognoza — pogrubiona, gradient; dla niedostępnych: "—"
+    if (isUnavailable) {{
+      h += '<td class="text-right"><span class="pred-val" style="color:#64748b;font-style:italic">—</span></td>';
+    }} else {{
+      h += '<td class="text-right"><span class="pred-val" style="'+predGradient(pred)+'">'+pred.toFixed(1)+'</span></td>';
+    }}
 
     // Średnia ważona
     const avgC = baseAvg >= 6 ? '#22d3ee' : baseAvg >= 3 ? '#10b981' : '#94a3b8';
@@ -5590,6 +5618,8 @@ def main():
             "popularity_pct": p.get("popularity_pct", ""),
             "stats_url": p.get("stats_url", ""),
             "form": form,
+            # Status dostępności: None = dostępny, inaczej tekst (np. "Kontuzjowany")
+            "availability_status": p.get("availability_status"),
             # Nowe statystyki per 90
             "xg_per90": p.get("xg_per90"),
             "shots_per90": p.get("shots_per90"),
@@ -5865,6 +5895,7 @@ def main():
                 "predicted_points", "base_avg", "fdr_modifier",
                 "minutes_factor", "home_away_factor", "avg_minutes",
                 "confidence", "detail",
+                "unavailable", "availability_reason",  # status dostępności
             ]
             with open(pred_csv, "w", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=pred_fields, extrasaction="ignore")
