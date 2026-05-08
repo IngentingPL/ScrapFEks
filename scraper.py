@@ -6249,7 +6249,11 @@ def main():
                     round_number=discord_next_gw,
                 )
             else:
-                print("  ℹ️  Eksperci: brak GEMINI_API_KEY — pomijam generowanie")
+                # Rozróżnij przyczynę pominięcia: brak klucza vs nie ten dzień
+                if not gemini_key:
+                    print("  ℹ️  Eksperci: brak GEMINI_API_KEY — pomijam generowanie")
+                elif not is_day_before:
+                    print("  ℹ️  Eksperci: nie dzień przed meczem — pomijam generowanie")
 
         # POST-ROUND: wyślij dzień po ostatnim meczu kolejki.
         # Wzbogacamy league_teams o display_name z league_teams_detail jeśli dostępne,
