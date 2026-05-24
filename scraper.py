@@ -3487,31 +3487,90 @@ function detailRow(pid, colspan) {{
 }}
 
 function renderPlayers() {{
-  let data = [...PLAYERS];
-  if (pos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === pos);
-  if (!data.length) return '<div class="empty-msg">Brak danych</div>';
+      // Oblicz średnie punkty per pozycja (dla ±Avg)
+      const POS_AVGS = {{}};
+      const sums = {{}}, counts = {{}};
+      PLAYERS.forEach(p => {{
+        const pk = POS_ID[p.position] || p.position || '';
+        const pts = p.total_points || 0;
+        if (pts > 0 && pk) {{
+          sums[pk] = (sums[pk] || 0) + pts;
+          counts[pk] = (counts[pk] || 0) + 1;
+        }}
+      }});
+      for (const k in sums) POS_AVGS[k] = sums[k] / counts[k];
 
-  // Buduj lookup ownership z aktualnego scope — dopasowanie po player_id
-  const scopeData = DATA[scope] || {{}};
-  const ownData = scopeData.ownership || [];
-  const ownMap = {{}};
-  ownData.forEach(o => {{ ownMap[o.player_id] = o; }});
-  const hasOwn = ownData.length > 0;
-  const hasLeague = LEAGUE_TEAMS.length > 0 && Object.keys(LEAGUE_POS_AVGS).length > 0;
-  const scopeLabel = scopeData.label || scope;
+      // Sortuj po punktach domyślnie
+      let data = [...PLAYERS].sort((a,b) => (b.total_points||0) - (a.total_points||0));
+      if (pos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === pos);
+      if (!data.length) return '<div class="empty-msg">Brak danych</div>';
 
-  let h = '<div class="section-title"><span style="font-size:22px">⚽</span><h2>Zawodnicy'+(hasOwn ? ' — ownership: '+scopeLabel : '')+'</h2><div class="line"></div></div>';
-  h += '<div class="data-table"><table><thead><tr>';
-  h += '<th class="text-left">#</th>';
-  h += '<th class="text-left sortable" data-tab="players" data-col="name">Zawodnik'+arrow('players','name')+'</th>';
-  h += '<th class="text-left sortable" data-tab="players" data-col="team">Drużyna'+arrow('players','team')+'</th>';
-  h += '<th class="text-center sortable" data-tab="players" data-col="position">Poz'+arrow('players','position')+'</th>';
-  h += '<th class="text-right sortable" data-tab="players" data-col="price">Cena'+arrow('players','price')+'</th>';
-  h += '<th class="text-right sortable" data-tab="players" data-col="total_points">Punkty'+arrow('players','total_points')+'</th>';
-  h += '<th class="text-center sortable" data-tab="players" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('players','_diff_global')+'</th>';
-  if (hasLeague) {{
-    h += '<th class="text-center sortable" data-tab="players" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('players','_diff_league')+'</th>';
-  }}
+      let h = '<div class="data-table"><table><thead><tr>';
+      h += '<th class="text-left">#</th>';
+      h += '<th class="text-left">Zawodnik</th>';
+      h += '<th class="text-left">Drużyna</th>';
+      h += '<th class="text-center">Poz</th>';
+      h += '<th class="text-right">Cena</th>';
+      h += '<th class="text-right">Punkty</th>';
+      h += '<th class="text-center">±Avg</th>';
+      h += '<th class="text-right">Pkt/Cena</th>';
+      h += '<th class="text-center">Forma</th>';
+      h += '<th class="text-right">Średnia</th>';
+      h += '<th class="text-right">Pop.</th>';
+      h += '</tr></thead><tbody>';
+
+      data.forEach((p, i) => {{
+        const pk = POS_ID[p.position] || p.position || '';
+        const price = p.price || 0;
+        const pts = p.total_points || 0;
+        const ppp = price > 0 ? pts / price : 0;
+        
+        // Oblicz diff global
+        const diff = (POS_AVGS[pk] && pts > 0) ? Math.round((pts - POS_AVGS[pk]) * 10) / 10 : 0;
+        const diffStr = diff > 0 ? '+' + diff : (diff === 0 ? '0' : diff);
+        const diffColor = diff > 0 ? '#10b981' : (diff < 0 ? '#ef4444' : '#94a3b8');
+        
+        // Forma i średnia
+        const f = p.form || [];
+        const played = f.filter(x => x.p !== false);
+        const favg = played.length ? played.reduce((s,x) => s + (x.pts||0), 0) / played.length : 0;
+        
+        // Kolory dla punktów i ceny
+        const ptsC = pts >= 35 ? '#22d3ee' : pts >= 25 ? '#e2e8f0' : '#94a3b8';
+        const pppC = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
+        
+        // Renderuj formę jako kółka
+        let formHtml = '';
+        if (f && f.length) {{
+          formHtml = '<div class="form-chart mini">';
+          f.forEach(ff => {{
+            const fpts = ff.pts || 0;
+            const fplayed = ff.p !== false;
+            const fcolor = !fplayed ? '#334155' : fpts >= 8 ? '#22d3ee' : fpts >= 4 ? '#10b981' : fpts >= 0 ? '#64748b' : '#ef4444';
+            const fheight = Math.max(Math.abs(fpts) / 15 * 20, 2);
+            formHtml += '<div class="form-bar' + (!fplayed ? ' not-played' : '') + '" style="height:'+fheight+'px;background:'+fcolor+'"></div>';
+          }});
+          formHtml += '</div>';
+        }}
+        
+        h += '<tr>';
+        h += '<td class="c-muted fw-700">'+(i+1)+'</td>';
+        h += '<td class="fw-700">'+(p.name||'')+'</td>';
+        h += '<td class="c-muted" style="font-size:13px">'+(p.team||'')+'</td>';
+        h += '<td class="text-center"><span class="pos-badge pos-'+pk+'">'+(POS_MAP[k]||k)+'</span></td>';
+        h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
+        h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
+        h += '<td class="text-center" style="color:'+diffColor+';font-weight:700">'+diffStr+'</td>';
+        h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
+        h += '<td class="text-center">'+(formHtml || '<span class="c-dim" style="font-size:11px">—</span>')+'</td>';
+        h += '<td class="text-right fw-600">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
+        h += '<td class="text-right c-dim" style="font-size:13px">'+(p.popularity_pct||'—')+'</td>';
+        h += '</tr>';
+      }});
+
+      h += '</tbody></table></div>';
+      document.getElementById('players-content').innerHTML = h;
+    }}
   h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
   h += '<th class="text-center" style="min-width:80px">Forma</th>';
   h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów z ostatnich 5 kolejek uwzględnionych w formie">Średnia'+arrow('players','_form_avg')+'</th>';
@@ -5819,6 +5878,12 @@ def generate_archive_html(
     .footer { text-align: center; margin-top: 32px; color: #949494; font-size: 12px; }
     .season-wrap { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
     .season-chart svg { display: block; }
+    /* Style dla formy (wykres) */
+    .form-chart { display: inline-flex; align-items: flex-end; gap: 3px; height: 48px; vertical-align: middle; }
+    .form-chart.mini { height: 24px; gap: 2px; }
+    .form-chart.mini .form-bar { width: 8px; }
+    .form-bar { width: 14px; border-radius: 3px 3px 0 0; min-height: 2px; display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+    .form-bar.not-played { opacity: 0.35; border: 1px dashed #475569; background: transparent !important; }
     """
 
     # JS dla archiwum (uproszczony)
@@ -5874,15 +5939,17 @@ def generate_archive_html(
     }}
 
     function renderTeams() {{
-      let data = [...LEAGUE_TEAMS].sort((a,b) => (b.total_points||0) - (a.total_points||0));
+      // Używamy 'pts' zamiast 'total_points' (takie pole jest w league_teams_detail)
+      let data = [...LEAGUE_TEAMS].sort((a,b) => (b.pts||0) - (a.pts||0));
       let h = '<div class="team-list">';
 
       data.forEach((t, i) => {{
         h += '<div class="team-list-item">';
         h += '<div class="team-list-header">';
         h += '<span class="team-list-rank">'+(i+1)+'</span>';
-        h += '<span class="team-list-name">'+(t.display_name||t.team_slug||'')+'</span>';
-        h += '<span class="team-list-pts">'+(t.total_points||0)+' pkt</span>';
+        // Używamy slug jako nazwy (zastępuje display_name)
+        h += '<span class="team-list-name">'+(t.slug||'')+'</span>';
+        h += '<span class="team-list-pts">'+(t.pts||0)+' pkt</span>';
         h += '</div></div>';
       }});
 
@@ -5911,9 +5978,11 @@ def generate_archive_html(
 
       standings.forEach(s => {{
         const avg = rounds.length > 0 ? (s.total_points / rounds.length).toFixed(1) : 0;
+        // Zamień nazwy drużyn na wielkie litery na początku każdego słowa
+        const teamName = (s.team||'').replace(/\\b\\w/g, l => l.toUpperCase());
         h += '<tr>';
         h += '<td class="fw-700">'+(s.position||'')+'</td>';
-        h += '<td>'+(s.team||'')+'</td>';
+        h += '<td>'+teamName+'</td>';
         h += '<td class="text-right">'+(s.total_points||0)+'</td>';
         h += '<td class="text-right c-muted">'+avg+'</td>';
         h += '</tr>';
