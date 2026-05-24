@@ -113,6 +113,10 @@ WORKERS = int(os.environ.get("WORKERS", "10"))
 # Maksymalny czas pracy (minuty) — graceful stop przed limitem GitHub Actions (6h)
 MAX_RUNTIME_MINUTES = int(os.environ.get("MAX_RUNTIME_MINUTES", "300"))
 
+# Archiwizacja sezonu
+ARCHIVE_SEASON = os.environ.get("ARCHIVE_SEASON", "false").lower() == "true"
+SEASON_NAME = os.environ.get("SEASON_NAME", "")
+
 # Globalny czas startu
 SCRIPT_START = time.time()
 
@@ -5520,6 +5524,267 @@ render();
 
 
 # ============================================================
+# GENEROWANIE ARCHIWUM SEZONU
+# ============================================================
+
+def generate_archive_html(
+    season_name: str,
+    players: list[dict],
+    league_teams_detail: list[dict],
+    league_history: dict,
+    timestamp: str,
+    filename: str,
+):
+    """
+    Generuje uproszczony HTML archiwum sezonu.
+    Zawiera tylko zakładki: Zawodnicy, Liga CMF, Sezon.
+    """
+    import shutil
+    import os
+
+    # Przygotuj dane dla JS
+    players_json = json.dumps(players[:200], ensure_ascii=False)  # Limit do 200 zawodników
+    league_teams_json = json.dumps(league_teams_detail, ensure_ascii=False)
+    league_history_json = json.dumps(league_history or {"rounds": []}, ensure_ascii=False)
+
+    # CSS dla archiwum (uproszczony)
+    archive_css = """
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: #131313; }
+    body {
+      min-height: 100vh;
+      background: #131313;
+      color: #ffffff;
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      padding: 24px 16px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .header .sub { font-size: 12px; color: #949494; margin: 0; }
+    .archive-badge {
+      background: #5200ff;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .back-link {
+      color: #3cffd0;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .back-link:hover { color: #3860be; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid #2d2d2d; flex-wrap: wrap; margin-bottom: 16px; }
+    .tab {
+      background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: #949494; padding: 10px 18px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border-radius: 8px 8px 0 0; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .tab.active { background: #2d2d2d; border-bottom-color: #3cffd0; color: #ffffff; }
+    .tab:hover { color: #3860be; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .data-table { background: #2d2d2d; border-radius: 12px; overflow: hidden; width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead tr { background: #131313; }
+    th { padding: 10px 14px; color: #949494; font-weight: 600; font-size: 11px; text-transform: uppercase; white-space: nowrap; }
+    td { padding: 10px 14px; border-top: 1px solid #131313; white-space: nowrap; }
+    .pos-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; color: #131313; }
+    .pos-BR, .pos-1 { background: #f59e0b; }
+    .pos-OBR, .pos-2 { background: #3b82f6; }
+    .pos-POM, .pos-3 { background: #10b981; }
+    .pos-NAP, .pos-4 { background: #ef4444; }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .fw-700 { font-weight: 700; }
+    .c-muted { color: #949494; }
+    .empty-msg { padding: 40px; text-align: center; color: #949494; }
+    .team-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+    .team-list-item { background: #2d2d2d; border: 1px solid #3cffd0; border-radius: 8px; }
+    .team-list-header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; }
+    .team-list-rank { font-size: 13px; font-weight: 800; color: #3cffd0; min-width: 32px; }
+    .team-list-name { font-size: 14px; font-weight: 700; color: #ffffff; flex: 1; text-transform: capitalize; }
+    .team-list-pts { font-size: 12px; color: #949494; font-weight: 600; }
+    .footer { text-align: center; margin-top: 32px; color: #949494; font-size: 12px; }
+    .season-wrap { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .season-chart svg { display: block; }
+    """
+
+    # JS dla archiwum (uproszczony)
+    archive_js = f"""
+    const PLAYERS = {players_json};
+    const LEAGUE_TEAMS = {league_teams_json};
+    const LEAGUE_HISTORY = {league_history_json};
+    const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
+    const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP'}};
+
+    let currentTab = 'players';
+
+    function showTab(tabId) {{
+      currentTab = tabId;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelector('[data-tab="' + tabId + '"]').classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }}
+
+    function posBadge(p) {{
+      const k = POS_ID[p] || p;
+      return '<span class="pos-badge pos-'+k+'">'+(POS_MAP[k]||k)+'</span>';
+    }}
+
+    function renderPlayers() {{
+      let data = [...PLAYERS].sort((a,b) => (b.total_points||0) - (a.total_points||0));
+      let h = '<div class="data-table"><table><thead><tr>';
+      h += '<th class="text-left">#</th>';
+      h += '<th class="text-left">Zawodnik</th>';
+      h += '<th class="text-left">Drużyna</th>';
+      h += '<th class="text-center">Poz</th>';
+      h += '<th class="text-right">Cena</th>';
+      h += '<th class="text-right">Punkty</th>';
+      h += '</tr></thead><tbody>';
+
+      data.forEach((p, i) => {{
+        const pk = POS_ID[p.position] || p.position || '';
+        const price = p.price || 0;
+        const pts = p.total_points || 0;
+        h += '<tr>';
+        h += '<td class="c-muted fw-700">'+(i+1)+'</td>';
+        h += '<td class="fw-700">'+(p.name||'')+'</td>';
+        h += '<td class="c-muted" style="font-size:13px">'+(p.team||'')+'</td>';
+        h += '<td class="text-center">'+posBadge(pk)+'</td>';
+        h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
+        h += '<td class="text-right fw-700">'+pts+'</td>';
+        h += '</tr>';
+      }});
+
+      h += '</tbody></table></div>';
+      document.getElementById('players-content').innerHTML = h;
+    }}
+
+    function renderTeams() {{
+      let data = [...LEAGUE_TEAMS].sort((a,b) => (b.total_points||0) - (a.total_points||0));
+      let h = '<div class="team-list">';
+
+      data.forEach((t, i) => {{
+        h += '<div class="team-list-item">';
+        h += '<div class="team-list-header">';
+        h += '<span class="team-list-rank">'+(i+1)+'</span>';
+        h += '<span class="team-list-name">'+(t.display_name||t.team_slug||'')+'</span>';
+        h += '<span class="team-list-pts">'+(t.total_points||0)+' pkt</span>';
+        h += '</div></div>';
+      }});
+
+      h += '</div>';
+      document.getElementById('teams-content').innerHTML = h;
+    }}
+
+    function renderSeason() {{
+      const rounds = (LEAGUE_HISTORY.rounds || []);
+      if (rounds.length < 1) {{
+        document.getElementById('season-content').innerHTML = '<div class="empty-msg">Brak danych sezonu</div>';
+        return;
+      }}
+
+      // Prosta tabela wyników
+      const lastRound = rounds[rounds.length - 1];
+      const standings = lastRound.standings || [];
+      standings.sort((a,b) => a.position - b.position);
+
+      let h = '<div class="data-table"><table><thead><tr>';
+      h += '<th class="text-left">Pozycja</th>';
+      h += '<th class="text-left">Drużyna</th>';
+      h += '<th class="text-right">Punkty</th>';
+      h += '<th class="text-right">Pkt/kol</th>';
+      h += '</tr></thead><tbody>';
+
+      standings.forEach(s => {{
+        const avg = rounds.length > 0 ? (s.total_points / rounds.length).toFixed(1) : 0;
+        h += '<tr>';
+        h += '<td class="fw-700">'+(s.position||'')+'</td>';
+        h += '<td>'+(s.team||'')+'</td>';
+        h += '<td class="text-right">'+(s.total_points||0)+'</td>';
+        h += '<td class="text-right c-muted">'+avg+'</td>';
+        h += '</tr>';
+      }});
+
+      h += '</tbody></table></div>';
+      document.getElementById('season-content').innerHTML = h;
+    }}
+
+    document.addEventListener('DOMContentLoaded', function() {{
+      renderPlayers();
+      renderTeams();
+      renderSeason();
+
+      document.querySelectorAll('.tab').forEach(tab => {{
+        tab.addEventListener('click', function() {{
+          showTab(this.dataset.tab);
+        }});
+      }});
+    }});
+    """
+
+    html = f"""<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScrapFEks – Archiwum Sezonu {season_name}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>{archive_css}</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-left">
+      <div>
+        <h1>📊 ScrapFEks – Sezon {season_name}</h1>
+        <p class="sub">Archiwum · {timestamp}</p>
+      </div>
+    </div>
+    <span class="archive-badge">📦 Archiwum</span>
+  </div>
+  <a href="../index.html" class="back-link">← Powrót do bieżącego sezonu</a>
+
+  <div class="tabs" style="margin-top: 20px;">
+    <button class="tab active" data-tab="players">⚽ Zawodnicy</button>
+    <button class="tab" data-tab="teams">📋 Liga CMF</button>
+    <button class="tab" data-tab="season">📈 Sezon</button>
+  </div>
+
+  <div id="tab-players" class="tab-content active">
+    <div id="players-content"><div class="empty-msg">Ładowanie...</div></div>
+  </div>
+  <div id="tab-teams" class="tab-content">
+    <div id="teams-content"><div class="empty-msg">Ładowanie...</div></div>
+  </div>
+  <div id="tab-season" class="tab-content">
+    <div id="season-content"><div class="empty-msg">Ładowanie...</div></div>
+  </div>
+
+  <div class="footer">ScrapFEks Archiwum · Sezon {season_name} · {timestamp}</div>
+</div>
+<script>{archive_js}</script>
+</body>
+</html>"""
+
+    # Utwórz katalog docs/archive jeśli nie istnieje
+    archive_dir = os.path.dirname(filename)
+    os.makedirs(archive_dir, exist_ok=True)
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"  📦 Archiwum wygenerowane: {filename}")
+
+
+# ============================================================
 # GŁÓWNA LOGIKA
 # ============================================================
 
@@ -6334,6 +6599,46 @@ def main():
             )
     else:
         print("  ℹ️  DISCORD_WEBHOOK_URL nie ustawiony — pomijam powiadomienia Discord")
+
+    # ============================================================
+    # ARCHIWIZACJA SEZONU
+    # ============================================================
+    if ARCHIVE_SEASON:
+        if not SEASON_NAME:
+            print("\n❌ Błąd archiwizacji: SEASON_NAME jest wymagany (np. 2025-26)")
+        else:
+            print(f"\n📦 Archiwizacja sezonu {SEASON_NAME}...")
+
+            # Ścieżka do archiwum
+            archive_html_path = f"docs/archive/sezon-{SEASON_NAME}.html"
+
+            # Generuj archiwum HTML
+            generate_archive_html(
+                season_name=SEASON_NAME,
+                players=players,
+                league_teams_detail=league_teams_detail,
+                league_history=league_history,
+                timestamp=timestamp,
+                filename=archive_html_path,
+            )
+
+            # Przenieś dane do archiwum
+            import shutil
+
+            # Kopia autumn_points.json do docs/archive/
+            archive_data_dir = "docs/archive"
+            os.makedirs(archive_data_dir, exist_ok=True)
+
+            if os.path.exists("autumn_points.json"):
+                shutil.copy("autumn_points.json", f"{archive_data_dir}/autumn_points_{SEASON_NAME}.json")
+                print(f"   📄 Skopiowano autumn_points.json → {archive_data_dir}/autumn_points_{SEASON_NAME}.json")
+
+            # Opcjonalnie: skopiuj inne pliki danych
+            if os.path.exists(json_file):
+                shutil.copy(json_file, f"{archive_data_dir}/players_{SEASON_NAME}.json")
+                print(f"   📄 Skopiowano {os.path.basename(json_file)} → {archive_data_dir}/")
+
+            print(f"   ✅ Archiwizacja zakończona: docs/archive/sezon-{SEASON_NAME}.html")
 
     print(f"\n{'='*50}")
     print(f"✅ Gotowe! Pliki zapisane w katalogu: {OUTPUT_DIR}/")
