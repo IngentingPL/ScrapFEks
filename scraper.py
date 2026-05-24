@@ -5845,6 +5845,21 @@ def generate_archive_html(
     }}
 
     function renderPlayers() {{
+      // NAPRAWA: rozszerzona wersja z dodatkowymi kolumnami
+      // Oblicz średnie punkty per pozycja (dla ±Avg)
+      const POS_AVGS = {{}};
+      const sums = {{}}, counts = {{}};
+      PLAYERS.forEach(p => {{
+        const pk = POS_ID[p.position] || p.position || '';
+        const pts = p.total_points || 0;
+        if (pts > 0 && pk) {{
+          sums[pk] = (sums[pk] || 0) + pts;
+          counts[pk] = (counts[pk] || 0) + 1;
+        }}
+      }});
+      for (const k in sums) POS_AVGS[k] = sums[k] / counts[k];
+
+      // Sortuj po punktach domyślnie
       let data = [...PLAYERS].sort((a,b) => (b.total_points||0) - (a.total_points||0));
       let h = '<div class="data-table"><table><thead><tr>';
       h += '<th class="text-left">#</th>';
@@ -5853,19 +5868,59 @@ def generate_archive_html(
       h += '<th class="text-center">Poz</th>';
       h += '<th class="text-right">Cena</th>';
       h += '<th class="text-right">Punkty</th>';
+      h += '<th class="text-center">±Avg</th>';
+      h += '<th class="text-right">Pkt/Cena</th>';
+      h += '<th class="text-center">Forma</th>';
+      h += '<th class="text-right">Średnia</th>';
+      h += '<th class="text-right">Pop.</th>';
       h += '</tr></thead><tbody>';
 
       data.forEach((p, i) => {{
         const pk = POS_ID[p.position] || p.position || '';
         const price = p.price || 0;
         const pts = p.total_points || 0;
+        const ppp = price > 0 ? pts / price : 0;
+        
+        // Oblicz diff global (±Avg)
+        const diff = (POS_AVGS[pk] && pts > 0) ? Math.round((pts - POS_AVGS[pk]) * 10) / 10 : 0;
+        const diffStr = diff > 0 ? '+' + diff : (diff === 0 ? '0' : diff);
+        const diffColor = diff > 0 ? '#10b981' : (diff < 0 ? '#ef4444' : '#94a3b8');
+        
+        // Forma i średnia z danych zawodnika
+        const f = p.form || [];
+        const played = f.filter(x => x.p !== false);
+        const favg = played.length ? played.reduce((s,x) => s + (x.pts||0), 0) / played.length : 0;
+        
+        // Kolory dla punktów i ceny
+        const ptsC = pts >= 35 ? '#22d3ee' : pts >= 25 ? '#e2e8f0' : '#94a3b8';
+        const pppC = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
+        
+        // Renderuj formę jako kółka
+        let formHtml = '';
+        if (f && f.length) {{
+          formHtml = '<div class="form-chart mini">';
+          f.forEach(ff => {{
+            const fpts = ff.pts || 0;
+            const fplayed = ff.p !== false;
+            const fcolor = !fplayed ? '#334155' : fpts >= 8 ? '#22d3ee' : fpts >= 4 ? '#10b981' : fpts >= 0 ? '#64748b' : '#ef4444';
+            const fheight = Math.max(Math.abs(fpts) / 15 * 20, 2);
+            formHtml += '<div class="form-bar' + (!fplayed ? ' not-played' : '') + '" style="height:'+fheight+'px;background:'+fcolor+'"></div>';
+          }});
+          formHtml += '</div>';
+        }}
+        
         h += '<tr>';
         h += '<td class="c-muted fw-700">'+(i+1)+'</td>';
         h += '<td class="fw-700">'+(p.name||'')+'</td>';
         h += '<td class="c-muted" style="font-size:13px">'+(p.team||'')+'</td>';
-        h += '<td class="text-center">'+posBadge(pk)+'</td>';
+        h += '<td class="text-center"><span class="pos-badge pos-'+pk+'">'+(POS_MAP[k]||k)+'</span></td>';
         h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
-        h += '<td class="text-right fw-700">'+pts+'</td>';
+        h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
+        h += '<td class="text-center" style="color:'+diffColor+';font-weight:700">'+diffStr+'</td>';
+        h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
+        h += '<td class="text-center">'+(formHtml || '<span class="c-dim" style="font-size:11px">—</span>')+'</td>';
+        h += '<td class="text-right fw-600">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
+        h += '<td class="text-right c-dim" style="font-size:13px">'+(p.popularity_pct||'—')+'</td>';
         h += '</tr>';
       }});
 
@@ -5874,15 +5929,16 @@ def generate_archive_html(
     }}
 
     function renderTeams() {{
-      let data = [...LEAGUE_TEAMS].sort((a,b) => (b.total_points||0) - (a.total_points||0));
+      // NAPRAWA: używamy 'pts' zamiast 'total_points', 'slug' zamiast 'display_name||team_slug'
+      let data = [...LEAGUE_TEAMS].sort((a,b) => (b.pts||0) - (a.pts||0));
       let h = '<div class="team-list">';
 
       data.forEach((t, i) => {{
         h += '<div class="team-list-item">';
         h += '<div class="team-list-header">';
         h += '<span class="team-list-rank">'+(i+1)+'</span>';
-        h += '<span class="team-list-name">'+(t.display_name||t.team_slug||'')+'</span>';
-        h += '<span class="team-list-pts">'+(t.total_points||0)+' pkt</span>';
+        h += '<span class="team-list-name">'+(t.slug||'')+'</span>';
+        h += '<span class="team-list-pts">'+(t.pts||0)+' pkt</span>';
         h += '</div></div>';
       }});
 
@@ -5911,9 +5967,11 @@ def generate_archive_html(
 
       standings.forEach(s => {{
         const avg = rounds.length > 0 ? (s.total_points / rounds.length).toFixed(1) : 0;
+        // NAPRAWA: zamiana nazw drużyn na wielkie litery na początku każdego słowa
+        const teamName = (s.team||'').replace(/\\b\\w/g, c => c.toUpperCase());
         h += '<tr>';
         h += '<td class="fw-700">'+(s.position||'')+'</td>';
-        h += '<td>'+(s.team||'')+'</td>';
+        h += '<td>'+teamName+'</td>';
         h += '<td class="text-right">'+(s.total_points||0)+'</td>';
         h += '<td class="text-right c-muted">'+avg+'</td>';
         h += '</tr>';
