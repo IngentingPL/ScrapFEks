@@ -2561,6 +2561,7 @@ def generate_dashboard_html(
     newsletter_data: list,
     timestamp: str,
     filename: str,
+    has_archive: bool = False,
 ):
     """Generuje interaktywny dashboard HTML z danymi Fantasy Ekstraklasa."""
 
@@ -2711,6 +2712,8 @@ body {{
 }}
 .tab.active {{ background: #2d2d2d; border-bottom-color: #3cffd0; color: #ffffff; }}
 .tab:hover {{ color: #3860be; }}
+.archive-link {{ text-decoration: none; display: inline-block; }}
+.archive-link.disabled {{ opacity: 0.4; pointer-events: none; cursor: default; }}
 
 /* Filters */
 .filters-row {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }}
@@ -2800,6 +2803,7 @@ html.theme-fantasy .stat-card .sub {{ color: #5a5a5a; }}
 html.theme-fantasy .tab {{ color: #5a5a5a; }}
 html.theme-fantasy .tab.active {{ background: #ffffff; border-bottom-color: #309875; color: #131313; }}
 html.theme-fantasy .tab:hover {{ color: #3860be; }}
+html.theme-fantasy .archive-link.disabled {{ opacity: 0.4; }}
 
 html.theme-fantasy .pos-btn {{ border-color: #e0e0e0; color: #5a5a5a; }}
 html.theme-fantasy .pos-btn.active {{ color: #ffffff; }}
@@ -3295,8 +3299,9 @@ html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0
       {"<button class='tab' data-tab='predictions'>🔮 Prognoza</button>" if has_predictions else ""}
       {"<button class='tab' data-tab='accuracy'>📊 Trafność</button>" if has_accuracy else ""}
       {"<button class='tab' data-tab='season'>📈 Sezon</button>" if has_season else ""}
-      {"<button class='tab' data-tab='newsletter'>📰 Newsletter</button>" if has_newsletter else ""}
+{"<button class='tab' data-tab='newsletter'>📰 Newsletter</button>" if has_newsletter else ""}
       <button class="tab" data-tab="compare">⚖️ Porównanie</button>
+      {f'<a href="archive/index.html" class="tab archive-link">📁 Archiwum</a>' if has_archive else '<span class="tab archive-link disabled">📁 Archiwum</span>'}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
@@ -5524,6 +5529,206 @@ render();
 
 
 # ============================================================
+# GENEROWANIE INDEX ARCHIWUM
+# ============================================================
+
+def generate_archive_index(archive_dir: str = "docs/archive"):
+    """
+    Generuje stronę index.html z listą wszystkich archiwów sezonów.
+    Skanuje katalog docs/archive/ w poszukiwaniu plików sezon-*.html.
+    """
+    import glob as glob_module
+    import re
+
+    # Sprawdź czy katalog istnieje
+    if not os.path.exists(archive_dir):
+        print(f"  ℹ️  Katalog archiwum nie istnieje: {archive_dir}")
+        return False
+
+    # Znajdź wszystkie pliki sezon-*.html
+    pattern = os.path.join(archive_dir, "sezon-*.html")
+    archive_files = glob_module.glob(pattern)
+
+    if not archive_files:
+        print(f"  ℹ️  Brak archiwów w katalogu: {archive_dir}")
+        return False
+
+    # Parsuj nazwy sezonów z plików
+    archives = []
+    for filepath in archive_files:
+        filename = os.path.basename(filepath)
+        # Wyciągnij nazwę sezonu: "sezon-2026 Wiosna.html" -> "2026 Wiosna"
+        match = re.match(r"sezon-(.+)\.html$", filename)
+        if match:
+            season_name = match.group(1).strip()
+            archives.append({
+                "name": season_name,
+                "filename": filename,
+            })
+
+    # Sortuj po nazwie (od najnowszego)
+    archives.sort(key=lambda x: x["name"], reverse=True)
+
+    if not archives:
+        print(f"  ℹ️  Nie znaleziono archiwów sezonów")
+        return False
+
+    # CSS dla strony index archiwum (ten sam co dashboard)
+    index_css = """
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: #131313; }
+    body {
+      min-height: 100vh;
+      background: #131313;
+      color: #ffffff;
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      padding: 24px 16px;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 0 16px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .header .sub { font-size: 12px; color: #949494; margin: 0; }
+    .back-link {
+      color: #3cffd0;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+    .back-link:hover { color: #3860be; }
+    .archive-list { display: flex; flex-direction: column; gap: 12px; }
+    .archive-item {
+      background: #2d2d2d;
+      border: 1px solid #3cffd0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      transition: all 0.2s;
+    }
+    .archive-item:hover {
+      background: #3cffd0;
+    }
+    .archive-item:hover .archive-name {
+      color: #131313;
+    }
+    .archive-item:hover .archive-arrow {
+      color: #131313;
+    }
+    .archive-item a {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .archive-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .archive-arrow {
+      font-size: 18px;
+      color: #3cffd0;
+    }
+    .empty-msg { padding: 40px; text-align: center; color: #949494; }
+    .footer { text-align: center; margin-top: 32px; color: #949494; font-size: 12px; }
+
+    /* Light theme */
+    html.theme-fantasy { background: #f5f5f5; }
+    html.theme-fantasy body { background: #f5f5f5; color: #131313; }
+    html.theme-fantasy .header h1 { color: #131313; }
+    html.theme-fantasy .header .sub { color: #5a5a5a; }
+    html.theme-fantasy .back-link { color: #309875; }
+    html.theme-fantasy .back-link:hover { color: #3860be; }
+    html.theme-fantasy .archive-item { background: #ffffff; border-color: #e0e0e0; }
+    html.theme-fantasy .archive-item:hover { background: #309875; }
+    html.theme-fantasy .archive-item:hover .archive-name { color: #ffffff; }
+    html.theme-fantasy .archive-item:hover .archive-arrow { color: #ffffff; }
+    html.theme-fantasy .archive-name { color: #131313; }
+    html.theme-fantasy .archive-arrow { color: #309875; }
+    html.theme-fantasy .footer { color: #5a5a5a; }
+    """
+
+    # Theme toggle JS
+    theme_js = """
+    function toggleTheme() {
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle');
+      if (html.classList.contains('theme-fantasy')) {
+        html.classList.remove('theme-fantasy');
+        btn.textContent = '☀️ Light';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        html.classList.add('theme-fantasy');
+        btn.textContent = '🌙 Dark';
+        localStorage.setItem('theme', 'light');
+      }
+    }
+    (function() {
+      const theme = localStorage.getItem('theme');
+      const html = document.documentElement;
+      const btn = document.querySelector('.theme-toggle');
+      if (theme === 'light') {
+        html.classList.add('theme-fantasy');
+        btn.textContent = '🌙 Dark';
+      } else {
+        btn.textContent = '☀️ Light';
+      }
+    })();
+    """
+
+    # Generuj HTML
+    archives_html = ""
+    for arch in archives:
+        archives_html += f'''
+        <div class="archive-item">
+          <a href="{arch['filename']}">
+            <span class="archive-name">📁 Sezon {arch['name']}</span>
+            <span class="archive-arrow">→</span>
+          </a>
+        </div>'''
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    html = f"""<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScrapFEks – Archiwum</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>{index_css}</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <h1>📁 Archiwum Sezonów</h1>
+      <p class="sub">ScrapFEks · {timestamp}</p>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">☀️ Light</button>
+  </div>
+  <a href="../index.html" class="back-link">← Powrót do bieżącego sezonu</a>
+
+  <div class="archive-list">
+    {archives_html}
+  </div>
+
+  <div class="footer">ScrapFEks Archiwum · {timestamp}</div>
+</div>
+<script>{theme_js}</script>
+</body>
+</html>"""
+
+    # Zapisz plik
+    index_path = os.path.join(archive_dir, "index.html")
+    with open(index_path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"  📁 Index archiwum wygenerowany: {index_path} ({len(archives)} sezonów)")
+    return True
+
+
+# ============================================================
 # GENEROWANIE ARCHIWUM SEZONU
 # ============================================================
 
@@ -6409,6 +6614,9 @@ def main():
     from newsletter import load_newsletter_history
     newsletter_history = load_newsletter_history()
 
+    # Generuj index archiwum (jeśli katalog istnieje)
+    has_archive = generate_archive_index("docs/archive")
+
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     generate_dashboard_html(
         summary_data=summary_data,
@@ -6432,6 +6640,7 @@ def main():
         newsletter_data=newsletter_history,
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
+        has_archive=has_archive,
     )
 
     # ============================================================
