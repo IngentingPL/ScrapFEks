@@ -5557,10 +5557,10 @@ def generate_archive_index(archive_dir: str = "docs/archive"):
     archives = []
     for filepath in archive_files:
         filename = os.path.basename(filepath)
-        # Wyciągnij nazwę sezonu: "sezon-2026 Wiosna.html" -> "2026 Wiosna"
+        # Wyciągnij nazwę sezonu: "sezon-2026-Wiosna.html" -> "2026 Wiosna" (myślniki → spacje w wyświetlaniu)
         match = re.match(r"sezon-(.+)\.html$", filename)
         if match:
-            season_name = match.group(1).strip()
+            season_name = match.group(1).strip().replace('-', ' ')
             archives.append({
                 "name": season_name,
                 "filename": filename,
@@ -5913,7 +5913,7 @@ def generate_archive_html(
         h += '<td class="c-muted fw-700">'+(i+1)+'</td>';
         h += '<td class="fw-700">'+(p.name||'')+'</td>';
         h += '<td class="c-muted" style="font-size:13px">'+(p.team||'')+'</td>';
-        h += '<td class="text-center"><span class="pos-badge pos-'+pk+'">'+(POS_MAP[k]||k)+'</span></td>';
+        h += '<td class="text-center"><span class="pos-badge pos-'+pk+'">'+(POS_MAP[pk]||pk)+'</span></td>';  // Poprawka: k → pk (zmienna niezdefiniowana w scope)
         h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
         h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
         h += '<td class="text-center" style="color:'+diffColor+';font-weight:700">'+diffStr+'</td>';
@@ -6876,8 +6876,8 @@ def main():
         else:
             print(f"\n📦 Archiwizacja sezonu {SEASON_NAME}...")
 
-            # Ścieżka do archiwum
-            archive_html_path = f"docs/archive/sezon-{SEASON_NAME}.html"
+            # Ścieżka do archiwum – spacje zamienione na myślniki (GitHub Pages nie lubi spacji w nazwach plików)
+            archive_html_path = f"docs/archive/sezon-{SEASON_NAME.replace(' ', '-')}.html"
 
             # Generuj archiwum HTML
             generate_archive_html(
@@ -6905,7 +6905,7 @@ def main():
                 shutil.copy(json_file, f"{archive_data_dir}/players_{SEASON_NAME}.json")
                 print(f"   📄 Skopiowano {os.path.basename(json_file)} → {archive_data_dir}/")
 
-            print(f"   ✅ Archiwizacja zakończona: docs/archive/sezon-{SEASON_NAME}.html")
+            print(f"   ✅ Archiwizacja zakończona: docs/archive/sezon-{SEASON_NAME.replace(' ', '-')}.html")
 
     print(f"\n{'='*50}")
     print(f"✅ Gotowe! Pliki zapisane w katalogu: {OUTPUT_DIR}/")
