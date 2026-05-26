@@ -31,14 +31,6 @@ on:
         description: 'Maksymalny czas pracy (minuty)'
         required: false
         default: '300'
-      archive_season:
-        description: 'Archiwizuj sezon (true/false)'
-        required: false
-        default: 'false'
-      season_name:
-        description: 'Nazwa sezonu do archiwizacji (np. 2025-26)'
-        required: false
-        default: ''
 
   # AUTO-SCHEDULE-START
   schedule:
@@ -92,8 +84,6 @@ jobs:
           MAX_RUNTIME_MINUTES: ${{ github.event.inputs.max_runtime || '300' }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          ARCHIVE_SEASON: ${{ github.event.inputs.archive_season || 'false' }}
-          SEASON_NAME: ${{ github.event.inputs.season_name || '' }}
         run: python scraper.py
 
       - name: Upload results

@@ -1,0 +1,49 @@
+name: Archive Season
+
+on:
+  workflow_dispatch:
+    inputs:
+      season_name:
+        description: 'Nazwa sezonu (np. 2025-26, 2025-26 Wiosna)'
+        required: true
+        type: string
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run archive
+        run: python archive.py "${{ github.event.inputs.season_name }}"
+
+      - name: Commit and push archive
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Pull latest changes
+          git fetch origin
+          git rebase origin/main || true
+          
+          # Add archive files
+          git add docs/archive/ || true
+          if git diff --staged --quiet; then
+            echo "No archive changes to commit"
+          else
+            git commit -m "📦 Archiwum sezonu ${{ github.event.inputs.season_name }} - $(date +'%Y-%m-%d')"
+            git push
+          fi

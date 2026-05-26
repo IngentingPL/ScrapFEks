@@ -14,6 +14,7 @@ ScrapFEks to automatyczny scraper i dashboard dla Fantasy Ekstraklasy (fantasy.e
 ScrapFEks/
 ├── .github/workflows/
 │   ├── scrape.yml              # Główny workflow – uruchamia scraper
+│   ├── archive.yml             # Archiwizacja sezonu (workflow_dispatch)
 │   ├── test_gemini.yml         # Testowanie klucza Gemini API
 │   └── update_schedule.yml    # Aktualizacja terminarza
 ├── docs/
@@ -25,6 +26,7 @@ ScrapFEks/
 │   ├── fantasy_captains_*.csv  # Historia kapitanów
 │   └── debug_team_*.html       # Pliki debugowe drużyn
 ├── scraper.py                  # GŁÓWNY PLIK – scraping + generowanie HTML
+├── archive.py                  # Archiwizacja sezonu do docs/archive/
 ├── predictor.py                # Logika prognoz zawodników
 ├── tuner.py                    # Optymalizacja parametrów predykcji
 ├── accuracy.py                 # Śledzenie trafności prognoz
@@ -179,3 +181,39 @@ python scraper.py
 ```
 
 Dashboard generuje się do `output/dashboard.html` i `docs/index.html`.
+
+---
+
+## Archiwizacja sezonu
+
+Archiwizacja została przeniesiona do osobnego pliku `archive.py` i workflow `archive.yml`.
+
+### Uruchamianie lokalne
+
+```bash
+python archive.py 2025-26
+python archive.py "2025-26 Wiosna"
+```
+
+Lub przez zmienną środowiskową:
+
+```bash
+SEASON_NAME=2025-26 python archive.py
+```
+
+### Uruchamianie przez GitHub Actions
+
+1. Przejdź do zakładki **Actions**
+2. Wybierz workflow **Archive Season**
+3. Kliknij **Run workflow**
+4. Wpisz nazwę sezonu (np. `2025-26` lub `2025-26 Wiosna`)
+5. Kliknij **Run workflow**
+
+Archiwizacja:
+- Generuje plik HTML `docs/archive/sezon-{SEASON}.html`
+- Kopiuje dane do `docs/archive/`:
+  - `autumn_points_{SEASON}.json`
+  - `league_history_{SEASON}.json`
+  - `duets_{SEASON}.json`
+  - `players_{SEASON}.json`
+- Aktualizuje index archiwum `docs/archive/index.html`
