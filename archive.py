@@ -585,17 +585,18 @@ if (LEAGUE_HISTORY && LEAGUE_HISTORY.rounds && LEAGUE_HISTORY.rounds.length > 0)
 
 def load_players_data() -> list[dict]:
     """Wczytuje dane zawodników z pliku JSON w output/."""
-    # Znajdź najnowszy plik players_*.json w output/
-    pattern = os.path.join(OUTPUT_DIR, "players_*.json")
-    files = glob_module.glob(pattern)
+    # Znajdź najnowszy plik fantasy_full_*.json w output/
+    # Sortuj po nazwie (alfabetycznie) - ostatni będzie najnowszy (格式: fantasy_full_YYYYMMDD_HHMMSS.json)
+    pattern = os.path.join(OUTPUT_DIR, "fantasy_full_*.json")
+    files = sorted(glob_module.glob(pattern))
     
     if not files:
-        print(f"  ⚠️  Brak plików players_*.json w {OUTPUT_DIR}")
+        print(f"  ⚠️  Brak plików fantasy_full_*.json w {OUTPUT_DIR}")
         return []
     
-    # Weź najnowszy plik
-    latest_file = max(files, key=os.path.getmtime)
-    print(f"  📂 Wczytuję dane z: {latest_file}")
+    # Weź ostatni plik (najnowszy)
+    latest_file = files[-1]
+    print(f"  📂 Wczytuję dane zawodników z: {latest_file}")
     
     with open(latest_file, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -603,7 +604,8 @@ def load_players_data() -> list[dict]:
 
 def load_league_history() -> dict:
     """Wczytuje historię ligi z league_history.json."""
-    history_file = "league_history.json"
+    # league_history.json jest w katalogu output/, nie w głównym katalogu
+    history_file = os.path.join(OUTPUT_DIR, "league_history.json")
     if not os.path.exists(history_file):
         print(f"  ℹ️  Brak pliku {history_file}")
         return {"rounds": []}
@@ -614,28 +616,9 @@ def load_league_history() -> dict:
 
 def load_league_teams_detail() -> list[dict]:
     """Wczytuje szczegóły drużyn ligi z output/."""
-    # Szukaj pliku z danymi ligi - sprawdź różne możliwe nazwy
-    possible_files = [
-        os.path.join(OUTPUT_DIR, "league_teams_detail.json"),
-        os.path.join(OUTPUT_DIR, "league_teams_detail_latest.json"),
-    ]
-    
-    for f in possible_files:
-        if os.path.exists(f):
-            print(f"  📂 Wczytuję dane ligi z: {f}")
-            with open(f, "r", encoding="utf-8") as fp:
-                return json.load(fp)
-    
-    # Fallback: spróbuj znaleźć dowolny pasujący plik
-    pattern = os.path.join(OUTPUT_DIR, "league_teams*.json")
-    files = glob_module.glob(pattern)
-    if files:
-        latest = max(files, key=os.path.getmtime)
-        print(f"  📂 Wczytuję dane ligi z: {latest}")
-        with open(latest, "r", encoding="utf-8") as fp:
-            return json.load(fp)
-    
-    print(f"  ℹ️  Brak plików league_teams w {OUTPUT_DIR}")
+    # Dane league_teams nie są zapisywane jako osobny plik JSON w output/
+    # Zwraca pustą listę - archiwum będzie działać bez danych ligi CMF
+    print(f"  ℹ️  Dane ligi CMF (league_teams) nie są dostępne jako JSON - pomijam")
     return []
 
 
