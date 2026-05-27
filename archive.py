@@ -254,15 +254,43 @@ def generate_archive_html(
     filename: str,
 ):
     """
-    Generuje uproszczony HTML archiwum sezonu.
-    Zawiera tylko zakładki: Zawodnicy, Liga CMF, Sezon.
+    Generuje HTML archiwum sezonu z pełną zakładką Zawodnicy (identyczna jak w dashboardzie).
+    Zawiera zakładki: Zawodnicy, Liga CMF, Sezon.
     """
-    # Przygotuj dane dla JS
-    players_json = json.dumps(players[:200], ensure_ascii=False)  # Limit do 200 zawodników
+    # Przygotuj dane dla JS - zawodnicy z formą (ostatnie 5 kolejek)
+    # Oblicz formę dla każdego zawodnika (średnia z ostatnich 5 kolejek)
+    players_with_form = []
+    for p in players:
+        player_copy = dict(p)
+        rounds = p.get("rounds", [])
+        # Weź ostatnie 5 kolejek z danymi
+        last_5 = rounds[-5:] if len(rounds) >= 5 else rounds
+        form_data = []
+        for r in last_5:
+            form_data.append({
+                "r": r.get("round", 0),
+                "pts": r.get("points", 0),
+                "p": r.get("played", False)
+            })
+        player_copy["form"] = form_data
+        # Oblicz points_per_price jeśli brak
+        if "points_per_price" not in player_copy:
+            price = player_copy.get("price", 0)
+            pts = player_copy.get("total_points", 0)
+            player_copy["points_per_price"] = round(pts / price, 1) if price > 0 else 0
+        players_with_form.append(player_copy)
+    
+    players_json = json.dumps(players_with_form, ensure_ascii=False)
     league_teams_json = json.dumps(league_teams_detail, ensure_ascii=False)
     league_history_json = json.dumps(league_history or {"rounds": []}, ensure_ascii=False)
 
-    # CSS dla archiwum (uproszczony)
+    # CSS dla archiwum - pełny zgodny z design.md i scraper.py
+    # Kolory z design.md:
+    # - Canvas Black: #131313 (tło)
+    # - Jelly Mint: #3cffd0 (akcent)
+    # - Verge Ultraviolet: #5200ff (akcent)
+    # - Surface Slate: #2d2d2d (karty)
+    # - Secondary Text: #949494 (metadane)
     archive_css = """
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { background: #131313; }
@@ -274,8 +302,8 @@ def generate_archive_html(
       padding: 24px 16px;
     }
     .container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .header-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
     .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
     .header .sub { font-size: 12px; color: #949494; margin: 0; }
     .archive-badge {
@@ -291,6 +319,8 @@ def generate_archive_html(
       text-decoration: none;
       font-size: 14px;
       font-weight: 600;
+      margin-bottom: 20px;
+      display: inline-block;
     }
     .back-link:hover { color: #3860be; }
     .tabs { display: flex; gap: 4px; border-bottom: 1px solid #2d2d2d; flex-wrap: wrap; margin-bottom: 16px; }
@@ -304,6 +334,34 @@ def generate_archive_html(
     .tab:hover { color: #3860be; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+
+    /* Filtry pozycji i scope - zgodne z scraper.py */
+    .filters-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .pos-filters { display: flex; gap: 4px; }
+    .pos-btn {
+      background: transparent; border: 1px solid #3cffd0; color: #3cffd0;
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .pos-btn.active { border-color: transparent; color: #131313; }
+    .pos-btn.active[data-pos="ALL"] { background: #3cffd0; }
+    .pos-btn.active[data-pos="BR"] { background: #f59e0b; }
+    .pos-btn.active[data-pos="OBR"] { background: #3b82f6; }
+    .pos-btn.active[data-pos="POM"] { background: #10b981; }
+    .pos-btn.active[data-pos="NAP"] { background: #ef4444; }
+    .pos-btn:hover { opacity: 0.8; }
+    
+    /* Scope filters */
+    .scope-filters { display: flex; gap: 4px; margin-left: auto; }
+    .scope-btn {
+      background: transparent; border: 1px solid #5200ff; color: #5200ff;
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .scope-btn.active { background: #5200ff; color: #ffffff; border-color: #5200ff; }
+    .scope-btn:hover { opacity: 0.8; }
+
+    /* Tabela danych */
     .data-table { background: #2d2d2d; border-radius: 12px; overflow: hidden; width: 100%; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     thead tr { background: #131313; }
@@ -318,52 +376,288 @@ def generate_archive_html(
     .text-center { text-align: center; }
     .text-left { text-align: left; }
     .fw-700 { font-weight: 700; }
+    .fw-600 { font-weight: 600; }
     .c-muted { color: #949494; }
+    .c-dim { color: #64748b; }
     .empty-msg { padding: 40px; text-align: center; color: #949494; }
+
+    /* Section title */
+    .section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .section-title h2 { font-size: 18px; font-weight: 700; margin: 0; }
+    .section-title .line { flex: 1; height: 1px; background: #2d2d2d; }
+
+    /* Sortowalne kolumny */
+    .sortable { cursor: pointer; user-select: none; }
+    .sortable:hover { color: #3cffd0 !important; }
+
+    /* Diff badges */
+    .diff-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .diff-pos { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .diff-neg { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .diff-zero { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+
+    /* Form chart */
+    .form-chart { display: flex; align-items: flex-end; gap: 2px; height: 20px; }
+    .form-chart.mini { height: 12px; }
+    .form-bar { width: 4px; border-radius: 2px; min-height: 2px; position: relative; }
+    .form-bar.not-played { opacity: 0.3; }
+    .form-val { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-size: 9px; color: #fff; opacity: 0; transition: opacity 0.2s; }
+    .form-bar:hover .form-val { opacity: 1; }
+    .form-rnd { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); font-size: 8px; color: #64748b; }
+
+    /* Bar chart for ownership */
+    .bar-wrap { display: flex; align-items: center; gap: 6px; }
+    .bar-bg { flex: 1; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .bar-val { font-size: 11px; color: #94a3b8; min-width: 36px; text-align: right; }
+
+    /* Clickable cells */
+    .clickable { cursor: pointer; }
+    .clickable:hover { color: #3cffd0; }
+
+    /* Detail panel */
+    .detail-panel { background: #0f172a; padding: 12px; border-radius: 8px; }
+    .detail-section { margin-bottom: 8px; }
+    .ds-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+    .roster-chip { display: inline-flex; align-items: center; gap: 4px; background: #1e293b; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin: 2px; }
+    .rc-badge { font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: 700; }
+    .rc-cap { background: #fbbf24; color: #000; }
+    .rc-res { background: #64748b; color: #fff; }
+    .rc-xi { background: #3cffd0; color: #000; }
+
+    /* Linki */
+    .player-link { color: #3cffd0; text-decoration: none; }
+    .player-link:hover { color: #3860be; }
+
+    /* Highlight wiersza */
+    .highlight { background: rgba(60, 255, 208, 0.1); }
+
+    /* Team list */
     .team-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
     .team-list-item { background: #2d2d2d; border: 1px solid #3cffd0; border-radius: 8px; }
     .team-list-header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; }
     .team-list-rank { font-size: 13px; font-weight: 800; color: #3cffd0; min-width: 32px; }
     .team-list-name { font-size: 14px; font-weight: 700; color: #ffffff; flex: 1; text-transform: capitalize; }
     .team-list-pts { font-size: 12px; color: #949494; font-weight: 600; }
+
+    /* Footer */
     .footer { text-align: center; margin-top: 32px; color: #949494; font-size: 12px; }
+
+    /* Season wrap */
     .season-wrap { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
     .season-chart svg { display: block; }
 
-    /* Dodatkowe style dla pełnej tabeli drużyn */
-    .section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .section-title h2 { font-size: 18px; font-weight: 700; margin: 0; }
-    .section-title .line { flex: 1; height: 1px; background: #2d2d2d; }
+    /* View toggle */
     .view-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
     .view-btn { padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; }
     .view-btn.active { background: #3b82f6; color: #fff; }
-    .sortable { cursor: pointer; }
-    .sortable:hover { color: #3cffd0 !important; }
-    .highlight { background: rgba(60, 255, 208, 0.1); }
+
+    /* Captain badge */
     .captain-badge { background: #fbbf24; color: #000; padding: 1px 5px; border-radius: 3px; font-size: 10px; font-weight: 700; }
-    .diff-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-    .diff-pos { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-    .diff-neg { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-    .diff-zero { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
-    .form-chart { display: flex; align-items: flex-end; gap: 2px; height: 20px; }
-    .form-chart.mini { height: 12px; }
-    .form-bar { width: 4px; border-radius: 2px; min-height: 2px; }
-    .form-bar.not-played { opacity: 0.3; }
-    .player-link { color: #3cffd0; text-decoration: none; }
-    .player-link:hover { color: #3860be; }
-    .c-dim { color: #64748b; }
+
+    /* Fantasy theme (light) */
+    html.theme-fantasy { background: #f5f5f5; }
+    html.theme-fantasy body { background: #f5f5f5; color: #131313; }
+    html.theme-fantasy .header h1 { color: #131313; }
+    html.theme-fantasy .header .sub { color: #5a5a5a; }
+    html.theme-fantasy .archive-badge { background: #309875; }
+    html.theme-fantasy .back-link { color: #309875; }
+    html.theme-fantasy .back-link:hover { color: #3860be; }
+    html.theme-fantasy .tabs { border-bottom-color: #e0e0e0; }
+    html.theme-fantasy .tab { color: #5a5a5a; }
+    html.theme-fantasy .tab.active { background: #ffffff; border-bottom-color: #309875; color: #131313; }
+    html.theme-fantasy .tab:hover { color: #3860be; }
+    html.theme-fantasy .pos-btn { border-color: #309875; color: #309875; }
+    html.theme-fantasy .pos-btn.active[data-pos="ALL"] { background: #309875; color: #ffffff; }
+    html.theme-fantasy .pos-btn.active[data-pos="BR"] { background: #f59e0b; color: #131313; }
+    html.theme-fantasy .pos-btn.active[data-pos="OBR"] { background: #3b82f6; color: #ffffff; }
+    html.theme-fantasy .pos-btn.active[data-pos="POM"] { background: #10b981; color: #ffffff; }
+    html.theme-fantasy .pos-btn.active[data-pos="NAP"] { background: #ef4444; color: #ffffff; }
+    html.theme-fantasy .scope-btn { border-color: #5200ff; color: #5200ff; }
+    html.theme-fantasy .scope-btn.active { background: #5200ff; color: #ffffff; }
+    html.theme-fantasy .data-table { background: #ffffff; }
+    html.theme-fantasy table { background: #ffffff; }
+    html.theme-fantasy thead tr { background: #f5f5f5; }
+    html.theme-fantasy th { color: #5a5a5a; }
+    html.theme-fantasy td { border-top-color: #e0e0e0; }
+    html.theme-fantasy .c-muted { color: #5a5a5a; }
+    html.theme-fantasy .c-dim { color: #949494; }
+    html.theme-fantasy .section-title .line { background: #e0e0e0; }
+    html.theme-fantasy .sortable:hover { color: #309875 !important; }
+    html.theme-fantasy .player-link { color: #309875; }
+    html.theme-fantasy .player-link:hover { color: #3860be; }
+    html.theme-fantasy .team-list-item { border-color: #309875; }
+    html.theme-fantasy .team-list-name { color: #131313; }
+    html.theme-fantasy .team-list-pts { color: #5a5a5a; }
+    html.theme-fantasy .footer { color: #5a5a5a; }
+    html.theme-fantasy .detail-panel { background: #f5f5f5; }
+    html.theme-fantasy .roster-chip { background: #e0e0e0; }
+    html.theme-fantasy .bar-bg { background: #e0e0e0; }
     """
 
-    # JS dla archiwum (uproszczony)
+    # JS dla archiwum - pełna funkcjonalność zakładki Zawodnicy (identyczna jak w scraper.py)
     archive_js = f"""
+    // Dane zawodników i drużyn
     const PLAYERS = {players_json};
     const LEAGUE_TEAMS = {league_teams_json};
     const LEAGUE_HISTORY = {league_history_json};
+    
+    // Mapowanie pozycji
     const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
-    const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP'}};
+    const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
+      Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
     const DUETS_DATA = [];  // Archiwum nie zawiera danych o duetach
 
-    // Średnie punkty per pozycja — globalne (z wszystkich zawodników)
+    // Stan aplikacji
+    let tab = 'players';
+    let pos = 'ALL';
+    let scope = 'all';
+    let selectedTeam = '';
+    let currentTeamsView = 'teams';
+    
+    // Konfiguracja sortowania
+    const sorts = {{
+      players: {{col:'total_points', dir:'desc'}},
+      teams: {{col:'_pos_order', dir:'asc'}},
+      teams_list: {{col:'total_pts', dir:'desc'}},
+      duets_list: {{col:'total_pts', dir:'desc'}}
+    }};
+
+    // Funkcje pomocnicze
+    function num(v) {{
+      if (v === null || v === undefined || v === '') return 0;
+      const n = typeof v === 'string' ? parseFloat(v) : v;
+      return isNaN(n) ? 0 : n;
+    }}
+    
+    function bar(val, max, color) {{
+      const w = Math.min(val / max * 100, 100);
+      return '<div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:'+w+'%;background:'+color+'"></div></div><span class="bar-val">'+val.toFixed(1)+'%</span></div>';
+    }}
+    
+    function posBadge(p) {{
+      const k = POS_ID[p] || p;
+      return '<span class="pos-badge pos-'+k+'">'+(POS_MAP[k]||POS_MAP[p]||p)+'</span>';
+    }}
+    
+    function arrow(tabName, col) {{
+      const s = sorts[tabName];
+      return s.col === col ? (s.dir === 'desc' ? ' ▼' : ' ▲') : '';
+    }}
+    
+    function filterPos(data) {{
+      if (pos === 'ALL') return data;
+      return data.filter(p => {{
+        const pk = POS_ID[p.position] || POS_ID[p.position_id] || p.position;
+        return pk === pos;
+      }});
+    }}
+    
+    function sortData(data, tabName) {{
+      const s = sorts[tabName];
+      return [...data].sort((a, b) => {{
+        let av = a[s.col], bv = b[s.col];
+        if (s.col === 'position' || s.col === 'position_id') {{
+          const order = {{BR:1,OBR:2,POM:3,NAP:4,'1':1,'2':2,'3':3,'4':4,Bramkarz:1,'Obrońca':2,Pomocnik:3,Napastnik:4}};
+          av = order[av] || 5; bv = order[bv] || 5;
+        }} else if (s.col === 'name' || s.col === 'team') {{
+          av = (av || '').toLowerCase(); bv = (bv || '').toLowerCase();
+          if (av < bv) return s.dir === 'desc' ? 1 : -1;
+          if (av > bv) return s.dir === 'desc' ? -1 : 1;
+          return 0;
+        }} else {{
+          av = num(av); bv = num(bv);
+        }}
+        if (av < bv) return s.dir === 'desc' ? 1 : -1;
+        if (av > bv) return s.dir === 'desc' ? -1 : 1;
+        return 0;
+      }});
+    }}
+    
+    function formAvgNum(form) {{
+      if (!form || !form.length) return 0;
+      const played = form.filter(f => f.p !== false);
+      if (!played.length) return 0;
+      return played.reduce((s,f) => s + (f.pts||0), 0) / played.length;
+    }}
+
+    function diffBadge(pts, avg) {{
+      if (!avg) return '<span class="diff-badge diff-zero">—</span>';
+      const d = pts - avg;
+      const cls = d > 0 ? 'diff-pos' : d < 0 ? 'diff-neg' : 'diff-zero';
+      return '<span class="diff-badge '+cls+'">'+(d>0?'+':'')+d.toFixed(0)+'</span>';
+    }}
+    
+    function nameCell(name, pid, style, prefix) {{
+      const attr = pid ? ' data-pid="'+pid+'"' : '';
+      return '<td class="clickable roster-trigger"'+attr+' style="cursor:pointer;'+(style||'')+'">'+(prefix||'')+name+' <span style="font-size:10px;color:#64748b">▸</span></td>';
+    }}
+    
+    function formChart(form, mini) {{
+      if (!form || !form.length) return '<span class="c-dim" style="font-size:11px">—</span>';
+      const SCALE = 15;
+      const MAX_H = mini ? 20 : 40;
+      let h = '<div class="form-chart'+(mini ? ' mini' : '')+'">';
+      form.forEach(f => {{
+        const pts = f.pts || 0;
+        const played = f.p !== false;
+        const ht = Math.max(Math.abs(pts) / SCALE * MAX_H, 2);
+        const c = !played ? '#334155' : pts >= 8 ? '#22d3ee' : pts >= 4 ? '#10b981' : pts >= 0 ? '#64748b' : '#ef4444';
+        const np = !played ? ' not-played' : '';
+        h += '<div class="form-bar'+np+'" style="height:'+ht+'px;background:'+c+'">';
+        h += '<span class="form-val">'+(played ? pts : '—')+'</span>';
+        h += '<span class="form-rnd">K'+f.r+'</span>';
+        h += '</div>';
+      }});
+      h += '</div>';
+      return h;
+    }}
+    
+    function detailRow(pid, colspan) {{
+      // W archiwum nie mamy danych ROSTERS, więc pokazujemy podstawowe info
+      const p = PLAYERS.find(x => x.player_id == pid);
+      if (!p) {{
+        return '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-panel"><span class="c-dim" style="font-size:12px">Brak szczegółowych danych</span></div></td></tr>';
+      }}
+      let h = '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-panel">';
+      h += '<div class="detail-section">';
+      h += '<span class="ds-label">Forma (ostatnie 5 kolejek)</span>';
+      h += formChart(p.form, false);
+      h += '</div>';
+      if (p.rounds && p.rounds.length) {{
+        h += '<div class="detail-section" style="margin-top:12px">';
+        h += '<span class="ds-label">Historia punktów</span>';
+        h += '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px">';
+        const last5 = p.rounds.slice(-5);
+        last5.forEach(r => {{
+          const pts = r.points || 0;
+          const color = pts >= 8 ? '#22d3ee' : pts >= 4 ? '#10b981' : pts >= 0 ? '#64748b' : '#ef4444';
+          h += '<span style="background:#1e293b;padding:4px 8px;border-radius:4px">K'+r.round+': <b style="color:'+color+'">'+pts+'</b></span>';
+        }});
+        h += '</div></div>';
+      }}
+      h += '</div></td></tr>';
+      return h;
+    }}
+    
+    function attachDetailClicks() {{
+      document.querySelectorAll('.roster-trigger').forEach(td => {{
+        td.onclick = function() {{
+          const pid = this.dataset.pid || '';
+          const row = this.closest('tr');
+          const next = row.nextElementSibling;
+          if (next && next.classList.contains('detail-row')) {{
+            next.remove();
+            return;
+          }}
+          document.querySelectorAll('.detail-row').forEach(r => r.remove());
+          const cols = row.querySelectorAll('td').length;
+          row.insertAdjacentHTML('afterend', detailRow(pid, cols));
+        }};
+      }});
+    }}
+
+    // Oblicz średnie punkty per pozycja — globalne
     const POS_AVGS = {{}};
     (function() {{
       const sums = {{}}, counts = {{}};
@@ -378,17 +672,17 @@ def generate_archive_html(
       for (const k in sums) POS_AVGS[k] = sums[k] / counts[k];
     }})();
 
-    // Średnie punkty per pozycja — liga (z drużyn ligowych)
+    // Oblicz średnie punkty per pozycja — liga
     const LEAGUE_POS_AVGS = {{}};
     (function() {{
       const seen = {{}}, sums = {{}}, counts = {{}};
       LEAGUE_TEAMS.forEach(t => {{
         if (t.players) t.players.forEach(p => {{
-          const pid = p.pid;
+          const pid = p.pid || p.player_id;
           if (seen[pid]) return;
           seen[pid] = true;
           const pk = POS_ID[p.pos] || p.pos || '';
-          const pts = p.pts || 0;
+          const pts = p.pts || p.total_points || 0;
           if (pts > 0 && pk) {{
             sums[pk] = (sums[pk] || 0) + pts;
             counts[pk] = (counts[pk] || 0) + 1;
@@ -397,44 +691,70 @@ def generate_archive_html(
       }});
       for (const k in sums) LEAGUE_POS_AVGS[k] = sums[k] / counts[k];
     }})();
-
-    // Stan dla renderTeams
-    let currentTeamsView = 'teams';
-    let selectedTeam = null;
-    const sorts = {{
-      teams: {{col: 'pts', dir: 'desc'}},
-      teams_list: {{col: 'total_pts', dir: 'desc'}},
-      duets: {{col: 'total_pts', dir: 'desc'}},
-      duets_list: {{col: 'total_pts', dir: 'desc'}}
-    }};
-
-    // Funkcje pomocnicze
-    function num(v) {{ return parseFloat(String(v).replace(/[^0-9.-]/g,'')) || 0; }}
-    function arrow(tab, col) {{ return sorts[tab].col === col ? (sorts[tab].dir === 'desc' ? ' ▼' : ' ▲') : ''; }}
-    function formAvgNum(f) {{ if (!f || !f.length) return 0; const played = f.filter(x => x.p !== false); return played.length ? played.reduce((s,x) => s + (x.pts||0), 0) / played.length : 0; }}
-
-    function diffBadge(pts, avg) {{
-      if (!avg) return '<span class="diff-badge diff-zero">—</span>';
-      const d = pts - avg;
-      const cls = d > 0 ? 'diff-pos' : d < 0 ? 'diff-neg' : 'diff-zero';
-      return '<span class="diff-badge '+cls+'">'+(d>0?'+':'')+d.toFixed(0)+'</span>';
-    }}
-
-    function nameCell(name, pid, style, prefix) {{
-      return '<td style="'+style+'">'+prefix+'<a href="#" class="player-link" data-pid="'+pid+'">'+name+'</a></td>';
-    }}
-
-    function formChart(f, mini) {{
-      if (!f || !f.length) return '<span style="color:#64748b">—</span>';
-      let h = '<div class="form-chart'+(mini?' mini':'')+'">';
-      f.forEach(ff => {{
-        const pts = ff.pts || 0;
-        const played = ff.p !== false;
-        const color = !played ? '#334155' : pts >= 8 ? '#22d3ee' : pts >= 4 ? '#10b981' : pts >= 0 ? '#64748b' : '#ef4444';
-        const height = Math.max(Math.abs(pts) / 15 * (mini?12:20), 2);
-        h += '<div class="form-bar'+(played?'':' not-played')+'" style="height:'+height+'px;background:'+color+'"></div>';
+    
+    // Funkcja renderPlayers - identyczna jak w scraper.py
+    function renderPlayers() {{
+      let data = [...PLAYERS];
+      if (pos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === pos);
+      if (!data.length) return '<div class="empty-msg">Brak danych</div>';
+      
+      const hasLeague = LEAGUE_TEAMS.length > 0 && Object.keys(LEAGUE_POS_AVGS).length > 0;
+      
+      let h = '<div class="section-title"><span style="font-size:22px">⚽</span><h2>Zawodnicy</h2><div class="line"></div></div>';
+      h += '<div class="data-table"><table><thead><tr>';
+      h += '<th class="text-left">#</th>';
+      h += '<th class="text-left sortable" data-tab="players" data-col="name">Zawodnik'+arrow('players','name')+'</th>';
+      h += '<th class="text-left sortable" data-tab="players" data-col="team">Drużyna'+arrow('players','team')+'</th>';
+      h += '<th class="text-center sortable" data-tab="players" data-col="position">Poz'+arrow('players','position')+'</th>';
+      h += '<th class="text-right sortable" data-tab="players" data-col="price">Cena'+arrow('players','price')+'</th>';
+      h += '<th class="text-right sortable" data-tab="players" data-col="total_points">Punkty'+arrow('players','total_points')+'</th>';
+      h += '<th class="text-center sortable" data-tab="players" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('players','_diff_global')+'</th>';
+      if (hasLeague) {{
+        h += '<th class="text-center sortable" data-tab="players" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('players','_diff_league')+'</th>';
+      }}
+      h += '<th class="text-right sortable" data-tab="players" data-col="points_per_price">Pkt/Cena'+arrow('players','points_per_price')+'</th>';
+      h += '<th class="text-center" style="min-width:80px">Forma</th>';
+      h += '<th class="text-right sortable" data-tab="players" data-col="_form_avg" title="Średnia punktów z rozegranych meczów z ostatnich 5 kolejek">Średnia'+arrow('players','_form_avg')+'</th>';
+      h += '<th class="text-right sortable" data-tab="players" data-col="popularity_pct" title="Oficjalny % popularności z API Fantasy Ekstraklasa">Pop.'+arrow('players','popularity_pct')+'</th>';
+      h += '</tr></thead><tbody>';
+      
+      // Dodaj dane formy i diff do sortowania
+      data.forEach(p => {{
+        const f = p.form || [];
+        const played = f.filter(x => x.p !== false);
+        p._form_avg = played.length ? played.reduce((s,x) => s + (x.pts||0), 0) / played.length : 0;
+        const pk = POS_ID[p.position] || p.position || '';
+        const pts = p.total_points || 0;
+        p._diff_global = (POS_AVGS[pk] && pts > 0) ? Math.round((pts - POS_AVGS[pk]) * 10) / 10 : 0;
+        p._diff_league = (LEAGUE_POS_AVGS[pk] && pts > 0) ? Math.round((pts - LEAGUE_POS_AVGS[pk]) * 10) / 10 : 0;
       }});
-      return h + '</div>';
+      data = sortData(data, 'players');
+      
+      data.forEach((p, i) => {{
+        const pts = p.total_points || 0, price = p.price || 0, ppp = p.points_per_price || 0;
+        const ptsC = pts >= 35 ? '#22d3ee' : pts >= 25 ? '#e2e8f0' : '#94a3b8';
+        const pppC = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
+        const pk = POS_ID[p.position] || p.position || '';
+        h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td>';
+        h += nameCell(p.name, p.player_id, 'font-weight:600');
+        h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
+        h += '<td class="text-center">'+posBadge(pk)+'</td>';
+        h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
+        h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
+        h += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
+        if (hasLeague) {{
+          h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
+        }}
+        h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
+        h += '<td class="text-center">'+formChart(p.form, true)+'</td>';
+        const favg = p._form_avg;
+        const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
+        h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
+        h += '<td class="text-right c-dim" style="font-size:13px">'+(p.popularity_pct || '—')+'</td>';
+        h += '</tr>';
+      }});
+      h += '</tbody></table></div>';
+      return h;
     }}
     """
 
@@ -467,22 +787,16 @@ def generate_archive_html(
 
   <!-- Zakładka Zawodnicy -->
   <div id="tab-players" class="tab-content active">
-    <div class="data-table">
-      <table>
-        <thead>
-          <tr>
-            <th class="sortable" data-col="name">Zawodnik</th>
-            <th>Drużyna</th>
-            <th class="text-center">Pozycja</th>
-            <th class="text-right sortable" data-col="total_points">Punkty</th>
-            <th class="text-right sortable" data-col="price">Cena</th>
-            <th class="text-right">Średnia</th>
-          </tr>
-        </thead>
-        <tbody id="players-body">
-        </tbody>
-      </table>
+    <div class="filters-row">
+      <div class="pos-filters">
+        <button class="pos-btn active" data-pos="ALL">ALL</button>
+        <button class="pos-btn" data-pos="BR">GK</button>
+        <button class="pos-btn" data-pos="OBR">DEF</button>
+        <button class="pos-btn" data-pos="POM">MID</button>
+        <button class="pos-btn" data-pos="NAP">FWD</button>
+      </div>
     </div>
+    <div id="players-content"></div>
   </div>
 
   <!-- Zakładka Liga CMF -->
@@ -502,71 +816,236 @@ def generate_archive_html(
 
 <script>{archive_js}</script>
 <script>
-// Obsługa zakładek
-document.querySelectorAll('.tab').forEach(tab => {{
-  tab.addEventListener('click', () => {{
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+// Funkcja render - główna funkcja renderująca zawartość zakładek
+function render() {{
+  // Renderuj zawartość zakładki Zawodnicy
+  const playersContent = document.getElementById('players-content');
+  if (playersContent) {{
+    playersContent.innerHTML = tab === 'players' ? renderPlayers() : '';
+  }}
+  
+  // Renderuj zawartość zakładki Liga CMF
+  const leagueContent = document.getElementById('league-content');
+  if (leagueContent) {{
+    leagueContent.innerHTML = tab === 'league' ? renderTeams() : '';
+  }}
+  
+  // Renderuj zawartość zakładki Sezon
+  const seasonContent = document.getElementById('season-content');
+  if (seasonContent) {{
+    seasonContent.innerHTML = tab === 'season' ? renderSeason() : '';
+  }}
+  
+  // Aktualizuj klasy aktywnych zakładek
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-' + tab));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  
+  // Aktualizuj aktywne filtry pozycji
+  document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
+  
+  // Podłącz obsługę kliknięć w sortowalne nagłówki
+  document.querySelectorAll('.sortable').forEach(th => {{
+    th.onclick = () => {{
+      const t = th.dataset.tab, col = th.dataset.col;
+      if (sorts[t].col === col) sorts[t].dir = sorts[t].dir === 'desc' ? 'asc' : 'desc';
+      else {{ sorts[t].col = col; sorts[t].dir = 'desc'; }}
+      render();
+    }};
   }});
-}});
-
-// Renderuj zawodników
-const playersBody = document.getElementById('players-body');
-PLAYERS.slice(0, 100).forEach(p => {{
-  const pos = POS_ID[p.position] || p.position || '';
-  const posClass = 'pos-' + (pos === 'BR' ? '1' : pos === 'OBR' ? '2' : pos === 'POM' ? '3' : pos === 'NAP' ? '4' : '');
-  const posLabel = POS_MAP[pos] || pos;
-  const avg = POS_AVGS[pos] || 0;
-  const row = document.createElement('tr');
-  row.innerHTML = `
-    ${{nameCell(p.name, p.player_id, '', '')}}
-    <td>${{p.team || ''}}</td>
-    <td class="text-center"><span class="pos-badge ${{posClass}}">${{posLabel}}</span></td>
-    <td class="text-right fw-700">${{p.total_points || 0}}</td>
-    <td class="text-right">${{(p.price || 0).toFixed(2)}}</td>
-    <td class="text-right c-muted">${{diffBadge(p.total_points / 15, avg)}}</td>
-  `;
-  playersBody.appendChild(row);
-}});
-
-// Renderuj ligę CMF
-const leagueContent = document.getElementById('league-content');
-if (LEAGUE_TEAMS && LEAGUE_TEAMS.length > 0) {{
-  let html = '<div class="team-list">';
-  LEAGUE_TEAMS.forEach((t, i) => {{
-    html += `
-      <div class="team-list-item">
-        <div class="team-list-header">
-          <span class="team-list-rank">${{i + 1}}</span>
-          <span class="team-list-name">${{t.team_name || t.slug || 'Drużyna'}}</span>
-          <span class="team-list-pts">${{t.total_points || 0}} pkt</span>
-        </div>
-      </div>`;
+  
+  // Podłącz obsługę kliknięć w wiersze drużyn (expand/collapse)
+  document.querySelectorAll('tr[data-teamslug]').forEach(el => {{
+    el.onclick = (e) => {{
+      if (e.target.closest('a')) return;
+      const slug = el.dataset.teamslug;
+      selectedTeam = selectedTeam === slug ? '' : slug;
+      render();
+    }};
   }});
-  html += '</div>';
-  leagueContent.innerHTML = html;
-}} else {{
-  leagueContent.innerHTML = '<div class="empty-msg">Brak danych ligi CMF</div>';
+  
+  // Podłącz obsługę kliknięć w szczegóły zawodników
+  attachDetailClicks();
 }}
 
-// Renderuj sezon
-const seasonContent = document.getElementById('season-content');
-if (LEAGUE_HISTORY && LEAGUE_HISTORY.rounds && LEAGUE_HISTORY.rounds.length > 0) {{
-  let html = '<div class="season-wrap">';
-  html += '<h3>Historia sezonu</h3>';
-  html += '<div class="season-chart">';
+// Funkcja renderTeams - renderuje zakładkę Liga CMF
+function renderTeams() {{
+  if (!LEAGUE_TEAMS.length) return '<div class="empty-msg">Brak danych o drużynach ligi</div>';
+  
+  // Sortowanie drużyn
+  const tls = sorts.teams_list;
+  const sortedTeams = [...LEAGUE_TEAMS].sort((a, b) => {{
+    let av, bv;
+    if (tls.col === 'name') {{
+      av = (a.display_name || a.slug || '').toLowerCase();
+      bv = (b.display_name || b.slug || '').toLowerCase();
+      if (av < bv) return tls.dir === 'desc' ? 1 : -1;
+      if (av > bv) return tls.dir === 'desc' ? -1 : 1;
+      return 0;
+    }}
+    av = num(a[tls.col]); bv = num(b[tls.col]);
+    if (av < bv) return tls.dir === 'desc' ? 1 : -1;
+    if (av > bv) return tls.dir === 'desc' ? -1 : 1;
+    return 0;
+  }});
+  
+  function tlArrow(col) {{
+    return tls.col === col ? (tls.dir === 'desc' ? ' ▼' : ' ▲') : '';
+  }}
+  
+  let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Liga CMF</h2><div class="line"></div></div>';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-center sortable" data-tab="teams_list" data-col="hockey_pos" style="width:50px">#'+tlArrow('hockey_pos')+'</th>';
+  h += '<th class="text-left sortable" data-tab="teams_list" data-col="name">Drużyna'+tlArrow('name')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="autumn_pts">Jesień'+tlArrow('autumn_pts')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="spring_pts">Wiosna'+tlArrow('spring_pts')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="total_pts" style="font-size:13px;font-weight:800">SUMA'+tlArrow('total_pts')+'</th>';
+  h += '<th class="text-center sortable" data-tab="teams_list" data-col="rank_change">Zmiana'+tlArrow('rank_change')+'</th>';
+  h += '</tr></thead><tbody>';
+  
+  sortedTeams.forEach((t, i) => {{
+    const pos = t.hockey_pos || (i + 1);
+    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+    const tName = t.display_name || (t.slug ? t.slug.replace(/-/g,' ') : 'Drużyna');
+    const isOpen = t.slug === selectedTeam;
+    const hasPlayers = t.players && t.players.length > 0;
+    
+    let rowStyle = hasPlayers ? 'cursor:pointer' : '';
+    
+    h += '<tr'+(rowStyle ? ' style="'+rowStyle+'"' : '')+' data-teamslug="'+t.slug+'">';
+    h += '<td class="text-center" style="font-size:'+(pos<=3?'18px':'14px')+'">' + medal + '</td>';
+    h += '<td style="font-weight:600">' + tName + (hasPlayers ? ' <span style="font-size:10px;color:#475569">'+(isOpen?'▼':'▶')+'</span>' : '') + '</td>';
+    h += '<td class="text-right" style="color:#94a3b8">' + (t.autumn_pts||0) + '</td>';
+    h += '<td class="text-right" style="color:#94a3b8">' + (t.spring_pts||0) + '</td>';
+    h += '<td class="text-right" style="font-weight:800;font-size:15px">' + (t.total_pts||0) + '</td>';
+    
+    const rc = t.rank_change || 0;
+    let changeHtml = '';
+    if (rc > 0) changeHtml = '<span style="color:#10b981">▲' + rc + '</span>';
+    else if (rc < 0) changeHtml = '<span style="color:#ef4444">▼' + Math.abs(rc) + '</span>';
+    else changeHtml = '<span style="color:#64748b">–</span>';
+    h += '<td class="text-center">' + changeHtml + '</td>';
+    h += '</tr>';
+    
+    // Rozwijany panel ze składem
+    if (isOpen && hasPlayers) {{
+      const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
+      
+      // Przygotuj dane zawodników
+      t.players.forEach(p => {{
+        const pk = POS_ID[p.pos] || p.pos || '';
+        p._pk = pk;
+        p._pos_order = POS_ORDER[pk] || 99;
+        p._diff_global = (POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - POS_AVGS[pk]) * 10) / 10 : 0;
+        p._diff_league = (LEAGUE_POS_AVGS[pk] && (p.pts||0) > 0) ? Math.round(((p.pts||0) - LEAGUE_POS_AVGS[pk]) * 10) / 10 : 0;
+        p._form_avg = formAvgNum(p.form);
+      }});
+      
+      // Sortuj zawodników
+      const s = sorts.teams;
+      const sortedPlayers = [...t.players].sort((a,b) => {{
+        let av = a[s.col], bv = b[s.col];
+        if (typeof av === 'string') {{
+          if (av < bv) return s.dir === 'desc' ? 1 : -1;
+          if (av > bv) return s.dir === 'desc' ? -1 : 1;
+          return 0;
+        }}
+        av = num(av); bv = num(bv);
+        if (av < bv) return s.dir === 'desc' ? 1 : -1;
+        if (av > bv) return s.dir === 'desc' ? -1 : 1;
+        return 0;
+      }});
+      
+      h += '<tr><td colspan="6" style="padding:0;background:#0f172a">';
+      h += '<div class="data-table" style="padding:4px 12px 12px">';
+      h += '<table><thead><tr>';
+      h += '<th class="text-left">#</th>';
+      h += '<th class="text-left sortable" data-tab="teams" data-col="name">Zawodnik'+arrow('teams','name')+'</th>';
+      h += '<th class="text-center sortable" data-tab="teams" data-col="_pos_order">Poz'+arrow('teams','_pos_order')+'</th>';
+      h += '<th class="text-right sortable" data-tab="teams" data-col="price">Cena'+arrow('teams','price')+'</th>';
+      h += '<th class="text-right sortable" data-tab="teams" data-col="pts">Punkty'+arrow('teams','pts')+'</th>';
+      h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_global">±Avg'+arrow('teams','_diff_global')+'</th>';
+      h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_league">±Liga'+arrow('teams','_diff_league')+'</th>';
+      h += '<th class="text-center" style="min-width:80px">Forma</th>';
+      h += '<th class="text-right sortable" data-tab="teams" data-col="_form_avg">Średnia'+arrow('teams','_form_avg')+'</th>';
+      h += '</tr></thead><tbody>';
+      
+      sortedPlayers.forEach((p, idx) => {{
+        const pk = p._pk;
+        const pts = p.pts || 0;
+        const price = p.price || 0;
+        let nameStyle = 'font-weight:600';
+        if (p.C) nameStyle += ';color:#fbbf24';
+        
+        h += '<tr><td class="c-muted fw-600">'+(idx+1)+'</td>';
+        h += nameCell(p.name, p.pid, nameStyle, p.C ? '<span class="captain-badge" style="margin-right:4px">C</span> ' : '');
+        h += '<td class="text-center">'+posBadge(pk)+'</td>';
+        h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
+        h += '<td class="text-right fw-700">'+pts+'</td>';
+        h += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
+        h += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
+        const favg = p._form_avg;
+        const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
+        h += '<td class="text-center">'+formChart(p.form, true)+'</td>';
+        h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
+        h += '</tr>';
+      }});
+      
+      h += '</tbody></table></div>';
+      h += '</td></tr>';
+    }}
+  }});
+  
+  h += '</tbody></table></div>';
+  return h;
+}}
+
+// Funkcja renderSeason - renderuje zakładkę Sezon
+function renderSeason() {{
+  if (!LEAGUE_HISTORY || !LEAGUE_HISTORY.rounds || LEAGUE_HISTORY.rounds.length === 0) {{
+    return '<div class="empty-msg">Brak danych sezonu</div>';
+  }}
+  
+  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Historia sezonu</h2><div class="line"></div></div>';
+  h += '<div class="season-wrap">';
+  h += '<div class="data-table"><table><thead><tr>';
+  h += '<th class="text-center">Kolejka</th>';
+  h += '<th class="text-left">Gospodarz</th>';
+  h += '<th class="text-center">Wynik</th>';
+  h += '<th class="text-left">Gość</th>';
+  h += '</tr></thead><tbody>';
+  
   LEAGUE_HISTORY.rounds.forEach(r => {{
-    html += `<div style="padding: 8px; border-bottom: 1px solid #2d2d2d;">
-      <strong>Kolejka ${{r.round}}</strong>: ${{r.home_team}} ${{r.home_score || '-'}} - ${{r.away_score || '-'}} ${{r.away_team}}
-    </div>`;
+    h += '<tr>';
+    h += '<td class="text-center fw-600">K'+r.round+'</td>';
+    h += '<td>'+(r.home_team || '—')+'</td>';
+    h += '<td class="text-center fw-700">'+(r.home_score || '-')+' : '+(r.away_score || '-')+'</td>';
+    h += '<td>'+(r.away_team || '—')+'</td>';
+    h += '</tr>';
   }});
-  html += '</div></div>';
-  seasonContent.innerHTML = html;
-}} else {{
-  seasonContent.innerHTML = '<div class="empty-msg">Brak danych sezonu</div>';
+  
+  h += '</tbody></table></div>';
+  h += '</div>';
+  return h;
 }}
+
+// Obsługa zakładek
+document.querySelectorAll('.tab').forEach(t => {{
+  t.addEventListener('click', () => {{
+    tab = t.dataset.tab;
+    render();
+  }});
+}});
+
+// Obsługa filtrów pozycji
+document.querySelectorAll('.pos-btn').forEach(b => {{
+  b.addEventListener('click', () => {{
+    pos = b.dataset.pos;
+    render();
+  }});
+}});
+
+// Inicjalne renderowanie
+render();
 </script>
 </body>
 </html>"""
