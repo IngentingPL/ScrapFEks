@@ -250,12 +250,14 @@ def generate_archive_html(
     players: list[dict],
     league_teams_detail: list[dict],
     league_history: dict,
+    duets_data: list[dict],
     timestamp: str,
     filename: str,
 ):
     """
     Generuje HTML archiwum sezonu z pełną zakładką Zawodnicy (identyczna jak w dashboardzie).
     Zawiera zakładki: Zawodnicy, Liga CMF, Sezon.
+    Zakładka Liga CMF zawiera widoki: Drużyny i Duety (identyczne jak w dashboardzie).
     """
     # Przygotuj dane dla JS - zawodnicy z formą (ostatnie 5 kolejek)
     # Oblicz formę dla każdego zawodnika (średnia z ostatnich 5 kolejek)
@@ -283,6 +285,7 @@ def generate_archive_html(
     players_json = json.dumps(players_with_form, ensure_ascii=False)
     league_teams_json = json.dumps(league_teams_detail, ensure_ascii=False)
     league_history_json = json.dumps(league_history or {"rounds": []}, ensure_ascii=False)
+    duets_json = json.dumps(duets_data or [], ensure_ascii=False)
 
     # CSS dla archiwum - pełny zgodny z design.md i scraper.py
     # Kolory z design.md:
@@ -506,13 +509,14 @@ def generate_archive_html(
     const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
     const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
       Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
-    const DUETS_DATA = [];  // Archiwum nie zawiera danych o duetach
+    const DUETS_DATA = {duets_json};
 
     // Stan aplikacji
     let tab = 'players';
     let pos = 'ALL';
     let scope = 'all';
     let selectedTeam = '';
+    let selectedDuet = '';
     let currentTeamsView = 'teams';
     
     // Konfiguracja sortowania
