@@ -1105,6 +1105,22 @@ def load_league_teams_detail() -> list[dict]:
     return []
 
 
+def load_duets_data() -> list[dict]:
+    """Wczytuje dane duetów z duets.json."""
+    if not os.path.exists("duets.json"):
+        print(f"  ℹ️  Brak pliku duets.json - pomijam dane duetów")
+        return []
+    
+    try:
+        with open("duets.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            print(f"  📂 Wczytano {len(data)} duetów z duets.json")
+            return data
+    except Exception as e:
+        print(f"  ⚠️  Błąd wczytywania duets.json: {e}")
+        return []
+
+
 # ============================================================
 # KOPIOWANIE PLIKÓW DO ARCHIWUM
 # ============================================================
@@ -1181,6 +1197,7 @@ def main():
     players = load_players_data()
     league_history = load_league_history()
     league_teams_detail = load_league_teams_detail()
+    duets_data = load_duets_data()  # Wczytaj dane duetów
 
     if not players:
         print("❌ Błąd: brak danych zawodników do archiwizacji!")
@@ -1189,6 +1206,7 @@ def main():
 
     print(f"   ✓ Załadowano {len(players)} zawodników")
     print(f"   ✓ Załadowano {len(league_teams_detail)} drużyn ligi")
+    print(f"   ✓ Załadowano {len(duets_data)} duetów")
 
     # Generuj archiwum HTML
     print("\n🎨 Generuję archiwum HTML...")
@@ -1198,6 +1216,7 @@ def main():
         players=players,
         league_teams_detail=league_teams_detail,
         league_history=league_history,
+        duets_data=duets_data,  # Przekaż dane duetów
         timestamp=timestamp,
         filename=archive_html_path,
     )
