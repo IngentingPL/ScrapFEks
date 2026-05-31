@@ -1098,11 +1098,21 @@ def load_league_history() -> dict:
 
 
 def load_league_teams_detail() -> list[dict]:
-    """Wczytuje szczegóły drużyn ligi z output/."""
-    # Dane league_teams nie są zapisywane jako osobny plik JSON w output/
-    # Zwraca pustą listę - archiwum będzie działać bez danych ligi CMF
-    print(f"  ℹ️  Dane ligi CMF (league_teams) nie są dostępne jako JSON - pomijam")
-    return []
+    """Wczytuje szczegóły drużyn ligi z output/league_teams_detail.json."""
+    teams_file = os.path.join(OUTPUT_DIR, "league_teams_detail.json")
+    
+    if not os.path.exists(teams_file):
+        print(f"  ⚠️  Brak pliku {teams_file} - dane drużyn ligi nie będą dostępne w archiwum")
+        return []
+    
+    try:
+        with open(teams_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        print(f"  📂 Wczytano {len(data)} drużyn ligi z {teams_file}")
+        return data
+    except Exception as e:
+        print(f"  ⚠️  Błąd wczytywania danych drużyn ligi: {e}")
+        return []
 
 
 def load_duets_data() -> list[dict]:

@@ -943,6 +943,16 @@ def save_full_json(players: list[dict], filename: str):
     print(f"💾 Zapisano pełne dane JSON do: {filename}")
 
 
+def save_league_teams_detail(league_teams_detail: list[dict], filename: str):
+    """Zapisuje dane drużyn ligi do JSON - używane przez archiwizację."""
+    os.makedirs(os.path.dirname(filename) or ".", exist_ok=True)
+
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(league_teams_detail, f, ensure_ascii=False, indent=2)
+
+    print(f"💾 Zapisano dane drużyn ligi do: {filename}")
+
+
 def save_rounds_csv(players: list[dict], filename: str):
     """Zapisuje statystyki per kolejka (każdy wiersz = zawodnik + kolejka)."""
     rows = []
@@ -2597,6 +2607,12 @@ def generate_dashboard_html(
     players_json = json.dumps(summary_data, ensure_ascii=False)
     rosters_json = json.dumps(league_rosters, ensure_ascii=False)
     teams_detail_json = json.dumps(league_teams_detail, ensure_ascii=False)
+    
+    # Zapisz dane drużyn ligi dla archiwizacji
+    if league_teams_detail:
+        league_teams_file = os.path.join(os.path.dirname(filename) or OUTPUT_DIR, "league_teams_detail.json")
+        save_league_teams_detail(league_teams_detail, league_teams_file)
+    
     duets_data_json = json.dumps(duets_data or [], ensure_ascii=False)
     fixtures_json = json.dumps(fixtures_data, ensure_ascii=False)
     ekstra_stats_json = json.dumps(ekstra_stats, ensure_ascii=False)
@@ -5521,7 +5537,7 @@ render();
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(html)
-print(f"  📊 Dashboard: {filename}")
+    print(f"  📊 Dashboard: {filename}")
 
 
 if __name__ == "__main__":
