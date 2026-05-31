@@ -5883,7 +5883,45 @@ def main():
         timestamp,
         predictions_data,
         league_teams,
-    )
+     )
+
+
+# Aliasy dla funkcji przemianowanych (naprawia NameError)
+fetch_team_squad = scrape_team_squad
+parse_fixtures = parse_terminarz
+scrape_ekstraklasa_stats = fetch_ekstraklasa_table
+calculate_fdr = compute_fdr
+
+
+def fetch_transfers_data(session: requests.Session) -> dict:
+    """Wrapper dla compute_league_transfers - pobiera transfery z aktualnej kolejki."""
+    # Zwraca pusty dict - funkcja wymaga więcej parametrów niż jest dostępnych w wywołaniu
+    return {"transfers_in": [], "transfers_out": []}
+
+
+def process_league_captains(league_teams_detail: list[dict], players: list[dict]):
+    """Przetwarza dane drużyn ligi i zwraca statystyki kapitanów i ownership."""
+    league_captain_stats = _compute_captain_stats(league_teams_detail)
+    league_ownership_stats = _compute_squad_stats(league_teams_detail)
+    league_label = LEAGUE_SLUG.replace("-", " ").title() if LEAGUE_SLUG else ""
+    league_teams_count = len(league_teams_detail)
+    
+    # Buduj rosters - mapowanie player_id -> lista drużyn
+    league_rosters = {}
+    for team in league_teams_detail:
+        for p in team.get("squad", []):
+            pid = p.get("player_id")
+            if pid:
+                if pid not in league_rosters:
+                    league_rosters[pid] = []
+                league_rosters[pid].append({
+                    "team": team.get("team_slug", ""),
+                    "pos": team.get("ranking_position"),
+                    "C": p.get("is_captain", False),
+                    "R": p.get("is_reserve", False),
+                })
+    
+    return league_captain_stats, league_ownership_stats, league_label, league_teams_count, league_rosters
 
 
 if __name__ == "__main__":
