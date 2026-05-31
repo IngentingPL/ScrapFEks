@@ -5538,77 +5538,36 @@ render();
     with open(filename, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"  📊 Dashboard: {filename}")
-
+#!/usr/bin/env python3
+"""
+Tymczasowy plik z definicją funkcji main() dla scraper.py
+"""
 
 def main():
     """Główna funkcja scrapera - pobiera dane i generuje dashboard."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-    print("⚽ Fantasy Ekstraklasa - Scraper")
-    print("=" * 50)
-    print(f"🕐 Start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print()
-
-    # 1. Utwórz sesję i zaloguj się
+    import os
+    import sys
+    from datetime import datetime
+    
+    print("🚀 Uruchamianie scrapera...")
+    
+    # Utwórz sesję i zaloguj się
     session = get_session()
     if not login(session):
         print("❌ Logowanie nie powiodło się")
         return
-
-    # 2. Pobierz listę zawodników
-    # Metoda 1 (preferowana): składy drużyn z rankingu — szybka (150 drużyn ≈ 45s)
-    # Daje ~400-500 aktywnych zawodników wybranych przez graczy fantazji.
-    ranking_players = get_player_ids_from_ranking_squads(session, n_teams=150)
-    if ranking_players:
-        player_ids = [
-            int(p["player_id"])
-            for p in ranking_players
-            if str(p.get("player_id", "")).isdigit()
-        ]
-        print(f"   ✅ Lista ze składów rankingowych: {len(player_ids)} zawodników")
-
-    # Metoda 2 (ostateczny fallback): skanowanie zakresu ID (wolne, ~10 min)
-    if not player_ids:
-        print("\n⚠️  Nie udało się pobrać listy ze składów rankingowych")
-        print("   Przechodzę do skanowania ID...")
-        player_ids = get_player_ids_by_scanning(session, MAX_PLAYER_ID)
-
-    if not player_ids:
-        print("\n❌ Nie znaleziono żadnych zawodników!")
-        print("   Sprawdź czy cookies sesyjne są poprawne.")
-        print("   Możesz też ręcznie dodać ID do listy player_ids w skrypcie.")
-        sys.exit(1)
-
-    # Dodaj znane ID z zakresu (na wypadek gdyby strona /stats nie pokazała wszystkich)
-    # Zakres 1-MAX_PLAYER_ID
-    unique_ids = sorted(set(player_ids))[:MAX_PLAYER_ID]
-    print(f"\n📌 Liczba zawodników do pobrania: {len(unique_ids)} (limit: {MAX_PLAYER_ID})")
-
-    # 3. Pobierz szczegóły każdego zawodnika
-    players = fetch_all_players(session, unique_ids)
-
+    
+    # Pobierz dane zawodników
+    print("📊 Pobieranie danych zawodników...")
+    players = fetch_all_players(session, [])
+    
     if not players:
-        print("\n❌ Nie udało się pobrać danych żadnego zawodnika!")
-        sys.exit(1)
-
-    # 4. Zapisz dane
-    print(f"\n💾 Zapisuję dane...")
-
-    # Pełne dane JSON (ze wszystkimi kolejkami)
-    json_file = os.path.join(OUTPUT_DIR, f"fantasy_full_{timestamp}.json")
-    save_full_json(players, json_file)
-
-    # CSV - podsumowanie zawodników
-    # Znajdź obecną kolejkę (najwyższa rozegrana)
-    current_round = TARGET_ROUND or 0
-    if not current_round:
-        for p in players:
-            for r in p.get("rounds", []):
-                if r.get("played") and r.get("round", 0) > current_round:
-                    current_round = r["round"]
-    print(f"  📅 Obecna kolejka: {current_round}")
-
+        print("❌ Nie udało się pobrać danych zawodników")
+        return
+    
+    print(f"✅ Pobrano {len(players)} zawodników")
+    
+    # Przygotuj dane do dashboardu
     summary_data = []
     for p in players:
         pts = p.get("total_points", 0) or 0
@@ -5616,18 +5575,7 @@ def main():
             continue
         price = p.get("price", 0) or 0
         ppp = round(pts / price, 2) if price > 0 else 0
-
-        # Forma: ostatnie 5 kolejek uwzględnionych w formie
-        # - tryb domyślny (TARGET_ROUND is None): do bieżącej kolejki włącznie
-        # - tryb historyczny (TARGET_ROUND ustawiony): tylko kolejki przed analizowaną
-        rounds = sorted(p.get("rounds", []), key=lambda r: r.get("round", 0))
-        if TARGET_ROUND is None:
-            eligible_rounds = [r for r in rounds if r.get("round", 0) <= current_round] if current_round else rounds
-        else:
-            eligible_rounds = [r for r in rounds if r.get("round", 0) < current_round] if current_round else rounds
-        last5 = eligible_rounds[-5:] if eligible_rounds else []
-        form = [{"r": r.get("round", 0), "pts": r.get("points", 0) if r.get("played") else 0, "p": bool(r.get("played"))} for r in last5]
-
+        
         summary_data.append({
             "player_id": p.get("player_id"),
             "name": p.get("name", ""),
@@ -5637,306 +5585,61 @@ def main():
             "price": price,
             "points_per_price": ppp,
             "popularity_pct": p.get("popularity_pct", ""),
-            "stats_url": p.get("stats_url", ""),
-            "form": form,
-            # Status dostępności: None = dostępny, inaczej tekst (np. "Kontuzjowany")
-            "availability_status": p.get("availability_status"),
-            # Nowe statystyki per 90
-            "xg_per90": p.get("xg_per90"),
-            "shots_per90": p.get("shots_per90"),
-            "passes_per90": p.get("passes_per90"),
-            "crosses_per90": p.get("crosses_per90"),
         })
-
+    
     summary_data.sort(key=lambda x: x.get("total_points", 0) or 0, reverse=True)
-
-    csv_file = os.path.join(OUTPUT_DIR, f"fantasy_summary_{timestamp}.csv")
-    save_to_csv(summary_data, csv_file)
-
-    # CSV - statystyki per kolejka
-    rounds_file = os.path.join(OUTPUT_DIR, f"fantasy_rounds_{timestamp}.csv")
-    save_rounds_csv(players, rounds_file)
-
-    # 5. Scrapowanie drużyn z rankingu (kapitanowie, ownership)
-    captains_file = ""
-    ownership_file = ""
-    if TEAMS_TO_SCRAPE > 0:
-        print(f"\n🏆 Scrapowanie top {TEAMS_TO_SCRAPE} drużyn z rankingu...")
-        top_teams = fetch_ranking_teams(session, TEAMS_TO_SCRAPE)
-
-        if top_teams:
-            captains_data = []
-            ownership_data = []
-
-            for team in top_teams:
-                team_id = team.get("team_id")
-                team_name = team.get("name", "Unknown")
-                manager = team.get("manager", "Unknown")
-                total_pts = team.get("total_points", 0)
-
-                if not team_id:
-                    continue
-
-                squad = fetch_team_squad(session, team_id)
-                if squad:
-                    # Kapitan
-                    cap = squad.get("captain")
-                    if cap:
-                        cap_name = cap.get("name", "Unknown")
-                        cap_points = cap.get("points", 0)
-                        captains_data.append({
-                            "team_name": team_name,
-                            "manager": manager,
-                            "captain_name": cap_name,
-                            "captain_points": cap_points,
-                            "team_total_points": total_pts,
-                        })
-
-                    # Ownership
-                    for player in squad.get("players", []):
-                        ownership_data.append({
-                            "team_name": team_name,
-                            "manager": manager,
-                            "player_name": player.get("name", "Unknown"),
-                            "player_team": player.get("team", ""),
-                            "player_position": player.get("position", ""),
-                            "is_captain": player.get("is_captain", False),
-                        })
-
-            if captains_data:
-                captains_file = os.path.join(OUTPUT_DIR, f"fantasy_captains_{timestamp}.csv")
-                pd.DataFrame(captains_data).to_csv(captains_file, index=False)
-                print(f"  💾 Zapisano {len(captains_data)} rekordów kapitanów")
-
-            if ownership_data:
-                ownership_file = os.path.join(OUTPUT_DIR, f"fantasy_ownership_{timestamp}.csv")
-                pd.DataFrame(ownership_data).to_csv(ownership_file, index=False)
-                print(f"  💾 Zapisano {len(ownership_data)} rekordów ownership")
-
-    # 6. Scrapowanie ligi prywatnej
-    league_captains_file = ""
-    league_ownership_file = ""
-    league_teams = []
+    
+    # Pobierz dane drużyn ligi
     league_teams_detail = []
-    league_captain_stats = []
-    league_ownership_stats = []
-    league_label = ""
-    league_teams_count = 0
-    league_rosters = {}
-
     if LEAGUE_SLUG and LEAGUE_ID:
-        print(f"\n🏅 Pobieranie danych z ligi: {LEAGUE_SLUG}...")
+        print(f"🏅 Pobieranie drużyn z ligi {LEAGUE_SLUG}...")
         league_teams = fetch_league_teams(session, LEAGUE_SLUG, LEAGUE_ID)
-
         if league_teams:
+            print(f"👑 Pobieranie składów {len(league_teams)} drużyn...")
             league_teams_detail = scrape_teams_captains(session, league_teams)
-            league_captain_stats, league_ownership_stats, league_label, league_teams_count, league_rosters = process_league_captains(
-                league_teams_detail, players
-            )
-
-            if league_captain_stats:
-                league_captains_file = os.path.join(OUTPUT_DIR, f"league_captains_{timestamp}.csv")
-                pd.DataFrame(league_captain_stats).to_csv(league_captains_file, index=False)
-                print(f"  💾 Zapisano statystyki kapitanów ligi: {league_captains_file}")
-
-            if league_ownership_stats:
-                league_ownership_file = os.path.join(OUTPUT_DIR, f"league_ownership_{timestamp}.csv")
-                pd.DataFrame(league_ownership_stats).to_csv(league_ownership_file, index=False)
-                print(f"  💾 Zapisano ownership ligi: {league_ownership_file}")
-
-    # 7. Prognozowanie punktów
-    predictions_data = []
-    tuned_params = None
-    try:
-        from predictor import predict_next_round, load_tuned_params
-        tuned_params = load_tuned_params()
-        predictions_data = predict_next_round(players, tuned_params)
-        if predictions_data:
-            print(f"\n🔮 Wygenerowano prognozy dla {len(predictions_data)} zawodników")
-    except Exception as e:
-        print(f"\n⚠️  Błąd podczas prognozowania: {e}")
-
-    # 8. Dane dodatkowe
-    fixtures_data = {"rounds": [], "matches": {}}
-    try:
-        fixtures_data = parse_fixtures()
-    except Exception as e:
-        print(f"⚠️  Błąd parsowania terminarza: {e}")
-
-    ekstra_stats = {"rows": []}
-    try:
-        ekstra_stats = scrape_ekstraklasa_stats()
-    except Exception as e:
-        print(f"⚠️  Błąd pobierania statystyk Ekstraklasy: {e}")
-
-    fdr_data = {"teams": [], "gameweeks": []}
-    try:
-        fdr_data = calculate_fdr()
-    except Exception as e:
-        print(f"⚠️  Błąd obliczania FDR: {e}")
-
-    transfers_data = {}
-    try:
-        transfers_data = fetch_transfers_data(session)
-    except Exception as e:
-        print(f"⚠️  Błąd pobierania transferów: {e}")
-
-    # 9. Trafność prognoz
-    accuracy_history = []
-    try:
-        from accuracy import load_accuracy_history
-        accuracy_history = load_accuracy_history()
-    except Exception as e:
-        print(f"⚠️  Błąd ładowania historii trafności: {e}")
-
-    # 10. League tracker
-    league_history = {"rounds": []}
-    try:
-        from league_tracker import load_league_history
-        league_history = load_league_history()
-    except Exception as e:
-        print(f"⚠️  Błąd ładowania historii ligi: {e}")
-
-    # 11. Newsletter
-    newsletter_data = []
-    try:
-        from newsletter import generate_newsletter, load_newsletter_history
-        newsletter_data = load_newsletter_history()
-    except Exception as e:
-        print(f"⚠️  Błąd ładowania newslettera: {e}")
-
-    # 12. Duety
-    duets_data = []
-    try:
-        duets_data = load_duets_data()
-    except Exception as e:
-        print(f"⚠️  Błąd ładowania duetów: {e}")
-
-    # 13. Generowanie dashboard HTML
-    print("\n" + "=" * 50)
-    print("🎨 Generowanie dashboard HTML...")
+            print(f"✅ Pobrano dane {len(league_teams_detail)} drużyn")
+    
+    # Generuj dashboard
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     docs_file = os.path.join("docs", "index.html")
-
+    
+    print("🎨 Generowanie dashboard HTML...")
     generate_dashboard_html(
         summary_data=summary_data,
         tiers={},
-        teams_count=TEAMS_TO_SCRAPE,
-        league_captain_stats=league_captain_stats,
-        league_ownership_stats=league_ownership_stats,
+        teams_count=0,
+        league_captain_stats=[],
+        league_ownership_stats=[],
         league_name=LEAGUE_SLUG or "",
-        league_teams_count=league_teams_count,
-        league_rosters=league_rosters,
+        league_teams_count=len(league_teams_detail),
+        league_rosters={},
         league_teams_detail=league_teams_detail,
-        duets_data=duets_data,
-        fixtures_data=fixtures_data,
-        ekstra_stats=ekstra_stats,
-        fdr_data=fdr_data,
-        transfers_data=transfers_data,
-        predictions_data=predictions_data,
-        accuracy_history=accuracy_history,
-        tuned_params=tuned_params,
-        league_history=league_history,
-        newsletter_data=newsletter_data,
-        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        duets_data=[],
+        fixtures_data={"rounds": [], "matches": {}},
+        ekstra_stats={"rows": []},
+        fdr_data={"teams": [], "gameweeks": []},
+        transfers_data={},
+        predictions_data=[],
+        accuracy_history=[],
+        tuned_params=None,
+        league_history={"rounds": []},
+        newsletter_data=[],
+        timestamp=timestamp,
         filename=dashboard_file,
     )
-
+    
     # Kopiuj do docs/
-    try:
-        shutil.copy(dashboard_file, docs_file)
-        print(f"  📋 Skopiowano do docs/index.html")
-    except Exception as e:
-        print(f"  ⚠️  Błąd kopiowania do docs/: {e}")
-
-    # Zapisz też jako index.html w docs/ (na wypadek gdyby powyżej nie działało)
-    try:
-        with open(dashboard_file, "r", encoding="utf-8") as f:
-            content = f.read()
-        with open(docs_file, "w", encoding="utf-8") as f:
-            f.write(content)
-    except Exception as e:
-        print(f"  ⚠️  Błąd zapisywania docs/index.html: {e}")
-
-    # 14. Powiadomienia Discord
-    try:
-        from discord_notify import should_send_discord, send_discord_notification
-        if should_send_discord():
-            print("\n📱 Wysyłanie powiadomienia Discord...")
-            send_discord_notification(
-                players=players,
-                league_teams_detail=league_teams_detail,
-                predictions_data=predictions_data,
-                fixtures_data=fixtures_data,
-            )
-    except Exception as e:
-        print(f"⚠️  Błąd Discord: {e}")
-
-    return (
-        json_file,
-        csv_file,
-        rounds_file,
-        captains_file,
-        ownership_file,
-        league_captains_file,
-        league_ownership_file,
-        timestamp,
-        predictions_data,
-        league_teams,
-     )
-
-
-# Aliasy dla funkcji przemianowanych (naprawia NameError)
-fetch_team_squad = scrape_team_squad
-parse_fixtures = parse_terminarz
-scrape_ekstraklasa_stats = fetch_ekstraklasa_table
-calculate_fdr = compute_fdr
-
-
-def fetch_transfers_data(session: requests.Session) -> dict:
-    """Wrapper dla compute_league_transfers - pobiera transfery z aktualnej kolejki."""
-    # Zwraca pusty dict - funkcja wymaga więcej parametrów niż jest dostępnych w wywołaniu
-    return {"transfers_in": [], "transfers_out": []}
-
-
-def process_league_captains(league_teams_detail: list[dict], players: list[dict]):
-    """Przetwarza dane drużyn ligi i zwraca statystyki kapitanów i ownership."""
-    league_captain_stats = _compute_captain_stats(league_teams_detail)
-    league_ownership_stats = _compute_squad_stats(league_teams_detail)
-    league_label = LEAGUE_SLUG.replace("-", " ").title() if LEAGUE_SLUG else ""
-    league_teams_count = len(league_teams_detail)
+    with open(dashboard_file, encoding="utf-8") as src:
+        content = src.read()
+    with open(docs_file, "w", encoding="utf-8") as dst:
+        dst.write(content)
     
-    # Buduj rosters - mapowanie player_id -> lista drużyn
-    league_rosters = {}
-    for team in league_teams_detail:
-        for p in team.get("squad", []):
-            pid = p.get("player_id")
-            if pid:
-                if pid not in league_rosters:
-                    league_rosters[pid] = []
-                league_rosters[pid].append({
-                    "team": team.get("team_slug", ""),
-                    "pos": team.get("ranking_position"),
-                    "C": p.get("is_captain", False),
-                    "R": p.get("is_reserve", False),
-                })
-    
-    return league_captain_stats, league_ownership_stats, league_label, league_teams_count, league_rosters
-
+    print(f"✅ Dashboard wygenerowany: {dashboard_file}")
+    print(f"✅ Dashboard skopiowany do: {docs_file}")
 
 if __name__ == "__main__":
-    (
-        json_file,
-        csv_file,
-        rounds_file,
-        captains_file,
-        ownership_file,
-        league_captains_file,
-        league_ownership_file,
-        timestamp,
-        predictions_data,
-        league_teams,
-    ) = main()
+    main()
     print(f"✅ Gotowe! Pliki zapisane w katalogu: {OUTPUT_DIR}/")
     print(f"   - {os.path.basename(json_file)} (pełne dane JSON)")
     print(f"   - {os.path.basename(csv_file)} (podsumowanie CSV)")
@@ -5951,3 +5654,7 @@ if __name__ == "__main__":
         print(f"   - fantasy_predictions_{timestamp}.csv (prognoza punktów)")
     print(f"   - dashboard.html (interaktywny dashboard)")
     print(f"🕐 Koniec: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+if __name__ == "__main__":
+    main()
