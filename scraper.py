@@ -5646,23 +5646,6 @@ def main():
     print(f"✅ Dashboard wygenerowany: {dashboard_file}")
     print(f"✅ Dashboard skopiowany do: {docs_file}")
 
-if __name__ == "__main__":
-    main()
-    print(f"✅ Gotowe! Pliki zapisane w katalogu: {OUTPUT_DIR}/")
-    print(f"   - {os.path.basename(json_file)} (pełne dane JSON)")
-    print(f"   - {os.path.basename(csv_file)} (podsumowanie CSV)")
-    print(f"   - {os.path.basename(rounds_file)} (statystyki per kolejka CSV)")
-    if TEAMS_TO_SCRAPE > 0:
-        print(f"   - {os.path.basename(captains_file)} (statystyki kapitanów CSV)")
-        print(f"   - {os.path.basename(ownership_file)} (ownership w drużynach CSV)")
-    if LEAGUE_SLUG and league_teams:
-        print(f"   - {os.path.basename(league_captains_file)} (kapitanowie ligi)")
-        print(f"   - {os.path.basename(league_ownership_file)} (ownership ligi)")
-    if predictions_data:
-        print(f"   - fantasy_predictions_{timestamp}.csv (prognoza punktów)")
-    print(f"   - dashboard.html (interaktywny dashboard)")
-    print(f"🕐 Koniec: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
 
 if __name__ == "__main__":
     main()
