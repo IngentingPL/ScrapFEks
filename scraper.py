@@ -5662,7 +5662,7 @@ def main():
     ownership_file = ""
     if TEAMS_TO_SCRAPE > 0:
         print(f"\n🏆 Scrapowanie top {TEAMS_TO_SCRAPE} drużyn z rankingu...")
-        top_teams = fetch_top_teams(session, TEAMS_TO_SCRAPE)
+        top_teams = fetch_ranking_teams(session, TEAMS_TO_SCRAPE)
 
         if top_teams:
             captains_data = []
