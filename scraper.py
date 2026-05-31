@@ -5538,7 +5538,105 @@ render();
     with open(filename, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"  📊 Dashboard: {filename}")
+#!/usr/bin/env python3
+"""
+Tymczasowy plik z definicją funkcji main() dla scraper.py
+"""
 
+def main():
+    """Główna funkcja scrapera - pobiera dane i generuje dashboard."""
+    import os
+    import sys
+    from datetime import datetime
+    
+    print("🚀 Uruchamianie scrapera...")
+    
+    # Utwórz sesję i zaloguj się
+    session = get_session()
+    if not login(session):
+        print("❌ Logowanie nie powiodło się")
+        return
+    
+    # Pobierz dane zawodników
+    print("📊 Pobieranie danych zawodników...")
+    players = fetch_all_players(session, [])
+    
+    if not players:
+        print("❌ Nie udało się pobrać danych zawodników")
+        return
+    
+    print(f"✅ Pobrano {len(players)} zawodników")
+    
+    # Przygotuj dane do dashboardu
+    summary_data = []
+    for p in players:
+        pts = p.get("total_points", 0) or 0
+        if pts == 0:
+            continue
+        price = p.get("price", 0) or 0
+        ppp = round(pts / price, 2) if price > 0 else 0
+        
+        summary_data.append({
+            "player_id": p.get("player_id"),
+            "name": p.get("name", ""),
+            "team": p.get("team", ""),
+            "position": p.get("position", ""),
+            "total_points": pts,
+            "price": price,
+            "points_per_price": ppp,
+            "popularity_pct": p.get("popularity_pct", ""),
+        })
+    
+    summary_data.sort(key=lambda x: x.get("total_points", 0) or 0, reverse=True)
+    
+    # Pobierz dane drużyn ligi
+    league_teams_detail = []
+    if LEAGUE_SLUG and LEAGUE_ID:
+        print(f"🏅 Pobieranie drużyn z ligi {LEAGUE_SLUG}...")
+        league_teams = fetch_league_teams(session, LEAGUE_SLUG, LEAGUE_ID)
+        if league_teams:
+            print(f"👑 Pobieranie składów {len(league_teams)} drużyn...")
+            league_teams_detail = scrape_teams_captains(session, league_teams)
+            print(f"✅ Pobrano dane {len(league_teams_detail)} drużyn")
+    
+    # Generuj dashboard
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
+    docs_file = os.path.join("docs", "index.html")
+    
+    print("🎨 Generowanie dashboard HTML...")
+    generate_dashboard_html(
+        summary_data=summary_data,
+        tiers={},
+        teams_count=0,
+        league_captain_stats=[],
+        league_ownership_stats=[],
+        league_name=LEAGUE_SLUG or "",
+        league_teams_count=len(league_teams_detail),
+        league_rosters={},
+        league_teams_detail=league_teams_detail,
+        duets_data=[],
+        fixtures_data={"rounds": [], "matches": {}},
+        ekstra_stats={"rows": []},
+        fdr_data={"teams": [], "gameweeks": []},
+        transfers_data={},
+        predictions_data=[],
+        accuracy_history=[],
+        tuned_params=None,
+        league_history={"rounds": []},
+        newsletter_data=[],
+        timestamp=timestamp,
+        filename=dashboard_file,
+    )
+    
+    # Kopiuj do docs/
+    with open(dashboard_file, encoding="utf-8") as src:
+        content = src.read()
+    with open(docs_file, "w", encoding="utf-8") as dst:
+        dst.write(content)
+    
+    print(f"✅ Dashboard wygenerowany: {dashboard_file}")
+    print(f"✅ Dashboard skopiowany do: {docs_file}")
 
 if __name__ == "__main__":
     main()
