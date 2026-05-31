@@ -5677,7 +5677,7 @@ def main():
                 if not team_id:
                     continue
 
-                squad = fetch_team_squad(session, team_id)
+                squad = scrape_team_squad(session, team_id)
                 if squad:
                     # Kapitan
                     cap = squad.get("captain")
