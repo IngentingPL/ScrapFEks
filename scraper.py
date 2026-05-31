@@ -5604,6 +5604,14 @@ def main():
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     docs_file = os.path.join("docs", "index.html")
     
+    # Zapisz dane drużyn ligi dla archiwizacji
+    try:
+        with open("output/league_teams_detail.json", "w", encoding="utf-8") as f:
+            json.dump(league_teams_detail, f, ensure_ascii=False, indent=2)
+        print("  💾 Zapisano dane drużyn ligi: output/league_teams_detail.json")
+    except Exception as e:
+        print(f"  ⚠️  Nie udało się zapisać danych drużyn ligi: {e}")
+
     print("🎨 Generowanie dashboard HTML...")
     generate_dashboard_html(
         summary_data=summary_data,
