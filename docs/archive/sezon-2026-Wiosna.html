@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScrapFEks – Archiwum Sezonu 2026-Wiosna</title>
+<title>ScrapFEks – Archiwum Sezonu 2026 Wiosna</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -213,10 +213,10 @@
 <div class="container">
   <div class="header">
     <div class="header-left">
-      <h1>📁 Archiwum Sezonu 2026-Wiosna</h1>
+      <h1>📁 Archiwum Sezonu 2026 Wiosna</h1>
       <span class="archive-badge">ARCHIWUM</span>
     </div>
-    <p class="sub">ScrapFEks · 2026-05-27 18:52:41</p>
+    <p class="sub">ScrapFEks · 2026-05-29 15:55:52</p>
   </div>
   <a href="../index.html" class="back-link">← Powrót do bieżącego sezonu</a>
 
@@ -252,7 +252,7 @@
     </div>
   </div>
 
-  <div class="footer">ScrapFEks Archiwum · 2026-05-27 18:52:41</div>
+  <div class="footer">ScrapFEks Archiwum · 2026-05-29 15:55:52</div>
 </div>
 
 <script>
@@ -265,13 +265,14 @@
     const POS_MAP = {BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'};
     const POS_ID = {'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
       Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'};
-    const DUETS_DATA = [];  // Archiwum nie zawiera danych o duetach
+    const DUETS_DATA = [{"team1": "Mariany Huja", "team2": "Zakari Lambo FC", "duet_name": "Zdobywcy Pucharow", "players": "ladzior & szazem"}, {"team1": "Makkabi Białystok", "team2": "WidzewBałuty", "duet_name": "ŻKS Makkabi Bałuty", "players": "Vami & hokiej"}, {"team1": "Tokusatsu Soccer", "team2": "Glonovia", "duet_name": "Gloninget", "players": "Inget & Kowal"}, {"team1": "Dunder Mifflin", "team2": "VfB Osterode", "duet_name": "Rozgrzeszenie i Rozliczenie", "players": "messinho & krzysfiol"}, {"team1": "mo salah na kapciu", "team2": "Huragan Primore", "duet_name": "Rzeczpospolita Obojga Narodów", "players": "kolek23 & beeres"}, {"team1": "Lelek Kozodój", "team2": "GLKS Kłomnice", "duet_name": "KŁAKI", "players": "laki & K."}, {"team1": "FC Przypał", "team2": "Wszystko czuj", "duet_name": "Przypalony Węgiel", "players": "Counter & Meler"}, {"team1": "FC ABW", "team2": "Golonka Hajda", "duet_name": "Widzew FC Skarżysko", "players": "Misiek & Hajd"}, {"team1": "Żoliborskie gówno", "team2": "Kościół Klubu Kuby", "duet_name": "Warszawscy Rasiści", "players": "hidalgopl & Monti"}, {"team1": "K52 Nieżyt Jelit", "team2": "Polski Kibel", "duet_name": "Cesarzowie Porcelany", "players": "Brachu & Seju"}, {"team1": "GOUDA TEAM", "team2": "Mewy 1FC", "duet_name": "Chłopcy tinderowcy", "players": "GOUDA & szramek"}, {"team1": "Negative Szczecin", "team2": "Deportivo Magazino", "duet_name": "Zestawieni", "players": "Sensei & Flincior"}];
 
     // Stan aplikacji
     let tab = 'players';
     let pos = 'ALL';
     let scope = 'all';
     let selectedTeam = '';
+    let selectedDuet = '';
     let currentTeamsView = 'teams';
     
     // Konfiguracja sortowania
