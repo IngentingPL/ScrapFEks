@@ -98,14 +98,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Pull latest changes without resetting local modifications
+          # Stash wszystkiego co wygenerował scraper przed rebase
+          git add -A
+          git stash --include-untracked
+          
+          # Pull latest changes
           git fetch origin
           git rebase origin/main || true
+          
+          # Przywróć wygenerowane pliki
+          git stash pop || true
           
           mkdir -p docs
           cp output/dashboard.html docs/index.html
           
-          git add output/ docs/ hockey_prev_ranking.json duets_prev_ranking.json || true
+          # Dodaj wszystko (w tym nowe pliki po stash pop)
+          git add -A
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
