@@ -23,6 +23,7 @@ import threading
 import re
 import os
 import sys
+import shutil
 import hashlib
 import unicodedata
 from datetime import datetime
@@ -5551,11 +5552,8 @@ def main():
     print(f"🕐 Start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
-    # 1. Utwórz sesję i zaloguj się
+    # 1. Utwórz sesję i zaloguj się (get_session() loguje już wewnętrznie)
     session = get_session()
-    if not login(session):
-        print("❌ Logowanie nie powiodło się")
-        return
 
     # 2. Pobierz listę zawodników
     # Metoda 1 (preferowana): składy drużyn z rankingu — szybka (150 drużyn ≈ 45s)
