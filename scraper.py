@@ -5743,18 +5743,6 @@ def main():
                 pd.DataFrame(league_ownership_stats).to_csv(league_ownership_file, index=False)
                 print(f"  💾 Zapisano ownership ligi: {league_ownership_file}")
 
-    # 7. Prognozowanie punktów
-    predictions_data = []
-    tuned_params = None
-    try:
-        from predictor import predict_next_round, load_tuned_params
-        tuned_params = load_tuned_params()
-        predictions_data = predict_next_round(players, tuned_params)
-        if predictions_data:
-            print(f"\n🔮 Wygenerowano prognozy dla {len(predictions_data)} zawodników")
-    except Exception as e:
-        print(f"\n⚠️  Błąd podczas prognozowania: {e}")
-
     # 8. Dane dodatkowe
     fixtures_data = {"rounds": [], "matches": {}}
     try:
@@ -5770,9 +5758,18 @@ def main():
 
     fdr_data = {"teams": [], "gameweeks": []}
     try:
-        fdr_data = calculate_fdr()
+        fdr_data = calculate_fdr(ekstra_stats, fixtures_data)  # Przekazujemy wymagane argumenty
     except Exception as e:
         print(f"⚠️  Błąd obliczania FDR: {e}")
+
+    # 8b. Prognozowanie punktów (po FDR, bo predict_all_players potrzebuje fdr_data i fixtures)
+    predictions_data = []
+    try:
+        predictions_data = predict_all_players(players, fdr_data, fixtures_data)  # predict_all_players zaimportowane globalnie (linia 33)
+        if predictions_data:
+            print(f"\n🔮 Wygenerowano prognozy dla {len(predictions_data)} zawodników")
+    except Exception as e:
+        print(f"\n⚠️  Błąd podczas prognozowania: {e}")
 
     transfers_data = {}
     try:
@@ -5867,15 +5864,12 @@ def main():
 
     # 14. Powiadomienia Discord
     try:
-        from discord_notify import should_send_discord, send_discord_notification
-        if should_send_discord():
-            print("\n📱 Wysyłanie powiadomienia Discord...")
-            send_discord_notification(
-                players=players,
-                league_teams_detail=league_teams_detail,
-                predictions_data=predictions_data,
-                fixtures_data=fixtures_data,
-            )
+        from discord_notify import should_send_pre_round, send_pre_round
+        # nowe API Discord: funkcje przyjmują round_number i fixtures_data
+        webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "")
+        if webhook_url and should_send_pre_round(current_round, fixtures_data):
+            print("\n📱 Wysyłanie powiadomienia Discord (pre-round)...")
+            send_pre_round(predictions_data, players, webhook_url, current_round, fixtures_data)
     except Exception as e:
         print(f"⚠️  Błąd Discord: {e}")
 

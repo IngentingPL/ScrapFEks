@@ -87,3 +87,25 @@ def save_round_standings(
         json.dump(history, f, ensure_ascii=False, indent=2)
 
     print(f"   📈 Zapisano stan ligi (kolejka {round_number}, {len(standings)} druzyn) -> {os.path.basename(output_path)}")
+
+
+def load_league_history(output_path: str = "output/league_history.json") -> dict:
+    """
+    Wczytuje historię ligi z pliku JSON.
+    Zwraca dict z kluczem "rounds" — listą kolejek.
+    Jeśli plik nie istnieje lub jest uszkodzony, zwraca {"rounds": []}.
+
+    📖 LEKCJA: Ta funkcja to odpowiednik save_round_standings, ale do odczytu.
+    Dodana jako alias dla starego API scrapera, które oczekiwało funkcji
+    load_league_history().
+    """
+    if not os.path.exists(output_path):
+        return {"rounds": []}
+    try:
+        with open(output_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict) or "rounds" not in data:
+            return {"rounds": []}
+        return data
+    except (json.JSONDecodeError, IOError):
+        return {"rounds": []}
