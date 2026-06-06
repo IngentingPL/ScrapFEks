@@ -1333,10 +1333,27 @@ def _process_team(args):
 
     captain_id = squad.get("captain_id")
     captain_name = ""
-    for p in squad.get("players", []):
+    raw_squad = squad.get("players", [])
+    for p in raw_squad:
         if p["player_id"] == captain_id:
             captain_name = p["name"]
             break
+
+    # Mapowanie pól squad do formatu oczekiwanego przez JS (pid, pos, pts, C, form)
+    # JS używa t.players.forEach — bez tego pola TypeError: undefined is not an object
+    players_js = []
+    for p in raw_squad:
+        players_js.append({
+            "pid": p.get("player_id", ""),
+            "name": p.get("name", ""),
+            "pos": p.get("position_id", ""),
+            "price": p.get("price", 0),
+            "pts": p.get("points", 0),
+            "C": p.get("is_captain", False),
+            "VC": p.get("is_subcaptain", False),
+            "R": p.get("is_reserve", False),
+            "form": [],  # dane formy nie są dostępne w squad scrape
+        })
 
     return {
         "ranking_position": team.get("position"),
@@ -1344,7 +1361,8 @@ def _process_team(args):
         "team_points": team.get("total_points"),
         "captain_id": captain_id,
         "captain_name": captain_name,
-        "squad": squad.get("players", []),
+        "squad": raw_squad,
+        "players": players_js,  # pole dla JS – musi istnieć, inaczej TypeError
     }
 
 
@@ -3606,7 +3624,8 @@ const LEAGUE_POS_AVGS = {{}};
 (function() {{
   const seen = {{}}, sums = {{}}, counts = {{}};
   LEAGUE_TEAMS.forEach(t => {{
-    t.players.forEach(p => {{
+    // guard: players może być undefined jeśli dane są z cache/archive
+    (t.players || []).forEach(p => {{
       const pid = p.pid;
       if (seen[pid]) return;
       seen[pid] = true;
