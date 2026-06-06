@@ -1163,8 +1163,8 @@ function renderTeams() {
   const sortedTeams = [...LEAGUE_TEAMS].sort((a, b) => {
     let av, bv;
     if (tls.col === 'name') {
-      av = (a.display_name || a.slug.replace(/-/g,' ')).toLowerCase();
-      bv = (b.display_name || b.slug.replace(/-/g,' ')).toLowerCase();
+      av = (a.display_name || (a.slug||'').replace(/-/g,' ')).toLowerCase();
+      bv = (b.display_name || (b.slug||'').replace(/-/g,' ')).toLowerCase();
       if (av < bv) return tls.dir === 'desc' ? 1 : -1;
       if (av > bv) return tls.dir === 'desc' ? -1 : 1;
       return 0;
@@ -1194,7 +1194,7 @@ function renderTeams() {
   sortedTeams.forEach((t, i) => {
     const pos = t.hockey_pos || (i + 1);
     const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
-    const tName = t.display_name || t.slug.replace(/-/g,' ');
+    const tName = t.display_name || (t.slug||'').replace(/-/g,' ');
     const isMyTeam = tName.toLowerCase() === 'tokusatsu soccer';
     const dimRow = t.autumn_only;
     const isOpen = t.slug === selectedTeam;
