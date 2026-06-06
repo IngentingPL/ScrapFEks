@@ -1356,9 +1356,9 @@ def _process_team(args):
         })
 
     return {
-        "ranking_position": team.get("position"),
-        "team_slug": slug,
-        "team_points": team.get("total_points"),
+        "hockey_pos": team.get("position"),    # nazwa zgodna z JS renderTeams()
+        "slug": slug,                           # nazwa zgodna z JS renderTeams()
+        "total_pts": team.get("total_points"),  # nazwa zgodna z JS renderTeams()
         "captain_id": captain_id,
         "captain_name": captain_name,
         "squad": raw_squad,
@@ -1382,7 +1382,7 @@ def scrape_teams_captains(session: requests.Session, teams: list[dict],
         try:
             with open(checkpoint_file, "r", encoding="utf-8") as f:
                 results = json.load(f)
-            done_slugs = {r["team_slug"] for r in results}
+            done_slugs = {r["slug"] for r in results}
             print(f"   📂 Wczytano checkpoint: {len(results)} drużyn")
         except Exception as e:
             print(f"   ⚠️  Błąd checkpointu: {e}")
@@ -1607,7 +1607,7 @@ def compute_league_transfers(
     }
 
     for i, team in enumerate(league_results):
-        slug = team.get("team_slug", "")
+        slug = team.get("slug", "")
         if not slug:
             continue
 
@@ -5951,8 +5951,8 @@ def process_league_captains(league_teams_detail: list[dict], players: list[dict]
                 if pid not in league_rosters:
                     league_rosters[pid] = []
                 league_rosters[pid].append({
-                    "team": team.get("team_slug", ""),
-                    "pos": team.get("ranking_position"),
+                    "team": team.get("slug", ""),
+                    "pos": team.get("hockey_pos"),
                     "C": p.get("is_captain", False),
                     "R": p.get("is_reserve", False),
                 })
