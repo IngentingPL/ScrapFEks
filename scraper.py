@@ -5764,6 +5764,7 @@ def main():
 
     # 8b. Prognozowanie punktów (po FDR, bo predict_all_players potrzebuje fdr_data i fixtures)
     predictions_data = []
+    tuned_params = None  # predict_all_players nie używa tuned_params, ale generate_dashboard_html tego wymaga
     try:
         predictions_data = predict_all_players(players, fdr_data, fixtures_data)  # predict_all_players zaimportowane globalnie (linia 33)
         if predictions_data:
