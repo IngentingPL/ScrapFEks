@@ -946,9 +946,12 @@ def save_full_json(players: list[dict], filename: str):
 
 
 def save_league_teams_detail(league_teams_detail: list[dict], filename: str):
-    """Zapisuje dane drużyn ligi do JSON - używane przez archiwizację."""
+    """Zapisuje dane drużyn ligi do JSON - bez żadnej transformacji pól.
+    Dane są zapisywane dokładnie tak, jak przyszły z pamięci (slug, hockey_pos,
+    total_pts itd. – zgodne z nazwami używanymi przez JS w dashboardzie)."""
     os.makedirs(os.path.dirname(filename) or ".", exist_ok=True)
 
+    # Zapis bez przemianowywania – json.dump całej struktury takiej, jaka jest
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(league_teams_detail, f, ensure_ascii=False, indent=2)
 
@@ -1355,10 +1358,36 @@ def _process_team(args):
             "form": [],  # dane formy nie są dostępne w squad scrape
         })
 
+    # Wczytaj dane z rundy jesiennej (autumn_points.json)
+    autumn_pts = 0
+    best_gw_autumn = 0
+    display_name = slug.replace("-", " ").title()
+    try:
+        with open("autumn_points.json", "r", encoding="utf-8") as f:
+            autumn_data = json.load(f)
+        # Budujemy mapowanie: slug -> dane jesienne
+        # Klucze w autumn_points.json to nazwy jak "Tokusatsu Soccer",
+        # slug to "tokusatsu-soccer" — konwertujemy klucze na slug do porównania
+        for autumn_name, autumn_info in autumn_data.items():
+            autumn_slug = autumn_name.lower().replace(" ", "-")
+            if autumn_slug == slug:
+                autumn_pts = autumn_info.get("points", 0)
+                best_gw_autumn = autumn_info.get("best_gameweek", 0)
+                display_name = autumn_name  # oryginalna nazwa z autumn_points
+                break
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass  # brak pliku autumn_points.json — zostaw domyślne 0
+
     return {
         "hockey_pos": team.get("position"),    # nazwa zgodna z JS renderTeams()
         "slug": slug,                           # nazwa zgodna z JS renderTeams()
+        "display_name": display_name,           # nazwa do wyświetlenia (z autumn_points lub ze slugu)
         "total_pts": team.get("total_points"),  # nazwa zgodna z JS renderTeams()
+        "autumn_pts": autumn_pts,               # punkty z rundy jesiennej (z autumn_points.json)
+        "spring_pts": team.get("total_points") or 0,  # punkty z wiosny = total_pts (scraper scrapuje tylko wiosnę)
+        "best_gw_autumn": best_gw_autumn,       # najlepsza kolejka jesieni (z autumn_points.json)
+        "best_gw_spring": 0,                    # najlepsza kolejka wiosny – niedostępne
+        "rank_change": 0,                       # zmiana pozycji – niedostępne
         "captain_id": captain_id,
         "captain_name": captain_name,
         "squad": raw_squad,
