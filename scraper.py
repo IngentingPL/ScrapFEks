@@ -2606,10 +2606,9 @@ def generate_dashboard_html(
     accuracy_json = json.dumps(accuracy_history or [], ensure_ascii=False)
     tuned_params_json = json.dumps(tuned_params or None, ensure_ascii=False)
     league_history_json = json.dumps(league_history or {"rounds": []}, ensure_ascii=False)
-    newsletter_json = json.dumps(newsletter_data or [], ensure_ascii=False)
+    # 📖 newsletter_data usunięte z dashboardu — zakładka Newsletter wyłączona
     has_season = len((league_history or {}).get("rounds", [])) > 0
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
-    has_newsletter = len(newsletter_data or []) > 0
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
     has_predictions = len(predictions_data or []) > 0
     has_accuracy = len(accuracy_history or []) > 0
@@ -2953,13 +2952,6 @@ html.theme-fantasy .pred-fdr-used {{ background: rgba(0,0,0,0.05); }}
 html.theme-fantasy .pred-legend {{ background: #f5f5f5; color: #5a5a5a; }}
 html.theme-fantasy .pred-legend b {{ color: #131313; }}
 
-/* Newsletter - Light Theme */
-html.theme-fantasy .nl-card {{ background: #ffffff; border-color: #e0e0e0; }}
-html.theme-fantasy .nl-round {{ color: #309875; }}
-html.theme-fantasy .nl-date {{ color: #949494; }}
-html.theme-fantasy .nl-model {{ color: #949494; }}
-html.theme-fantasy .nl-text {{ color: #131313; }}
-
 /* Season Tracker - Light Theme */
 html.theme-fantasy .season-wrap {{ background: #ffffff; border-color: #e0e0e0; }}
 html.theme-fantasy .season-btn {{ background: transparent; border: 1px solid #e0e0e0; color: #5a5a5a; }}
@@ -3098,23 +3090,6 @@ html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0
 }}
 .pred-legend b {{ color: #e2e8f0; }}
 .pred-filters {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }}
-/* --- Newsletter tab --- */
-.nl-list {{ display: flex; flex-direction: column; gap: 16px; }}
-.nl-card {{
-  background: #1e293b; border-radius: 12px; padding: 20px 24px;
-  border-left: 4px solid #F0B232;
-}}
-.nl-card-header {{
-  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
-}}
-.nl-round {{
-  font-size: 18px; font-weight: 800; color: #F0B232;
-}}
-.nl-date {{ font-size: 12px; color: #64748b; }}
-.nl-model {{ font-size: 11px; color: #334155; margin-left: auto; }}
-.nl-text {{
-  font-size: 14px; color: #cbd5e1; line-height: 1.7; white-space: pre-wrap;
-}}
 /* --- Season tracker --- */
 .season-wrap {{ background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }}
 .season-controls {{ display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }}
@@ -3294,7 +3269,6 @@ html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0
       {"<button class='tab' data-tab='predictions'>🔮 Prognoza</button>" if has_predictions else ""}
       {"<button class='tab' data-tab='accuracy'>📊 Trafność</button>" if has_accuracy else ""}
       {"<button class='tab' data-tab='season'>📈 Sezon</button>" if has_season else ""}
-      {"<button class='tab' data-tab='newsletter'>📰 Newsletter</button>" if has_newsletter else ""}
       <button class="tab" data-tab="compare">⚖️ Porównanie</button>
       {"<a href='archive/index.html' class='tab' style='text-decoration:none'>📁 Archiwum</a>" if has_archive else "<span class='tab' style='opacity:0.4;pointer-events:none;cursor:default'>📁 Archiwum</span>"}
     </div>
@@ -3315,7 +3289,6 @@ html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0
     <div id="tab-predictions" class="tab-content"></div>
     <div id="tab-accuracy" class="tab-content"></div>
     <div id="tab-season" class="tab-content"></div>
-    <div id="tab-newsletter" class="tab-content"></div>
     <div id="tab-compare" class="tab-content"></div>
   </div>
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
@@ -3337,7 +3310,6 @@ const PREDICTIONS = {predictions_json};
 const ACCURACY_HISTORY = {accuracy_json};
 const TUNED_PARAMS = {tuned_params_json};
 const LEAGUE_HISTORY = {league_history_json};
-const NEWSLETTER_DATA = {newsletter_json};
  const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
   Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
@@ -5311,8 +5283,6 @@ function render() {{
   if (acEl) acEl.innerHTML = tab === 'accuracy' ? renderAccuracy() : '';
   const seEl = document.getElementById('tab-season');
   if (seEl) seEl.innerHTML = tab === 'season' ? renderSeason() : '';
-  const nlEl = document.getElementById('tab-newsletter');
-  if (nlEl) nlEl.innerHTML = tab === 'newsletter' ? renderNewsletter() : '';
   const cmpEl = document.getElementById('tab-compare');
   if (cmpEl) cmpEl.innerHTML = tab === 'compare' ? renderComparison() : '';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
@@ -5448,32 +5418,6 @@ function render() {{
       }}
     }});
   }}
-}}
-
-function renderNewsletter() {{
-  // 📖 LEKCJA: NEWSLETTER_DATA to lista newsletterów wygenerowanych przez Gemini AI.
-  // Wyświetlamy je od najnowszego — odwracamy listę przez slice().reverse().
-  const items = (NEWSLETTER_DATA || []).slice().reverse();
-  if (!items.length) {{
-    return '<div class="empty-msg">Brak newsletterów — zostaną wygenerowane automatycznie po kolejce gdy GEMINI_API_KEY jest skonfigurowany</div>';
-  }}
-  let h = '<div class="nl-list">';
-  for (const item of items) {{
-    const round = item.round || '?';
-    const dt = item.date || '';
-    const text = (item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const model = item.model || 'AI';
-    h += `<div class="nl-card">`;
-    h += `<div class="nl-card-header">`;
-    h += `<span class="nl-round">Kolejka ${{round}}</span>`;
-    if (dt) h += `<span class="nl-date">${{dt}}</span>`;
-    h += `<span class="nl-model">${{model}}</span>`;
-    h += `</div>`;
-    h += `<div class="nl-text">${{text}}</div>`;
-    h += `</div>`;
-  }}
-  h += '</div>';
-  return h;
 }}
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {{ tab = t.dataset.tab; render(); }}));
