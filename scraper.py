@@ -21,6 +21,7 @@ import csv
 import time
 import threading
 import re
+import glob
 import os
 import sys
 import hashlib
@@ -2612,6 +2613,8 @@ def generate_dashboard_html(
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
     has_predictions = len(predictions_data or []) > 0
     has_accuracy = len(accuracy_history or []) > 0
+    # Sprawdź czy istnieje katalog archiwum z plikami sezon-*.html
+    has_archive = len(glob.glob("docs/archive/sezon-*.html")) > 0
 
     # For stat cards
     all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))
@@ -3293,6 +3296,7 @@ html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0
       {"<button class='tab' data-tab='season'>📈 Sezon</button>" if has_season else ""}
       {"<button class='tab' data-tab='newsletter'>📰 Newsletter</button>" if has_newsletter else ""}
       <button class="tab" data-tab="compare">⚖️ Porównanie</button>
+      {"<a href='archive/index.html' class='tab' style='text-decoration:none'>📁 Archiwum</a>" if has_archive else "<span class='tab' style='opacity:0.4;pointer-events:none;cursor:default'>📁 Archiwum</span>"}
     </div>
     <div class="filters-row" style="margin-top: 12px;">
       {scope_toggle_html}
