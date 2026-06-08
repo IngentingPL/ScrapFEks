@@ -446,14 +446,35 @@ def generate_archive_html(
     /* Footer */
     .footer { text-align: center; margin-top: 32px; color: #949494; font-size: 12px; }
 
-    /* Season wrap */
+    /* --- Season tracker --- */
     .season-wrap { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .season-controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .season-btn {
+      background: transparent; border: 1px solid #334155; color: #64748b;
+      padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+      border-radius: 6px; font-family: inherit; transition: all 0.15s;
+    }
+    .season-btn.active { background: #22d3ee; color: #0f172a; border-color: transparent; }
+    .season-chart { position: relative; width: 100%; overflow-x: auto; }
     .season-chart svg { display: block; }
-
-    /* View toggle */
-    .view-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
-    .view-btn { padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; }
-    .view-btn.active { background: #3b82f6; color: #fff; }
+    .season-tooltip {
+      position: absolute; pointer-events: none; background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #e2e8f0;
+      white-space: nowrap; z-index: 10; opacity: 0; transition: opacity 0.15s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .season-tooltip.visible { opacity: 1; }
+    .season-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
+    .season-legend-item {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+      color: #94a3b8; cursor: pointer; user-select: none; transition: opacity 0.2s;
+    }
+    .season-legend-item.hidden { opacity: 0.3; text-decoration: line-through; }
+    .season-legend-item .swatch { width: 14px; height: 3px; border-radius: 2px; }
+    .season-table { margin-top: 20px; }
+    .trend-up { color: #10b981; }
+    .trend-down { color: #ef4444; }
+    .trend-flat { color: #64748b; }
 
     /* Captain badge */
     .captain-badge { background: #fbbf24; color: #000; padding: 1px 5px; border-radius: 3px; font-size: 10px; font-weight: 700; }
@@ -496,6 +517,16 @@ def generate_archive_html(
     html.theme-fantasy .detail-panel { background: #f5f5f5; }
     html.theme-fantasy .roster-chip { background: #e0e0e0; }
     html.theme-fantasy .bar-bg { background: #e0e0e0; }
+
+    /* Season Tracker - Light Theme */
+    html.theme-fantasy .season-wrap { background: #ffffff; border-color: #e0e0e0; }
+    html.theme-fantasy .season-btn { background: transparent; border: 1px solid #e0e0e0; color: #5a5a5a; }
+    html.theme-fantasy .season-btn.active { background: #309875; color: #ffffff; }
+    html.theme-fantasy .season-tooltip { background: #ffffff; border-color: #e0e0e0; color: #131313; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    html.theme-fantasy .season-legend-item { color: #5a5a5a; }
+    html.theme-fantasy .trend-up { color: #10b981; }
+    html.theme-fantasy .trend-down { color: #ef4444; }
+    html.theme-fantasy .trend-flat { color: #949494; }
     """
 
     # JS dla archiwum - pełna funkcjonalność zakładki Zawodnicy (identyczna jak w scraper.py)
@@ -518,6 +549,18 @@ def generate_archive_html(
     let selectedTeam = '';
     let selectedDuet = '';
     let currentTeamsView = 'teams';
+    
+    // Stan widoku sezonu — przechowywany poza renderSeason(), bo render() czyści DOM
+    let seasonView = 'positions';  // 'positions' lub 'points'
+    let seasonFilter = 'all';     // 'all', 'top5', 'bottom5'
+    let seasonHidden = {{}};       // {{teamName: true}} — ukryte linie
+
+    // Paleta kolorów czytelna na ciemnym tle
+    const SEASON_COLORS = [
+      '#22d3ee','#f59e0b','#10b981','#a78bfa','#f472b6','#fb923c',
+      '#38bdf8','#facc15','#4ade80','#c084fc','#fb7185','#fdba74',
+      '#67e8f9','#fde047','#86efac','#d8b4fe','#fda4af','#fed7aa',
+    ];
     
     // Konfiguracja sortowania
     const sorts = {{
@@ -869,6 +912,8 @@ function render() {{
   
   // Podłącz obsługę kliknięć w szczegóły zawodników
   attachDetailClicks();
+  // Podłącz obsługę interakcji zakładki Sezon (tooltip, legenda, przełączniki)
+  if (tab === 'season') attachSeasonHandlers();
 }}
 
 // Funkcja renderTeams - renderuje zakładkę Liga CMF
@@ -1003,33 +1048,285 @@ function renderTeams() {{
   return h;
 }}
 
-// Funkcja renderSeason - renderuje zakładkę Sezon
+// ========== SEASON TRACKER ==========
+// (skopiowane z scraper.py — identyczna logika dla archiwum)
 function renderSeason() {{
-  if (!LEAGUE_HISTORY || !LEAGUE_HISTORY.rounds || LEAGUE_HISTORY.rounds.length === 0) {{
-    return '<div class="empty-msg">Brak danych sezonu</div>';
+  const rounds = (LEAGUE_HISTORY.rounds || []);
+  if (rounds.length < 1) {{
+    return '<div class="empty-msg">Zbieranie danych — wykres pojawi się po 2+ kolejkach</div>';
   }}
-  
-  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Historia sezonu</h2><div class="line"></div></div>';
-  h += '<div class="season-wrap">';
-  h += '<div class="data-table"><table><thead><tr>';
-  h += '<th class="text-center">Kolejka</th>';
-  h += '<th class="text-left">Gospodarz</th>';
-  h += '<th class="text-center">Wynik</th>';
-  h += '<th class="text-left">Gość</th>';
-  h += '</tr></thead><tbody>';
-  
-  LEAGUE_HISTORY.rounds.forEach(r => {{
-    h += '<tr>';
-    h += '<td class="text-center fw-600">K'+r.round+'</td>';
-    h += '<td>'+(r.home_team || '—')+'</td>';
-    h += '<td class="text-center fw-700">'+(r.home_score || '-')+' : '+(r.away_score || '-')+'</td>';
-    h += '<td>'+(r.away_team || '—')+'</td>';
-    h += '</tr>';
+
+  // Zbierz wszystkie drużyny (unikalne nazwy)
+  const teamSet = new Set();
+  rounds.forEach(r => (r.standings || []).forEach(s => teamSet.add(s.team)));
+  const allTeams = [...teamSet];
+
+  // Przypisz kolory
+  const teamColor = {{}};
+  allTeams.forEach((t, i) => teamColor[t] = SEASON_COLORS[i % SEASON_COLORS.length]);
+
+  // Ostatnia kolejka — aktualne pozycje do filtrowania
+  const lastRound = rounds[rounds.length - 1];
+  const lastStandings = {{}};
+  (lastRound.standings || []).forEach(s => lastStandings[s.team] = s);
+
+  // Filtruj drużyny wg przełącznika
+  let visibleTeams = allTeams;
+  if (seasonFilter === 'top5') {{
+    visibleTeams = allTeams.filter(t => lastStandings[t] && lastStandings[t].position <= 5);
+  }} else if (seasonFilter === 'bottom5') {{
+    const sorted = allTeams.filter(t => lastStandings[t]).sort((a, b) => lastStandings[b].position - lastStandings[a].position);
+    visibleTeams = sorted.slice(0, 5);
+  }}
+
+  // Wymiary wykresu SVG
+  const marginL = 44, marginR = 20, marginT = 20, marginB = 36;
+  const numRounds = rounds.length;
+  // Szerokość punktu danych: min 60px, dopasuj do ekranu
+  const ptW = Math.max(60, Math.min(100, (900 - marginL - marginR) / Math.max(numRounds - 1, 1)));
+  const chartW = marginL + marginR + ptW * Math.max(numRounds - 1, 1);
+  const chartH = 320;
+  const plotW = chartW - marginL - marginR;
+  const plotH = chartH - marginT - marginB;
+
+  // Zakres osi Y
+  let yMin, yMax;
+  if (seasonView === 'positions') {{
+    // Pozycje: 1..maxPos (odwrócone — 1 na górze)
+    const maxPos = allTeams.length || 1;
+    yMin = 1;
+    yMax = maxPos;
+  }} else {{
+    // Punkty łącznie: 0..max
+    let maxPts = 0;
+    rounds.forEach(r => (r.standings || []).forEach(s => {{ if (s.total_points > maxPts) maxPts = s.total_points; }}));
+    yMin = 0;
+    yMax = maxPts || 100;
+  }}
+
+  // Funkcje mapowania
+  const xScale = (idx) => marginL + (numRounds > 1 ? idx / (numRounds - 1) * plotW : plotW / 2);
+  const yScale = (val) => {{
+    if (seasonView === 'positions') {{
+      // Odwrócona oś — pozycja 1 na górze
+      return marginT + (val - yMin) / (yMax - yMin) * plotH;
+    }} else {{
+      // Punkty rosnąco w górę
+      return marginT + plotH - (val - yMin) / (yMax - yMin || 1) * plotH;
+    }}
+  }};
+
+  // Buduj SVG
+  let svg = '<svg width="' + chartW + '" height="' + chartH + '" xmlns="http://www.w3.org/2000/svg">';
+
+  // Siatka i etykiety osi Y
+  const yTicks = seasonView === 'positions'
+    ? Array.from({{length: Math.min(yMax, 10)}}, (_, i) => i + 1)
+    : (() => {{
+        const step = Math.ceil(yMax / 6 / 10) * 10 || 10;
+        const ticks = [];
+        for (let v = 0; v <= yMax; v += step) ticks.push(v);
+        return ticks;
+      }})();
+
+  yTicks.forEach(v => {{
+    const y = yScale(v);
+    svg += '<line x1="' + marginL + '" y1="' + y + '" x2="' + (chartW - marginR) + '" y2="' + y + '" stroke="#1e293b" stroke-width="1"/>';
+    svg += '<text x="' + (marginL - 8) + '" y="' + (y + 4) + '" text-anchor="end" fill="#64748b" font-size="11" font-family="DM Sans,sans-serif">' + v + '</text>';
   }});
-  
-  h += '</tbody></table></div>';
+
+  // Etykiety osi X — numery kolejek
+  rounds.forEach((r, i) => {{
+    const x = xScale(i);
+    svg += '<text x="' + x + '" y="' + (chartH - 8) + '" text-anchor="middle" fill="#64748b" font-size="11" font-family="DM Sans,sans-serif">' + r.round + '</text>';
+  }});
+
+  // Linie drużyn
+  // Budujemy dane per drużyna: [{{x, y, round, team, position, total_points}}]
+  const teamLines = {{}};
+  visibleTeams.forEach(team => {{
+    teamLines[team] = [];
+    rounds.forEach((r, ri) => {{
+      const s = (r.standings || []).find(s => s.team === team);
+      if (s) {{
+        const val = seasonView === 'positions' ? s.position : s.total_points;
+        teamLines[team].push({{
+          x: xScale(ri), y: yScale(val),
+          round: r.round, team: team,
+          position: s.position, total_points: s.total_points, round_points: s.round_points || 0,
+        }});
+      }}
+    }});
+  }});
+
+  // Rysuj linie i punkty
+  visibleTeams.forEach(team => {{
+    if (seasonHidden[team]) return;
+    const pts = teamLines[team];
+    if (pts.length < 1) return;
+    const color = teamColor[team];
+    // Grubsza linia dla własnej drużyny (slug zawierający 'tokusatsu' lub pozycja 1)
+    const isOwn = team.toLowerCase().includes('tokusatsu');
+    const sw = isOwn ? 3 : 1.5;
+    const opacity = isOwn ? 1 : 0.85;
+
+    // Polyline
+    const points = pts.map(p => p.x + ',' + p.y).join(' ');
+    svg += '<polyline points="' + points + '" fill="none" stroke="' + color + '" stroke-width="' + sw + '" stroke-opacity="' + opacity + '" stroke-linejoin="round" stroke-linecap="round"/>';
+
+    // Punkty danych (klikalne kółka)
+    pts.forEach((p, pi) => {{
+      svg += '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (isOwn ? 5 : 3.5) + '" fill="' + color + '" stroke="#0f172a" stroke-width="1.5"'
+        + ' data-season-pt="1"'
+        + ' data-tip="Kolejka ' + p.round + ': ' + p.team + ' — poz. ' + p.position + ' (' + p.total_points + ' pkt)"'
+        + ' style="cursor:pointer" />';
+    }});
+  }});
+
+  svg += '</svg>';
+
+  // === Buduj HTML ===
+  let h = '<div class="section-title"><span style="font-size:22px">📈</span><h2>Sezon — historia ligi</h2><div class="line"></div></div>';
+
+  // Kontrolki
+  h += '<div class="season-controls">';
+  h += '<button class="season-btn' + (seasonView === 'positions' ? ' active' : '') + '" data-sview="positions">Pozycje</button>';
+  h += '<button class="season-btn' + (seasonView === 'points' ? ' active' : '') + '" data-sview="points">Punkty łącznie</button>';
+  h += '<span style="width:16px"></span>';
+  h += '<button class="season-btn' + (seasonFilter === 'all' ? ' active' : '') + '" data-sfilter="all">Wszystkie</button>';
+  h += '<button class="season-btn' + (seasonFilter === 'top5' ? ' active' : '') + '" data-sfilter="top5">Top 5</button>';
+  h += '<button class="season-btn' + (seasonFilter === 'bottom5' ? ' active' : '') + '" data-sfilter="bottom5">Dolne 5</button>';
   h += '</div>';
+
+  // Wykres
+  h += '<div class="season-wrap">';
+  h += '<div class="season-chart" id="seasonChart">';
+  h += svg;
+  h += '<div class="season-tooltip" id="seasonTooltip"></div>';
+  h += '</div>';
+
+  // Legenda
+  h += '<div class="season-legend">';
+  visibleTeams.forEach(team => {{
+    const color = teamColor[team];
+    const cls = seasonHidden[team] ? ' hidden' : '';
+    h += '<span class="season-legend-item' + cls + '" data-steam="' + team.replace(/"/g, '&quot;') + '">';
+    h += '<span class="swatch" style="background:' + color + '"></span>' + team;
+    h += '</span>';
+  }});
+  h += '</div>';
+  h += '</div>';  // season-wrap
+
+  // === Tabela szczegółów ===
+  if (lastRound && lastRound.standings && lastRound.standings.length > 0) {{
+    h += '<div class="season-table"><div class="data-table"><table>';
+    h += '<thead><tr>';
+    h += '<th class="text-left">Drużyna</th><th class="text-center">Poz.</th><th class="text-right">Punkty</th>';
+    h += '<th class="text-right">Średnia/kol.</th><th class="text-right">Najlepsza kol.</th><th class="text-right">Najgorsza kol.</th>';
+    h += '<th class="text-center">Trend</th>';
+    h += '</tr></thead><tbody>';
+
+    // Oblicz statystyki per drużyna
+    const teamStats = [];
+    allTeams.forEach(team => {{
+      const roundData = [];
+      rounds.forEach(r => {{
+        const s = (r.standings || []).find(s => s.team === team);
+        if (s) roundData.push({{ round: r.round, pts: s.round_points || 0, pos: s.position, total: s.total_points }});
+      }});
+      if (roundData.length === 0) return;
+
+      const last = roundData[roundData.length - 1];
+      const totalPts = last.total;
+      const avg = roundData.length > 0 ? (totalPts / roundData.length) : 0;
+
+      // Najlepsza/najgorsza kolejka (po round_points)
+      let bestRound = roundData[0], worstRound = roundData[0];
+      roundData.forEach(rd => {{
+        if (rd.pts > bestRound.pts) bestRound = rd;
+        if (rd.pts < worstRound.pts) worstRound = rd;
+      }});
+
+      // Trend — zmiana pozycji w ostatnich 3 kolejkach
+      let trend = 0;
+      if (roundData.length >= 2) {{
+        const recent = roundData.slice(-3);
+        trend = recent[0].pos - recent[recent.length - 1].pos;
+      }}
+
+      teamStats.push({{
+        team, position: last.pos, totalPts, avg,
+        bestRound: bestRound.pts + ' (K' + bestRound.round + ')',
+        worstRound: worstRound.pts + ' (K' + worstRound.round + ')',
+        trend,
+      }});
+    }});
+
+    // Sortuj po pozycji
+    teamStats.sort((a, b) => a.position - b.position);
+
+    teamStats.forEach(ts => {{
+      const trendHtml = ts.trend > 0
+        ? '<span class="trend-up">▲' + ts.trend + '</span>'
+        : ts.trend < 0
+          ? '<span class="trend-down">▼' + Math.abs(ts.trend) + '</span>'
+          : '<span class="trend-flat">●</span>';
+      const color = teamColor[ts.team] || '#e2e8f0';
+      h += '<tr>';
+      h += '<td class="text-left" style="color:' + color + ';font-weight:600">' + ts.team + '</td>';
+      h += '<td class="text-center fw-700">' + ts.position + '</td>';
+      h += '<td class="text-right fw-600">' + ts.totalPts + '</td>';
+      h += '<td class="text-right">' + ts.avg.toFixed(1) + '</td>';
+      h += '<td class="text-right" style="color:#10b981">' + ts.bestRound + '</td>';
+      h += '<td class="text-right" style="color:#ef4444">' + ts.worstRound + '</td>';
+      h += '<td class="text-center">' + trendHtml + '</td>';
+      h += '</tr>';
+    }});
+
+    h += '</tbody></table></div></div>';
+  }}
+
   return h;
+}}
+
+function attachSeasonHandlers() {{
+  // Przełączniki widoku i filtra
+  document.querySelectorAll('[data-sview]').forEach(btn => {{
+    btn.onclick = () => {{ seasonView = btn.dataset.sview; render(); }};
+  }});
+  document.querySelectorAll('[data-sfilter]').forEach(btn => {{
+    btn.onclick = () => {{ seasonFilter = btn.dataset.sfilter; render(); }};
+  }});
+  // Legenda — klik ukrywa/pokazuje linię
+  document.querySelectorAll('.season-legend-item').forEach(item => {{
+    item.onclick = () => {{
+      const team = item.dataset.steam;
+      seasonHidden[team] = !seasonHidden[team];
+      render();
+    }};
+  }});
+  // Tooltip na punktach wykresu
+  const chart = document.getElementById('seasonChart');
+  const tip = document.getElementById('seasonTooltip');
+  if (chart && tip) {{
+    chart.addEventListener('mouseover', (e) => {{
+      const el = e.target.closest('[data-season-pt]');
+      if (el) {{
+        tip.textContent = el.dataset.tip;
+        tip.classList.add('visible');
+        const rect = chart.getBoundingClientRect();
+        const cx = parseFloat(el.getAttribute('cx'));
+        const cy = parseFloat(el.getAttribute('cy'));
+        tip.style.left = (cx + 12) + 'px';
+        tip.style.top = (cy - 10) + 'px';
+      }}
+    }});
+    chart.addEventListener('mouseout', (e) => {{
+      if (e.target.closest('[data-season-pt]')) {{
+        tip.classList.remove('visible');
+      }}
+    }});
+  }}
 }}
 
 // Obsługa zakładek
