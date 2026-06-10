@@ -2513,7 +2513,10 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                 if len(parts) == 2:
                     home = parts[0].strip()
                     away = parts[1].strip()
-                    if home and away and len(home) > 2 and not re.match(r'^\d', home):
+                    # Pomijamy linie z cyframi — to listy strzelców (np. "Luis Palma 57 - Kike Hermoso 52"),
+                    # a nie mecze. Nazwy drużyn Ekstraklasy nigdy nie zawierają cyfr.
+                    if home and away and len(home) > 2 and not re.match(r'^\d', home) \
+                            and not re.search(r'\d', home) and not re.search(r'\d', away):
                         teams_set.add(home)
                         teams_set.add(away)
                         matches_by_round[current_round].append({
