@@ -984,7 +984,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
                 break
 
         if success:
-            disclaimer = "_Wygenerowano przez Gemini AI · Dane mogą nie oddawać pełnego obrazu_"
+            disclaimer = "_Wygenerowano przez AI · Dane mogą nie oddawać pełnego obrazu_"
             ok = _send_content(webhook_url, disclaimer)
             success = success and ok
 
@@ -1121,84 +1121,145 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
 
 
 # ============================================================
-# STAŁE I IMPORTY DLA GEMINI
+# STAŁE I IMPORTY DLA AI (DeepSeek + Gemini fallback)
 # ============================================================
 
 import urllib.request
 import urllib.error
 
-# Ustawienia Gemini dla prognoz eksperckich
+# Ustawienia DeepSeek — model podstawowy (OpenAI-compatible API)
+DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_TIMEOUT = 30
+DEEPSEEK_MAX_OUTPUT_TOKENS = 1500
+
+# Ustawienia Gemini — fallback
 GEMINI_TIMEOUT = 30
 GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_MAX_OUTPUT_TOKENS = 1500
 GEMINI_THINKING_BUDGET = 0
 
 
-def _call_gemini_expert(prompt: str, api_key: str, label: str = "expert") -> dict:
+def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", label: str = "expert") -> dict:
     """
-    Wywołuje Gemini API dla prognoz eksperckich z retry.
+    Wywołuje API AI dla prognoz eksperckich: DeepSeek jako główny model, Gemini jako fallback.
     
-    Zwraca dict z 'text' (treść odpowiedzi) i 'error' (opis błędu lub None).
+    Oba modele mają własną logikę retry (exponential backoff).
+    Zwraca dict z 'text' (treść odpowiedzi), 'error' (opis błędu lub None) i 'model'.
     """
     import time
     import random
     
-    max_retries = 3
-    last_error = None
+    # --- KROK 1: DeepSeek (model podstawowy) ---
+    if deepseek_key:
+        last_error = None
+        for attempt in range(3):
+            try:
+                result = _call_deepseek_expert_raw(prompt, deepseek_key)
+                text = ""
+                choices = result.get("choices", [])
+                if choices:
+                    text = choices[0].get("message", {}).get("content", "")
+                if text:
+                    print(f"  ✅ {label}: DeepSeek odpowiedź ({len(text)} znaków)")
+                    return {"text": text, "error": None, "model": DEEPSEEK_MODEL}
+                last_error = "Pusta odpowiedź od DeepSeek"
+            except Exception as e:
+                last_error = str(e)
+            
+            if attempt < 2:
+                wait_time = (2 ** attempt) + random.uniform(0.5, 1.5)
+                print(f"  ⚠️  {label}: DeepSeek próba {attempt + 1} nieudana ({last_error}), retry za {wait_time:.1f}s...")
+                time.sleep(wait_time)
+        
+        print(f"  ⚠️  {label}: DeepSeek failed after 3 attempts ({last_error}), próbuję Gemini...")
+    else:
+        print(f"  ℹ️  {label}: brak DEEPSEEK_API_KEY, próbuję Gemini...")
     
-    for attempt in range(max_retries):
-        url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{GEMINI_MODEL}:generateContent?key={api_key}"
-        )
-        
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
-                "thinkingConfig": {
-                    "thinkingBudget": GEMINI_THINKING_BUDGET,
-                },
-            },
-        }
-        
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(
-            url,
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        
-        try:
-            with urllib.request.urlopen(req, timeout=GEMINI_TIMEOUT) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                # Wyciągnij tekst z odpowiedzi
+    # --- KROK 2: Gemini (fallback) ---
+    if gemini_key:
+        max_retries = 3
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                result = _call_gemini_expert_raw(prompt, gemini_key)
                 text = ""
                 candidates = result.get("candidates", [])
                 if candidates:
                     parts = candidates[0].get("content", {}).get("parts", [])
                     text = "".join(p.get("text", "") for p in parts)
                 if text:
-                    return {"text": text, "error": None}
-                else:
-                    last_error = "Pusta odpowiedź od Gemini"
-        except urllib.error.HTTPError as e:
-            body = e.read().decode("utf-8", errors="replace")
-            last_error = f"HTTP {e.code}: {body[:200]}"
-        except urllib.error.URLError as e:
-            last_error = f"URL error: {e.reason}"
-        except Exception as e:
-            last_error = str(e)
+                    print(f"  ✅ {label}: Gemini odpowiedź ({len(text)} znaków)")
+                    return {"text": text, "error": None, "model": GEMINI_MODEL}
+                last_error = "Pusta odpowiedź od Gemini"
+            except Exception as e:
+                last_error = str(e)
+            
+            if attempt < max_retries - 1:
+                wait_time = (2 ** attempt) + random.uniform(0.5, 1.5)
+                print(f"  ⚠️  {label}: Gemini próba {attempt + 1} nieudana ({last_error}), retry za {wait_time:.1f}s...")
+                time.sleep(wait_time)
         
-        # Retry z exponential backoff
-        if attempt < max_retries - 1:
-            wait_time = (2 ** attempt) + random.uniform(0.5, 1.5)
-            print(f"  ⚠️  {label}: próba {attempt + 1} nieudana, retry za {wait_time:.1f}s...")
-            time.sleep(wait_time)
+        print(f"  ⚠️  {label}: Gemini failed after {max_retries} attempts ({last_error})")
+        return {"text": "", "error": f"Gemini fallback: {last_error}", "model": ""}
+    else:
+        print(f"  ℹ️  {label}: brak GEMINI_API_KEY")
     
-    return {"text": "", "error": last_error}
+    return {"text": "", "error": "Brak klucza API", "model": ""}
+
+
+def _call_deepseek_expert_raw(prompt: str, api_key: str):
+    """
+    Wysyła prompt do DeepSeek API i zwraca sparsowany JSON.
+    """
+    url = "https://api.deepseek.com/v1/chat/completions"
+    payload = {
+        "model": DEEPSEEK_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": DEEPSEEK_MAX_OUTPUT_TOKENS,
+        "temperature": 0.7,
+        "stream": False,
+    }
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=DEEPSEEK_TIMEOUT) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def _call_gemini_expert_raw(prompt: str, api_key: str):
+    """
+    Wysyła prompt do Gemini API i zwraca surowy obiekt response.
+    Używane wewnątrz _call_ai_expert jako fallback.
+    """
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{GEMINI_MODEL}:generateContent?key={api_key}"
+    )
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
+            "thinkingConfig": {
+                "thinkingBudget": GEMINI_THINKING_BUDGET,
+            },
+        },
+    }
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    return json.loads(urllib.request.urlopen(req, timeout=GEMINI_TIMEOUT).read().decode("utf-8"))
 
 
 def _build_expert_context(all_data: dict) -> dict:
@@ -1349,26 +1410,28 @@ def _build_expert_context(all_data: dict) -> dict:
     return ctx
 
 
-def generate_expert_predictions(all_data: dict, api_key: str) -> tuple[dict, dict]:
+def generate_expert_predictions(all_data: dict, deepseek_key: str = "", gemini_key: str = "") -> tuple[dict, dict]:
     """
-    Generuje dwie prognozy eksperckie (Rabbti i Tlinf) przez Gemini API.
+    Generuje dwie prognozy eksperckie (Rabbti i Tlinf) przez API AI.
+    DeepSeek jako model podstawowy, Gemini jako fallback.
     
     Parametry:
         all_data: słownik z wszystkimi danymi (predictions, players, fixtures, etc.)
-        api_key: klucz Gemini API ze zmiennej środowiskowej
+        deepseek_key: klucz DeepSeek API
+        gemini_key: klucz Gemini API (fallback)
     
     Zwraca tuple z dwoma dict:
-        - {"name": "Rabbti", "text": "...", "error": None/str}
-        - {"name": "Tlinf", "text": "...", "error": None/str}
+        - {"name": "Rabbti", "text": "...", "error": None/str, "model": "..."}
+        - {"name": "Tlinf", "text": "...", "error": None/str, "model": "..."}
     
     Każda prognoza zawiera:
         - Rekomendację kapitana (z uzasadnieniem)
         - 2 transfery do rozważenia
     """
-    if not api_key:
+    if not deepseek_key and not gemini_key:
         return (
-            {"name": "Rabbti", "text": "", "error": "Brak GEMINI_API_KEY"},
-            {"name": "Tlinf", "text": "", "error": "Brak GEMINI_API_KEY"},
+            {"name": "Rabbti", "text": "", "error": "Brak klucza API", "model": ""},
+            {"name": "Tlinf", "text": "", "error": "Brak klucza API", "model": ""},
         )
     
     round_number = all_data.get("round_number", "?")
@@ -1407,18 +1470,19 @@ WYMAGANIA:
 - Po polsku, krótko i rzeczowo
 - Nie dodawaj wstępu ani zakończenia"""
 
-    print("  📊 Rabbti: wysyłam zapytanie do Gemini...")
-    rabbti_result = _call_gemini_expert(rabbti_prompt, api_key, label="rabbti")
+    print("  📊 Rabbti: wysyłam zapytanie do AI...")
+    rabbti_result = _call_ai_expert(rabbti_prompt, deepseek_key=deepseek_key, gemini_key=gemini_key, label="rabbti")
     
     if rabbti_result.get("error"):
-        print(f"  ⚠️  Rabbti: błąd Gemini - {rabbti_result['error']}")
+        print(f"  ⚠️  Rabbti: błąd AI - {rabbti_result['error']}")
     else:
-        print(f"  ✅ Rabbti: otrzymano odpowiedź ({len(rabbti_result.get('text', ''))} znaków)")
+        print(f"  ✅ Rabbti: otrzymano odpowiedź ({len(rabbti_result.get('text', ''))} znaków) [{rabbti_result.get('model', '?')}]")
     
     results.append({
         "name": "Rabbti",
         "text": rabbti_result.get("text", ""),
         "error": rabbti_result.get("error"),
+        "model": rabbti_result.get("model", ""),
     })
     
     # === EKSPERT 2: TLINF - kibic, kontrowersyjny, szuka nietypowych rozwiązań ===
@@ -1449,24 +1513,25 @@ WYMAGANIA:
 - Po polsku, w stylu kibica z forum
 - Nie dodawaj wstępu ani zakończenia"""
 
-    print("  📊 Tlinf: wysyłam zapytanie do Gemini...")
-    tlinf_result = _call_gemini_expert(tlinf_prompt, api_key, label="tlinf")
+    print("  📊 Tlinf: wysyłam zapytanie do AI...")
+    tlinf_result = _call_ai_expert(tlinf_prompt, deepseek_key=deepseek_key, gemini_key=gemini_key, label="tlinf")
     
     if tlinf_result.get("error"):
-        print(f"  ⚠️  Tlinf: błąd Gemini - {tlinf_result['error']}")
+        print(f"  ⚠️  Tlinf: błąd AI - {tlinf_result['error']}")
     else:
-        print(f"  ✅ Tlinf: otrzymano odpowiedź ({len(tlinf_result.get('text', ''))} znaków)")
+        print(f"  ✅ Tlinf: otrzymano odpowiedź ({len(tlinf_result.get('text', ''))} znaków) [{tlinf_result.get('model', '?')}]")
     
     results.append({
         "name": "Tlinf",
         "text": tlinf_result.get("text", ""),
         "error": tlinf_result.get("error"),
+        "model": tlinf_result.get("model", ""),
     })
     
     return (results[0], results[1])
 
 
-def send_expert_predictions(all_data: dict, webhook_url: str, api_key: str, round_number: int):
+def send_expert_predictions(all_data: dict, webhook_url: str, deepseek_key: str = "", gemini_key: str = "", round_number: int = 0):
     """
     Generuje i wysyła prognozy eksperckie (Rabbti i Tlinf) na Discord.
     
@@ -1475,11 +1540,12 @@ def send_expert_predictions(all_data: dict, webhook_url: str, api_key: str, roun
     Parametry:
         all_data: słownik z wszystkimi danymi (predictions, players, fixtures, etc.)
         webhook_url: URL Discord webhooka
-        api_key: klucz Gemini API
+        deepseek_key: klucz DeepSeek API
+        gemini_key: klucz Gemini API (fallback)
         round_number: numer kolejki
     """
-    # Generuj prognozy przez Gemini
-    rabbti, tlinf = generate_expert_predictions(all_data, api_key)
+    # Generuj prognozy przez AI (DeepSeek + Gemini fallback)
+    rabbti, tlinf = generate_expert_predictions(all_data, deepseek_key=deepseek_key, gemini_key=gemini_key)
     
     # Wyślij każdą prognozę jako osobną wiadomość Discord
     predictions_to_send = [rabbti, tlinf]

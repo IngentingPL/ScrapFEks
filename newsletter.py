@@ -1,13 +1,13 @@
 """
-newsletter.py — Newsletter AI (Gemini) dla ScrapFEks
-=====================================================
+newsletter.py — Newsletter AI (DeepSeek + Gemini fallback) dla ScrapFEks
+========================================================================
 
 Po każdej kolejce generuje krótki komentarz po polsku na bazie danych z ScrapFEks.
-Używa Gemini API (gemini-2.5-flash) przez urllib.request — BEZ zewnętrznych bibliotek.
+Używa DeepSeek API jako modelu podstawowego, Gemini API jako fallbacku.
+Komunikacja przez urllib.request — BEZ zewnętrznych bibliotek.
 
 📖 LEKCJA: API (Application Programming Interface) to sposób komunikacji między
 programami. Wysyłasz JSON z pytaniem → dostajesz JSON z odpowiedzią.
-Gemini API jest darmowe do ~15 requestów/minutę (model gemini-2.5-flash).
 
 Autor: Wygenerowane przez Claude dla Piotra
 """
@@ -32,6 +32,11 @@ MAX_NEWSLETTER_CHARS = 1500
 GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_MAX_OUTPUT_TOKENS = 2200
 GEMINI_THINKING_BUDGET = 0  # 0 = wyłącz thinking dla newslettera
+
+# Ustawienia DeepSeek — model podstawowy (OpenAI-compatible API)
+DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_TIMEOUT = 30
+
 NEWSLETTER_END_MARKER = "### KONIEC NEWSLETTERA ###"
 
 
@@ -40,17 +45,19 @@ NEWSLETTER_END_MARKER = "### KONIEC NEWSLETTERA ###"
 # ============================================================
 
 
-def generate_newsletter(round_data: dict, api_key: str):
+def generate_newsletter(round_data: dict, deepseek_key: str = "", gemini_key: str = ""):
     """
     Generuje newsletter AI po zakończeniu kolejki.
+    
+    Używa DeepSeek jako modelu podstawowego, Gemini jako fallbacku.
 
     Wersja diagnostyczna:
     - loguje finish_reason i usageMetadata,
     - wykrywa podejrzanie urwaną odpowiedź,
     - robi jedną próbę awaryjną krótszym promptem.
     """
-    if not api_key:
-        print("  ℹ️  Newsletter: brak GEMINI_API_KEY — pomijam")
+    if not deepseek_key and not gemini_key:
+        print("  ℹ️  Newsletter: brak kluczy API (DEEPSEEK_API_KEY ani GEMINI_API_KEY) — pomijam")
         return None
 
     round_number = round_data.get("round_number")
@@ -60,7 +67,7 @@ def generate_newsletter(round_data: dict, api_key: str):
     try:
         context = _build_context(round_data)
         prompt = _build_prompt(round_number, context)
-        result = call_gemini(prompt, api_key, label="primary")
+        result = call_ai(prompt, deepseek_key=deepseek_key, gemini_key=gemini_key, label="primary")
     except Exception as e:
         print(f"  ⚠️  Newsletter: błąd generowania — {e}")
         return None
@@ -71,7 +78,7 @@ def generate_newsletter(round_data: dict, api_key: str):
         print("  ⚠️  Newsletter: odpowiedź wygląda na urwaną lub niepełną — retry krótszym promptem")
         try:
             retry_prompt = _build_retry_prompt(round_number, context)
-            retry_result = call_gemini(retry_prompt, api_key, label="retry")
+            retry_result = call_ai(retry_prompt, deepseek_key=deepseek_key, gemini_key=gemini_key, label="retry")
             retry_text = (retry_result.get("text") or "").strip()
             if retry_text and not _should_retry_newsletter(retry_result, retry_text):
                 result = retry_result
@@ -86,7 +93,7 @@ def generate_newsletter(round_data: dict, api_key: str):
 
     text = (text or "").strip()
     if not text:
-        print("  ⚠️  Newsletter: Gemini zwrócił pusty tekst — pomijam")
+        print("  ⚠️  Newsletter: model zwrócił pusty tekst — pomijam")
         return None
 
     if len(text) > MAX_NEWSLETTER_CHARS:
@@ -94,7 +101,7 @@ def generate_newsletter(round_data: dict, api_key: str):
         print(f"  ℹ️  Newsletter: obcięto do {MAX_NEWSLETTER_CHARS} znaków")
 
     try:
-        _save_newsletter(round_number, text)
+        _save_newsletter(round_number, text, model=result.get("model", ""))
     except Exception as e:
         print(f"  ⚠️  Newsletter: błąd zapisu do archiwum — {e}")
 
@@ -103,19 +110,61 @@ def generate_newsletter(round_data: dict, api_key: str):
 
 
 # ============================================================
-# GEMINI API CALL
+# AI API CALL (DeepSeek + Gemini fallback)
 # ============================================================
 
 
-def call_gemini(prompt: str, api_key: str, label: str = "primary") -> dict:
+def call_ai(prompt: str, deepseek_key: str = "", gemini_key: str = "", label: str = "primary") -> dict:
     """
-    Wysyła prompt do Gemini API i zwraca słownik z tekstem i diagnostyką.
+    Wysyła prompt do API AI: DeepSeek jako model podstawowy, Gemini jako fallback.
+    
+    Zwraca słownik z tekstem, diagnostyką i nazwą użytego modelu.
+    """
+    # --- KROK 1: DeepSeek (model podstawowy) ---
+    if deepseek_key:
+        try:
+            result = _call_deepseek_api(prompt, deepseek_key, label)
+            parsed = _parse_deepseek_result(result, label)
+            if parsed.get("text"):
+                parsed["model"] = DEEPSEEK_MODEL
+                return parsed
+            print(f"  ⚠️  DeepSeek zwrócił pusty tekst ({label}), próbuję Gemini...")
+        except Exception as e:
+            print(f"  ⚠️  DeepSeek błąd ({label}): {e}, próbuję Gemini...")
+    else:
+        print(f"  ℹ️  DeepSeek: brak DEEPSEEK_API_KEY, próbuję Gemini...")
+    
+    # --- KROK 2: Gemini (fallback) ---
+    if gemini_key:
+        try:
+            result = _call_gemini_api(prompt, gemini_key, label)
+            parsed = _parse_gemini_result(result)
+            _log_gemini_debug(parsed, label=label)
+            parsed["model"] = GEMINI_MODEL
+            return parsed
+        except Exception as e:
+            print(f"  ⚠️  Gemini błąd ({label}): {e}")
+    else:
+        print(f"  ℹ️  Gemini: brak GEMINI_API_KEY")
+    
+    # --- Oba zawiodły ---
+    print(f"  ⚠️  Brak dostępnego modelu AI ({label})")
+    return {
+        "text": None,
+        "finish_reason": None,
+        "usage_metadata": {},
+        "marker_present": False,
+        "candidate_parts_count": 0,
+        "error": "Brak klucza API",
+        "raw": None,
+        "model": "",
+    }
 
-    Najważniejsze poprawki:
-    - wyłącza thinkingBudget dla Gemini 2.5 Flash,
-    - zwiększa maxOutputTokens,
-    - łączy tekst ze wszystkich części odpowiedzi (parts),
-    - loguje finishReason i usageMetadata.
+
+def _call_gemini_api(prompt: str, api_key: str, label: str = "primary") -> dict:
+    """
+    Wysyła prompt do Gemini API i zwraca surową odpowiedź JSON.
+    Wyodrębnione z call_gemini — używane tylko jako fallback.
     """
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -143,45 +192,84 @@ def call_gemini(prompt: str, api_key: str, label: str = "primary") -> dict:
 
     try:
         with urllib.request.urlopen(req, timeout=GEMINI_TIMEOUT) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
+            return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", errors="replace")
-        print(f"  ⚠️  Gemini API HTTP błąd ({label}): {e.code} {e.reason} — {body[:400]}")
-        return {
-            "text": None,
-            "finish_reason": None,
-            "usage_metadata": {},
-            "marker_present": False,
-            "candidate_parts_count": 0,
-            "error": f"HTTP {e.code}",
-            "raw": None,
-        }
+        raise RuntimeError(f"Gemini HTTP {e.code}: {body[:300]}")
     except urllib.error.URLError as e:
-        print(f"  ⚠️  Gemini API błąd połączenia ({label}): {e.reason}")
-        return {
-            "text": None,
-            "finish_reason": None,
-            "usage_metadata": {},
-            "marker_present": False,
-            "candidate_parts_count": 0,
-            "error": str(e.reason),
-            "raw": None,
-        }
-    except Exception as e:
-        print(f"  ⚠️  Gemini API nieoczekiwany błąd ({label}): {e}")
-        return {
-            "text": None,
-            "finish_reason": None,
-            "usage_metadata": {},
-            "marker_present": False,
-            "candidate_parts_count": 0,
-            "error": str(e),
-            "raw": None,
-        }
+        raise RuntimeError(f"Gemini URL error: {e.reason}")
 
-    parsed = _parse_gemini_result(result)
-    _log_gemini_debug(parsed, label=label)
-    return parsed
+
+def _call_deepseek_api(prompt: str, api_key: str, label: str = "primary") -> dict:
+    """
+    Wysyła prompt do DeepSeek API (OpenAI-compatible) i zwraca surową odpowiedź JSON.
+    """
+    url = "https://api.deepseek.com/v1/chat/completions"
+
+    payload = {
+        "model": DEEPSEEK_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": GEMINI_MAX_OUTPUT_TOKENS,  # ten sam limit co Gemini
+        "temperature": 0.7,
+        "stream": False,
+    }
+
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=DEEPSEEK_TIMEOUT) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"DeepSeek HTTP {e.code}: {body[:300]}")
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"DeepSeek URL error: {e.reason}")
+
+
+def _parse_deepseek_result(result: dict, label: str = "primary") -> dict:
+    """
+    Parsuje odpowiedź DeepSeek (format OpenAI-compatible) do wspólnego formatu.
+    """
+    choices = result.get("choices") or []
+    choice = choices[0] if choices else {}
+    message = choice.get("message") or {}
+    text = (message.get("content") or "").strip()
+    finish_reason = choice.get("finish_reason") or ""
+    usage = result.get("usage") or {}
+
+    marker_present = NEWSLETTER_END_MARKER in text
+    if marker_present:
+        text = text.replace(NEWSLETTER_END_MARKER, "").strip()
+
+    print(f"  === DEEPSEEK DEBUG ({label}) START ===")
+    print(f"  model: {result.get('model', DEEPSEEK_MODEL)}")
+    print(f"  finish_reason: {finish_reason}")
+    print(f"  text_length: {len(text)}")
+    print(f"  text_ending: {repr(text[-200:])}")
+    print(f"  prompt_tokens: {usage.get('prompt_tokens')}")
+    print(f"  completion_tokens: {usage.get('completion_tokens')}")
+    print(f"  total_tokens: {usage.get('total_tokens')}")
+    print(f"  marker_present: {marker_present}")
+    print(f"  === DEEPSEEK DEBUG ({label}) END ===")
+
+    return {
+        "text": text,
+        "finish_reason": finish_reason,
+        "usage_metadata": usage,
+        "marker_present": marker_present,
+        "candidate_parts_count": 1 if text else 0,
+        "model_version": result.get("model", DEEPSEEK_MODEL),
+        "raw": result,
+    }
 
 def _parse_gemini_result(result: dict) -> dict:
     """Parsuje odpowiedź Gemini i składa tekst ze wszystkich części odpowiedzi."""
@@ -264,7 +352,7 @@ def _log_gemini_debug(parsed: dict, label: str = "primary") -> None:
 
 
 def _build_retry_prompt(round_number, context: dict) -> str:
-    """Krótszy prompt retry: mniej swobody, większa szansa na domknięcie tekstu."""
+    """Krótszy prompt retry: mniej swobody, większa szansa na domknięcie tekstu (wysyłany do tego samego modelu co primary)."""
     context_json = json.dumps(context, ensure_ascii=False, indent=2)
     return f"""Jesteś komentatorem Fantasy Ekstraklasa. Napisz bardzo krótki newsletter po polsku po kolejce {round_number}.
 
@@ -287,7 +375,7 @@ ZASADY:
 
 
 # ============================================================
-# BUDOWANIE KONTEKSTU DLA GEMINI
+# BUDOWANIE KONTEKSTU DLA AI
 # ============================================================
 
 def _build_context(round_data: dict) -> dict:
@@ -500,12 +588,12 @@ def _collect_captains(league_teams_detail, players_data, round_number, league_da
 
 
 # ============================================================
-# PROMPT DLA GEMINI
+# PROMPT DLA AI
 # ============================================================
 
 
 def _build_prompt(round_number, context: dict) -> str:
-    """Buduje precyzyjny prompt dla Gemini z danymi kolejki."""
+    """Buduje precyzyjny prompt dla modelu AI z danymi kolejki."""
     context_json = json.dumps(context, ensure_ascii=False, indent=2)
     return f"""Jesteś komentatorem Fantasy Ekstraklasa. Piszesz krótki, energiczny newsletter po polsku po zakończeniu kolejki {round_number}.
 
@@ -538,7 +626,7 @@ ZASADY:
 # ARCHIWUM — zapis i odczyt newsletter_history.json
 # ============================================================
 
-def _save_newsletter(round_number, text: str) -> None:
+def _save_newsletter(round_number, text: str, model: str = "") -> None:
     """
     Dopisuje newsletter do archiwum JSON.
 
@@ -564,7 +652,7 @@ def _save_newsletter(round_number, text: str) -> None:
         "round": round_number,
         "date": date.today().isoformat(),
         "text": text,
-        "model": GEMINI_MODEL,
+        "model": model or DEEPSEEK_MODEL,  # DeepSeek domyślnie, Gemini tylko jeśli fallback
     }
     history.append(entry)
 
@@ -591,26 +679,31 @@ def load_newsletter_history() -> list:
 
 
 # ============================================================
-# CLI — test klucza Gemini API
+# CLI — test kluczy API (DeepSeek + Gemini)
 # ============================================================
 # Użycie:
+#   DEEPSEEK_API_KEY=twoj_klucz python newsletter.py
 #   GEMINI_API_KEY=twoj_klucz python newsletter.py
 #
-# Wysyła krótki testowy prompt do Gemini i wyświetla odpowiedź.
-# NIE wysyła nic na Discord, NIE zapisuje do archiwum.
+# Wysyła krótki testowy prompt do DeepSeek (lub Gemini jako fallback)
+# i wyświetla odpowiedź. NIE wysyła nic na Discord, NIE zapisuje do archiwum.
 
 if __name__ == "__main__":
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        print("❌ Ustaw zmienną GEMINI_API_KEY, np.:")
+    deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "")
+    gemini_key = os.environ.get("GEMINI_API_KEY", "")
+    if not deepseek_key and not gemini_key:
+        print("❌ Ustaw zmienną DEEPSEEK_API_KEY lub GEMINI_API_KEY, np.:")
+        print("   DEEPSEEK_API_KEY=sk-... python newsletter.py")
         print("   GEMINI_API_KEY=AIza... python newsletter.py")
         raise SystemExit(1)
 
-    print("🔑 Testuję klucz Gemini API...")
-    test_prompt = "Odpowiedz jednym zdaniem po polsku: Czy działa połączenie z Gemini API?"
-    result = call_gemini(test_prompt, api_key)
+    print("🔑 Testuję połączenie z API AI...")
+    test_prompt = "Odpowiedz jednym zdaniem po polsku: Czy działa połączenie z API?"
+    result = call_ai(test_prompt, deepseek_key=deepseek_key, gemini_key=gemini_key)
 
-    if result:
-        print(f"✅ Klucz działa! Odpowiedź Gemini:\n   {result.strip()}")
+    text = result.get("text") if result else None
+    model = result.get("model", "?") if result else "?"
+    if text:
+        print(f"✅ Klucz działa! Model: {model}\n   {text.strip()}")
     else:
-        print("❌ Brak odpowiedzi — sprawdź klucz lub logi powyżej.")
+        print(f"❌ Brak odpowiedzi — sprawdź klucz lub logi powyżej. Użyty model: {model}")

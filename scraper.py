@@ -6207,8 +6207,9 @@ def main():
             is_day_before = date.today() == (first_date - __import__('datetime').timedelta(days=1)) if first_date else False
             
             # Tylko dzień przed meczem (nie w dzień meczu!)
-            gemini_key = os.environ.get("GEMINI_API_KEY")
-            if gemini_key and is_day_before:
+            deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "")
+            gemini_key = os.environ.get("GEMINI_API_KEY", "")
+            if (deepseek_key or gemini_key) and is_day_before:
                 # Buduj mapę slug → display_name dla ładniejszych nazw drużyn
                 display_name_map = {
                     t.get("slug", ""): t.get("display_name", "")
@@ -6237,13 +6238,14 @@ def main():
                 send_expert_predictions(
                     all_data=expert_data,
                     webhook_url=webhook_url,
-                    api_key=gemini_key,
+                    deepseek_key=deepseek_key,
+                    gemini_key=gemini_key,
                     round_number=discord_next_gw,
                 )
             else:
-                # Rozróżnij przyczynę pominięcia: brak klucza vs nie ten dzień
-                if not gemini_key:
-                    print("  ℹ️  Eksperci: brak GEMINI_API_KEY — pomijam generowanie")
+                # Rozróżnij przyczynę pominięcia: brak kluczy vs nie ten dzień
+                if not deepseek_key and not gemini_key:
+                    print("  ℹ️  Eksperci: brak kluczy API (DEEPSEEK_API_KEY ani GEMINI_API_KEY) — pomijam generowanie")
                 elif not is_day_before:
                     print("  ℹ️  Eksperci: nie dzień przed meczem — pomijam generowanie")
 
@@ -6266,12 +6268,13 @@ def main():
                     entry["display_name"] = display_name_map[slug]
                 discord_league.append(entry)
 
-            # Newsletter AI (Gemini) — generuj jeśli klucz API jest dostępny.
+            # Newsletter AI (DeepSeek + Gemini fallback) — generuj jeśli klucz API jest dostępny.
             # Błąd newslettera NIE przerywa wysyłki post-rounda.
             from newsletter import generate_newsletter
-            gemini_key = os.environ.get("GEMINI_API_KEY")
+            deepseek_key2 = os.environ.get("DEEPSEEK_API_KEY", "")
+            gemini_key2 = os.environ.get("GEMINI_API_KEY", "")
             newsletter_text = None
-            if gemini_key:
+            if deepseek_key2 or gemini_key2:
                 newsletter_round_data = {
                     "round_number": current_round,
                     "league_data": discord_league,
@@ -6280,9 +6283,9 @@ def main():
                     "league_teams_detail": league_teams_detail,
                     "predictions_data": predictions_data,
                 }
-                newsletter_text = generate_newsletter(newsletter_round_data, gemini_key)
+                newsletter_text = generate_newsletter(newsletter_round_data, deepseek_key=deepseek_key2, gemini_key=gemini_key2)
             else:
-                print("  ℹ️  Newsletter: brak GEMINI_API_KEY — pomijam generowanie")
+                print("  ℹ️  Newsletter: brak kluczy API (DEEPSEEK_API_KEY ani GEMINI_API_KEY) — pomijam generowanie")
 
             send_post_round(
                 league_data=discord_league,
