@@ -2454,6 +2454,10 @@ MONTHS_PL = {
     "września": 9, "października": 10, "listopada": 11, "grudnia": 12,
 }
 
+def _normalize_team(name: str) -> str:
+    """Normalizuje nazwę drużyny dla porównań (strip, NFKD, lower)."""
+    return unicodedata.normalize("NFKD", name.strip()).lower()
+
 def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
     """Parsuje terminarz.txt i zwraca dane do fixture ticker."""
     if not os.path.exists(filepath):
@@ -2481,7 +2485,8 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                     if month:
                         current_round_date = f"{int(header_date.group(1)):02d}.{month:02d}"
                 continue
-            date_match = re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})\s*$", line)
+            # Opcjonalnie ignoruj frekwencję w nawiasie na końcu linii, np. "(14 569)"
+            date_match = re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})\s*(?:\(\d[\d\s]*\))?\s*$", line)
             if date_match and current_round:
                 day = int(date_match.group(1))
                 month_name = date_match.group(2)
@@ -5782,11 +5787,17 @@ def main():
             next_gw = fdr_data["gameweeks"][0]  # fallback
         next_matches = fixtures_data.get("matches", {}).get(str(next_gw), [])
 
+        # Zabezpieczenie: gdy brak meczów (np. koniec sezonu), pomiń prognozę z komunikatem
+        if not next_matches:
+            print(f"  ⚠️  Brak kolejki do prognozy (kolejka {next_gw} nie ma meczów w terminarzu)")
+            # Dalej pomijamy predykcję — next_matches pusta, pred_fixtures będzie {}
+
         # Buduj fixtures w formacie predictora: {team: {opponent, is_home}}
+        # Nazwy drużyn normalizowane (strip, NFKD, lower) dla zgodności z player["team"]
         pred_fixtures = {}
         for m in next_matches:
-            pred_fixtures[m["home"]] = {"opponent": m["away"], "is_home": True}
-            pred_fixtures[m["away"]] = {"opponent": m["home"], "is_home": False}
+            pred_fixtures[_normalize_team(m["home"])] = {"opponent": m["away"], "is_home": True}
+            pred_fixtures[_normalize_team(m["away"])] = {"opponent": m["home"], "is_home": False}
 
         # Buduj fdr_data w formacie predictora: {team: {atk, def}}
         # Użyj FDR z pierwszej kolejki w fdr_data (next_gw)
@@ -5807,14 +5818,23 @@ def main():
             pp = dict(p)
             raw_pos = pp.get("position", "")
             pp["position"] = pos_map.get(raw_pos, raw_pos)
+            # Normalizuj nazwę drużyny tak samo jak klucze w pred_fixtures
+            pp["team"] = _normalize_team(pp.get("team", ""))
             players_for_pred.append(pp)
 
         # DEBUG: sprawdź dane przed predykcją
         if players_for_pred:
             sample = players_for_pred[0]
             print(f"   DEBUG: pierwszy gracz do pred={sample.get('name')}, xg_per90={sample.get('xg_per90')}")
+        # DEBUG: porównaj nazwy drużyn w fixtures vs players (diagnostyka niezgodności)
+        print(f"   DEBUG pred_fixtures keys: {list(pred_fixtures.keys())[:5]}")
+        print(f"   DEBUG player teams: {[p['team'] for p in players_for_pred[:5]]}")
         
-        predictions_data = predict_all_players(players_for_pred, pred_fdr, pred_fixtures)
+        # Uruchom predykcję tylko gdy są fixtures; inaczej zwróć pustą listę (np. koniec sezonu)
+        if pred_fixtures:
+            predictions_data = predict_all_players(players_for_pred, pred_fdr, pred_fixtures)
+        else:
+            predictions_data = []
         print(f"   DEBUG: predykcje={len(predictions_data)}")
         if predictions_data:
             print(f"   DEBUG: top3 pred: {[(p.get('name'), p.get('predicted_points')) for p in predictions_data[:3]]}")
