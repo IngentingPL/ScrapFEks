@@ -1442,10 +1442,11 @@ def copy_data_files_to_archive(season_name: str):
         shutil.copy("autumn_points.json", dest)
         print(f"   📄 Skopiowano autumn_points.json → {dest}")
     
-    # Kopia league_history.json
-    if os.path.exists("league_history.json"):
+    # Kopia league_history.json – plik jest w output/, nie w głównym katalogu
+    league_history_src = os.path.join(OUTPUT_DIR, "league_history.json")
+    if os.path.exists(league_history_src):
         dest = f"{ARCHIVE_DIR}/league_history_{season_name}.json"
-        shutil.copy("league_history.json", dest)
+        shutil.copy(league_history_src, dest)
         print(f"   📄 Skopiowano league_history.json → {dest}")
     
     # Kopia duets.json
