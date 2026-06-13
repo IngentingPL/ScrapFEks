@@ -526,8 +526,9 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
             fdr_sum = None
             for pred in predictions:
                 if pred.get("team") == home_team and pred.get("is_home"):
-                    atk = pred.get("fdr_atk_opponent") or pred.get("fdr_atk_team") or 3
-                    defn = pred.get("fdr_def_opponent") or pred.get("fdr_def_team") or 3
+                    # fdr_atk_team / fdr_def_team nie istnieją w danych predykcji (predictor.py zwraca tylko opponent)
+                    atk = pred.get("fdr_atk_opponent") or 3
+                    defn = pred.get("fdr_def_opponent") or 3
                     fdr_sum = atk + defn
                     break
             if fdr_sum is not None:
