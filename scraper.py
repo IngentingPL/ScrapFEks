@@ -207,21 +207,21 @@ def login(session: requests.Session) -> bool:
             timeout=30,
         )
         if resp.status_code != 200:
-            print(f"   ❌ Błąd tworzenia tokenu connect")
-            return True  # kontynuuj bez cookies
+            print(f"   ❌ Błąd tworzenia tokenu connect: HTTP {resp.status_code}")
+            return False  # krytyczny błąd – bez tokenu connect nie można się zalogować
 
         create_data = resp.json()
         connect_hash = create_data.get("token") or create_data.get("hash") or create_data.get("code")
 
         if not connect_hash:
-            print("   ⚠️  Brak connect_hash w odpowiedzi token/create")
-            return True
+            print("   ❌ Brak connect_hash w odpowiedzi token/create – nie można dokończyć logowania")
+            return False  # krytyczny błąd – bez connect_hash /connect nie zadziała
 
         print(f"   ✅ Connect hash: {str(connect_hash)[:50]}...")
 
     except Exception as e:
         print(f"   ❌ Błąd token/create: {e}")
-        return True
+        return False  # krytyczny błąd – token/create się nie powiodło
 
     # Krok 4: GET /connect?g4t7hjq3rcyb0s2m={hash} — ustawia PHPSESSID
     try:
@@ -252,16 +252,16 @@ def login(session: requests.Session) -> bool:
         )
 
         if not dict(session.cookies).get("PHPSESSID"):
-            print("   ⚠️  /connect nie ustawiło PHPSESSID")
+            print("   ❌ /connect nie ustawiło PHPSESSID – sesja nie została utworzona")
             session.headers.clear()
             session.headers.update(saved_headers)
-            return True
+            return False  # krytyczny błąd – bez PHPSESSID sesja jest nieautoryzowana
 
     except Exception as e:
         print(f"   ❌ Błąd /connect: {e}")
         session.headers.clear()
         session.headers.update(saved_headers)
-        return True
+        return False  # krytyczny błąd – /connect się nie powiodło
 
     # Krok 5: POST /login-sso — autoryzuje sesję
     try:
