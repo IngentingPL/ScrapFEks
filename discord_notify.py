@@ -1121,11 +1121,9 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
 
 
 # ============================================================
-# STAŁE I IMPORTY DLA AI (DeepSeek + Gemini fallback)
+# STAŁE KONFIGURACYJNE DLA AI (DeepSeek + Gemini fallback)
 # ============================================================
-
-import urllib.request
-import urllib.error
+# (importy urllib są na górze pliku)
 
 # Ustawienia DeepSeek — model podstawowy (OpenAI-compatible API)
 DEEPSEEK_MODEL = "deepseek-chat"
