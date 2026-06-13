@@ -531,7 +531,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
                     fdr_sum = atk + defn
                     break
             if fdr_sum is not None:
-                home_str = "D" if True else "W"
+                home_str = "D" if pred.get("is_home", True) else "W"  # D=dom, W=wyjazd
                 match_fdr.append({
                     "label": f"{home_team} vs {away_team} ({home_str})",
                     "fdr": fdr_sum,
