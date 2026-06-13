@@ -237,7 +237,7 @@ def _parse_date_str(date_str):
         day = int(parts[0])
         month = int(parts[1])
         # Sezon 2025-2026: sierpień-grudzień = 2025, styczeń-lipiec = 2026
-        year = 2025 if month >= 8 else 2026
+        year = datetime.now().year  # dynamicznie: datetime.now().year zawsze zwraca aktualny rok kalendarzowy
         return date(year, month, day)
     except (ValueError, IndexError):
         return None
