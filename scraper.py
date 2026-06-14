@@ -1540,6 +1540,21 @@ def generate_squad_stats(team_results: list[dict], filename: str):
     return stats
 
 
+def _fetch_prev_squad(args):
+    """Worker do pobrania składu z poprzedniej kolejki (thread-safe).
+    Zwraca (slug, set[pids], error_msg|None)."""
+    session, slug, prev_round = args
+    try:
+        prev_squad_data = scrape_team_squad(session, slug, round_num=prev_round)
+        return (slug, {
+            str(p.get("player_id"))
+            for p in prev_squad_data.get("players", [])
+            if p.get("player_id")
+        }, None)
+    except Exception as e:
+        return (slug, set(), str(e))
+
+
 def compute_league_transfers(
     session: requests.Session,
     league_results: list[dict],
@@ -1570,50 +1585,53 @@ def compute_league_transfers(
 
     print(f"\n🔄 Obliczam transfery ligi (K{prev_round} → K{current_round}, {total_teams} drużyn)...")
 
-    browser_headers = {
-        "User-Agent": HEADERS["User-Agent"],
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
-        "Referer": f"{BASE_URL}/",
-    }
-
-    for i, team in enumerate(league_results):
+    # Zbuduj mapę slug → current_pids (składy z obecnej kolejki już pobrane)
+    slug_to_current_pids: dict[str, set[str]] = {}
+    for team in league_results:
         slug = team.get("team_slug", "")
         if not slug:
             continue
-
-        # Aktualny skład (już pobrany)
         current_pids = {
             str(p.get("player_id"))
             for p in team.get("squad", [])
             if p.get("player_id")
         }
+        slug_to_current_pids[slug] = current_pids
 
-        # Skład z poprzedniej kolejki
-        try:
-            prev_squad_data = scrape_team_squad(session, slug, round_num=prev_round)
-            prev_pids = {
-                str(p.get("player_id"))
-                for p in prev_squad_data.get("players", [])
-                if p.get("player_id")
-            }
-        except Exception as e:
-            if i < 3:
-                print(f"   ⚠️  Błąd pobierania K{prev_round} dla {slug}: {e}")
-            prev_pids = set()
+    # Równoległe pobieranie składów K{prev_round} (ThreadPoolExecutor)
+    # Wzorzec identyczny jak w scrape_teams_captains()
+    print(f"   Równoległe pobieranie składów K{prev_round} ({WORKERS} workerów)...")
+    args_list = [(session, slug, prev_round) for slug in slug_to_current_pids]
+    total = len(slug_to_current_pids)
+    completed = 0
+    errors = 0
 
-        # Transfery IN = pojawili się w current, nie było ich w prev
-        for pid in current_pids - prev_pids:
-            transfers_in_count[pid] = transfers_in_count.get(pid, 0) + 1
+    with ThreadPoolExecutor(max_workers=WORKERS) as executor:
+        futures = {executor.submit(_fetch_prev_squad, args): args[1] for args in args_list}
+        for future in as_completed(futures):
+            slug = futures[future]
+            try:
+                result_slug, prev_pids, error = future.result(timeout=30)
+            except Exception as e:
+                prev_pids = set()
+                error = str(e)
 
-        # Transfery OUT = byli w prev, nie ma ich w current
-        for pid in prev_pids - current_pids:
-            transfers_out_count[pid] = transfers_out_count.get(pid, 0) + 1
+            if error:
+                errors += 1
+                if errors <= 3:  # Pokaż pierwsze 3 błędy (jak w oryginale)
+                    print(f"   ⚠️  Błąd pobierania K{prev_round} dla {slug}: {error}")
 
-        if (i + 1) % 5 == 0 or (i + 1) == total_teams:
-            print(f"   [{i + 1}/{total_teams}] drużyn przetworzono")
+            # Transfery IN = pojawili się w current, nie było ich w prev
+            current_pids = slug_to_current_pids.get(slug, set())
+            for pid in current_pids - prev_pids:
+                transfers_in_count[pid] = transfers_in_count.get(pid, 0) + 1
+            # Transfery OUT = byli w prev, nie ma ich w current
+            for pid in prev_pids - current_pids:
+                transfers_out_count[pid] = transfers_out_count.get(pid, 0) + 1
 
-        time.sleep(REQUEST_DELAY)
+            completed += 1
+            if completed % 5 == 0 or completed == total:
+                print(f"   [{completed}/{total}] drużyn przetworzono")
 
     def _build_list(count_dict: dict, limit: int = 15) -> list[dict]:
         rows = []
