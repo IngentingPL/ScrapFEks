@@ -2606,7 +2606,7 @@ def generate_dashboard_html(
     accuracy_history: list[dict],
     tuned_params: dict,
     league_history: dict,
-    newsletter_data: list,
+    # 📖 newsletter_data usunięte z sygnatury — zakładka Newsletter wyłączona
     timestamp: str,
     filename: str,
 ):
@@ -2657,7 +2657,7 @@ def generate_dashboard_html(
     accuracy_json = json.dumps(accuracy_history or [], ensure_ascii=False)
     tuned_params_json = json.dumps(tuned_params or None, ensure_ascii=False)
     league_history_json = json.dumps(league_history or {"rounds": []}, ensure_ascii=False)
-    # 📖 newsletter_data usunięte z dashboardu — zakładka Newsletter wyłączona
+    # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona
     has_season = len((league_history or {}).get("rounds", [])) > 0
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
@@ -6192,9 +6192,7 @@ def main():
         except (json.JSONDecodeError, IOError):
             pass
 
-    # Wczytaj historię newsletterów (newsletter_history.json) dla zakładki Newsletter
-    from newsletter import load_newsletter_history
-    newsletter_history = load_newsletter_history()
+    # 📖 load_newsletter_history usunięte — newsletter_history.json write-only, zakładka Newsletter wyłączona
 
     dashboard_file = os.path.join(OUTPUT_DIR, "dashboard.html")
     
@@ -6226,7 +6224,7 @@ def main():
         accuracy_history=accuracy_history,
         tuned_params=tuned_params,
         league_history=league_history,
-        newsletter_data=newsletter_history,
+        # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona, newsletter_history.json write-only
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
     )

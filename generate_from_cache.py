@@ -83,8 +83,8 @@ def main():
     accuracy_history = []
     tuned_params = None
     league_history = {"rounds": []}
-    newsletter_data = []
-    
+    # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona, newsletter_history.json write-only
+
     # ---- Generuj HTML ----
     dashboard_file = os.path.join(output_dir, "dashboard.html")
     docs_file = os.path.join(script_dir, "docs", "index.html")
@@ -111,7 +111,7 @@ def main():
         accuracy_history=accuracy_history,
         tuned_params=tuned_params,
         league_history=league_history,
-        newsletter_data=newsletter_data,
+        # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona
         timestamp=timestamp,
         filename=dashboard_file,
     )

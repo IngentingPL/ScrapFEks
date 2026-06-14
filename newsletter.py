@@ -16,11 +16,10 @@ import json
 import os
 import urllib.request
 import urllib.error
-from datetime import date
+# 📖 from datetime import date usunięte — nieżywotne po usunięciu _save_newsletter
 
 
-OUTPUT_DIR = "output"
-NEWSLETTER_HISTORY_FILE = os.path.join(OUTPUT_DIR, "newsletter_history.json")
+# 📖 OUTPUT_DIR i NEWSLETTER_HISTORY_FILE usunięte — newsletter_history.json write-only, nic go nie czyta
 
 # Timeout dla requestu do Gemini API (sekundy)
 GEMINI_TIMEOUT = 30
@@ -100,11 +99,7 @@ def generate_newsletter(round_data: dict, deepseek_key: str = "", gemini_key: st
         text = text[:MAX_NEWSLETTER_CHARS - 1].rstrip() + "…"
         print(f"  ℹ️  Newsletter: obcięto do {MAX_NEWSLETTER_CHARS} znaków")
 
-    try:
-        _save_newsletter(round_number, text, model=result.get("model", ""))
-    except Exception as e:
-        print(f"  ⚠️  Newsletter: błąd zapisu do archiwum — {e}")
-
+    # 📖 _save_newsletter usunięte — newsletter_history.json write-only, nic go nie czyta
     print(f"  ✅ Newsletter wygenerowany ({len(text)} znaków)")
     return text
 
@@ -621,61 +616,8 @@ ZASADY:
 - Na samym końcu dopisz dokładnie: {NEWSLETTER_END_MARKER}
 """
 
-
-# ============================================================
-# ARCHIWUM — zapis i odczyt newsletter_history.json
-# ============================================================
-
-def _save_newsletter(round_number, text: str, model: str = "") -> None:
-    """
-    Dopisuje newsletter do archiwum JSON.
-
-    Format: lista słowników [{round, date, text, model}, ...]
-    Najnowsze wpisy mają największy indeks (append).
-
-    📖 LEKCJA: os.makedirs z exist_ok=True tworzy katalog jeśli nie istnieje,
-    ale nie wyrzuca błędu jeśli już istnieje.
-    """
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-    # Wczytaj istniejące archiwum (lub zacznij od pustej listy)
-    history = []
-    if os.path.exists(NEWSLETTER_HISTORY_FILE):
-        try:
-            with open(NEWSLETTER_HISTORY_FILE, "r", encoding="utf-8") as f:
-                history = json.load(f)
-        except (json.JSONDecodeError, IOError):
-            history = []
-
-    # Dodaj nowy wpis
-    entry = {
-        "round": round_number,
-        "date": date.today().isoformat(),
-        "text": text,
-        "model": model or DEEPSEEK_MODEL,  # DeepSeek domyślnie, Gemini tylko jeśli fallback
-    }
-    history.append(entry)
-
-    with open(NEWSLETTER_HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(history, f, ensure_ascii=False, indent=2)
-
-    print(f"  ✅ Newsletter zapisany do archiwum ({len(history)} wpisów)")
-
-
-def load_newsletter_history() -> list:
-    """
-    Wczytuje archiwum newsletterów z pliku JSON.
-
-    Zwraca listę wpisów (lub pustą listę jeśli brak pliku).
-    Używane przez generate_dashboard_html do zakładki Newsletter.
-    """
-    if not os.path.exists(NEWSLETTER_HISTORY_FILE):
-        return []
-    try:
-        with open(NEWSLETTER_HISTORY_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, IOError):
-        return []
+# 📖 _save_newsletter i load_newsletter_history usunięte — newsletter_history.json był write-only, nic go nie czytało
+#    Zakładka Newsletter wyłączona, AI i Discord nie korzystają z historii
 
 
 # ============================================================
