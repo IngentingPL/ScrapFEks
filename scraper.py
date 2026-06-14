@@ -158,6 +158,45 @@ def _request_with_retry(method, url, max_retries=3, **kwargs):
     return None
 
 
+# ============================================================
+# CACHE ZEWNĘTRZNYCH ŹRÓDEŁ (90minut.pl, ekstraklasa.org API)
+# ============================================================
+
+def _load_external_cache():
+    """Wczytuje cache zewnętrznych statystyk z external_cache.json."""
+    try:
+        with open(os.path.join(OUTPUT_DIR, "external_cache.json"), "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def _get_cached_external(key, ttl_hours=24):
+    """Zwraca dane z cache jeśli są świeższe niż ttl_hours, inaczej None."""
+    entry = _load_external_cache().get(key)
+    if not entry:
+        return None
+    try:
+        ts = datetime.fromisoformat(entry["timestamp"])
+    except (KeyError, ValueError):
+        return None
+    age_h = (datetime.now() - ts).total_seconds() / 3600
+    if age_h < entry.get("ttl_hours", ttl_hours):
+        print(f"📦 Cache hit dla '{key}' (wiek: {age_h:.1f}h)")
+        return entry["data"]
+    return None
+
+def _save_external_cache(key, data, ttl_hours=24):
+    """Zapisuje dane do cache, zachowując inne klucze w pliku."""
+    cache = _load_external_cache()
+    cache[key] = {
+        "timestamp": datetime.now().isoformat(),
+        "ttl_hours": ttl_hours,
+        "data": data,
+    }
+    with open(os.path.join(OUTPUT_DIR, "external_cache.json"), "w", encoding="utf-8") as f:
+        json.dump(cache, f, ensure_ascii=False, indent=2)
+
+
 def login(session: requests.Session) -> bool:
     """
     Automatycznie loguje się do Fantasy Ekstraklasa.
@@ -1820,6 +1859,11 @@ def _find_standings_tables(soup) -> list:
 
 def fetch_ekstraklasa_table() -> dict:
     """Scrapuje tabelę Ekstraklasy z 90minut.pl (bramki ogółem + dom/wyjazd)."""
+    # Cache 24h — unikamy ponownego scrapowania 90minut.pl przy każdym runie
+    cached = _get_cached_external("90minut_table")
+    if cached is not None:
+        return cached
+
     url = f"http://www.90minut.pl/liga/1/liga{NINETYM_LIGA_ID}.html"
     team_stats = {}
     try:
@@ -1872,6 +1916,9 @@ def fetch_ekstraklasa_table() -> dict:
               f" {'(z podziałem dom/wyjazd)' if has_ha else '(tylko ogółem)'}")
     except Exception as e:
         print(f"  ⚠️  Błąd scrapowania z 90minut.pl: {e}")
+    # Zapisz do cache tylko jeśli udało się pobrać niepuste dane
+    if team_stats:
+        _save_external_cache("90minut_table", team_stats)
     return team_stats
 
 
@@ -1900,106 +1947,6 @@ EXTRA_STATS_PARAMS = {
 EXTRA_API_TOKEN = os.environ.get("EXTRAKLASA_API_TOKEN", "")  # fallback: pusty string
 
 
-def _fetch_extra_stat_page(url: str) -> list[dict]:
-    """
-    Pobiera dane z pojedynczej strony statystyk indywidualnych.
-    
-    Zwraca listę dict: {"name": "...", "team": "...", "value": numeric}
-    """
-    stats = []
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                        "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
-        }
-        resp = requests.get(url, headers=headers, timeout=30)
-        # DEBUG: tymczasowy print statusu
-        print(f"    status={resp.status_code}, len={len(resp.text)}")
-        
-        if resp.status_code != 200:
-            return stats
-        
-        resp.encoding = "utf-8"
-        soup = BeautifulSoup(resp.text, "lxml")
-        
-        # Szukaj tabeli z danymi — struktura może się różnić w zależności od strony
-        # Typowe wzorce: tabela w <table> lub wiersze z klasą "player-row"
-        
-        # Metoda 1: szukaj tabeli z wierszami
-        table = soup.select_one("table.stats-table, table.table, table.data")
-        if table:
-            for row in table.select("tbody tr, tr"):
-                cells = row.select("td")
-                if len(cells) >= 3:
-                    # Sprawdź czy pierwsza komórka to pozycja (nie liczba)
-                    first_cell = cells[0].get_text(strip=True)
-                    if first_cell.isdigit():
-                        continue  # To pozycja w tabeli, nie nazwa gracza
-                    
-                    # Format: nazwa, drużyna, wartość (lub odwrotnie)
-                    # Spróbuj różne układy
-                    name = ""
-                    team = ""
-                    value = 0
-                    
-                    # Próba 1: nazwa | drużyna | wartość
-                    if len(cells) >= 3:
-                        name = cells[0].get_text(strip=True)
-                        team = cells[1].get_text(strip=True)
-                        value = _safe_float(cells[2].get_text(strip=True))
-                    
-                    # Próba 2: poz | nazwa | drużyna | wartość
-                    if len(cells) >= 4 and not name:
-                        name = cells[1].get_text(strip=True)
-                        team = cells[2].get_text(strip=True)
-                        value = _safe_float(cells[3].get_text(strip=True))
-                    
-                    if name and value > 0:
-                        stats.append({"name": name, "team": team, "value": value})
-        
-        # Metoda 2: szukaj elementów z danymi gracza (listy OL lub DIVy)
-        if not stats:
-            player_elements = soup.select(".player-row, .stat-row, [data-player]")
-            for el in player_elements:
-                name_el = el.select_one(".name, .player-name, [data-name]")
-                team_el = el.select_one(".team, .club")
-                value_el = el.select_one(".value, .stat-value, [data-value]")
-                
-                if name_el:
-                    name = name_el.get_text(strip=True)
-                    team = team_el.get_text(strip=True) if team_el else ""
-                    value = _safe_float(value_el.get_text(strip=True)) if value_el else 0
-                    
-                    if name and value > 0:
-                        stats.append({"name": name, "team": team, "value": value})
-        
-        # Metoda 3: fallback do OL z linkami do zawodników
-        if not stats:
-            player_links = soup.select("a[href*='/zawodnik/'], a[href*='/player/']")
-            for link in player_links[:50]:  # Ogranicz do 50
-                name = link.get_text(strip=True)
-                if not name:
-                    continue
-                # Szukaj wartości statystyki w sąsiednim elemencie
-                parent = link.find_parent("li") or link.find_parent("tr")
-                if not parent:
-                    continue
-                value_text = parent.get_text(strip=True)
-                # Wyciągnij liczbę z całego wiersza
-                value_match = re.search(r"(\d+[,.]?\d*)\s*$", value_text)
-                if value_match:
-                    value = _safe_float(value_match.group(1))
-                    if value > 0:
-                        stats.append({"name": name, "team": "", "value": value})
-        
-    except Exception as e:
-        print(f"    ⚠️  Błąd pobierania {url}: {e}")
-    
-    return stats
-
-
 def fetch_extra_player_stats() -> dict:
     """
     Pobiera rozszerzone statystyki zawodników z ukrytego API ekstraklasy.
@@ -2009,6 +1956,11 @@ def fetch_extra_player_stats() -> dict:
     
     Zwraca dict z statystykami: xg, shots, shots_on_target, key_passes, crosses, crosses_accurate
     """
+    # Cache 24h — unikamy ponownego odpytywania API ekstraklasy przy każdym runie
+    cached = _get_cached_external("extra_player_stats")
+    if cached is not None:
+        return cached
+
     # Sprawdź czy token API jest dostępny – jeśli nie, pomiń rozszerzone statystyki
     if not EXTRA_API_TOKEN:
         print("\n⚠️  Brak EXTRAKLASA_API_TOKEN – pomijam rozszerzone statystyki")
@@ -2140,6 +2092,9 @@ def fetch_extra_player_stats() -> dict:
     except Exception as e:
         print(f"   ⚠️  Błąd: {e}")
     
+    # Zapisz do cache tylko jeśli pobrano niepuste dane (np. jest przynajmniej jeden wpis w xg)
+    if any(v for v in all_stats.values()):
+        _save_external_cache("extra_player_stats", all_stats)
     return all_stats
 
 
@@ -5525,7 +5480,8 @@ render();
 def cleanup_old_output_files():
     """
     Usuwa stare pliki z output/ z timestampem w nazwie, zachowując N najnowszych.
-    NIGDY nie rusza plików stanu (dashboard.html, league_teams_detail.json, itp.).
+    NIGDY nie rusza plików stanu (dashboard.html, league_teams_detail.json,
+    external_cache.json, itp.).
     Wzorce i liczba do zachowania są ustalone na stałe — tylko te pliki są czyszczone.
     """
     # Wzorzec → ile najnowszych plików zachować
