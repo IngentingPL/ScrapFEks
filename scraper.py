@@ -1875,9 +1875,9 @@ EXTRA_STATS_PARAMS = {
     "include": "resource,resource.squad.team.club",
 }
 
-# Token autoryzacyjny - pobrany z localStorage strony (może wymagać odświeżenia)
-# Token jest unikalny dla sesji przeglądarki, ale działa przez jakiś czas
-EXTRA_API_TOKEN = "548e70be68e804aad3f7f779f43129ae"  # przykładowy token
+# Token autoryzacyjny - pobrany ze zmiennej środowiskowej EXTRAKLASA_API_TOKEN
+# Jeśli nie ustawiony, rozszerzone statystyki są pomijane
+EXTRA_API_TOKEN = os.environ.get("EXTRAKLASA_API_TOKEN", "")  # fallback: pusty string
 
 
 def _fetch_extra_stat_page(url: str) -> list[dict]:
@@ -1989,6 +1989,11 @@ def fetch_extra_player_stats() -> dict:
     
     Zwraca dict z statystykami: xg, shots, shots_on_target, key_passes, crosses, crosses_accurate
     """
+    # Sprawdź czy token API jest dostępny – jeśli nie, pomiń rozszerzone statystyki
+    if not EXTRA_API_TOKEN:
+        print("\n⚠️  Brak EXTRAKLASA_API_TOKEN – pomijam rozszerzone statystyki")
+        return {}
+
     print("\n📊 Pobieram rozszerzone statystyki z API ekstraklasy...")
     print(f"   Token: {EXTRA_API_TOKEN[:20]}...")
     

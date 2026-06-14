@@ -93,6 +93,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          EXTRAKLASA_API_TOKEN: ${{ secrets.EXTRAKLASA_API_TOKEN }}
         run: python scraper.py
 
       - name: Upload results
