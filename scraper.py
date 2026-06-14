@@ -138,6 +138,26 @@ HEADERS = {
 }
 
 
+def _request_with_retry(method, url, max_retries=3, **kwargs):
+    """
+    Wykonuje request HTTP z retry (exponential backoff: 1s, 2s, 4s).
+    method: requests.get lub requests.post
+    Zwraca response albo None jeśli wszystkie próby zawiodły.
+    """
+    for attempt in range(max_retries):
+        try:
+            return method(url, **kwargs)
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            if attempt < max_retries - 1:
+                wait = 2 ** attempt
+                print(f"   ⚠️  Błąd sieci ({e.__class__.__name__}), próba {attempt+1}/{max_retries}, czekam {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"   ❌ Wszystkie {max_retries} próby nieudane: {url}")
+                return None
+    return None
+
+
 def login(session: requests.Session) -> bool:
     """
     Automatycznie loguje się do Fantasy Ekstraklasa.
@@ -819,12 +839,11 @@ def fetch_player_detail(session: requests.Session, player_id: int) -> Optional[d
     Thread-safe — używa requests.get() z cookies z sesji.
     """
     try:
-        resp = requests.get(
-            f"{BASE_URL}/stats-player/{player_id}",
-            headers=HEADERS,
-            cookies=dict(session.cookies),
-            timeout=15,
-        )
+        # Retry logic na wypadek problemów sieciowych
+        resp = _request_with_retry(requests.get, f"{BASE_URL}/stats-player/{player_id}",
+            headers=HEADERS, cookies=dict(session.cookies), timeout=15)
+        if resp is None:
+            return None
         if resp.status_code != 200:
             return None
 
@@ -1217,13 +1236,11 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
                if round_num is not None
                else f"{BASE_URL}/user-team/view/{slug}")
 
-        # Thread-safe: użyj requests.get() z cookies z sesji
-        resp = requests.get(
-            url,
-            headers=browser_headers,
-            cookies=dict(session.cookies),
-            timeout=15,
-        )
+        # Thread-safe: użyj requests.get() z cookies z sesji (z retry)
+        resp = _request_with_retry(requests.get, url,
+            headers=browser_headers, cookies=dict(session.cookies), timeout=15)
+        if resp is None:
+            return {"slug": slug, "players": [], "captain_id": None}
 
         if resp.status_code != 200:
             if debug:
@@ -1813,7 +1830,10 @@ def fetch_ekstraklasa_table() -> dict:
             "Accept-Encoding": "gzip, deflate",
             "Connection": "keep-alive",
         }
-        resp = requests.get(url, headers=headers, timeout=20)
+        # Retry logic na wypadek problemów sieciowych
+        resp = _request_with_retry(requests.get, url, headers=headers, timeout=20)
+        if resp is None:
+            return team_stats  # pusty słownik, bo nie udało się pobrać
         resp.raise_for_status()
 
         resp.encoding = resp.apparent_encoding or "iso-8859-2"
