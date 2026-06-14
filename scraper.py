@@ -5519,6 +5519,44 @@ render();
 
 
 # ============================================================
+# CZYSZCZENIE STARYCH PLIKÓW W OUTPUT/
+# ============================================================
+
+def cleanup_old_output_files():
+    """
+    Usuwa stare pliki z output/ z timestampem w nazwie, zachowując N najnowszych.
+    NIGDY nie rusza plików stanu (dashboard.html, league_teams_detail.json, itp.).
+    Wzorce i liczba do zachowania są ustalone na stałe — tylko te pliki są czyszczone.
+    """
+    # Wzorzec → ile najnowszych plików zachować
+    keep_rules = {
+        "output/fantasy_full_*.json": 1,
+        "output/fantasy_predictions_*.csv": 2,
+        "output/fantasy_players_*.csv": 1,
+        "output/fantasy_rounds_*.csv": 1,
+        "output/fantasy_captains_*.csv": 1,
+        "output/fantasy_ownership_*.csv": 1,
+        "output/fantasy_league_captains_*.csv": 1,
+        "output/fantasy_league_ownership_*.csv": 1,
+    }
+
+    for pattern, keep_count in keep_rules.items():
+        try:
+            files = sorted(glob.glob(pattern))
+            if len(files) <= keep_count:
+                continue  # nic do usunięcia
+
+            to_remove = files[:-keep_count]  # najstarsze pliki
+            for f in to_remove:
+                try:
+                    os.remove(f)
+                except OSError as e:
+                    print(f"  ⚠️  Nie udało się usunąć {f}: {e}")
+            print(f"  🧹 {pattern}: usunięto {len(to_remove)} starych plików (zachowano {len(files) - len(to_remove)})")
+        except Exception as e:
+            print(f"  ⚠️  Błąd czyszczenia {pattern}: {e}")
+
+# ============================================================
 # GŁÓWNA LOGIKA
 # ============================================================
 
@@ -6361,6 +6399,9 @@ def main():
             )
     else:
         print("  ℹ️  DISCORD_WEBHOOK_URL nie ustawiony — pomijam powiadomienia Discord")
+
+    # Czyszczenie starych plików z timestampem w output/
+    cleanup_old_output_files()
 
     print(f"\n{'='*50}")
     print(f"✅ Gotowe! Pliki zapisane w katalogu: {OUTPUT_DIR}/")
