@@ -100,7 +100,7 @@ jobs:
         with:
           name: fantasy-data-${{ github.run_number }}
           path: output/
-          retention-days: 90
+          retention-days: 7  # Artefakt tylko do debugowania ostatniego runu; dane i tak są w repo
 
       - name: Commit results to repo
         run: |
