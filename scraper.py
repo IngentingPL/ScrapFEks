@@ -137,6 +137,16 @@ HEADERS = {
     "Referer": f"{BASE_URL}/",
 }
 
+# Nagłówki przeglądarki (czyste, bez X-Requested-With) – używane przy żądaniach HTML
+BROWSER_HEADERS = {
+    "User-Agent": HEADERS["User-Agent"],
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": HEADERS["Accept-Language"],
+}
+
+# Nagłówki do endpointów AJAX POST (ranking-list itp.)
+RANKING_HEADERS = {**HEADERS, "Content-Type": "application/x-www-form-urlencoded"}
+
 
 def _request_with_retry(method, url, max_retries=3, **kwargs):
     """
@@ -337,6 +347,12 @@ def login(session: requests.Session) -> bool:
             timeout=30,
             allow_redirects=True,
         )
+        # Sprawdź czy serwer nie odpowiedział błędem (np. 403/500)
+        if not resp.ok:
+            session.headers.clear()
+            session.headers.update(saved_headers)
+            print(f"   ❌ Login SSO nie powiódł się: HTTP {resp.status_code}")
+            return False
         # Przywróć oryginalne headers sesji
         session.headers.clear()
         session.headers.update(saved_headers)
@@ -476,10 +492,7 @@ def get_user_team_slug(session: requests.Session) -> str:
         resp = session.post(
             f"{BASE_URL}/ranking-list",
             data="start=0&length=1",
-            headers={
-                **HEADERS,
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
+            headers=RANKING_HEADERS,
             timeout=15,
         )
         if resp.status_code == 200:
@@ -524,9 +537,7 @@ def get_player_ids_from_transfers(session: requests.Session, slug: str) -> list[
     }
     # Czyste headery przeglądarki dla stron HTML (bez X-Requested-With)
     browser_headers = {
-        "User-Agent": HEADERS["User-Agent"],
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": HEADERS["Accept-Language"],
+        **BROWSER_HEADERS,
         "Referer": f"{BASE_URL}/user-team/view/{slug}",
     }
 
@@ -669,10 +680,7 @@ def get_player_ids_from_ranking_squads(
         resp = session.post(
             f"{BASE_URL}/ranking-list",
             data=f"start=0&length={n_teams}",
-            headers={
-                **HEADERS,
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
+            headers=RANKING_HEADERS,
             timeout=30,
         )
         if resp.status_code == 200:
@@ -1117,9 +1125,7 @@ def scrape_stats_page(session: requests.Session) -> list[dict]:
 
     # Czyste headery przeglądarki — jak scrape_team_squad
     browser_headers = {
-        "User-Agent": HEADERS["User-Agent"],
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": HEADERS["Accept-Language"],
+        **BROWSER_HEADERS,
         "Referer": f"{BASE_URL}/",
     }
     cookies = dict(session.cookies)
@@ -1178,10 +1184,7 @@ def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
             resp = session.post(
                 f"{BASE_URL}/ranking-list",
                 data=f"start={start}&length={length}",
-                headers={
-                    **HEADERS,
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
+                headers=RANKING_HEADERS,
                 timeout=30,
             )
             if resp.status_code != 200:
@@ -1223,11 +1226,7 @@ def fetch_league_teams(session: requests.Session, league_slug: str, league_id: s
         resp = session.post(
             f"{BASE_URL}/ranking-list",
             data=payload,
-            headers={
-                **HEADERS,
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                "Referer": f"{BASE_URL}/league/{league_slug}",
-            },
+            headers={**RANKING_HEADERS, "Referer": f"{BASE_URL}/league/{league_slug}"},
             timeout=30,
         )
         if resp.status_code != 200:
@@ -1265,9 +1264,7 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
     try:
         # Czyste headery przeglądarki — bez X-Requested-With
         browser_headers = {
-            "User-Agent": HEADERS["User-Agent"],
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
+            **BROWSER_HEADERS,
             "Referer": f"{BASE_URL}/",
         }
 
