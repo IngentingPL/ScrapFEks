@@ -8,6 +8,12 @@ on:
         required: true
         type: string
 
+# Tylko jeden workflow na raz może pisać do repo -
+# zapobiega konfliktom przy nakładających się runach (dni meczowe)
+concurrency:
+  group: repo-write
+  cancel-in-progress: false
+
 jobs:
   archive:
     runs-on: ubuntu-latest
@@ -45,7 +51,11 @@ jobs:
           
           # Pull latest changes
           git fetch origin
-          git rebase origin/main || true
+          if ! git rebase origin/main; then
+            echo "❌ Rebase nie powiódł się - przerywam, żeby nie zepsuć repo"
+            git rebase --abort
+            exit 1
+          fi
           
           # Add archive files
           git add docs/archive/ || true
