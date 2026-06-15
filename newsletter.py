@@ -36,6 +36,11 @@ GEMINI_THINKING_BUDGET = 0  # 0 = wyłącz thinking dla newslettera
 DEEPSEEK_MODEL = "deepseek-chat"
 DEEPSEEK_TIMEOUT = 30
 
+# Nagłówki do DeepSeek API (Authorization dodawane per wywołanie)
+DEEPSEEK_HEADERS = {
+    "Content-Type": "application/json",
+}
+
 NEWSLETTER_END_MARKER = "### KONIEC NEWSLETTERA ###"
 
 
@@ -213,10 +218,7 @@ def _call_deepseek_api(prompt: str, api_key: str, label: str = "primary") -> dic
     req = urllib.request.Request(
         url,
         data=data,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        },
+        headers={**DEEPSEEK_HEADERS, "Authorization": f"Bearer {api_key}"},
         method="POST",
     )
 

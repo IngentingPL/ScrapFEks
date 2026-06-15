@@ -37,6 +37,12 @@ WEBHOOK_TIMEOUT = 10
 # Link do dashboardu — pojawi się w footerze każdego embeda
 DASHBOARD_URL = "ingentingpl.github.io/ScrapFEks"
 
+# Nagłówki do Discord webhook API
+DISCORD_HEADERS = {
+    "Content-Type": "application/json",
+    "User-Agent": "DiscordBot (https://github.com/IngentingPL/ScrapFEks, 1.0)",
+}
+
 
 # ============================================================
 # FUNKCJE POMOCNICZE — obsługa pliku z logiem wysłanych postów
@@ -109,10 +115,7 @@ def _send_embed(webhook_url, embed, content=None, embeds=None):
     req = urllib.request.Request(
         webhook_url,
         data=payload,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "DiscordBot (https://github.com/IngentingPL/ScrapFEks, 1.0)",
-        },
+        headers=DISCORD_HEADERS,
         method="POST",
     )
 
@@ -155,10 +158,7 @@ def _send_content(webhook_url, content):
     req = urllib.request.Request(
         webhook_url,
         data=payload,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "DiscordBot (https://github.com/IngentingPL/ScrapFEks, 1.0)",
-        },
+        headers=DISCORD_HEADERS,
         method="POST",
     )
 
@@ -1137,6 +1137,11 @@ GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_MAX_OUTPUT_TOKENS = 1500
 GEMINI_THINKING_BUDGET = 0
 
+# Nagłówki do DeepSeek API (Authorization dodawane per wywołanie)
+DEEPSEEK_HEADERS = {
+    "Content-Type": "application/json",
+}
+
 
 def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", label: str = "expert") -> dict:
     """
@@ -1222,10 +1227,7 @@ def _call_deepseek_expert_raw(prompt: str, api_key: str):
     req = urllib.request.Request(
         url,
         data=data,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        },
+        headers={**DEEPSEEK_HEADERS, "Authorization": f"Bearer {api_key}"},
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=DEEPSEEK_TIMEOUT) as resp:
