@@ -51,31 +51,31 @@ def extract_round_points(player_data, round_number):
     """
     Wyciąga punkty zawodnika z konkretnej kolejki.
 
-    Dane formy gracza wyglądają tak:
-    [{'r': 20, 'pts': 7, 'p': True}, {'r': 21, 'pts': 6, 'p': True}, ...]
-    Szukamy wpisu gdzie 'r' == round_number i zwracamy 'pts'.
+    Dane kolejek gracza wyglądają tak:
+    [{'round': 20, 'points': 7, 'played': True}, {'round': 21, 'points': 6, 'played': True}, ...]
+    Szukamy wpisu gdzie 'round' == round_number i zwracamy 'points'.
 
     Zwraca None jeśli zawodnik nie grał w tej kolejce.
     """
-    form = player_data.get("form", [])
+    rounds = player_data.get("rounds", [])  # Poprawione: "rounds" zamiast "form" (bug od marca 2026)
 
-    # form może być stringiem (z CSV) albo listą (z JSON)
-    if isinstance(form, str):
+    # rounds może być stringiem (z CSV) albo listą (z JSON)
+    if isinstance(rounds, str):
         try:
             # Zamień string na listę — ast.literal_eval byłby bezpieczniejszy,
-            # ale form używa True/False co wymaga specjalnej obsługi
-            form = form.replace("True", "true").replace("False", "false")
-            form = json.loads(form.replace("'", '"'))
+            # ale rounds używa True/False co wymaga specjalnej obsługi
+            rounds = rounds.replace("True", "true").replace("False", "false")
+            rounds = json.loads(rounds.replace("'", '"'))
         except (json.JSONDecodeError, ValueError):
             return None
 
-    if not isinstance(form, list):
+    if not isinstance(rounds, list):
         return None
 
-    for entry in form:
-        if isinstance(entry, dict) and entry.get("r") == round_number:
-            if entry.get("p"):  # p = played (czy grał)
-                return entry.get("pts", 0)
+    for entry in rounds:
+        if isinstance(entry, dict) and entry.get("round") == round_number:
+            if entry.get("played"):  # played = czy grał w tej kolejce
+                return entry.get("points", 0)
     return None
 
 
@@ -305,6 +305,21 @@ def evaluate_predictions(predictions_csv_path, current_players_data, round_numbe
         return None
 
     print(f"  Wczytano {len(predictions)} prognoz z {os.path.basename(predictions_csv_path)}")
+
+    # Guard: sprawdź czy plik prognoz dotyczy tej samej kolejki
+    # (nowe pliki CSV mają kolumnę round_number, stare nie — nie blokujemy na nich)
+    first_pred = predictions[0]
+    csv_round = first_pred.get("round_number")
+    if csv_round is not None:
+        try:
+            csv_round = int(csv_round)
+        except (ValueError, TypeError):
+            pass  # nieudana konwersja → traktuj jak brak kolumny
+        else:
+            if csv_round != round_number:
+                print(f"  ⚠️ Plik prognoz dotyczy kolejki {csv_round}, "
+                      f"a sprawdzamy kolejkę {round_number} — pomijam")
+                return None
 
     # Oblicz metryki trafności
     result = compute_accuracy(predictions, current_players_data, round_number)

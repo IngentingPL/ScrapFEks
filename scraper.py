@@ -5891,6 +5891,7 @@ def main():
             pred["opponent_short"] = fi.get("opponent_short", "")
             pred["fdr_atk_team"] = fi.get("atk", 3)
             pred["fdr_def_team"] = fi.get("def", 3)
+            pred["round_number"] = current_round  # kolejka której dotyczy prognoza
 
         # Zapisz CSV z prognozami
         if predictions_data:
@@ -5901,6 +5902,7 @@ def main():
                 "minutes_factor", "home_away_factor", "avg_minutes",
                 "confidence", "detail",
                 "unavailable", "availability_reason",  # status dostępności
+                "round_number",  # numer kolejki, której dotyczy prognoza (dla accuracy.py)
             ]
             with open(pred_csv, "w", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=pred_fields, extrasaction="ignore")
