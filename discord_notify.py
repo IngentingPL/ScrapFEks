@@ -19,6 +19,7 @@ import os
 import urllib.request
 import urllib.error
 from datetime import datetime, date, timedelta
+from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  # wspólny klient API
 
 
 # ============================================================
@@ -1126,21 +1127,13 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
 # ============================================================
 # (importy urllib są na górze pliku)
 
-# Ustawienia DeepSeek — model podstawowy (OpenAI-compatible API)
-DEEPSEEK_MODEL = "deepseek-chat"
-DEEPSEEK_TIMEOUT = 30
+# 📖 DEEPSEEK_MODEL, GEMINI_MODEL przeniesione do ai_client.py
+# 📖 DEEPSEEK_TIMEOUT, GEMINI_TIMEOUT, GEMINI_THINKING_BUDGET, DEEPSEEK_HEADERS
+#     usunięte jako martwy kod — używane tylko w usuniętych funkcjach transportowych
+
+# Lokalne wartości max_tokens — różne od newsletter.py (tam 2200, tu 1500)
 DEEPSEEK_MAX_OUTPUT_TOKENS = 1500
-
-# Ustawienia Gemini — fallback
-GEMINI_TIMEOUT = 30
-GEMINI_MODEL = "gemini-2.5-flash"
 GEMINI_MAX_OUTPUT_TOKENS = 1500
-GEMINI_THINKING_BUDGET = 0
-
-# Nagłówki do DeepSeek API (Authorization dodawane per wywołanie)
-DEEPSEEK_HEADERS = {
-    "Content-Type": "application/json",
-}
 
 
 def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", label: str = "expert") -> dict:
@@ -1158,7 +1151,7 @@ def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", l
         last_error = None
         for attempt in range(3):
             try:
-                result = _call_deepseek_expert_raw(prompt, deepseek_key)
+                result = call_deepseek(prompt, deepseek_key, max_tokens=DEEPSEEK_MAX_OUTPUT_TOKENS)
                 text = ""
                 choices = result.get("choices", [])
                 if choices:
@@ -1185,7 +1178,7 @@ def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", l
         last_error = None
         for attempt in range(max_retries):
             try:
-                result = _call_gemini_expert_raw(prompt, gemini_key)
+                result = call_gemini(prompt, gemini_key, max_tokens=GEMINI_MAX_OUTPUT_TOKENS)
                 text = ""
                 candidates = result.get("candidates", [])
                 if candidates:
@@ -1209,58 +1202,6 @@ def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", l
         print(f"  ℹ️  {label}: brak GEMINI_API_KEY")
     
     return {"text": "", "error": "Brak klucza API", "model": ""}
-
-
-def _call_deepseek_expert_raw(prompt: str, api_key: str):
-    """
-    Wysyła prompt do DeepSeek API i zwraca sparsowany JSON.
-    """
-    url = "https://api.deepseek.com/v1/chat/completions"
-    payload = {
-        "model": DEEPSEEK_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": DEEPSEEK_MAX_OUTPUT_TOKENS,
-        "temperature": 0.7,
-        "stream": False,
-    }
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={**DEEPSEEK_HEADERS, "Authorization": f"Bearer {api_key}"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=DEEPSEEK_TIMEOUT) as resp:
-        return json.loads(resp.read().decode("utf-8"))
-
-
-def _call_gemini_expert_raw(prompt: str, api_key: str):
-    """
-    Wysyła prompt do Gemini API i zwraca surowy obiekt response.
-    Używane wewnątrz _call_ai_expert jako fallback.
-    """
-    url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{GEMINI_MODEL}:generateContent?key={api_key}"
-    )
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
-            "thinkingConfig": {
-                "thinkingBudget": GEMINI_THINKING_BUDGET,
-            },
-        },
-    }
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    return json.loads(urllib.request.urlopen(req, timeout=GEMINI_TIMEOUT).read().decode("utf-8"))
 
 
 def _build_expert_context(all_data: dict) -> dict:

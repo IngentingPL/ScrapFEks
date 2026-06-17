@@ -16,30 +16,20 @@ import json
 import os
 import urllib.request
 import urllib.error
+from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  # wspólny klient API
 # 📖 from datetime import date usunięte — nieżywotne po usunięciu _save_newsletter
 
 
 # 📖 OUTPUT_DIR i NEWSLETTER_HISTORY_FILE usunięte — newsletter_history.json write-only, nic go nie czyta
 
-# Timeout dla requestu do Gemini API (sekundy)
-GEMINI_TIMEOUT = 30
-
 # Maksymalna długość newslettera zwracanego dalej do Discorda.
 MAX_NEWSLETTER_CHARS = 1500
 
 # Ustawienia Gemini — wersja diagnostyczna
-GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_MAX_OUTPUT_TOKENS = 2200
-GEMINI_THINKING_BUDGET = 0  # 0 = wyłącz thinking dla newslettera
-
-# Ustawienia DeepSeek — model podstawowy (OpenAI-compatible API)
-DEEPSEEK_MODEL = "deepseek-chat"
-DEEPSEEK_TIMEOUT = 30
-
-# Nagłówki do DeepSeek API (Authorization dodawane per wywołanie)
-DEEPSEEK_HEADERS = {
-    "Content-Type": "application/json",
-}
+# 📖 GEMINI_MODEL, DEEPSEEK_MODEL przeniesione do ai_client.py
+# 📖 GEMINI_TIMEOUT, DEEPSEEK_TIMEOUT, GEMINI_THINKING_BUDGET, DEEPSEEK_HEADERS
+#     usunięte jako martwy kod — używane tylko w usuniętych funkcjach transportowych
+GEMINI_MAX_OUTPUT_TOKENS = 2200  # lokalna wartość dla newslettera (różna od discord_notify)
 
 NEWSLETTER_END_MARKER = "### KONIEC NEWSLETTERA ###"
 
@@ -123,7 +113,7 @@ def call_ai(prompt: str, deepseek_key: str = "", gemini_key: str = "", label: st
     # --- KROK 1: DeepSeek (model podstawowy) ---
     if deepseek_key:
         try:
-            result = _call_deepseek_api(prompt, deepseek_key, label)
+            result = call_deepseek(prompt, deepseek_key, max_tokens=GEMINI_MAX_OUTPUT_TOKENS)
             parsed = _parse_deepseek_result(result, label)
             if parsed.get("text"):
                 parsed["model"] = DEEPSEEK_MODEL
@@ -137,7 +127,7 @@ def call_ai(prompt: str, deepseek_key: str = "", gemini_key: str = "", label: st
     # --- KROK 2: Gemini (fallback) ---
     if gemini_key:
         try:
-            result = _call_gemini_api(prompt, gemini_key, label)
+            result = call_gemini(prompt, gemini_key, max_tokens=GEMINI_MAX_OUTPUT_TOKENS)
             parsed = _parse_gemini_result(result)
             _log_gemini_debug(parsed, label=label)
             parsed["model"] = GEMINI_MODEL
@@ -159,77 +149,6 @@ def call_ai(prompt: str, deepseek_key: str = "", gemini_key: str = "", label: st
         "raw": None,
         "model": "",
     }
-
-
-def _call_gemini_api(prompt: str, api_key: str, label: str = "primary") -> dict:
-    """
-    Wysyła prompt do Gemini API i zwraca surową odpowiedź JSON.
-    Wyodrębnione z call_gemini — używane tylko jako fallback.
-    """
-    url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{GEMINI_MODEL}:generateContent?key={api_key}"
-    )
-
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
-            "thinkingConfig": {
-                "thinkingBudget": GEMINI_THINKING_BUDGET,
-            },
-        },
-    }
-
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=GEMINI_TIMEOUT) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Gemini HTTP {e.code}: {body[:300]}")
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"Gemini URL error: {e.reason}")
-
-
-def _call_deepseek_api(prompt: str, api_key: str, label: str = "primary") -> dict:
-    """
-    Wysyła prompt do DeepSeek API (OpenAI-compatible) i zwraca surową odpowiedź JSON.
-    """
-    url = "https://api.deepseek.com/v1/chat/completions"
-
-    payload = {
-        "model": DEEPSEEK_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": GEMINI_MAX_OUTPUT_TOKENS,  # ten sam limit co Gemini
-        "temperature": 0.7,
-        "stream": False,
-    }
-
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={**DEEPSEEK_HEADERS, "Authorization": f"Bearer {api_key}"},
-        method="POST",
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=DEEPSEEK_TIMEOUT) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"DeepSeek HTTP {e.code}: {body[:300]}")
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"DeepSeek URL error: {e.reason}")
 
 
 def _parse_deepseek_result(result: dict, label: str = "primary") -> dict:
