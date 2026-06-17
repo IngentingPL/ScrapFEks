@@ -20,6 +20,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime, date, timedelta
 from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  # wspólny klient API
+from predictor import parse_ownership_pct, captain_differential_score
 
 
 # ============================================================
@@ -264,22 +265,6 @@ def _get_round_date_range(fixtures_data, round_num):
     return min(dates), max(dates)
 
 
-def _parse_ownership_pct(pct_str):
-    """
-    Parsuje string popularności np. '12.3%' na float 12.3.
-
-    Zwraca 100.0 (maksimum) jeśli nie udało się sparsować —
-    bezpieczny fallback, żeby gracz nie był przypadkowo wybierany
-    jako "differential" przy błędnych danych.
-    """
-    if not pct_str:
-        return 100.0
-    try:
-        return float(str(pct_str).replace("%", "").strip())
-    except (ValueError, TypeError):
-        return 100.0
-
-
 # ============================================================
 # LOGIKA TIMINGOWA — kiedy wysyłać który post
 # ============================================================
@@ -392,12 +377,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
     # Formuła: prognoza × (1 - ownership/100)
     # Gracz z wysoką prognozą i małym ownership = "differential" — mało kto go ma,
     # więc dobre wyniki dadzą przewagę nad rywalami w lidze.
-    def _captain_score(pred):
-        pts = pred.get("predicted_points") or 0.0
-        own = _parse_ownership_pct(pred.get("popularity_pct", "100%"))
-        return pts * (1.0 - own / 100.0)
-
-    captain = max(predictions, key=_captain_score)
+    captain = max(predictions, key=captain_differential_score)
     cap_pid = captain.get("player_id")
     cap_pts = captain.get("predicted_points") or 0.0
     cap_own = captain.get("popularity_pct", "?")
@@ -470,7 +450,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
     diff_text = ""
     for pred in predictions:
         pts = pred.get("predicted_points") or 0
-        own = _parse_ownership_pct(pred.get("popularity_pct", "100%"))
+        own = parse_ownership_pct(pred.get("popularity_pct", "100%"))
         if pts > 6 and own < 10:
             pos = pred.get("position", "")
             team = pred.get("team", "")
@@ -488,7 +468,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
     # Jeśli ich unikniesz, a oni zawiodą — zyskujesz przewagę nad rywalami.
     avoid_candidates = []
     for pred in predictions:
-        own = _parse_ownership_pct(pred.get("popularity_pct", "0%"))
+        own = parse_ownership_pct(pred.get("popularity_pct", "0%"))
         pts = pred.get("predicted_points") or 0
         if own > 30 and pts > 0:
             avoid_candidates.append(pred)
@@ -502,7 +482,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
             pos = pred.get("position", "")
             name = pred.get("name", "?").split()[-1]  # Nazwisko
             pts = pred.get("predicted_points") or 0
-            own = _parse_ownership_pct(pred.get("popularity_pct", "0%"))
+            own = parse_ownership_pct(pred.get("popularity_pct", "0%"))
             opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
             home_str = "D" if pred.get("is_home", True) else "W"
             avoid_lines.append(
@@ -725,7 +705,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
     if players_data and round_number:
         for player in players_data:
             # Sprawdź globalny ownership — jeśli >= 20%, to nie "niespodzianka"
-            own = _parse_ownership_pct(player.get("popularity_pct", "100%"))
+            own = parse_ownership_pct(player.get("popularity_pct", "100%"))
             if own >= 20.0:
                 continue
 
@@ -773,7 +753,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
     if players_data and round_number:
         for player in players_data:
             # Sprawdź globalny ownership — jeśli <= 40%, to nie "rozczarowanie"
-            own = _parse_ownership_pct(player.get("popularity_pct", "0%"))
+            own = parse_ownership_pct(player.get("popularity_pct", "0%"))
             if own <= 40.0:
                 continue
 
@@ -797,7 +777,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
         team_name = disappointment.get("team", "")
         own_str = disappointment.get("popularity_pct", "?")
         # Oblicz ile drużyn z top 1000 go miało (przybliżenie: ownership% × 10)
-        own_pct = _parse_ownership_pct(own_str)
+        own_pct = parse_ownership_pct(own_str)
         approx_count = int(own_pct * 10)  # top 1000 × ownership% = ile drużyn
 
         dis_text = (
@@ -1308,17 +1288,8 @@ def _build_expert_context(all_data: dict) -> dict:
         ctx["top_predictions"] = top_preds
         
         # Captain pick (differential formula)
-        def _captain_score(pred):
-            pts = pred.get("predicted_points") or 0.0
-            own_str = pred.get("popularity_pct", "100%")
-            try:
-                own = float(str(own_str).replace("%", "").strip())
-            except (ValueError, TypeError):
-                own = 100.0
-            return pts * (1.0 - own / 100.0)
-        
         if predictions:
-            cap = max(predictions, key=_captain_score)
+            cap = max(predictions, key=captain_differential_score)
             ctx["captain_pick"] = {
                 "name": cap.get("name", "?"),
                 "team": cap.get("team", "?"),

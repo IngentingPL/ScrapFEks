@@ -17,6 +17,7 @@ import os
 import urllib.request
 import urllib.error
 from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  # wspólny klient API
+from predictor import parse_ownership_pct, captain_differential_score
 # 📖 from datetime import date usunięte — nieżywotne po usunięciu _save_newsletter
 
 
@@ -402,16 +403,7 @@ def _build_context(round_data: dict) -> dict:
             ctx["top5_predictions"] = top5
 
         # Captain pick (differential formula)
-        def _captain_score(pred):
-            pts = pred.get("predicted_points") or 0.0
-            own_str = pred.get("popularity_pct", "100%")
-            try:
-                own = float(str(own_str).replace("%", "").strip())
-            except (ValueError, TypeError):
-                own = 100.0
-            return pts * (1.0 - own / 100.0)
-
-        cap = max(predictions_data, key=_captain_score)
+        cap = max(predictions_data, key=captain_differential_score)
         ctx["captain_pick"] = {
             "name": cap.get("name", "?"),
             "team": cap.get("team", "?"),
@@ -427,10 +419,7 @@ def _find_hidden_gem(players_data, round_number):
     best = None
     best_pts = -1
     for player in players_data:
-        try:
-            own = float(str(player.get("popularity_pct", "100%")).replace("%", "").strip())
-        except (ValueError, TypeError):
-            own = 100.0
+        own = parse_ownership_pct(player.get("popularity_pct", "100%"))
         if own >= 20.0:
             continue
         for r in player.get("rounds", []):
@@ -448,10 +437,7 @@ def _find_disappointment(players_data, round_number):
     worst = None
     worst_pts = 999
     for player in players_data:
-        try:
-            own = float(str(player.get("popularity_pct", "0%")).replace("%", "").strip())
-        except (ValueError, TypeError):
-            own = 0.0
+        own = parse_ownership_pct(player.get("popularity_pct", "0%"))
         if own <= 40.0:
             continue
         for r in player.get("rounds", []):

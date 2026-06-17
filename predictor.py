@@ -73,6 +73,32 @@ def weighted_average(values, decay=0.85):
     return total_value / total_weight if total_weight > 0 else 0.0
 
 
+def parse_ownership_pct(pct_str):
+    """
+    Parsuje string popularności np. '12.3%' na float 12.3.
+    Zwraca 100.0 (maksimum) jeśli nie udało się sparsować -
+    bezpieczny fallback, żeby gracz nie był przypadkowo wybierany
+    jako "differential" przy błędnych danych.
+    """
+    if not pct_str:
+        return 100.0
+    try:
+        return float(str(pct_str).replace("%", "").strip())
+    except (ValueError, TypeError):
+        return 100.0
+
+
+def captain_differential_score(pred):
+    """
+    Liczy "differential captain score": predicted_points * (1 - ownership% / 100).
+    Im niższy ownership przy wysokiej prognozie, tym wyższy wynik -
+    nagradza kapitanów, których mało kto wybrał.
+    """
+    pts = pred.get("predicted_points") or 0.0
+    own = parse_ownership_pct(pred.get("popularity_pct", "100%"))
+    return pts * (1.0 - own / 100.0)
+
+
 def get_fdr_modifier(fdr_atk, fdr_def, position):
     """
     Oblicza modyfikator prognozy na podstawie FDR rywala i pozycji gracza.

@@ -34,6 +34,7 @@ import json
 import os
 from datetime import datetime
 from itertools import product
+from predictor import weighted_average
 
 # ============================================================
 # STAŁE — minimalne wymagania i wartości domyślne
@@ -108,23 +109,6 @@ LOOKBACK_MAX_VARIANTS = [6, 7, 8]
 # ============================================================
 # FUNKCJE POMOCNICZE
 # ============================================================
-
-def _weighted_average(values, decay):
-    """
-    Średnia ważona z malejącymi wagami — lustro funkcji z predictor.py.
-
-    Używamy tej samej logiki co predictor.py, żeby wyniki były spójne.
-    """
-    if not values:
-        return 0.0
-    total_weight = 0.0
-    total_value = 0.0
-    for i, val in enumerate(values):
-        weight = decay ** i
-        total_value += val * weight
-        total_weight += weight
-    return total_value / total_weight if total_weight > 0 else 0.0
-
 
 def _load_accuracy_history(accuracy_history_path):
     """
@@ -344,7 +328,7 @@ def compute_mae_for_params(dataset, decay, fdr_strength, home_away_bonus):
             recent = played[:DEFAULT_LOOKBACK]
             if len(recent) >= 2:
                 points = [r.get("points", 0) for r in recent]
-                base_avg = _weighted_average(points, decay)
+                base_avg = weighted_average(points, decay)
             else:
                 base_avg = item["base_avg"]  # Fallback na wartość z CSV
         else:
