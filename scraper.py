@@ -460,7 +460,8 @@ def get_player_ids_by_scanning(session: requests.Session, max_id: int = 3000) ->
 
             time.sleep(REQUEST_DELAY / 2)  # Krótsze opóźnienie przy skanowaniu
 
-        except Exception:
+        except Exception as e:  # jawne logowanie błędu zamiast cichego maskowania
+            print(f"⚠️ błąd skanowania ID {pid}: {e}")
             continue
 
         # Jeśli po 200 kolejnych ID nie znaleźliśmy nikogo, przerywamy
@@ -1362,6 +1363,7 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
         }
 
     except Exception as e:
+        print(f"⚠️ błąd scrape_team_squad({slug}): {e}")
         if debug:
             print(f"      ⚠️  Błąd: {e}")
         return {"slug": slug, "players": [], "captain_id": None, "error": str(e)}
@@ -1461,7 +1463,8 @@ def scrape_teams_captains(session: requests.Session, teams: list[dict],
 
                     if not result.get("squad"):
                         errors += 1
-                except Exception:
+                except Exception as e:  # jawne logowanie błędu workera
+                    print(f"⚠️ błąd workera ({slug}): {e}")
                     completed += 1
                     errors += 1
 
@@ -1482,8 +1485,8 @@ def scrape_teams_captains(session: requests.Session, teams: list[dict],
                 with open(checkpoint_file, "w", encoding="utf-8") as f:
                     json.dump(results, f, ensure_ascii=False)
                 print(f"   💾 Checkpoint: {len(results)} drużyn")
-            except Exception:
-                pass
+            except Exception as e:  # jawne logowanie błędu checkpointu
+                print(f"⚠️ nie udało się zapisać checkpointu: {e}")
 
         if timed_out:
             break
@@ -1493,8 +1496,8 @@ def scrape_teams_captains(session: requests.Session, teams: list[dict],
         try:
             with open(checkpoint_file, "w", encoding="utf-8") as f:
                 json.dump(results, f, ensure_ascii=False)
-        except Exception:
-            pass
+        except Exception as e:  # jawne logowanie błędu finalnego checkpointu
+            print(f"⚠️ nie udało się zapisać finalnego checkpointu: {e}")
 
     elapsed = time.time() - start_time
     status = "⏰ PRZERWANO (limit czasu)" if timed_out else "✅ Zakończono"
@@ -6007,8 +6010,8 @@ def main():
                         pass  # stary format — ignorujemy, zaczynamy od nowa
                     else:
                         rankings_by_round = loaded
-                except Exception:
-                    pass
+                except Exception as e:  # jawne logowanie błędu parsowania hockey_prev_ranking.json
+                    print(f"⚠️ błąd parsowania hockey_prev_ranking.json: {e}")
 
             # Pobierz ranking poprzedniej kolejki do porównania
             prev_round_key = f"round_{current_round - 1}" if current_round and current_round > 1 else None
@@ -6094,8 +6097,8 @@ def main():
                         pass  # stary format — ignorujemy
                     else:
                         duets_rankings_by_round = loaded_duets
-                except Exception:
-                    pass
+                except Exception as e:  # jawne logowanie błędu parsowania duets_prev_ranking.json
+                    print(f"⚠️ błąd parsowania duets_prev_ranking.json: {e}")
 
             duets_prev_round_key = f"round_{current_round - 1}" if current_round and current_round > 1 else None
             duets_prev_ranking = duets_rankings_by_round.get(duets_prev_round_key, {}) if duets_prev_round_key else {}
