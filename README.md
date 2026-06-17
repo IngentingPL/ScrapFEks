@@ -16,8 +16,16 @@ Skopiuj pliki do nowego repozytorium na GitHubie.
 
 **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
 
+**Wymagane:**
 - `FANTASY_EMAIL` — email konta na fantasy.ekstraklasa.org
 - `FANTASY_PASSWORD` — hasło do tego konta
+
+**Opcjonalne (włączają dodatkowe funkcje):**
+- `DEEPSEEK_API_KEY` — newsletter i eksperci AI na Discordzie (model główny)
+- `GEMINI_API_KEY` — fallback dla powyższego, gdy DeepSeek zawiedzie
+- `DISCORD_WEBHOOK_URL` — powiadomienia na Discord
+- `EXTRAKLASA_API_TOKEN` — rozszerzone statystyki zawodników (xG, strzały)
+- `WORKFLOW_PAT` — Personal Access Token, wymagany TYLKO jeśli chcesz używać workflow **Update Schedule** (edytuje plik workflow, czego domyślny token GitHuba nie może zrobić)
 
 > **Zalecenie:** użyj osobnego konta fantasy do scrapowania.
 
@@ -215,7 +223,7 @@ Wszystkie pliki zapisywane do katalogu `output/` ze znacznikiem czasu (`YYYYMMDD
 | `checkpoint_global.json` | Punkt wznowienia dla scrapowania zawodników |
 | `checkpoint_league.json` | Punkt wznowienia dla scrapowania drużyn |
 
-Artefakty z GitHub Actions przechowywane przez **90 dni**.
+Artefakty z GitHub Actions przechowywane przez **7 dni**.
 
 ---
 

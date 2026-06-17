@@ -15,7 +15,6 @@ ScrapFEks/
 ├── .github/workflows/
 │   ├── scrape.yml              # Główny workflow – uruchamia scraper
 │   ├── archive.yml             # Archiwizacja sezonu (workflow_dispatch)
-│   ├── test_gemini.yml         # Testowanie klucza Gemini API
 │   └── update_schedule.yml    # Aktualizacja terminarza
 ├── docs/
 │   ├── index.html              # Wygenerowany dashboard (GitHub Pages)
@@ -30,8 +29,9 @@ ScrapFEks/
 ├── predictor.py                # Logika prognoz zawodników
 ├── tuner.py                    # Optymalizacja parametrów predykcji
 ├── accuracy.py                 # Śledzenie trafności prognoz
-├── discord_notify.py           # Wysyłanie powiadomień Discord
-├── newsletter.py               # Newsletter generowany przez Gemini AI
+├── ai_client.py                 # Wspólny klient AI (DeepSeek + Gemini) – używany przez discord_notify.py i newsletter.py
+├── discord_notify.py           # Wysyłanie powiadomień Discord + eksperci Rabbti i Tlinf
+├── newsletter.py               # Newsletter przez DeepSeek (fallback: Gemini)
 ├── league_tracker.py           # Tracker sezonu ligowego
 ├── update_schedule.py          # Aktualizacja terminarza kolejek
 ├── test_single_player.py       # Testowanie pojedynczego zawodnika
@@ -55,6 +55,7 @@ ScrapFEks/
 4. **Komentarze po polsku** – krótkie, beginner-friendly, przy każdej ważniejszej zmianie
 5. **Przyrostowe zmiany** – małe kroki, sprawdzaj każdy etap
 6. **Jeden plik HTML** – cały CSS i JS inline w generowanym pliku, bez osobnych plików
+7. **Nagłówki HTTP do fantasy.ekstraklasa.org** – używaj istniejących stałych `HEADERS` / `BROWSER_HEADERS` / `RANKING_HEADERS` w scraper.py, nie twórz nowych słowników nagłówków od zera
 
 ---
 
@@ -125,11 +126,16 @@ Każda wiadomość Discord max **2000 znaków** (limit webhooków). Wiadomości 
 
 ---
 
-## Gemini AI
+## AI: DeepSeek (główny) + Gemini (fallback)
 
-- Model: `gemini-2.5-flash`
-- Klucz API: GitHub Secret `GEMINI_API_KEY`
-- Używany w: `newsletter.py`, prognozach ekspertów w `discord_notify.py`
+- **DeepSeek** (`deepseek-chat`) – główny model, próbowany pierwszy
+- **Gemini** (`gemini-2.5-flash`) – fallback, używany tylko gdy DeepSeek zawiedzie (błąd HTTP, timeout, brak klucza)
+- Wspólna logika wywołań HTTP do obu API żyje w `ai_client.py` (funkcje `call_deepseek()`, `call_gemini()`) – używana przez `newsletter.py` i `discord_notify.py`
+- Logika fallbacku (kolejność prób, retry, parsowanie wyniku) jest osobna w każdym pliku – `newsletter.py` ma `call_ai()`, `discord_notify.py` ma `_call_ai_expert()` (z retry + exponential backoff dla ekspertów)
+- Klucze API: `DEEPSEEK_API_KEY` (główny), `GEMINI_API_KEY` (fallback)
+- Używany w: `newsletter.py` (newsletter), `discord_notify.py` (eksperci Rabbti i Tlinf)
+
+**Jeśli zmieniasz coś w wywołaniu API (URL, nagłówki, timeout)** – zmień w `ai_client.py`, nie twórz nowej kopii w `newsletter.py` albo `discord_notify.py`.
 
 ---
 
@@ -137,9 +143,29 @@ Każda wiadomość Discord max **2000 znaków** (limit webhooków). Wiadomości 
 
 | Secret | Do czego |
 |---|---|
-| `GEMINI_API_KEY` | Gemini API |
+| `FANTASY_EMAIL` | Login do fantasy.ekstraklasa.org |
+| `FANTASY_PASSWORD` | Hasło do fantasy.ekstraklasa.org |
+| `DEEPSEEK_API_KEY` | DeepSeek API – główny model AI (newsletter + eksperci Discord) |
+| `GEMINI_API_KEY` | Gemini API – fallback, używany tylko gdy DeepSeek zawiedzie |
 | `DISCORD_WEBHOOK_URL` | Webhook Discord |
-| `PAT` | Personal Access Token do pushowania zmian przez Actions |
+| `EXTRAKLASA_API_TOKEN` | Rozszerzone statystyki zawodników (xG, strzały) z API ekstraklasa.org |
+| `WORKFLOW_PAT` | Personal Access Token – wymagany TYLKO przez `update_schedule.yml`. Ten workflow edytuje plik `.github/workflows/scrape.yml`, a domyślny `GITHUB_TOKEN` nie ma uprawnień do modyfikacji plików w `.github/workflows/` (twarde ograniczenie GitHuba). `scrape.yml` i `archive.yml` NIE potrzebują tego sekretu. |
+
+---
+
+## Cache zewnętrznych statystyk (24h)
+
+`output/external_cache.json` cache'uje dwa źródła zewnętrzne na 24h, żeby nie odpytywać ich przy każdym uruchomieniu (workflow odpala się kilka razy w dzień meczowy):
+- Tabela z **90minut.pl** (bramki strzelone/stracone)
+- Extra statystyki z API ekstraklasa.org (xG, strzały, podania kluczowe)
+
+Jeśli dane wydają się nieaktualne po meczu – to oczekiwane, cache odświeży się automatycznie po 24h. Plik jest commitowany do repo (przetrwa między uruchomieniami workflow).
+
+## Trafność prognoz (accuracy.py)
+
+`accuracy_history.json` śledzi trafność prognoz kolejka po kolejce i zasila auto-tuning parametrów (tuner.py). Wymaga **4+ kolejek danych**, zanim auto-tuning zacznie działać.
+
+Zawiera guard: jeśli plik prognoz (`fantasy_predictions_*.csv`) dotyczy innej kolejki niż ta którą sprawdzamy, porównanie jest pomijane z jasnym komunikatem w logach – zamiast cichego "0 dopasowań".
 
 ---
 
@@ -171,6 +197,7 @@ Każda wiadomość Discord max **2000 znaków** (limit webhooków). Wiadomości 
 7. **Trafność** – accuracy tracker
 8. **Sezon** – league tracker sezonu
 9. **FDR** – wskaźnik trudności rywala (ATK/DEF, skala 1-5)
+10. **Archiwum** – linki do zarchiwizowanych sezonów (`docs/archive/`); wyszarzona jeśli nie ma jeszcze żadnego zarchiwizowanego sezonu
 
 ---
 
