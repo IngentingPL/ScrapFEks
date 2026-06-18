@@ -35,6 +35,9 @@ DEFAULT_LOOKBACK = 5
 # Minimalna liczba rozegranych kolejek, żeby prognoza miała sens
 MIN_ROUNDS_FOR_PREDICTION = 2
 
+# środek skali trudności FDR (skala 1-5) - używany jako neutralny fallback
+FDR_NEUTRAL = 3
+
 
 # ============================================================
 # FUNKCJE POMOCNICZE
@@ -139,7 +142,7 @@ def get_fdr_modifier(fdr_atk, fdr_def, position):
     # Konwersja: FDR → modyfikator (skala odwrócona)
     # FDR 1→1.20, 2→1.10, 3→1.00, 4→0.90, 5→0.80
     def fdr_to_modifier(fdr_value):
-        return 1.0 + (3 - fdr_value) * 0.10
+        return 1.0 + (FDR_NEUTRAL - fdr_value) * 0.10
 
     # Dla napastnika/pomocnika: interesuje nas FDR DEF rywala (im słabsza obrona, tym lepiej)
     mod_from_def = fdr_to_modifier(fdr_def)
@@ -270,7 +273,7 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
 
     # --- Krok 3: Modyfikator FDR ---
     opponent = next_fixture.get("opponent", "")
-    opponent_fdr = fdr_data.get(opponent, {"atk": 3, "def": 3})  # domyślnie średni
+    opponent_fdr = fdr_data.get(opponent, {"atk": FDR_NEUTRAL, "def": FDR_NEUTRAL})  # domyślnie średni
     fdr_mod = get_fdr_modifier(
         fdr_atk=opponent_fdr["atk"],
         fdr_def=opponent_fdr["def"],

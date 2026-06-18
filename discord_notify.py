@@ -20,7 +20,8 @@ import urllib.request
 import urllib.error
 from datetime import datetime, date, timedelta
 from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  # wspólny klient API
-from predictor import parse_ownership_pct, captain_differential_score
+from predictor import parse_ownership_pct, captain_differential_score, FDR_NEUTRAL
+from analytics import find_hidden_gem, find_disappointment, collect_captains
 
 
 # ============================================================
@@ -35,6 +36,11 @@ DISCORD_SENT_FILE = os.path.join(OUTPUT_DIR, "discord_sent.json")
 
 # Timeout dla requestów do Discord (sekundy)
 WEBHOOK_TIMEOUT = 10
+
+# limit znaków na część wiadomości (2000 - margines)
+DISCORD_CONTENT_MAX_LEN = 1900
+# liczba prób dla wywołań DeepSeek/Gemini przed poddaniem się
+AI_MAX_RETRIES = 3
 
 # Link do dashboardu — pojawi się w footerze każdego embeda
 DASHBOARD_URL = "ingentingpl.github.io/ScrapFEks"
@@ -181,7 +187,7 @@ def _send_content(webhook_url, content):
         return False
 
 
-def _split_text_for_content(text, max_len=1900):
+def _split_text_for_content(text, max_len=DISCORD_CONTENT_MAX_LEN):
     """
     Dzieli długi tekst na części bezpieczne dla zwykłego Discord content.
 
@@ -508,8 +514,8 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
             for pred in predictions:
                 if pred.get("team") == home_team and pred.get("is_home"):
                     # fdr_atk_team / fdr_def_team nie istnieją w danych predykcji (predictor.py zwraca tylko opponent)
-                    atk = pred.get("fdr_atk_opponent") or 3
-                    defn = pred.get("fdr_def_opponent") or 3
+                    atk = pred.get("fdr_atk_opponent") or FDR_NEUTRAL
+                    defn = pred.get("fdr_def_opponent") or FDR_NEUTRAL
                     fdr_sum = atk + defn
                     break
             if fdr_sum is not None:
@@ -703,22 +709,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
     hidden_gem_pts = -1
 
     if players_data and round_number:
-        for player in players_data:
-            # Sprawdź globalny ownership — jeśli >= 20%, to nie "niespodzianka"
-            own = parse_ownership_pct(player.get("popularity_pct", "100%"))
-            if own >= 20.0:
-                continue
-
-            # Szukaj punktów tej kolejki w danych per-kolejkowych gracza
-            # 'rounds' to lista {"round": N, "played": True/False, "points": X, ...}
-            rounds = player.get("rounds", [])
-            for r in rounds:
-                if r.get("round") == round_number and r.get("played"):
-                    pts = r.get("points", 0) or 0
-                    if pts > hidden_gem_pts:
-                        hidden_gem_pts = pts
-                        hidden_gem = player
-                    break  # Każdy gracz ma co najwyżej jeden wpis na kolejkę
+        hidden_gem, hidden_gem_pts = find_hidden_gem(players_data, round_number)
 
     if hidden_gem and hidden_gem_pts > 0:
         # Mapowanie pełnych nazw pozycji → skróty używane w aplikacji
@@ -751,21 +742,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
     disappointment_pts = 999  # szukamy minimum, startujemy od dużej wartości
 
     if players_data and round_number:
-        for player in players_data:
-            # Sprawdź globalny ownership — jeśli <= 40%, to nie "rozczarowanie"
-            own = parse_ownership_pct(player.get("popularity_pct", "0%"))
-            if own <= 40.0:
-                continue
-
-            # Szukaj punktów tej kolejki
-            rounds = player.get("rounds", [])
-            for r in rounds:
-                if r.get("round") == round_number and r.get("played"):
-                    pts = r.get("points", 0) or 0
-                    if pts < disappointment_pts:
-                        disappointment_pts = pts
-                        disappointment = player
-                    break
+        disappointment, disappointment_pts = find_disappointment(players_data, round_number)
 
     if disappointment and disappointment_pts < 5:
         # Pokazuj rozczarowanie tylko gdy punkty są naprawdę niskie (< 5)
@@ -799,49 +776,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
     # skład każdej drużyny (players) z flagą C=True dla kapitana.
     # Punkty kapitana za konkretną kolejkę szukamy w players_data (rounds).
     if league_teams_detail:
-        # Buduj lookup: player_id → punkty w tej kolejce
-        player_round_pts = {}
-        if players_data and round_number:
-            for player in players_data:
-                pid = str(player.get("player_id", ""))
-                if not pid:
-                    continue
-                for r in player.get("rounds", []):
-                    if r.get("round") == round_number and r.get("played"):
-                        player_round_pts[pid] = r.get("points", 0) or 0
-                        break
-
-        # Zbierz dane kapitanów z każdej drużyny
-        captain_entries = []
-        pos_map_cap = {
-            "Bramkarz": "BR", "Obrońca": "OBR",
-            "Pomocnik": "POM", "Napastnik": "NAP",
-        }
-        for team in league_teams_detail:
-            team_slug = team.get("slug", "")
-            # Szukaj display_name w league_data (wzbogacone dane)
-            display_name = ""
-            for ld in (league_data or []):
-                if ld.get("slug") == team_slug:
-                    display_name = ld.get("display_name", "")
-                    break
-            if not display_name:
-                display_name = team_slug.replace("-", " ").title()
-
-            # Znajdź kapitana w składzie drużyny
-            for p in team.get("players", []):
-                if p.get("C"):  # C=True oznacza kapitana
-                    cap_pid = str(p.get("pid", ""))
-                    cap_name = p.get("name", "?")
-                    cap_pos = pos_map_cap.get(p.get("pos", ""), p.get("pos", ""))
-                    cap_pts = player_round_pts.get(cap_pid, 0)
-                    captain_entries.append({
-                        "team_name": display_name,
-                        "cap_name": cap_name,
-                        "cap_pos": cap_pos,
-                        "cap_pts": cap_pts,
-                    })
-                    break  # Każda drużyna ma jednego kapitana
+        captain_entries = collect_captains(league_teams_detail, players_data, round_number, league_data)
 
         if captain_entries:
             # Sortuj od najwyższych punktów kapitana do najniższych
@@ -920,7 +855,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
     # --- KAPITANOWIE W LIDZE jako zwykły tekst ---
     if success and captain_lines:
         captains_text = "\n".join(captain_lines)
-        captain_parts = _split_text_for_content(captains_text, max_len=1900)
+        captain_parts = _split_text_for_content(captains_text, max_len=DISCORD_CONTENT_MAX_LEN)
         print(f"  🔎 Kapitanowie — części: {len(captain_parts)} | długości: {[len(p) for p in captain_parts]}")
 
         for idx, part in enumerate(captain_parts, start=1):
@@ -951,7 +886,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
                 cleaned = cleaned[len(header):].lstrip("\n :-—")
                 break
 
-        newsletter_parts = _split_text_for_content(cleaned, max_len=1900)
+        newsletter_parts = _split_text_for_content(cleaned, max_len=DISCORD_CONTENT_MAX_LEN)
         print(f"  🔎 Newsletter — części: {len(newsletter_parts)} | długości: {[len(p) for p in newsletter_parts]}")
 
         for idx, part in enumerate(newsletter_parts, start=1):
@@ -1082,8 +1017,8 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
         cap_summary_text = "Kapitanowie:\n" + "\n".join(cap_summary_lines)
 
         # Sprawdź limit 2000 znaków - jeśli za długa, podziel na części
-        if len(cap_summary_text) > 1900:
-            cap_parts = _split_text_for_content(cap_summary_text, max_len=1900)
+        if len(cap_summary_text) > DISCORD_CONTENT_MAX_LEN:
+            cap_parts = _split_text_for_content(cap_summary_text, max_len=DISCORD_CONTENT_MAX_LEN)
             for idx, part in enumerate(cap_parts, start=1):
                 header = f"Kapitanowie ({idx}/{len(cap_parts)}):\n" if len(cap_parts) > 1 else "Kapitanowie:\n"
                 ok = _send_content(webhook_url, header + part)
@@ -1129,7 +1064,7 @@ def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", l
     # --- KROK 1: DeepSeek (model podstawowy) ---
     if deepseek_key:
         last_error = None
-        for attempt in range(3):
+        for attempt in range(AI_MAX_RETRIES):
             try:
                 result = call_deepseek(prompt, deepseek_key, max_tokens=DEEPSEEK_MAX_OUTPUT_TOKENS)
                 text = ""
@@ -1143,7 +1078,7 @@ def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", l
             except Exception as e:
                 last_error = str(e)
             
-            if attempt < 2:
+            if attempt < AI_MAX_RETRIES - 1:
                 wait_time = (2 ** attempt) + random.uniform(0.5, 1.5)
                 print(f"  ⚠️  {label}: DeepSeek próba {attempt + 1} nieudana ({last_error}), retry za {wait_time:.1f}s...")
                 time.sleep(wait_time)
@@ -1154,7 +1089,7 @@ def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", l
     
     # --- KROK 2: Gemini (fallback) ---
     if gemini_key:
-        max_retries = 3
+        max_retries = AI_MAX_RETRIES
         last_error = None
         for attempt in range(max_retries):
             try:

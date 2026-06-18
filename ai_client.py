@@ -13,6 +13,8 @@ DEEPSEEK_TIMEOUT = 30
 GEMINI_TIMEOUT = 30
 GEMINI_THINKING_BUDGET = 0
 DEEPSEEK_HEADERS = {"Content-Type": "application/json"}
+AI_TEMPERATURE = 0.7  # temperatura modeli AI - im wyżej, tym bardziej "kreatywne" odpowiedzi
+ERROR_PREVIEW_LEN = 300  # ile znaków błędu HTTP pokazać w komunikacie
 
 
 def call_deepseek(prompt: str, api_key: str, max_tokens: int = 1500) -> dict:
@@ -22,7 +24,7 @@ def call_deepseek(prompt: str, api_key: str, max_tokens: int = 1500) -> dict:
         "model": DEEPSEEK_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": max_tokens,
-        "temperature": 0.7,
+        "temperature": AI_TEMPERATURE,
         "stream": False,
     }
     data = json.dumps(payload).encode("utf-8")
@@ -36,7 +38,7 @@ def call_deepseek(prompt: str, api_key: str, max_tokens: int = 1500) -> dict:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"DeepSeek HTTP {e.code}: {body[:300]}")
+        raise RuntimeError(f"DeepSeek HTTP {e.code}: {body[:ERROR_PREVIEW_LEN]}")
     except urllib.error.URLError as e:
         raise RuntimeError(f"DeepSeek URL error: {e.reason}")
 
@@ -50,7 +52,7 @@ def call_gemini(prompt: str, api_key: str, max_tokens: int = 1500) -> dict:
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.7,
+            "temperature": AI_TEMPERATURE,
             "maxOutputTokens": max_tokens,
             "thinkingConfig": {"thinkingBudget": GEMINI_THINKING_BUDGET},
         },
@@ -66,6 +68,6 @@ def call_gemini(prompt: str, api_key: str, max_tokens: int = 1500) -> dict:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         body = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Gemini HTTP {e.code}: {body[:300]}")
+        raise RuntimeError(f"Gemini HTTP {e.code}: {body[:ERROR_PREVIEW_LEN]}")
     except urllib.error.URLError as e:
         raise RuntimeError(f"Gemini URL error: {e.reason}")
