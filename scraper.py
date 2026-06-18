@@ -36,23 +36,9 @@ from tuner import run_tuning
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from Crypto.Random import get_random_bytes
+from utils import normalize_team_name, _normalize_name, _safe_int, _safe_float, _normalize_team
 
 
-def normalize_team_name(name: str) -> str:
-    """Normalizuj nazwę drużyny: lowercase + usuń polskie diakrytyki."""
-    nfkd = unicodedata.normalize("NFKD", name)
-    ascii_name = "".join(c for c in nfkd if not unicodedata.combining(c))
-    ascii_name = ascii_name.replace("ł", "l").replace("Ł", "L")
-    return ascii_name.lower().strip()
-
-def _normalize_name(name: str) -> str:
-    """Normalizuj imię i nazwisko: lowercase + usuń polskie diakrytyki, zachowaj spację."""
-    if not name:
-        return ""
-    nfkd = unicodedata.normalize("NFKD", name)
-    ascii_name = "".join(c for c in nfkd if not unicodedata.combining(c))
-    ascii_name = ascii_name.replace("ł", "l").replace("Ł", "L")
-    return ascii_name.lower().strip()
 
 
 def cryptojs_aes_encrypt(plaintext: str, passphrase: str) -> str:
@@ -1092,20 +1078,7 @@ def print_round_summary(players: list[dict], round_num: int):
               f"{p['popularity_pct']:>6} {p['total_points']:>9}")
 
 
-def _safe_int(val: str) -> int:
-    """Bezpiecznie konwertuje string na int."""
-    try:
-        return int(re.sub(r"[^\d-]", "", val or "0") or "0")
-    except (ValueError, TypeError):
-        return 0
 
-
-def _safe_float(val: str) -> float:
-    """Bezpiecznie konwertuje string na float."""
-    try:
-        return float(re.sub(r"[^\d.,\-]", "", val or "0").replace(",", ".") or "0")
-    except (ValueError, TypeError):
-        return 0.0
 
 
 # ============================================================
@@ -2441,11 +2414,6 @@ MONTHS_PL = {
     "maja": 5, "czerwca": 6, "lipca": 7, "sierpnia": 8,
     "września": 9, "października": 10, "listopada": 11, "grudnia": 12,
 }
-
-def _normalize_team(name: str) -> str:
-    """Normalizuje nazwę drużyny dla porównań (strip, NFKD, lower)."""
-    return unicodedata.normalize("NFKD", name.strip()).lower()
-
 def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
     """Parsuje terminarz.txt i zwraca dane do fixture ticker."""
     if not os.path.exists(filepath):
