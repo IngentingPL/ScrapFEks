@@ -15,9 +15,9 @@ Autor: Wygenerowane przez Claude dla Piotra
 import json
 import os
 import urllib.request
-import urllib.error
 from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  # wspólny klient API
-from predictor import parse_ownership_pct, captain_differential_score
+from predictor import captain_differential_score
+from analytics import find_hidden_gem, find_disappointment, collect_captains
 # 📖 from datetime import date usunięte — nieżywotne po usunięciu _save_newsletter
 
 
@@ -354,7 +354,7 @@ def _build_context(round_data: dict) -> dict:
     # --- Zawodnik-niespodzianka i rozczarowanie ---
     players_data = round_data.get("players_data", [])
     if players_data and round_number:
-        hidden_gem, gem_pts = _find_hidden_gem(players_data, round_number)
+        hidden_gem, gem_pts = find_hidden_gem(players_data, round_number)
         if hidden_gem and gem_pts > 0:
             ctx["surprise_player"] = {
                 "name": hidden_gem.get("name", "?"),
@@ -363,7 +363,7 @@ def _build_context(round_data: dict) -> dict:
                 "ownership_pct": hidden_gem.get("popularity_pct", "?"),
             }
 
-        disappointment, dis_pts = _find_disappointment(players_data, round_number)
+        disappointment, dis_pts = find_disappointment(players_data, round_number)
         if disappointment and dis_pts < 5:
             ctx["disappointment_player"] = {
                 "name": disappointment.get("name", "?"),
@@ -375,7 +375,11 @@ def _build_context(round_data: dict) -> dict:
     # --- Kapitanowie w lidze ---
     league_teams_detail = round_data.get("league_teams_detail", [])
     if league_teams_detail and players_data and round_number:
-        captains = _collect_captains(league_teams_detail, players_data, round_number, league_data)
+        raw_captains = collect_captains(league_teams_detail, players_data, round_number, league_data)
+        captains = [
+            {"team": c["team_name"], "captain": c["cap_name"], "captain_pts": c["cap_pts"]}
+            for c in raw_captains
+        ]
         if captains:
             ctx["captains"] = captains[:8]  # max 8 żeby prompt nie był za długi
 
@@ -414,79 +418,10 @@ def _build_context(round_data: dict) -> dict:
     return ctx
 
 
-def _find_hidden_gem(players_data, round_number):
-    """Szuka zawodnika z najwyższymi punktami przy ownership < 20%."""
-    best = None
-    best_pts = -1
-    for player in players_data:
-        own = parse_ownership_pct(player.get("popularity_pct", "100%"))
-        if own >= 20.0:
-            continue
-        for r in player.get("rounds", []):
-            if r.get("round") == round_number and r.get("played"):
-                pts = r.get("points", 0) or 0
-                if pts > best_pts:
-                    best_pts = pts
-                    best = player
-                break
-    return best, best_pts
 
 
-def _find_disappointment(players_data, round_number):
-    """Szuka gracza z najniższymi punktami przy ownership > 40%."""
-    worst = None
-    worst_pts = 999
-    for player in players_data:
-        own = parse_ownership_pct(player.get("popularity_pct", "0%"))
-        if own <= 40.0:
-            continue
-        for r in player.get("rounds", []):
-            if r.get("round") == round_number and r.get("played"):
-                pts = r.get("points", 0) or 0
-                if pts < worst_pts:
-                    worst_pts = pts
-                    worst = player
-                break
-    return worst, worst_pts
 
 
-def _collect_captains(league_teams_detail, players_data, round_number, league_data):
-    """Zbiera dane kapitanów z każdej drużyny ligi."""
-    # Lookup: player_id → punkty w tej kolejce
-    player_round_pts = {}
-    for player in players_data:
-        pid = str(player.get("player_id", ""))
-        if not pid:
-            continue
-        for r in player.get("rounds", []):
-            if r.get("round") == round_number and r.get("played"):
-                player_round_pts[pid] = r.get("points", 0) or 0
-                break
-
-    # Lookup: slug → display_name
-    display_name_map = {
-        t.get("slug", ""): t.get("display_name") or t.get("slug", "").replace("-", " ").title()
-        for t in (league_data or [])
-    }
-
-    captains = []
-    for team in league_teams_detail:
-        team_slug = team.get("slug", "")
-        team_name = display_name_map.get(team_slug) or team_slug.replace("-", " ").title()
-        for p in team.get("players", []):
-            if p.get("C"):
-                cap_pid = str(p.get("pid", ""))
-                cap_name = p.get("name", "?")
-                cap_pts = player_round_pts.get(cap_pid, 0)
-                captains.append({
-                    "team": team_name,
-                    "captain": cap_name,
-                    "captain_pts": cap_pts,
-                })
-                break  # Każda drużyna ma jednego kapitana
-
-    captains.sort(key=lambda c: c["captain_pts"], reverse=True)
-    return captains
 
 
 # ============================================================

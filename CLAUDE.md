@@ -25,6 +25,7 @@ ScrapFEks/
 │   ├── fantasy_captains_*.csv  # Historia kapitanów
 │   └── debug_team_*.html       # Pliki debugowe drużyn
 ├── scraper.py                  # GŁÓWNY PLIK – scraping + generowanie HTML
+├── generate_from_cache.py      # Regeneruje dashboard z istniejącego JSON, bez nowego scrapowania
 ├── archive.py                  # Archiwizacja sezonu do docs/archive/
 ├── predictor.py                # Logika prognoz zawodników
 ├── tuner.py                    # Optymalizacja parametrów predykcji
@@ -32,6 +33,7 @@ ScrapFEks/
 ├── ai_client.py                 # Wspólny klient AI (DeepSeek + Gemini) – używany przez discord_notify.py i newsletter.py
 ├── discord_notify.py           # Wysyłanie powiadomień Discord + eksperci Rabbti i Tlinf
 ├── newsletter.py               # Newsletter przez DeepSeek (fallback: Gemini)
+├── analytics.py                # Wspólne funkcje analityczne (hidden gem, disappointment, kapitanowie)
 ├── league_tracker.py           # Tracker sezonu ligowego
 ├── update_schedule.py          # Aktualizacja terminarza kolejek
 ├── test_single_player.py       # Testowanie pojedynczego zawodnika
@@ -118,7 +120,7 @@ Powiadomienia są wysyłane przez `discord_notify.py` i zarządzane w `scraper.p
 | Godzinę po pierwszym meczu | Podsumowanie kapitanów |
 | Po ostatnim meczu kolejki | Post-match: wyniki |
 
-### Eksperci AI (Gemini):
+### Eksperci AI:
 - **⚽ Rabbti** – doświadczony analityk Ekstraklasy, rzetelny, pracuje na danych
 - **🛋️ Tlinf** – zwykły kibic, kontrowersyjny, podważa konsensus
 
@@ -166,6 +168,18 @@ Jeśli dane wydają się nieaktualne po meczu – to oczekiwane, cache odśwież
 `accuracy_history.json` śledzi trafność prognoz kolejka po kolejce i zasila auto-tuning parametrów (tuner.py). Wymaga **4+ kolejek danych**, zanim auto-tuning zacznie działać.
 
 Zawiera guard: jeśli plik prognoz (`fantasy_predictions_*.csv`) dotyczy innej kolejki niż ta którą sprawdzamy, porównanie jest pomijane z jasnym komunikatem w logach – zamiast cichego "0 dopasowań".
+
+---
+
+## Inne nazwane stałe (sesja optymalizacyjna)
+
+| Stała | Plik | Wartość | Co kontroluje |
+|---|---|---|---|
+| `FDR_NEUTRAL` | predictor.py | 3 | Środek skali FDR (1-5), neutralny fallback |
+| `AI_TEMPERATURE` | ai_client.py | 0.7 | Temperatura modeli DeepSeek/Gemini |
+| `AI_MAX_RETRIES` | discord_notify.py | 3 | Liczba prób wywołań AI dla ekspertów |
+| `DISCORD_CONTENT_MAX_LEN` | discord_notify.py | 1900 | Limit znaków na część wiadomości (margines pod limitem Discorda 2000) |
+| `ERROR_PREVIEW_LEN` | ai_client.py | 300 | Ile znaków błędu HTTP pokazać w logach |
 
 ---
 

@@ -237,6 +237,16 @@ Artefakty z GitHub Actions przechowywane przez **7 dni**.
 | `terminarz.txt` | Terminarz meczów — źródło danych dla fixture tickera i auto-uruchomień |
 | `.github/workflows/scrape.yml` | Workflow GitHub Actions — główny scraper |
 | `.github/workflows/update_schedule.yml` | Workflow GitHub Actions — aktualizacja harmonogramu |
+| `predictor.py` | Logika prognoz punktowych zawodników |
+| `tuner.py` | Auto-tuning parametrów predykcji na podstawie trafności |
+| `accuracy.py` | Śledzenie trafności prognoz kolejka po kolejce |
+| `analytics.py` | Wspólne funkcje analityczne (hidden gem, disappointment, kapitanowie) |
+| `ai_client.py` | Wspólny klient DeepSeek/Gemini używany przez newsletter i Discord |
+| `discord_notify.py` | Wysyłanie powiadomień na Discord |
+| `newsletter.py` | Generowanie newslettera przez AI |
+| `league_tracker.py` | Tracker sezonu ligowego |
+| `archive.py` | Archiwizacja zakończonego sezonu |
+| `generate_from_cache.py` | Regeneruje dashboard z istniejącego JSON |
 
 ---
 
