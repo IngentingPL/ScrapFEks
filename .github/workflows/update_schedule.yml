@@ -6,6 +6,12 @@ on:
       - 'terminarz.txt'
   workflow_dispatch:
 
+# Tylko jeden workflow na raz może pisać do repo -
+# zapobiega konfliktom przy nakładających się runach (dni meczowe)
+concurrency:
+  group: repo-write
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
