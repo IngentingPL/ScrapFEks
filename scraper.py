@@ -37,6 +37,17 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from Crypto.Random import get_random_bytes
 from utils import normalize_team_name, _normalize_name, _safe_int, _safe_float, _normalize_team
+from network import _request_with_retry, _load_external_cache, _get_cached_external, _save_external_cache
+from config import (
+    FANTASY_EMAIL, FANTASY_PASSWORD, TARGET_ROUND, MAX_PLAYER_ID,
+    TEAMS_TO_SCRAPE, LEAGUE_SLUG, LEAGUE_ID, USER_TEAM_SLUG,
+    REQUEST_DELAY, WORKERS, MAX_RUNTIME_MINUTES,
+    OUTPUT_DIR, SCRIPT_START, BASE_URL, LOGIN_API_URL,
+    TOKEN_CREATE_URL, LOGIN_SSO_URL, APPLICATION_ID,
+    HEADERS, BROWSER_HEADERS, RANKING_HEADERS,
+    EXTRA_API_TOKEN, TEAM_ABBREVS, NINETYM_TEAM_MAP,
+    NINETYM_LIGA_ID, EXTRA_STATS_API, EXTRA_STATS_PARAMS, MONTHS_PL,
+)
 
 
 
@@ -64,133 +75,6 @@ def cryptojs_aes_encrypt(plaintext: str, passphrase: str) -> str:
 
     result = base64.b64encode(b"Salted__" + salt + ciphertext).decode("utf-8")
     return result
-
-
-# ============================================================
-# KONFIGURACJA
-# ============================================================
-
-# Dane logowania (z GitHub Secrets lub zmiennych środowiskowych)
-FANTASY_EMAIL = os.environ.get("FANTASY_EMAIL", "")
-FANTASY_PASSWORD = os.environ.get("FANTASY_PASSWORD", "")
-
-# Którą kolejkę analizować (None = ostatnia rozegrana)
-TARGET_ROUND = int(os.environ["TARGET_ROUND"]) if os.environ.get("TARGET_ROUND") else None
-
-# Maksymalne ID zawodnika do sprawdzenia
-MAX_PLAYER_ID = int(os.environ.get("MAX_PLAYER_ID", "4000"))
-
-# Ile drużyn z rankingu scrapować (dla statystyk kapitanów itp.)
-TEAMS_TO_SCRAPE = int(os.environ.get("TEAMS_TO_SCRAPE", "1000"))
-
-# Slug ligi prywatnej (puste = pomiń)
-LEAGUE_SLUG = os.environ.get("LEAGUE_SLUG", "discord-fmforumcmf")
-# ID ligi (z Network tab: POST /ranking-list → league: 304)
-LEAGUE_ID = os.environ.get("LEAGUE_ID", "304")
-
-# Slug drużyny użytkownika (do zakładki transferów; puste = wykryj automatycznie)
-USER_TEAM_SLUG = os.environ.get("USER_TEAM_SLUG", "")
-
-# Opóźnienie między requestami (w sekundach) - bądź miły dla serwera
-REQUEST_DELAY = 0.3
-
-# Ile równoległych workerów do scrapowania drużyn
-WORKERS = int(os.environ.get("WORKERS", "10"))
-
-# Maksymalny czas pracy (minuty) — graceful stop przed limitem GitHub Actions (6h)
-MAX_RUNTIME_MINUTES = int(os.environ.get("MAX_RUNTIME_MINUTES", "300"))
-
-# Globalny czas startu
-SCRIPT_START = time.time()
-
-# Plik wyjściowy
-OUTPUT_DIR = "output"
-# ============================================================
-
-
-BASE_URL = "https://fantasy.ekstraklasa.org"
-LOGIN_API_URL = "https://wicket-api.ekstraklasa-prod.tisagroup.ch/p/user/login/"
-TOKEN_CREATE_URL = "https://wicket-api.ekstraklasa-prod.tisagroup.ch/p/anonymous/token/create"
-LOGIN_SSO_URL = f"{BASE_URL}/login-sso"
-APPLICATION_ID = "sHCKWvfuCwRdu7s0vWwlPgBBjtHahTCvVgzTVZ8osyBGYKpikt"
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/html, */*",
-    "Accept-Language": "pl-PL,pl;q=0.9,en;q=0.8",
-    "X-Requested-With": "XMLHttpRequest",
-    "Referer": f"{BASE_URL}/",
-}
-
-# Nagłówki przeglądarki (czyste, bez X-Requested-With) – używane przy żądaniach HTML
-BROWSER_HEADERS = {
-    "User-Agent": HEADERS["User-Agent"],
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": HEADERS["Accept-Language"],
-}
-
-# Nagłówki do endpointów AJAX POST (ranking-list itp.)
-RANKING_HEADERS = {**HEADERS, "Content-Type": "application/x-www-form-urlencoded"}
-
-
-def _request_with_retry(method, url, max_retries=3, **kwargs):
-    """
-    Wykonuje request HTTP z retry (exponential backoff: 1s, 2s, 4s).
-    method: requests.get lub requests.post
-    Zwraca response albo None jeśli wszystkie próby zawiodły.
-    """
-    for attempt in range(max_retries):
-        try:
-            return method(url, **kwargs)
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            if attempt < max_retries - 1:
-                wait = 2 ** attempt
-                print(f"   ⚠️  Błąd sieci ({e.__class__.__name__}), próba {attempt+1}/{max_retries}, czekam {wait}s...")
-                time.sleep(wait)
-            else:
-                print(f"   ❌ Wszystkie {max_retries} próby nieudane: {url}")
-                return None
-    return None
-
-
-# ============================================================
-# CACHE ZEWNĘTRZNYCH ŹRÓDEŁ (90minut.pl, ekstraklasa.org API)
-# ============================================================
-
-def _load_external_cache():
-    """Wczytuje cache zewnętrznych statystyk z external_cache.json."""
-    try:
-        with open(os.path.join(OUTPUT_DIR, "external_cache.json"), "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-def _get_cached_external(key, ttl_hours=24):
-    """Zwraca dane z cache jeśli są świeższe niż ttl_hours, inaczej None."""
-    entry = _load_external_cache().get(key)
-    if not entry:
-        return None
-    try:
-        ts = datetime.fromisoformat(entry["timestamp"])
-    except (KeyError, ValueError):
-        return None
-    age_h = (datetime.now() - ts).total_seconds() / 3600
-    if age_h < entry.get("ttl_hours", ttl_hours):
-        print(f"📦 Cache hit dla '{key}' (wiek: {age_h:.1f}h)")
-        return entry["data"]
-    return None
-
-def _save_external_cache(key, data, ttl_hours=24):
-    """Zapisuje dane do cache, zachowując inne klucze w pliku."""
-    cache = _load_external_cache()
-    cache[key] = {
-        "timestamp": datetime.now().isoformat(),
-        "ttl_hours": ttl_hours,
-        "data": data,
-    }
-    with open(os.path.join(OUTPUT_DIR, "external_cache.json"), "w", encoding="utf-8") as f:
-        json.dump(cache, f, ensure_ascii=False, indent=2)
 
 
 def login(session: requests.Session) -> bool:
@@ -1705,48 +1589,6 @@ def compute_league_transfers(
 # FIXTURE TICKER — parsowanie terminarz.txt
 # ============================================================
 
-TEAM_ABBREVS = {
-    "Arka Gdynia": "ARK", "Bruk-Bet Termalica Nieciecza": "BBT",
-    "Cracovia": "CRA", "GKS Katowice": "GKS", "Górnik Zabrze": "GÓR",
-    "Jagiellonia Białystok": "JAG", "Korona Kielce": "KOR",
-    "Lech Poznań": "LPO", "Lechia Gdańsk": "LGD", "Legia Warszawa": "LEG",
-    "Motor Lublin": "MOT", "Piast Gliwice": "PIA", "Pogoń Szczecin": "POG",
-    "Radomiak Radom": "RAD", "Raków Częstochowa": "RAK", "Widzew Łódź": "WID",
-    "Wisła Płock": "WPŁ", "Zagłębie Lubin": "ZAG",
-}
-
-# Mapowanie nazw drużyn z 90minut.pl → nazwy lokalne z terminarz.txt
-NINETYM_TEAM_MAP = {
-    "Jagiellonia Białystok": "Jagiellonia Białystok",
-    "Jagiellonia B.": "Jagiellonia Białystok",
-    "Legia Warszawa": "Legia Warszawa",
-    "Lech Poznań": "Lech Poznań",
-    "Lechia Gdańsk": "Lechia Gdańsk",
-    "Górnik Zabrze": "Górnik Zabrze",
-    "Pogoń Szczecin": "Pogoń Szczecin",
-    "Widzew Łódź": "Widzew Łódź",
-    "Wisła Płock": "Wisła Płock",
-    "Zagłębie Lubin": "Zagłębie Lubin",
-    "Raków Częstochowa": "Raków Częstochowa",
-    "Bruk-Bet Termalica Nieciecza": "Bruk-Bet Termalica Nieciecza",
-    "Bruk-Bet Termalica": "Bruk-Bet Termalica Nieciecza",
-    "Termalica Bruk-Bet Nieciecza": "Bruk-Bet Termalica Nieciecza",
-    "Termalica Nieciecza": "Bruk-Bet Termalica Nieciecza",
-    "Korona Kielce": "Korona Kielce",
-    "Cracovia": "Cracovia",
-    "KS Cracovia": "Cracovia",
-    "Cracovia Kraków": "Cracovia",
-    "Arka Gdynia": "Arka Gdynia",
-    "GKS Katowice": "GKS Katowice",
-    "Piast Gliwice": "Piast Gliwice",
-    "Radomiak Radom": "Radomiak Radom",
-    "Motor Lublin": "Motor Lublin",
-}
-
-# ID rozgrywek Ekstraklasy na 90minut.pl (aktualizuj co sezon)
-NINETYM_LIGA_ID = "14072"  # PKO BP Ekstraklasa 2025/2026
-
-
 def _parse_90min_table(table) -> dict:
     """Parsuje pojedynczą tabelę ligową z 90minut.pl. Zwraca {raw_name: {gf, ga, mp}}."""
     results = {}
@@ -1898,27 +1740,6 @@ def fetch_ekstraklasa_table() -> dict:
 # ============================================================
 # SCRAPING NOWYCH STATYSTYK Z EKSTRAKLASA.ORG
 # ============================================================
-
-# API do statystyk indywidualnych (xG, strzały, podania, dośrodkowania)
-# Używa ukrytego API ekstraklasy (umpire-api.tisagroup.ch)
-# Wymaga tokena autoryzacyjnego (token jest w localStorage strony)
-EXTRA_STATS_API = "https://production-umpire-api.ekstraklasa.tisagroup.ch/api/v3/statistics"
-
-# Parametry filtrów dla API statystyk zawodników
-EXTRA_STATS_PARAMS = {
-    "filter[context_type_eq]": "CompetitionSeason",
-    "filter[resource_type_eq]": "SquadPlayer",
-    "filter[resource_status_eq]": "active",
-    "filter[context_id_eq]": "166",  # bieżąca sezona
-    "page[number]": "0",
-    "page[size]": "100",
-    "include": "resource,resource.squad.team.club",
-}
-
-# Token autoryzacyjny - pobrany ze zmiennej środowiskowej EXTRAKLASA_API_TOKEN
-# Jeśli nie ustawiony, rozszerzone statystyki są pomijane
-EXTRA_API_TOKEN = os.environ.get("EXTRAKLASA_API_TOKEN", "")  # fallback: pusty string
-
 
 def fetch_extra_player_stats() -> dict:
     """
@@ -2409,11 +2230,6 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
     }
 
 
-MONTHS_PL = {
-    "stycznia": 1, "lutego": 2, "marca": 3, "kwietnia": 4,
-    "maja": 5, "czerwca": 6, "lipca": 7, "sierpnia": 8,
-    "września": 9, "października": 10, "listopada": 11, "grudnia": 12,
-}
 def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
     """Parsuje terminarz.txt i zwraca dane do fixture ticker."""
     if not os.path.exists(filepath):
