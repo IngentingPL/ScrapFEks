@@ -30,7 +30,6 @@ LEAGUE_SLUG = os.environ.get("LEAGUE_SLUG", "discord-fmforumcmf")
 LEAGUE_ID = os.environ.get("LEAGUE_ID", "304")
 
 # Slug drużyny użytkownika (do zakładki transferów; puste = wykryj automatycznie)
-USER_TEAM_SLUG = os.environ.get("USER_TEAM_SLUG", "")
 
 # Opóźnienie między requestami (w sekundach) - bądź miły dla serwera
 REQUEST_DELAY = 0.3
