@@ -927,6 +927,7 @@ def main():
                 webhook_url=webhook_url,
                 round_number=discord_next_gw,
                 fixtures=fixtures_data,
+                fdr_data=fdr_data,
             )
 
             # Prognozy eksperckie (Rabbti + Tlinf) — wysyłane TYLKO w dzień przed meczem

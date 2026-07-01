@@ -345,7 +345,10 @@ def should_send_captains_summary(round_number, fixtures_data):
 # FUNKCJA A: PRE-ROUND — prognozy i captain pick
 # ============================================================
 
-def send_pre_round(predictions, players_data, webhook_url, round_number, fixtures):
+def send_pre_round(predictions, players_data, webhook_url, round_number,
+                   fixtures, fdr_data=None):
+# fdr_data=None zapewnia backward compatibility jeśli ktoś wywoła
+# bez tego parametru - stary kod zadziała z gorszym FDR fallbackiem
     """
     Wysyła Discord embed z prognozami PRZED kolejką.
 
@@ -497,33 +500,39 @@ def send_pre_round(predictions, players_data, webhook_url, round_number, fixture
         avoid_text = "\n".join(avoid_lines)
 
     # --- SEKCJA 6: MAPA FDR KOLEJKI ---
-    # 📖 LEKCJA: FDR (Fixture Difficulty Rating) mówi jak trudny jest mecz.
-    # Szukamy 2 najłatwiejszych i 2 najtrudniejszych meczów dla drużyn grających u siebie.
-    # Dane bierzemy z fixtures (terminarz) i prognoz (FDR).
+    # Bezpośredni lookup z fdr_data zamiast iteracji po predictions —
+    # pewniejsze i szybsze (O(1) per mecz zamiast O(n*m))
     fdr_map_text = ""
     round_matches = fixtures.get("matches", {}).get(str(round_number), [])
-    if round_matches:
-        # Zbierz FDR per mecz — sumujemy atk+def rywala jako trudność
-        # 📖 LEKCJA: Niższy łączny FDR rywala = łatwiejszy mecz dla gospodarza
+    if round_matches and fdr_data:
+        # Zbuduj lookup {nazwa_drużyny: {atk, def}} dla tej kolejki
+        # 📖 LEKCJA: dict comprehension to jednorazowe przejście przez dane,
+        # zamiast szukania od nowa dla każdego meczu
+        fdr_lookup = {}
+        for team in fdr_data.get("teams", []):
+            team_name = team.get("name", "")
+            for fix in team.get("fixtures", []):
+                if fix.get("gw") == round_number:
+                    fdr_lookup[team_name] = {
+                        "atk": fix.get("atk", FDR_NEUTRAL),
+                        "def": fix.get("def", FDR_NEUTRAL),
+                    }
+                    break
+
         match_fdr = []
         for m in round_matches:
             home_team = m.get("home", "")
             away_team = m.get("away", "")
-            # Szukaj FDR rywala (away team) w prognozach graczy z home_team
-            fdr_sum = None
-            for pred in predictions:
-                if pred.get("team") == home_team and pred.get("is_home"):
-                    # fdr_atk_team / fdr_def_team nie istnieją w danych predykcji (predictor.py zwraca tylko opponent)
-                    atk = pred.get("fdr_atk_opponent") or FDR_NEUTRAL
-                    defn = pred.get("fdr_def_opponent") or FDR_NEUTRAL
-                    fdr_sum = atk + defn
-                    break
-            if fdr_sum is not None:
-                home_str = "D" if pred.get("is_home", True) else "W"  # D=dom, W=wyjazd
-                match_fdr.append({
-                    "label": f"{home_team} vs {away_team} ({home_str})",
-                    "fdr": fdr_sum,
-                })
+            home_fdr = fdr_lookup.get(home_team)
+            if home_fdr is None:
+                continue  # brak danych FDR dla tej drużyny — pomijamy mecz
+            # Sumujemy atk + def rywala z perspektywy gospodarza
+            # (ta sama semantyka co poprzedni kod)
+            fdr_sum = home_fdr["atk"] + home_fdr["def"]
+            match_fdr.append({
+                "label": f"{home_team} vs {away_team} (D)",
+                "fdr": fdr_sum,
+            })
 
         if len(match_fdr) >= 4:
             match_fdr.sort(key=lambda x: x["fdr"])
