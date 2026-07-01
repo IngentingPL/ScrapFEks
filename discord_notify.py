@@ -446,7 +446,8 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
                 continue
             p = best_per_pos[pos]
             emoji = pos_emoji.get(pos, "")
-            name = p.get("name", "?").split()[-1]  # Tylko nazwisko
+            _parts = p.get("name", "?").split()
+            name = _parts[-1] if _parts else "?"  # Tylko nazwisko
             pts = p.get("predicted_points") or 0
             opp = p.get("opponent_short") or p.get("next_opponent", "?")
             home_str = "D" if p.get("is_home", True) else "W"
@@ -489,7 +490,8 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
         avoid_lines = []
         for pred in avoid_candidates[:2]:
             pos = pred.get("position", "")
-            name = pred.get("name", "?").split()[-1]  # Nazwisko
+            _parts = pred.get("name", "?").split()
+            name = _parts[-1] if _parts else "?"  # Nazwisko
             pts = pred.get("predicted_points") or 0
             own = parse_ownership_pct(pred.get("popularity_pct", "0%"))
             opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
