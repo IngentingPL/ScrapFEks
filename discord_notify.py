@@ -16,6 +16,8 @@ Autor: Wygenerowane przez Claude dla Piotra
 
 import json
 import os
+import random
+import time
 import urllib.request
 import urllib.error
 from datetime import datetime, date, timedelta
@@ -955,11 +957,6 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    pos_map = {
-        "1": "BR", "2": "OBR", "3": "POM", "4": "NAP",
-        "Bramkarz": "BR", "Obrońca": "OBR", "Pomocnik": "POM", "Napastnik": "NAP",
-    }
-
     # ZMIANA 1: POMIŃ drużyny bez kapitana (cap_name != "?")
     # ZMIANA 2: sortuj według cmf_standings (tabela sumaryczna jesień+wiosna)
     # - ujemne wartości w cmf_standings oznaczają więcej punktów = wyższa pozycja
@@ -1069,9 +1066,6 @@ def _call_ai_expert(prompt: str, deepseek_key: str = "", gemini_key: str = "", l
     Oba modele mają własną logikę retry (exponential backoff).
     Zwraca dict z 'text' (treść odpowiedzi), 'error' (opis błędu lub None) i 'model'.
     """
-    import time
-    import random
-    
     # --- KROK 1: DeepSeek (model podstawowy) ---
     if deepseek_key:
         last_error = None
