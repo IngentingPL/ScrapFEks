@@ -204,6 +204,7 @@ def main():
     # 2. Pobierz listę zawodników
     # Metoda 1 (preferowana): składy drużyn z rankingu — szybka (150 drużyn ≈ 45s)
     # Daje ~400-500 aktywnych zawodników wybranych przez graczy fantazji.
+    player_ids = []  # domyślna wartość — nadpisana gdy ranking_players nie pusty
     ranking_players = get_player_ids_from_ranking_squads(session, n_teams=150)
     if ranking_players:
         player_ids = [
