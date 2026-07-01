@@ -1267,6 +1267,37 @@ def _build_expert_context(all_data: dict) -> dict:
     return ctx
 
 
+def _generate_single_expert(
+    name, emoji, system_prompt, context_json,
+    round_number, deepseek_key, gemini_key, label
+):
+    """
+    Generuje prognozę jednego eksperta AI (Rabbti lub Tlinf).
+    Zwraca dict: {"name": str, "emoji": str, "text": str, "error": str|None, "model": str}
+    """
+    print(f"  🤖 Generuję prognozę {emoji} {name}...")
+    full_prompt = system_prompt.format(round_number=round_number)
+    result = _call_ai_expert(
+        prompt=f"{full_prompt}\n\nDANE:\n{context_json}",
+        deepseek_key=deepseek_key,
+        gemini_key=gemini_key,
+        label=label,
+    )
+    text = result.get("text", "")
+    error = result.get("error")
+    if not text:
+        print(f"  ⚠️  {name}: brak tekstu ({error})")
+    else:
+        print(f"  ✅ {name}: {len(text)} znaków (model: {result.get('model', '?')})")
+    return {
+        "name": name,
+        "emoji": emoji,
+        "text": text,
+        "error": error,
+        "model": result.get("model", ""),
+    }
+
+
 def generate_expert_predictions(all_data: dict, deepseek_key: str = "", gemini_key: str = "") -> tuple[dict, dict]:
     """
     Generuje dwie prognozy eksperckie (Rabbti i Tlinf) przez API AI.
@@ -1298,17 +1329,13 @@ def generate_expert_predictions(all_data: dict, deepseek_key: str = "", gemini_k
     ctx = _build_expert_context(all_data)
     context_json = json.dumps(ctx, ensure_ascii=False, indent=2)
     
-    results = []
-    
-    # === EKSPERT 1: RABBTI - analityk, rzetelny, pracuje na danych ===
     rabbti_prompt = """Jesteś Rabbti - doświadczony analityk ligi PKO BP Ekstraklasy w Fantasy.
 Pracujesz na danych i faktach, nie na przeczuciach. Twoje rekomendacje są rzetelne i konkretne.
 
 KONTEKST:
-""" + context_json + """
 
 ZADANIE:
-Na podstawie powyższych danych przygotuj krótką prognozę przed kolejką """ + str(round_number) + """.
+Na podstawie powyższych danych przygotuj krótką prognozę przed kolejką {round_number}.
 
 FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 ⚽ Rabbti:
@@ -1327,31 +1354,20 @@ WYMAGANIA:
 - Po polsku, krótko i rzeczowo
 - Nie dodawaj wstępu ani zakończenia"""
 
-    print("  📊 Rabbti: wysyłam zapytanie do AI...")
-    rabbti_result = _call_ai_expert(rabbti_prompt, deepseek_key=deepseek_key, gemini_key=gemini_key, label="rabbti")
+    rabbti = _generate_single_expert(
+        name="Rabbti", emoji="⚽", system_prompt=rabbti_prompt,
+        context_json=context_json, round_number=round_number,
+        deepseek_key=deepseek_key, gemini_key=gemini_key, label="rabbti"
+    )
     
-    if rabbti_result.get("error"):
-        print(f"  ⚠️  Rabbti: błąd AI - {rabbti_result['error']}")
-    else:
-        print(f"  ✅ Rabbti: otrzymano odpowiedź ({len(rabbti_result.get('text', ''))} znaków) [{rabbti_result.get('model', '?')}]")
-    
-    results.append({
-        "name": "Rabbti",
-        "text": rabbti_result.get("text", ""),
-        "error": rabbti_result.get("error"),
-        "model": rabbti_result.get("model", ""),
-    })
-    
-    # === EKSPERT 2: TLINF - kibic, kontrowersyjny, szuka nietypowych rozwiązań ===
     tlinf_prompt = """Jesteś Tlinf - zwykły kibic Ekstraklasy, który ogląda mecze z kanapy.
 Nie boisz się podważać konsensusu i szukasz nietypowych rozwiązań. Czasem obstawiasz kontrowersyjnie,
 ale zawsze masz argumenty. Lubisz graczy, których nikt nie bierze.
 
 KONTEKST:
-""" + context_json + """
 
 ZADANIE:
-Na podstawie powyższych danych przygotuj kontrowersyjną prognozę przed kolejką """ + str(round_number) + """.
+Na podstawie powyższych danych przygotuj kontrowersyjną prognozę przed kolejką {round_number}.
 
 FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 🛋️ Tlinf:
@@ -1370,22 +1386,12 @@ WYMAGANIA:
 - Po polsku, w stylu kibica z forum
 - Nie dodawaj wstępu ani zakończenia"""
 
-    print("  📊 Tlinf: wysyłam zapytanie do AI...")
-    tlinf_result = _call_ai_expert(tlinf_prompt, deepseek_key=deepseek_key, gemini_key=gemini_key, label="tlinf")
-    
-    if tlinf_result.get("error"):
-        print(f"  ⚠️  Tlinf: błąd AI - {tlinf_result['error']}")
-    else:
-        print(f"  ✅ Tlinf: otrzymano odpowiedź ({len(tlinf_result.get('text', ''))} znaków) [{tlinf_result.get('model', '?')}]")
-    
-    results.append({
-        "name": "Tlinf",
-        "text": tlinf_result.get("text", ""),
-        "error": tlinf_result.get("error"),
-        "model": tlinf_result.get("model", ""),
-    })
-    
-    return (results[0], results[1])
+    tlinf = _generate_single_expert(
+        name="Tlinf", emoji="🛋️", system_prompt=tlinf_prompt,
+        context_json=context_json, round_number=round_number,
+        deepseek_key=deepseek_key, gemini_key=gemini_key, label="tlinf"
+    )
+    return rabbti, tlinf
 
 
 def send_expert_predictions(all_data: dict, webhook_url: str, deepseek_key: str = "", gemini_key: str = "", round_number: int = 0):
