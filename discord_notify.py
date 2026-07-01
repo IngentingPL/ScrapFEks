@@ -93,6 +93,44 @@ def _save_sent_log(log):
 # FUNKCJE POMOCNICZE — wysyłanie requestów do Discord
 # ============================================================
 
+def _send_to_discord(webhook_url, payload):
+    """
+    Wspólna warstwa transportowa dla wszystkich wiadomości Discord.
+    Przyjmuje gotowy payload dict i wysyła POST przez webhook.
+    Wywołujący sam buduje payload zgodnie z Discord API:
+      - embed:  {"embeds": [embed_dict], "content": "opcjonalnie"}
+      - tekst:  {"content": "tekst wiadomości"}
+    Zwraca True jeśli HTTP 200/204, False przy błędzie.
+    """
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        webhook_url,
+        data=data,
+        headers=DISCORD_HEADERS,
+        method="POST",
+    )
+    url_preview = (
+        webhook_url[:50] + "..." + webhook_url[-10:]
+        if len(webhook_url) > 60 else webhook_url
+    )
+    print(f"  🔍 Discord wysyłam: {url_preview} ({len(data)} B)")
+    try:
+        with urllib.request.urlopen(req, timeout=WEBHOOK_TIMEOUT) as resp:
+            print(f"  🔍 Discord odpowiedź: HTTP {resp.status}")
+            return resp.status in (200, 204)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        print(f"  ⚠️  Discord HTTP błąd: {e.code} {e.reason}")
+        print(f"  🔍 Discord treść błędu: {body}")
+        return False
+    except urllib.error.URLError as e:
+        print(f"  ⚠️  Discord błąd połączenia: {e.reason}")
+        return False
+    except Exception as e:
+        print(f"  ⚠️  Discord nieoczekiwany błąd: {e}")
+        return False
+
+
 def _send_embed(webhook_url, embed, content=None, embeds=None):
     """
     Wysyła Discord embed(y) przez webhook URL.
@@ -114,45 +152,12 @@ def _send_embed(webhook_url, embed, content=None, embeds=None):
     Ustawiamy headers (nagłówki) żeby Discord wiedział, że wysyłamy JSON.
     """
     if embeds:
-        data = {"embeds": embeds}
+        payload = {"embeds": embeds}
     else:
-        data = {"embeds": [embed]}
+        payload = {"embeds": [embed]}
     if content:
-        # content pojawia się nad embedem — tu wstawiamy @wzmianki
-        data["content"] = content
-    payload = json.dumps(data).encode("utf-8")
-
-    req = urllib.request.Request(
-        webhook_url,
-        data=payload,
-        headers=DISCORD_HEADERS,
-        method="POST",
-    )
-
-    # DEBUG: pokaż pierwsze/ostatnie znaki URL żeby wykryć literówki bez ujawniania tokenu
-    url_preview = webhook_url[:50] + "..." + webhook_url[-10:] if len(webhook_url) > 60 else webhook_url
-    print(f"  🔍 DEBUG webhook URL: {url_preview} (długość: {len(webhook_url)})")
-    print(f"  🔍 DEBUG payload: {len(payload)} bajtów")
-
-    try:
-        with urllib.request.urlopen(req, timeout=WEBHOOK_TIMEOUT) as resp:
-            # Discord zwraca 204 No Content przy sukcesie
-            print(f"  🔍 DEBUG odpowiedź: HTTP {resp.status}")
-            return resp.status in (200, 204)
-    except urllib.error.HTTPError as e:
-        # Błąd HTTP np. 401 (zły webhook), 429 (rate limit)
-        body = e.read().decode("utf-8", errors="replace")
-        print(f"  ⚠️  Discord webhook HTTP błąd: {e.code} {e.reason}")
-        print(f"  🔍 DEBUG odpowiedź Discord: {body}")
-        return False
-    except urllib.error.URLError as e:
-        # Błąd sieci — brak połączenia, timeout
-        print(f"  ⚠️  Discord webhook błąd połączenia: {e.reason}")
-        return False
-    except Exception as e:
-        # Inny nieoczekiwany błąd — logujemy i kontynuujemy
-        print(f"  ⚠️  Discord webhook nieoczekiwany błąd: {e}")
-        return False
+        payload["content"] = content
+    return _send_to_discord(webhook_url, payload)
 
 
 def _send_content(webhook_url, content):
@@ -162,31 +167,7 @@ def _send_content(webhook_url, content):
     Używamy tej ścieżki dla długich sekcji, które Discord potrafi wizualnie
     ucinać w embedach (np. długie listy kapitanów lub newsletter AI).
     """
-    data = {"content": content}
-    payload = json.dumps(data).encode("utf-8")
-
-    req = urllib.request.Request(
-        webhook_url,
-        data=payload,
-        headers=DISCORD_HEADERS,
-        method="POST",
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=WEBHOOK_TIMEOUT) as resp:
-            print(f"  🔎 DEBUG content odpowiedź: HTTP {resp.status}")
-            return resp.status in (200, 204)
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace")
-        print(f"  ⚠️  Discord content HTTP błąd: {e.code} {e.reason}")
-        print(f"  🔎 DEBUG odpowiedź Discord: {body}")
-        return False
-    except urllib.error.URLError as e:
-        print(f"  ⚠️  Discord content błąd połączenia: {e.reason}")
-        return False
-    except Exception as e:
-        print(f"  ⚠️  Discord content nieoczekiwany błąd: {e}")
-        return False
+    return _send_to_discord(webhook_url, {"content": content})
 
 
 def _split_text_for_content(text, max_len=DISCORD_CONTENT_MAX_LEN):
