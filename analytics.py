@@ -5,6 +5,7 @@ identyczny wynik niezależnie czy trafia do newslettera AI czy na
 Discord embed - inaczej użytkownik zobaczy niespójność.
 """
 from predictor import parse_ownership_pct
+from config import POS_MAP
 
 
 def find_hidden_gem(players_data, round_number, ownership_threshold=20.0):
@@ -60,10 +61,6 @@ def collect_captains(league_teams_detail, players_data, round_number, league_dat
     punktów kapitana (najwyższe pierwsze).
     Zwraca listę: [{"team_name", "cap_name", "cap_pos", "cap_pts"}, ...]
     """
-    POS_MAP_CAP = {
-        "Bramkarz": "BR", "Obrońca": "OBR",
-        "Pomocnik": "POM", "Napastnik": "NAP",
-    }
 
     player_round_pts = {}
     if players_data and round_number:
@@ -89,7 +86,7 @@ def collect_captains(league_teams_detail, players_data, round_number, league_dat
             if p.get("C"):
                 cap_pid = str(p.get("pid", ""))
                 cap_name = p.get("name", "?")
-                cap_pos = POS_MAP_CAP.get(p.get("pos", ""), p.get("pos", ""))
+                cap_pos = POS_MAP.get(p.get("pos", ""), p.get("pos", ""))
                 cap_pts = player_round_pts.get(cap_pid, 0)
                 captain_entries.append({
                     "team_name": team_name,

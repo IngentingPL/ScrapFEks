@@ -149,3 +149,9 @@ MONTHS_PL = {
     "maja": 5, "czerwca": 6, "lipca": 7, "sierpnia": 8,
     "września": 9, "października": 10, "listopada": 11, "grudnia": 12,
 }
+
+# Mapowanie polskich nazw pozycji na skróty (BR, OBR, POM, NAP)
+POS_MAP = {
+    "Bramkarz": "BR", "Obrońca": "OBR",
+    "Pomocnik": "POM", "Napastnik": "NAP",
+}

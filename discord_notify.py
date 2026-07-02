@@ -24,6 +24,7 @@ from datetime import datetime, date, timedelta
 from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  # wspólny klient API
 from predictor import parse_ownership_pct, captain_differential_score, FDR_NEUTRAL
 from analytics import find_hidden_gem, find_disappointment, collect_captains
+from config import POS_MAP
 
 
 # ============================================================
@@ -706,14 +707,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
         hidden_gem, hidden_gem_pts = find_hidden_gem(players_data, round_number)
 
     if hidden_gem and hidden_gem_pts > 0:
-        # Mapowanie pełnych nazw pozycji → skróty używane w aplikacji
-        pos_map = {
-            "Bramkarz": "BR",
-            "Obrońca": "OBR",
-            "Pomocnik": "POM",
-            "Napastnik": "NAP",
-        }
-        pos = pos_map.get(hidden_gem.get("position", ""), hidden_gem.get("position", ""))
+        pos = POS_MAP.get(hidden_gem.get("position", ""), hidden_gem.get("position", ""))
         team_name = hidden_gem.get("team", "")
         own_str = hidden_gem.get("popularity_pct", "?")
 
@@ -740,11 +734,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
 
     if disappointment and disappointment_pts < 5:
         # Pokazuj rozczarowanie tylko gdy punkty są naprawdę niskie (< 5)
-        pos_map_dis = {
-            "Bramkarz": "BR", "Obrońca": "OBR",
-            "Pomocnik": "POM", "Napastnik": "NAP",
-        }
-        pos = pos_map_dis.get(disappointment.get("position", ""), disappointment.get("position", ""))
+        pos = POS_MAP.get(disappointment.get("position", ""), disappointment.get("position", ""))
         team_name = disappointment.get("team", "")
         own_str = disappointment.get("popularity_pct", "?")
         # Oblicz ile drużyn z top 1000 go miało (przybliżenie: ownership% × 10)

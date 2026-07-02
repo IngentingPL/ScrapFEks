@@ -44,6 +44,7 @@ from config import (
     HEADERS, BROWSER_HEADERS, RANKING_HEADERS,
     EXTRA_API_TOKEN, TEAM_ABBREVS, NINETYM_TEAM_MAP,
     NINETYM_LIGA_ID, EXTRA_STATS_API, EXTRA_STATS_PARAMS, MONTHS_PL,
+    POS_MAP,
 )
 
 from auth import cryptojs_aes_encrypt, login, get_session
@@ -523,12 +524,11 @@ def main():
                     }
 
         # Mapuj pozycje z pełnych nazw na skróty dla predictora
-        pos_map = {"Bramkarz": "BR", "Obrońca": "OBR", "Pomocnik": "POM", "Napastnik": "NAP"}
         players_for_pred = []
         for p in players:
             pp = dict(p)
             raw_pos = pp.get("position", "")
-            pp["position"] = pos_map.get(raw_pos, raw_pos)
+            pp["position"] = POS_MAP.get(raw_pos, raw_pos)
             # Normalizuj nazwę drużyny tak samo jak klucze w pred_fixtures
             pp["team"] = _normalize_team(pp.get("team", ""))
             players_for_pred.append(pp)
