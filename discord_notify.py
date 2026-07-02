@@ -754,7 +754,8 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
 
     # --- SEKCJA 4: KAPITANOWIE W LIDZE ---
     # Lista WSZYSTKICH drużyn z ligi prywatnej — kogo wybrały na kapitana
-    # i ile ten kapitan zdobył. Sortuj od najwyższych punktów kapitana.
+    # i ile ten kapitan zdobył. Lista już posortowana od najwyższych punktów
+    # kapitana (sortowanie robi collect_captains() w analytics.py:101).
     #
     # 📖 LEKCJA: Dane kapitanów pochodzą z league_teams_detail, które zawiera
     # skład każdej drużyny (players) z flagą C=True dla kapitana.
@@ -763,9 +764,6 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
         captain_entries = collect_captains(league_teams_detail, players_data, round_number, league_data)
 
         if captain_entries:
-            # Sortuj od najwyższych punktów kapitana do najniższych
-            captain_entries.sort(key=lambda c: c["cap_pts"], reverse=True)
-
             # Emoji: ✅ przy najlepszym, ❌ przy najgorszym
             best_pts = captain_entries[0]["cap_pts"]
             worst_pts = captain_entries[-1]["cap_pts"]
