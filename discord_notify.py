@@ -727,12 +727,12 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
     # Szukamy gracza z NAJNIŻSZYMI punktami (lub ujemnymi) w tej kolejce,
     # który miał ownership > 40%. "Pułapka" = prawie wszyscy go mieli, a zawiódł.
     disappointment = None
-    disappointment_pts = 999  # szukamy minimum, startujemy od dużej wartości
+    disappointment_pts = None  # szukamy minimum, startujemy od None
 
     if players_data and round_number:
         disappointment, disappointment_pts = find_disappointment(players_data, round_number)
 
-    if disappointment and disappointment_pts < 5:
+    if disappointment and disappointment_pts is not None and disappointment_pts < 5:
         # Pokazuj rozczarowanie tylko gdy punkty są naprawdę niskie (< 5)
         pos = POS_MAP.get(disappointment.get("position", ""), disappointment.get("position", ""))
         team_name = disappointment.get("team", "")

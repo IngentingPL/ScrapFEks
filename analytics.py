@@ -36,10 +36,10 @@ def find_disappointment(players_data, round_number, ownership_threshold=40.0):
     Szuka zawodnika z najniższymi punktami w danej kolejce, którego
     ownership jest wyższy niż ownership_threshold - "rozczarowanie",
     którego wielu wybrało, a zagrał słabo.
-    Zwraca (player_dict, points) albo (None, 999) jeśli nic nie znaleziono.
+    Zwraca (player_dict, points) albo (None, None) jeśli nic nie znaleziono.
     """
     worst = None
-    worst_pts = 999
+    worst_pts = None
     for player in players_data:
         own = parse_ownership_pct(player.get("popularity_pct", "0%"))
         if own <= ownership_threshold:
@@ -47,10 +47,12 @@ def find_disappointment(players_data, round_number, ownership_threshold=40.0):
         for r in player.get("rounds", []):
             if r.get("round") == round_number and r.get("played"):
                 pts = r.get("points", 0) or 0
-                if pts < worst_pts:
+                if worst_pts is None or pts < worst_pts:
                     worst_pts = pts
                     worst = player
                 break
+    if worst is None:
+        return None, None
     return worst, worst_pts
 
 
