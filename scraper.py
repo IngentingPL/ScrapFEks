@@ -14,42 +14,34 @@ Autor: Wygenerowane przez Claude dla Piotra
 """
 
 import requests
-from bs4 import BeautifulSoup
 import json
 import csv
 import time
 import threading
-import re
-import glob
 import os
 import sys
-import unicodedata
 from datetime import datetime
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from predictor import predict_all_players
 from accuracy import evaluate_predictions, find_latest_predictions_csv, load_accuracy_history
 from tuner import run_tuning
-from utils import normalize_team_name, _normalize_name, _safe_int, _safe_float, _normalize_team
-from network import _request_with_retry, _load_external_cache, _get_cached_external, _save_external_cache
-from players import parse_player_detail, fetch_player_detail, fetch_all_players
+from utils import normalize_team_name, _normalize_team
+from players import fetch_all_players
 from external_stats import fetch_ekstraklasa_table, fetch_extra_player_stats
 from fdr import compute_fdr
 from config import (
-    FANTASY_EMAIL, FANTASY_PASSWORD, TARGET_ROUND, MAX_PLAYER_ID,
+    TARGET_ROUND, MAX_PLAYER_ID,
     TEAMS_TO_SCRAPE, LEAGUE_SLUG, LEAGUE_ID,
-    REQUEST_DELAY, WORKERS, MAX_RUNTIME_MINUTES,
-    OUTPUT_DIR, SCRIPT_START, BASE_URL, LOGIN_API_URL,
-    TOKEN_CREATE_URL, LOGIN_SSO_URL, APPLICATION_ID,
-    HEADERS, BROWSER_HEADERS, RANKING_HEADERS,
-    EXTRA_API_TOKEN, TEAM_ABBREVS, NINETYM_TEAM_MAP,
-    NINETYM_LIGA_ID, EXTRA_STATS_API, EXTRA_STATS_PARAMS, MONTHS_PL,
+    REQUEST_DELAY, WORKERS,
+    OUTPUT_DIR, BASE_URL,
+    RANKING_HEADERS,
     POS_MAP,
 )
 
-from auth import cryptojs_aes_encrypt, login, get_session
+from auth import get_session
 from export import (
-    filter_by_round, save_to_csv, save_full_json,
+    save_to_csv, save_full_json,
     save_rounds_csv, print_round_summary,
 )
 from squads import (
@@ -58,7 +50,7 @@ from squads import (
     _compute_squad_stats, generate_captain_stats, generate_squad_stats,
 )
 
-from transfers import _fetch_prev_squad, compute_league_transfers, compute_player_stats_per90
+from transfers import compute_league_transfers, compute_player_stats_per90
 from schedule import parse_terminarz, cleanup_old_output_files
 
 

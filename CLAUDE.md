@@ -25,9 +25,21 @@ ScrapFEks/
 │   ├── fantasy_captains_*.csv  # Historia kapitanów
 │   └── debug_team_*.html       # Pliki debugowe drużyn
 ├── scraper.py                  # GŁÓWNY PLIK – scraping + generowanie HTML
+├── config.py                   # Globalne stałe: URL-e, nagłówki, zmienne środowiskowe
+├── auth.py                     # Logowanie do fantasy.ekstraklasa.org (AES + SSO)
+├── network.py                  # Warstwa HTTP: retry, cache 24h dla zewnętrznych statystyk
+├── utils.py                    # Normalizacja nazw, bezpieczne konwersje typów
+├── dashboard.py                # Generowanie HTML dashboardu (~2900 linii)
+├── export.py                   # Zapis CSV/JSON, filtrowanie po kolejce
 ├── generate_from_cache.py      # Regeneruje dashboard z istniejącego JSON, bez nowego scrapowania
 ├── archive.py                  # Archiwizacja sezonu do docs/archive/
 ├── predictor.py                # Logika prognoz zawodników
+├── players.py                  # Pobieranie i parsowanie danych zawodników
+├── squads.py                   # Scrapowanie składów drużyn, statystyki kapitanów/ownership
+├── external_stats.py           # Zewnętrzne statystyki: 90minut.pl i API ekstraklasa.org
+├── fdr.py                      # Obliczenia FDR (Fixture Difficulty Rating)
+├── transfers.py                # Transfery ligowe, statystyki per 90 minut
+├── schedule.py                 # Parsowanie terminarz.txt, czyszczenie starych plików
 ├── tuner.py                    # Optymalizacja parametrów predykcji
 ├── accuracy.py                 # Śledzenie trafności prognoz
 ├── ai_client.py                 # Wspólny klient AI (DeepSeek + Gemini) – używany przez discord_notify.py i newsletter.py
