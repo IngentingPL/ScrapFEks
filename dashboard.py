@@ -5,7 +5,6 @@ i zwraca kompletny string HTML. Zero globalnego stanu, zero
 operacji I/O - czysty transform danych → HTML.
 """
 import json
-import glob
 
 def generate_dashboard_html(
     summary_data: list[dict],
@@ -29,6 +28,7 @@ def generate_dashboard_html(
     # 📖 newsletter_data usunięte z sygnatury — zakładka Newsletter wyłączona
     timestamp: str,
     filename: str,
+    has_archive: bool = False,
 ):
     """Generuje interaktywny dashboard HTML z danymi Fantasy Ekstraklasa."""
 
@@ -83,8 +83,7 @@ def generate_dashboard_html(
     has_transfers = bool((transfers_data or {}).get("transfers_in") or (transfers_data or {}).get("transfers_out"))
     has_predictions = len(predictions_data or []) > 0
     has_accuracy = len(accuracy_history or []) > 0
-    # Sprawdź czy istnieje katalog archiwum z plikami sezon-*.html
-    has_archive = len(glob.glob("docs/archive/sezon-*.html")) > 0
+    # Sprawdź czy istnieje katalog archiwum z plikami sezon-*.html (dostarczane jako parametr)
 
     # For stat cards
     all_tier = tiers.get("all", tiers.get("top100", tiers.get("top10", {})))

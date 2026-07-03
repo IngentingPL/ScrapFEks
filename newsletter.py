@@ -307,6 +307,9 @@ def _build_context(round_data: dict) -> dict:
     """
     ctx = {}
 
+    def _team_name(t):
+        return t.get("display_name") or t.get("slug", "").replace("-", " ").title()
+
     round_number = round_data.get("round_number")
     if round_number:
         ctx["round_number"] = round_number
@@ -322,14 +325,14 @@ def _build_context(round_data: dict) -> dict:
         )
         top3 = []
         for t in sorted_by_gw[:3]:
-            name = t.get("display_name") or t.get("slug", "").replace("-", " ").title()
+            name = _team_name(t)
             top3.append({"name": name, "pts_this_round": t.get("last_points") or t.get("pts", 0) or 0})
         if top3:
             ctx["top3_teams"] = top3
 
         bottom3 = []
         for t in sorted_by_gw[-3:]:
-            name = t.get("display_name") or t.get("slug", "").replace("-", " ").title()
+            name = _team_name(t)
             bottom3.append({"name": name, "pts_this_round": t.get("last_points") or t.get("pts", 0) or 0})
         if bottom3:
             ctx["bottom3_teams"] = bottom3
@@ -342,7 +345,7 @@ def _build_context(round_data: dict) -> dict:
         )
         standings = []
         for i, t in enumerate(sorted_by_total):
-            name = t.get("display_name") or t.get("slug", "").replace("-", " ").title()
+            name = _team_name(t)
             total = t.get("total_points") or t.get("season_total") or 0
             standings.append({"pos": i + 1, "name": name, "total_pts": total})
         if standings:

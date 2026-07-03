@@ -16,6 +16,7 @@ Używa TYLKO standardowej biblioteki Pythona (csv, json, os, datetime).
 import csv
 import json
 import os
+import sys
 from datetime import datetime
 
 
@@ -343,7 +344,7 @@ def evaluate_predictions(predictions_csv_path, current_players_data, round_numbe
     # Najnowszy wpis (ostatni) zostaje bez zmian – dashboard wyświetla pełną tabelę tylko dla niego.
     # Starsze wpisy zachowują tylko player_id i actual – tuner.py potrzebuje tylko tych 2 pól.
     trimmed_count = 0
-    size_before_kb = len(json.dumps(history, ensure_ascii=False)) / 1024
+    size_before_kb = sys.getsizeof(history) / 1024
 
     if len(history) > 1:
         for entry in history[:-1]:
@@ -355,7 +356,7 @@ def evaluate_predictions(predictions_csv_path, current_players_data, round_numbe
                 trimmed_count += 1
 
     if trimmed_count > 0:
-        size_after_kb = len(json.dumps(history, ensure_ascii=False)) / 1024
+        size_after_kb = sys.getsizeof(history) / 1024
         print(f"  🧹 Przycięto details w {trimmed_count} starszych wpisach historii")
         print(f"     Rozmiar accuracy_history.json: {size_before_kb:.1f} KB → {size_after_kb:.1f} KB")
 

@@ -20,6 +20,7 @@ import time
 import threading
 import os
 import sys
+import glob
 from datetime import datetime
 from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -242,10 +243,9 @@ def main():
     # Znajdź obecną kolejkę (najwyższa rozegrana)
     current_round = TARGET_ROUND or 0
     if not current_round:
-        for p in players:
-            for r in p.get("rounds", []):
-                if r.get("played") and r.get("round", 0) > current_round:
-                    current_round = r["round"]
+        played = [r.get("round", 0) for p in players
+                  for r in p.get("rounds", []) if r.get("played")]
+        current_round = max(played) if played else 0
     print(f"  📅 Obecna kolejka: {current_round}")
 
     summary_data = []
@@ -475,7 +475,7 @@ def main():
     players = compute_player_stats_per90(extra_player_stats, players, player_minutes)
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
-    remaining_rounds = len([r for r in fixtures_data.get("rounds", []) if r >= (current_round or 0)])
+    remaining_rounds = sum(1 for r in fixtures_data.get("rounds", []) if r >= (current_round or 0))
     fdr_data = compute_fdr(
         ekstra_stats, fixtures_data,
         current_round=current_round,
@@ -856,6 +856,7 @@ def main():
         # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona, newsletter_history.json write-only
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
+        has_archive=len(glob.glob("docs/archive/sezon-*.html")) > 0,
     )
 
     # ============================================================
