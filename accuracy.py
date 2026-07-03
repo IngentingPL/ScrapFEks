@@ -185,14 +185,16 @@ def compute_accuracy(predictions, players_data, round_number):
     hit_rate = hits / len(comparisons)
 
     # Największe pudła — sortujemy po abs_error malejąco
-    worst = sorted(comparisons, key=lambda x: x["abs_error"], reverse=True)[:5]
+    # Raz sortujemy po abs_error i używamy w 3 miejscach
+    comparisons_sorted = sorted(comparisons, key=lambda x: x["abs_error"])
+    worst = comparisons_sorted[-5:][::-1]  # ostatnie 5, odwrócone (malejąco)
     worst_misses = [
         {"name": w["name"], "predicted": w["predicted"], "actual": w["actual"], "error": w["error"]}
         for w in worst
     ]
 
     # Najlepsze trafienia — sortujemy po abs_error rosnąco
-    best = sorted(comparisons, key=lambda x: x["abs_error"])[:5]
+    best = comparisons_sorted[:5]
     best_hits = [
         {"name": b["name"], "predicted": b["predicted"], "actual": b["actual"], "error": b["error"]}
         for b in best
@@ -218,7 +220,7 @@ def compute_accuracy(predictions, players_data, round_number):
                 "actual": c["actual"],
                 "error": c["error"],
             }
-            for c in sorted(comparisons, key=lambda x: x["abs_error"])
+            for c in comparisons_sorted
         ],
     }
 

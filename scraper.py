@@ -327,9 +327,12 @@ def main():
     # Oblicz statystyki per tier (top10, top100, all)
     tiers = {}
     if team_results:
+        sorted_results = sorted(
+            team_results,
+            key=lambda t: t.get("ranking_position") or 999999
+        )
         for tier_key, tier_limit in [("top10", 10), ("top100", 100)]:
-            tier_teams = [t for t in team_results
-                          if (t.get("ranking_position") or 999999) <= tier_limit]
+            tier_teams = sorted_results[:tier_limit]
             if tier_teams:
                 tiers[tier_key] = {
                     "captains": _compute_captain_stats(tier_teams),

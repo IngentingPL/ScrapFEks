@@ -259,12 +259,13 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
 
     # Weź ostatnich N
     recent_rounds = played_rounds[:lookback]
+    n_rounds = len(recent_rounds)
 
-    if len(recent_rounds) < MIN_ROUNDS_FOR_PREDICTION:
+    if n_rounds < MIN_ROUNDS_FOR_PREDICTION:
         return {
             "predicted_points": None,
             "confidence": "insufficient_data",
-            "detail": f"Za mało danych ({len(recent_rounds)}/{MIN_ROUNDS_FOR_PREDICTION} kolejek)"
+            "detail": f"Za mało danych ({n_rounds}/{MIN_ROUNDS_FOR_PREDICTION} kolejek)"
         }
 
     # --- Krok 2: Średnia ważona punktów ---
@@ -296,9 +297,9 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     predicted = round(predicted, 1)
 
     # Pewność prognozy
-    if len(recent_rounds) >= 4:
+    if n_rounds >= 4:
         confidence = "high"
-    elif len(recent_rounds) >= MIN_ROUNDS_FOR_PREDICTION:
+    elif n_rounds >= MIN_ROUNDS_FOR_PREDICTION:
         confidence = "medium"
     else:
         confidence = "low"
@@ -312,7 +313,7 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         "minutes_factor": round(min_factor, 2),
         "home_away_factor": round(ha_factor, 2),
         "avg_minutes": round(avg_minutes, 0),
-        "rounds_used": len(recent_rounds),
+        "rounds_used": n_rounds,
         "confidence": confidence,
         "detail": (
             f"Śr. {round(base_avg, 1)} × FDR {round(fdr_mod, 2)} "

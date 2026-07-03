@@ -51,9 +51,11 @@ def save_to_csv(data: list[dict], filename: str):
 
     # Zbierz wszystkie klucze
     keys = []
+    keys_set = set()
     for row in data:
         for k in row:
-            if k not in keys and k != "rounds" and k != "price_history":
+            if k not in keys_set and k != "rounds" and k != "price_history":
+                keys_set.add(k)
                 keys.append(k)
 
     with open(filename, "w", newline="", encoding="utf-8-sig") as f:
