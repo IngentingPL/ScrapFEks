@@ -171,6 +171,13 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
         if val <= thr[3]: return 2
         return 1
 
+    # Buduj lookup O(1) meczów: (round, team) → match dict
+    match_lookup = {}
+    for r, ms in matches.items():
+        for m in ms:
+            match_lookup[(int(r), m["home"])] = m
+            match_lookup[(int(r), m["away"])] = m
+
     # Buduj dane per drużyna
     fdr_teams = []
     for team in teams:
@@ -179,15 +186,16 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
         total_atk = 0
         total_def = 0
         for r in shown_rounds:
-            ms = matches.get(str(r), [])
-            fixture_info = None
-            for m in ms:
-                if m["home"] == team:
-                    fixture_info = {"opponent": m["away"], "home": True, "date": m.get("date", "")}
-                    break
-                elif m["away"] == team:
-                    fixture_info = {"opponent": m["home"], "home": False, "date": m.get("date", "")}
-                    break
+            m = match_lookup.get((r, team))
+            if m:
+                is_home = m["home"] == team
+                fixture_info = {
+                    "opponent": m["away"] if is_home else m["home"],
+                    "home": is_home,
+                    "date": m.get("date", ""),
+                }
+            else:
+                fixture_info = None
             if fixture_info:
                 raw = fixture_map.get((team, r), {"atk": 1.0, "def": 1.0})
                 atk_r = _val_to_rating(raw["atk"], atk_thr)

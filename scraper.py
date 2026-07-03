@@ -454,12 +454,14 @@ def main():
     if fixtures_data["rounds"]:
         print(f"  📅 Terminarz: {len(fixtures_data['rounds'])} kolejek, {len(fixtures_data['teams'])} drużyn")
 
-    # 8.6 Scrapuj statystyki bramkowe z 90minut.pl
-    ekstra_stats = fetch_ekstraklasa_table()
-
+    # 8.6 Scrapuj statystyki bramkowe z 90minut.pl (równolegle z 8.6b)
     # 8.6b Pobierz rozszerzone statystyki zawodników z ekstraklasa.org
     # (xG, strzały, podania kluczowe, dośrodkowania)
-    extra_player_stats = fetch_extra_player_stats()
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        fut_table = ex.submit(fetch_ekstraklasa_table)
+        fut_extra = ex.submit(fetch_extra_player_stats)
+        ekstra_stats = fut_table.result()
+        extra_player_stats = fut_extra.result()
 
     # Oblicz sumę minut dla każdego zawodnika (do przeliczania na per 90)
     player_minutes = {}

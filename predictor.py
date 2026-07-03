@@ -365,8 +365,9 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
 
     # Sortuj: najpierw dostępni zawodnicy wg prognozy malejąco, potem niedostępni (prognoza 0)
     # Niedostępni zawodnicy zawsze na końcu listy, niezależnie od sortowania
-    available = [p for p in predictions if not p.get("unavailable")]
-    unavailable = [p for p in predictions if p.get("unavailable")]
+    available, unavailable = [], []
+    for p in predictions:
+        (unavailable if p.get("unavailable") else available).append(p)
     available.sort(key=lambda x: x.get("predicted_points") or 0, reverse=True)
     # Niedostępnych zostawiamy w kolejności alfabetycznej
     unavailable.sort(key=lambda x: x.get("name", "").lower())
