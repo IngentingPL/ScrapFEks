@@ -134,7 +134,7 @@ Dzięki temu możesz porównać popularność zawodnika wśród najlepszych grac
 2. **Skanowanie zawodników** — sekwencyjne pobieranie profili (ID 1–4000), statystyki per kolejka, historia cen
 3. **Scrapowanie drużyn** — top 1000 drużyn z rankingu (10 workerów równolegle), parsowanie HTML składów
 4. **Liga prywatna** — pobieranie składów, matching z pełnymi danymi zawodników, wykrywanie transferów
-5. **Siła drużyn** — scrapowanie tabeli z **90minut.pl** (bramki strzelone/stracone) na potrzeby fixture tickera
+5. **Siła drużyn i statystyki zewnętrzne** — scrapowanie 3 źródeł: **90minut.pl** (GF/GA drużyn → FDR), **API ekstraklasy** (xG, strzały, podania kluczowe), **conceptuallyfootball.com** (xA, percentyle ligowe)
 6. **Obliczenia** — ownership %, średnie pozycyjne (globalne + ligowe), forma (5 ostatnich kolejek)
 7. **Dashboard** — generowanie HTML z osadzonym JS, publikacja na GitHub Pages
 8. **Auto-kontynuacja** — przekroczenie limitu czasu → zapis checkpointu → automatyczny restart workflow
@@ -232,11 +232,19 @@ Artefakty z GitHub Actions przechowywane przez **7 dni**.
 | Plik | Opis |
 |---|---|
 | `scraper.py` | Główny skrypt — logowanie, scrapowanie, obliczenia, generowanie dashboardu |
-| `update_schedule.py` | Parser terminarza → generuje cron triggery w `scrape.yml` |
-| `test_single_player.py` | Narzędzie do testowania pobierania danych jednego zawodnika |
-| `terminarz.txt` | Terminarz meczów — źródło danych dla fixture tickera i auto-uruchomień |
-| `.github/workflows/scrape.yml` | Workflow GitHub Actions — główny scraper |
-| `.github/workflows/update_schedule.yml` | Workflow GitHub Actions — aktualizacja harmonogramu |
+| `auth.py` | Logowanie do fantasy.ekstraklasa.org (AES + SSO) |
+| `config.py` | Globalne stałe: URL-e, nagłówki, zmienne środowiskowe |
+| `network.py` | Warstwa HTTP: retry, cache 24h dla zewnętrznych statystyk |
+| `utils.py` | Normalizacja nazw, bezpieczne konwersje typów |
+| `dashboard.py` | Generowanie HTML dashboardu (~2900 linii) |
+| `export.py` | Zapis CSV/JSON, filtrowanie po kolejce |
+| `players.py` | Pobieranie i parsowanie danych zawodników |
+| `squads.py` | Scrapowanie składów drużyn, statystyki kapitanów/ownership |
+| `external_stats.py` | Zewnętrzne statystyki: 90minut.pl i API ekstraklasa.org |
+| `fdr.py` | Obliczenia FDR (Fixture Difficulty Rating) |
+| `transfers.py` | Transfery ligowe, statystyki per 90 minut |
+| `schedule.py` | Parsowanie terminarz.txt, czyszczenie starych plików |
+| `conceptually_client.py` | Statystyki xA i percentyle z conceptuallyfootball.com (Sofascore), cache 24h |
 | `predictor.py` | Logika prognoz punktowych zawodników |
 | `tuner.py` | Auto-tuning parametrów predykcji na podstawie trafności |
 | `accuracy.py` | Śledzenie trafności prognoz kolejka po kolejce |
@@ -247,6 +255,11 @@ Artefakty z GitHub Actions przechowywane przez **7 dni**.
 | `league_tracker.py` | Tracker sezonu ligowego |
 | `archive.py` | Archiwizacja zakończonego sezonu |
 | `generate_from_cache.py` | Regeneruje dashboard z istniejącego JSON |
+| `update_schedule.py` | Parser terminarza → generuje cron triggery w `scrape.yml` |
+| `test_single_player.py` | Narzędzie do testowania pobierania danych jednego zawodnika |
+| `terminarz.txt` | Terminarz meczów — źródło danych dla fixture tickera i auto-uruchomień |
+| `.github/workflows/scrape.yml` | Workflow GitHub Actions — główny scraper |
+| `.github/workflows/update_schedule.yml` | Workflow GitHub Actions — aktualizacja harmonogramu |
 
 ---
 
