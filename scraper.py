@@ -22,7 +22,6 @@ import os
 import sys
 import glob
 from datetime import datetime
-from typing import Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from predictor import predict_all_players
 from accuracy import evaluate_predictions, find_latest_predictions_csv, load_accuracy_history
@@ -48,7 +47,7 @@ from export import (
 )
 from squads import (
     fetch_ranking_teams, fetch_league_teams, scrape_team_squad,
-    _process_team, scrape_teams_captains, _compute_captain_stats,
+    scrape_teams_captains, _compute_captain_stats,
     _compute_squad_stats, generate_captain_stats, generate_squad_stats,
 )
 
