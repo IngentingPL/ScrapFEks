@@ -369,6 +369,10 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             "popularity_pct": player.get("popularity_pct", ""),
             "next_opponent": next_fix.get("opponent", ""),
             "is_home": next_fix.get("is_home", False),
+            # xA i percentyle z conceptually_client (przekazywane przez scraper.py)
+            "xa_per_90": player.get("xa_per_90"),
+            "percentile_xa": player.get("percentile_xa"),
+            "percentile_xg": player.get("percentile_xg"),
             **pred,  # 📖 ** "rozpakuje" dict — dodaje wszystkie klucze z pred do tego dicta
         })
 

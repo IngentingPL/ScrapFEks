@@ -421,6 +421,8 @@ html.theme-fantasy .pred-fdr-tile {{ background: #e0e0e0; color: #131313; }}
 html.theme-fantasy .pred-fdr-used {{ background: rgba(0,0,0,0.05); }}
 html.theme-fantasy .pred-legend {{ background: #f5f5f5; color: #5a5a5a; }}
 html.theme-fantasy .pred-legend b {{ color: #131313; }}
+html.theme-fantasy .pred-pctl-high {{ background: rgba(16,185,129,0.15); color: #10b981; }}
+html.theme-fantasy .pred-pctl-low {{ background: rgba(239,68,68,0.15); color: #ef4444; }}
 
 /* Season Tracker - Light Theme */
 html.theme-fantasy .season-wrap {{ background: #ffffff; border-color: #e0e0e0; }}
@@ -554,6 +556,9 @@ html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0
 .pred-conf-low {{ background: rgba(239,68,68,0.2); color: #ef4444; }}
 .pred-conf-insufficient {{ background: rgba(100,116,139,0.2); color: #94a3b8; }}
 .pred-conf-unavailable {{ background: rgba(239,68,68,0.15); color: #ef4444; }}
+/* percentyl xA/xG — kolorowanie komórek w tabeli Prognoza */
+.pred-pctl-high {{ background: #2d6a4f; color: #ffffff; }}
+.pred-pctl-low {{ background: #6b2737; color: #ffffff; }}
 .pred-legend {{
   background: #1e293b; border-radius: 8px; padding: 12px 16px;
   margin-bottom: 16px; font-size: 12px; color: #94a3b8; line-height: 1.8;
@@ -1900,6 +1905,8 @@ function renderPredictions() {{
   h += '<th class="text-center">FDR DEF</th>';
   h += '<th class="text-center">Użyty FDR</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="avg_minutes">Śr. min'+predArrow('avg_minutes')+'</th>';
+  h += '<th class="text-right sortable" data-tab="predictions" data-col="xa_per_90">xA/90'+predArrow('xa_per_90')+'</th>';
+  h += '<th class="text-center sortable" data-tab="predictions" data-col="percentile">Percentyl'+predArrow('percentile')+'</th>';
   h += '<th class="text-center sortable" data-tab="predictions" data-col="confidence">Pewność'+predArrow('confidence')+'</th>';
   h += '</tr></thead><tbody>';
 
@@ -1952,6 +1959,20 @@ function renderPredictions() {{
 
     // Średnie minuty
     h += '<td class="text-right c-muted">'+Math.round(avgMin)+'&prime;</td>';
+
+    // xA/90 (expected assists per 90 min)
+    const xa90 = p.xa_per_90;
+    h += '<td class="text-right c-muted">'+(xa90 != null ? xa90.toFixed(2) : '—')+'</td>';
+
+    // Percentyl xA (fallback: xG) z kolorowaniem tła
+    const pctl = p.percentile_xa != null ? p.percentile_xa : p.percentile_xg;
+    let pctlClass = '';
+    if (pctl != null && pctl >= 80) {{
+      pctlClass = ' pred-pctl-high';
+    }} else if (pctl != null && pctl < 50) {{
+      pctlClass = ' pred-pctl-low';
+    }}
+    h += '<td class="text-center' + pctlClass + '" style="font-weight:700">' + (pctl != null ? Math.round(pctl) : '—') + '</td>';
 
     // Pewność
     h += '<td class="text-center">'+confidenceBadge(p.confidence)+'</td>';
