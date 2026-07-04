@@ -91,6 +91,13 @@ def generate_dashboard_html(
     top_owned = all_owns[0] if all_owns else {}
     best_ppp = max(summary_data, key=lambda x: x.get("points_per_price", 0)) if summary_data else {}
 
+    # Lider ligi CMF — pierwsza drużyna (dane już posortowane wg total_pts)
+    league_leader = league_teams_detail[0] if league_teams_detail else None
+    leader_name = league_leader.get("display_name") or \
+                  league_leader.get("slug", "").replace("-", " ").title() \
+                  if league_leader else "—"
+    leader_pts = league_leader.get("total_pts", 0) if league_leader else 0
+
     # Default scope
     default_scope = "top10" if "top10" in scopes_data else ("top100" if "top100" in scopes_data else "league")
 
@@ -719,8 +726,9 @@ html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0
   </div>
   <div class="stats-row">
     <div class="stat-card accent-cyan">
-      <div class="val">{teams_count}</div>
-      <div class="label">Top drużyn</div>
+      <div class="val">{leader_pts}</div>
+      <div class="label">Lider ligi</div>
+      <div class="sub">{leader_name}</div>
     </div>
     <div class="stat-card accent-green">
       <div class="val">{top_owned.get('squad_pct', '—')}</div>
