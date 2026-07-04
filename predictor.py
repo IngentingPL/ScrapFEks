@@ -272,6 +272,15 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     recent_points = [r.get("points", 0) for r in recent_rounds]
     base_avg = weighted_average(recent_points, decay=decay)
 
+    # --- Krok 2.5: Modyfikator xA (expected assists) z conceptuallyfootball ---
+    # Zawodnik z wysokim xa_per_90 ma bonus do prognozy (tworzy więcej szans)
+    # Mediana xA/90 w Ekstraklasie to ≈0.07 — każde 0.1 powyżej to +1% bonusu
+    # Maksymalny bonus: +15%, maksymalna kara: -10%
+    xa = player.get("xa_per_90")
+    if xa is not None and xa > 0:
+        xa_bonus = min(max((xa - 0.07) * 10, -0.10), 0.15)
+        base_avg = base_avg * (1 + xa_bonus)
+
     # --- Krok 3: Modyfikator FDR ---
     opponent = next_fixture.get("opponent", "")
     opponent_fdr = fdr_data.get(opponent, {"atk": FDR_NEUTRAL, "def": FDR_NEUTRAL})  # domyślnie średni

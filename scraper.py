@@ -27,9 +27,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from predictor import predict_all_players
 from accuracy import evaluate_predictions, find_latest_predictions_csv, load_accuracy_history
 from tuner import run_tuning
-from utils import normalize_team_name, _normalize_team
+from utils import normalize_team_name, _normalize_team, _normalize_name
 from players import fetch_all_players
 from external_stats import fetch_ekstraklasa_table, fetch_extra_player_stats
+from conceptually_client import fetch_conceptually_stats
 from fdr import compute_fdr
 from config import (
     TARGET_ROUND, MAX_PLAYER_ID,
@@ -457,11 +458,13 @@ def main():
     # 8.6 Scrapuj statystyki bramkowe z 90minut.pl (równolegle z 8.6b)
     # 8.6b Pobierz rozszerzone statystyki zawodników z ekstraklasa.org
     # (xG, strzały, podania kluczowe, dośrodkowania)
-    with ThreadPoolExecutor(max_workers=2) as ex:
+    with ThreadPoolExecutor(max_workers=3) as ex:
         fut_table = ex.submit(fetch_ekstraklasa_table)
         fut_extra = ex.submit(fetch_extra_player_stats)
+        fut_cf = ex.submit(fetch_conceptually_stats)
         ekstra_stats = fut_table.result()
         extra_player_stats = fut_extra.result()
+        cf_stats = fut_cf.result()
 
     # Oblicz sumę minut dla każdego zawodnika (do przeliczania na per 90)
     player_minutes = {}
@@ -471,8 +474,19 @@ def main():
         if total_mins > 0:
             player_minutes[pid] = total_mins
 
-    # Wzbogać dane zawodników o statystyki per 90
+    # Wzbogać dane zawodników o statystyki per 90 (xG, strzały, podania)
     players = compute_player_stats_per90(extra_player_stats, players, player_minutes)
+
+    # Wzbogać o statystyki z conceptuallyfootball.com (xA, percentyle)
+    if cf_stats:
+        for p in players:
+            norm = _normalize_name(p.get("name", ""))
+            cf = cf_stats.get(norm, {})
+            p["xa_per_90"] = cf.get("xa_per_90")
+            p["percentile_xa"] = cf.get("percentile_xa")
+            p["percentile_xg"] = cf.get("percentile_xg")
+            p["goals_per_90"] = cf.get("goals_per_90")
+            p["assists_per_90"] = cf.get("assists_per_90")
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
     remaining_rounds = sum(1 for r in fixtures_data.get("rounds", []) if r >= (current_round or 0))
