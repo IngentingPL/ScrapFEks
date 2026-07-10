@@ -81,6 +81,9 @@ RANKING_HEADERS = {**HEADERS, "Content-Type": "application/x-www-form-urlencoded
 # BLOK C – pozostałe stałe modułowe
 # ============================================================
 
+# Numer ostatniej kolejki rundy jesiennej (może się różnić co sezon)
+AUTUMN_LAST_ROUND = 18
+
 # Skróty nazw drużyn (używane w FDR i terminarzu)
 TEAM_ABBREVS = {
     "Arka Gdynia": "ARK", "Bruk-Bet Termalica Nieciecza": "BBT",

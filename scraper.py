@@ -38,6 +38,7 @@ from config import (
     OUTPUT_DIR, BASE_URL,
     RANKING_HEADERS,
     POS_MAP,
+    AUTUMN_LAST_ROUND,
 )
 
 from auth import get_session
@@ -630,6 +631,23 @@ def main():
 
     # 8.10 Liga Hokejowa — wzbogać league_teams_detail o dane jesienne i ranking łączny
     script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Automatyczny zapis punktów rundy jesiennej
+    autumn_path = os.path.join(script_dir, "autumn_points.json")
+    if (current_round == AUTUMN_LAST_ROUND
+            and league_teams
+            and not os.path.exists(autumn_path)):
+        autumn_data = {}
+        for t in league_teams:
+            slug = t.get("slug", "")
+            if slug:
+                autumn_data[slug] = {
+                    "points": t.get("total_points", 0) or 0,
+                    "best_gameweek": t.get("max_points", 0) or 0,
+                }
+        with open(autumn_path, "w", encoding="utf-8") as f:
+            json.dump(autumn_data, f, ensure_ascii=False, indent=2)
+        print(f"🍂 Zapisano autumn_points.json ({len(autumn_data)} drużyn, kolejka {current_round})")
     autumn_points_file = os.path.join(script_dir, "autumn_points.json")
     hockey_prev_file = os.path.join(script_dir, "hockey_prev_ranking.json")
     if os.path.exists(autumn_points_file):
@@ -638,45 +656,61 @@ def main():
                 autumn_raw = json.load(f)
             print(f"\n🏒 Liga Hokejowa: wczytano {len(autumn_raw)} drużyn z rundy jesiennej")
 
-            # Buduj lookup: normalize(name) → {points, best_gw, display_name}
+            # Buduj lookup po slugach (nowy format: klucze to slugi)
             autumn_lookup = {}
-            for name, val in autumn_raw.items():
-                key = normalize_team_name(name)
-                if isinstance(val, dict):
-                    autumn_lookup[key] = {"points": val.get("points", 0), "best_gw": val.get("best_gameweek", 0), "display_name": name}
+            for slug, data in autumn_raw.items():
+                # Nowy format: klucze to slugi (np. "tokusatsu-soccer")
+                if isinstance(data, dict):
+                    autumn_lookup[slug] = {
+                        "points": data.get("points", 0) or 0,
+                        "best_gw": data.get("best_gameweek", 0) or 0,
+                        "display_name": slug.replace("-", " ").title(),
+                    }
                 else:
-                    autumn_lookup[key] = {"points": val, "best_gw": 0, "display_name": name}
+                    autumn_lookup[slug] = {
+                        "points": data,
+                        "best_gw": 0,
+                        "display_name": slug.replace("-", " ").title(),
+                    }
 
             # Buduj lookup max_points z league_teams (fetch_league_teams → /ranking-list)
             max_pts_lookup = {}
             if league_teams:
                 for t in league_teams:
-                    slug_name = t["slug"].replace("-", " ")
-                    key = normalize_team_name(slug_name)
-                    max_pts_lookup[key] = t.get("max_points", 0)
+                    max_pts_lookup[t["slug"]] = t.get("max_points", 0)
 
             # Wzbogać league_teams_detail o dane hokejowe
-            spring_seen_keys = set()
+            spring_seen_slugs = set()
+            matched_any = False
             for t in league_teams_detail:
-                slug_name = t["slug"].replace("-", " ")
-                key = normalize_team_name(slug_name)
-                spring_seen_keys.add(key)
-                autumn_info = autumn_lookup.get(key, {"points": 0, "best_gw": 0, "display_name": ""})
-                t["autumn_pts"] = autumn_info["points"]
-                t["best_gw_autumn"] = autumn_info["best_gw"]
-                best_gw_spring = max_pts_lookup.get(key, 0)
+                slug = t.get("slug", "")
+                spring_seen_slugs.add(slug)
+                autumn_info = autumn_lookup.get(slug)
+                if autumn_info:
+                    matched_any = True
+                    t["autumn_pts"] = autumn_info["points"]
+                    t["best_gw_autumn"] = autumn_info["best_gw"]
+                    t["display_name"] = autumn_info["display_name"] or slug.replace("-", " ").title()
+                else:
+                    t["autumn_pts"] = 0
+                    t["best_gw_autumn"] = 0
+                    t["display_name"] = slug.replace("-", " ").title()
+                best_gw_spring = max_pts_lookup.get(slug, 0)
                 t["best_gw_spring"] = best_gw_spring if best_gw_spring else 0
                 t["spring_pts"] = t["pts"]
                 t["total_pts"] = t["autumn_pts"] + t["spring_pts"]
-                t["display_name"] = autumn_info["display_name"] or slug_name
                 t["autumn_only"] = False
-                t["spring_only"] = key not in autumn_lookup
+                t["spring_only"] = slug not in autumn_lookup
+
+            # Fallback: stary format kluczy (nazwy) nie dopasuje się do slugów
+            if not matched_any and autumn_lookup:
+                print(f"⚠️ autumn_points.json używa starych kluczy (nazwy) — zostanie zastąpiony automatycznie po kolejce {AUTUMN_LAST_ROUND}")
 
             # Dodaj drużyny jesienne bez wiosny (autumn_only)
-            for key, info in autumn_lookup.items():
-                if key not in spring_seen_keys:
+            for slug, info in autumn_lookup.items():
+                if slug not in spring_seen_slugs:
                     league_teams_detail.append({
-                        "slug": info["display_name"].lower().replace(" ", "-"),
+                        "slug": slug,
                         "rank": None,
                         "pts": 0,
                         "players": [],
