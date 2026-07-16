@@ -92,8 +92,8 @@ jobs:
           MAX_PLAYER_ID: ${{ github.event.inputs.max_players || '4000' }}
           TARGET_ROUND: ${{ github.event.inputs.target_round || '' }}
           TEAMS_TO_SCRAPE: ${{ github.event.inputs.teams_to_scrape || '1000' }}
-          LEAGUE_SLUG: ${{ github.event.inputs.league_slug || 'discord-fmforumcmf' }}
-          LEAGUE_ID: ${{ github.event.inputs.league_id || '304' }}
+          LEAGUE_SLUG: ${{ github.event.inputs.league_slug || 'fmforumdiscord-iii' }}
+          LEAGUE_ID: ${{ github.event.inputs.league_id || '641' }}
           WORKERS: ${{ github.event.inputs.workers || '10' }}
           MAX_RUNTIME_MINUTES: ${{ github.event.inputs.max_runtime || '300' }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -173,7 +173,7 @@ jobs:
             -f max_players="${{ github.event.inputs.max_players || '4000' }}" \
             -f target_round="${{ github.event.inputs.target_round || '' }}" \
             -f teams_to_scrape="${{ github.event.inputs.teams_to_scrape || '1000' }}" \
-            -f league_slug="${{ github.event.inputs.league_slug || 'discord-fmforumcmf' }}" \
-            -f league_id="${{ github.event.inputs.league_id || '304' }}" \
+            -f league_slug="${{ github.event.inputs.league_slug || 'fmforumdiscord-iii' }}" \
+            -f league_id="${{ github.event.inputs.league_id || '641' }}" \
             -f workers="${{ github.event.inputs.workers || '10' }}" \
             -f max_runtime="${{ github.event.inputs.max_runtime || '300' }}"

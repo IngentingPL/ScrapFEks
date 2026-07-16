@@ -25,9 +25,9 @@ MAX_PLAYER_ID = int(os.environ.get("MAX_PLAYER_ID", "4000"))
 TEAMS_TO_SCRAPE = int(os.environ.get("TEAMS_TO_SCRAPE", "1000"))
 
 # Slug ligi prywatnej (puste = pomiń)
-LEAGUE_SLUG = os.environ.get("LEAGUE_SLUG", "discord-fmforumcmf")
+LEAGUE_SLUG = os.environ.get("LEAGUE_SLUG", "fmforumdiscord-iii")
 # ID ligi (z Network tab: POST /ranking-list → league: 304)
-LEAGUE_ID = os.environ.get("LEAGUE_ID", "304")
+LEAGUE_ID = os.environ.get("LEAGUE_ID", "641")
 
 # Slug drużyny użytkownika (do zakładki transferów; puste = wykryj automatycznie)
 
