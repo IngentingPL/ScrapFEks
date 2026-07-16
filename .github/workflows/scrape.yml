@@ -18,11 +18,11 @@ on:
       league_slug:
         description: 'Slug ligi prywatnej (puste = pomiń)'
         required: false
-        default: 'discord-fmforumcmf'
+        default: 'FMForumDiscord III'
       league_id:
         description: 'ID ligi (z Network tab)'
         required: false
-        default: '304'
+        default: '641'
       workers:
         description: 'Liczba równoległych workerów'
         required: false
