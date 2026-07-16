@@ -18,7 +18,7 @@ on:
       league_slug:
         description: 'Slug ligi prywatnej (puste = pomiń)'
         required: false
-        default: 'FMForumDiscord III'
+        default: 'fmforumdiscord-iii'
       league_id:
         description: 'ID ligi (z Network tab)'
         required: false
