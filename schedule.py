@@ -102,7 +102,7 @@ def cleanup_old_output_files():
     """
     Usuwa stare pliki z output/ z timestampem w nazwie, zachowując N najnowszych.
     NIGDY nie rusza plików stanu (dashboard.html, league_teams_detail.json,
-    external_cache.json, itp.).
+    external_cache.json, league_squads_history.json, itp.).
     Wzorce i liczba do zachowania są ustalone na stałe — tylko te pliki są czyszczone.
     """
     # Wzorzec → ile najnowszych plików zachować

@@ -881,6 +881,9 @@ def main():
     except Exception as e:
         print(f"  ⚠️  Nie udało się zapisać danych drużyn ligi: {e}")
 
+    if current_round and league_teams_detail:
+        save_league_squads_history(league_teams_detail, current_round)
+
     generate_dashboard_html(
         summary_data=summary_data,
         tiers=tiers,
@@ -1094,6 +1097,77 @@ def main():
         print(f"   - fantasy_predictions_{timestamp}.csv (prognoza punktów)")
     print(f"   - dashboard.html (interaktywny dashboard)")
     print(f"🕐 Koniec: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+
+def save_league_squads_history(league_teams_detail, current_round):
+    """
+    Archiwizuje składy drużyn ligowych per kolejka.
+    Dopisuje do output/league_squads_history.json bez nadpisywania
+    poprzednich kolejek.
+    Format: {
+      "round": 5,
+      "timestamp": "2026-07-25T20:30:00",
+      "teams": [
+        {
+          "slug": "tokusatsu-soccer",
+          "display_name": "Tokusatsu Soccer",
+          "total_pts": 142,
+          "players": [
+            {"pid": 480, "name": "Bartosz Nowak", "pos": "NAP",
+             "C": false, "VC": false}
+          ]
+        }
+      ]
+    }
+    Jeden wpis per kolejka — jeśli wpis dla tej kolejki już istnieje,
+    nadpisuje go (idempotentność przy wielokrotnych runach tej samej kolejki).
+    """
+    path = os.path.join(OUTPUT_DIR, "league_squads_history.json")
+
+    # Wczytaj istniejącą historię
+    history = []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            history = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        history = []
+
+    # Zbuduj wpis dla bieżącej kolejki
+    teams_snapshot = []
+    for team in league_teams_detail:
+        players_snapshot = [
+            {
+                "pid": p.get("pid"),
+                "name": p.get("name", ""),
+                "pos": p.get("pos", ""),
+                "C": p.get("C", False),
+                "VC": p.get("VC", False),
+            }
+            for p in team.get("players", [])
+        ]
+        teams_snapshot.append({
+            "slug": team.get("slug", ""),
+            "display_name": team.get("display_name", ""),
+            "total_pts": team.get("total_pts", 0),
+            "players": players_snapshot,
+        })
+
+    entry = {
+        "round": current_round,
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "teams": teams_snapshot,
+    }
+
+    # Usuń poprzedni wpis dla tej kolejki jeśli istnieje
+    history = [h for h in history if h.get("round") != current_round]
+    history.append(entry)
+    history.sort(key=lambda h: h["round"])
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
+    print(f"📚 Zapisano składy kolejki {current_round} "
+          f"({len(teams_snapshot)} drużyn) → league_squads_history.json")
 
 
 if __name__ == "__main__":
