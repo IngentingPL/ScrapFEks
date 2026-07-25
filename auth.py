@@ -64,17 +64,18 @@ def login(session: requests.Session) -> bool:
     """
 
     # KROK 1: Password grant → access_token
-    print("   🔐 Krok 1: Password grant (sso-client)...")
+    # Używa /oauth/token (standardowy Cognito endpoint),
+    # NIE /v1/authorization_token (ten wymaga Bearer tokena z kroku 1).
+    print("   🔐 Krok 1: Password grant (sso-client, /oauth/token)...")
     try:
         resp = session.post(
-            f"{COGNITO_API}/v1/authorization_token",
-            json={
+            f"{COGNITO_API}/oauth/token",
+            data={
                 "grant_type": "password",
                 "client_id": SSO_CLIENT_ID,
                 "email": FANTASY_EMAIL,
                 "password": FANTASY_PASSWORD,
                 "scope": SCOPE,
-                "redirect_uri": REDIRECT_URI,
             },
             timeout=15,
         )
