@@ -52,9 +52,12 @@ def login(session: requests.Session) -> bool:
         resp = session.post(
             f"{COGNITO_API}/v1/authorization_token",
             json={
+                "client_id": CLIENT_ID,
                 "email": FANTASY_EMAIL,
                 "password": FANTASY_PASSWORD,
                 "redirect_uri": REDIRECT_URI,
+                "scope": SCOPE,
+                "grant_type": "password",
             },
             timeout=15,
         )
