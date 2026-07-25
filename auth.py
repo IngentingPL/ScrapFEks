@@ -143,13 +143,10 @@ def login(session: requests.Session) -> bool:
         session.cookies.set("PHPSESSID", "init_session_000", domain="fantasy.ekstraklasa.org")
         session.get(BASE_URL, timeout=15)
 
-        # Zapamiętaj fake PHPSESSID żeby sprawdzić czy serwer go zmienił
-        phpsessid_before = session.cookies.get("PHPSESSID", "")
-
         # Teraz GET /connect z hashem
         resp = session.get(
             f"{BASE_URL}/connect",
-            params={"g4t7hjq3rcyb0s2m": connect_hash},
+            params={"g4t7hjq3rcyb2s0m": connect_hash},
             headers={
                 "User-Agent": HEADERS["User-Agent"],
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -159,7 +156,8 @@ def login(session: requests.Session) -> bool:
         )
 
         phpsessid_after = session.cookies.get("PHPSESSID", "")
-        if not phpsessid_after or phpsessid_after == phpsessid_before:
+        # Sprawdź czy serwer zmienił fake PHPSESSID na prawdziwy token
+        if not phpsessid_after or phpsessid_after == "init_session_000":
             print("   ❌ /connect nie ustawiło nowego PHPSESSID – sesja nie została utworzona")
             session.headers.clear()
             session.headers.update(saved_headers)
