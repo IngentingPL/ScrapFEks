@@ -2,6 +2,18 @@
 auth.py - logowanie do fantasy.ekstraklasa.org przez OAuth 2.0 + PKCE.
 Nowy flow (2026/27): api.id.ekstraklasa.org → id.ekstraklasa.org → PHPSESSID
 Stary flow (AES + wicket-api) usunięty.
+
+Flow (reverse-engineered z kodu JS Cognito):
+  1. POST /v1/authorization_token (password grant, sso-client)
+     → access_token + refresh_token
+  2. Generujemy własny PKCE challenge + state
+  3. POST /v1/authorization_token (authorization_code grant, esa-fantasy,
+     Bearer access_token z kroku 1)
+     → authorization_token
+  4. GET api.id.ekstraklasa.org/oauth/authorize?authorization_token=...
+     → 302 do /login/check-green-sso?code=...&state=...
+  5. GET /login/check-green-sso?code=...&state=...
+     → 302 z Set-Cookie: PHPSESSID
 """
 import base64
 import hashlib
@@ -18,7 +30,12 @@ from config import (
 # Stałe OAuth
 COGNITO_BASE = "https://id.ekstraklasa.org"
 COGNITO_API  = "https://api.id.ekstraklasa.org"
-CLIENT_ID    = "esa-fantasy-019eb5ae177d703c8f736a11594aa705"
+
+# Client ID dla password grant (login formularza Cognito)
+SSO_CLIENT_ID = "sso-client-8aaa228311424773ac37c83b36f51a40"
+# Client ID dla authorization grant (aplikacji fantasy)
+FANTASY_CLIENT_ID = "esa-fantasy-019eb5ae177d703c8f736a11594aa705"
+
 REDIRECT_URI = f"{BASE_URL}/login/check-green-sso"
 SCOPE        = "profile"
 
@@ -46,52 +63,91 @@ def login(session: requests.Session) -> bool:
     Zwraca True jeśli PHPSESSID został ustawiony, False przy błędzie.
     """
 
-    # KROK 1: Pobierz authorization_token przez password grant
-    print("   🔐 Krok 1: Pobieranie authorization_token...")
+    # KROK 1: Password grant → access_token
+    print("   🔐 Krok 1: Password grant (sso-client)...")
     try:
         resp = session.post(
             f"{COGNITO_API}/v1/authorization_token",
             json={
-                "client_id": CLIENT_ID,
+                "grant_type": "password",
+                "client_id": SSO_CLIENT_ID,
                 "email": FANTASY_EMAIL,
                 "password": FANTASY_PASSWORD,
-                "redirect_uri": REDIRECT_URI,
                 "scope": SCOPE,
-                "grant_type": "password",
             },
             timeout=15,
         )
         if resp.status_code != 200:
-            print(f"   ❌ authorization_token HTTP {resp.status_code}: "
-                  f"{resp.text[:200]}")
+            print(f"   ❌ Password grant HTTP {resp.status_code}: "
+                  f"{resp.text[:300]}")
             return False
-        auth_token = resp.json().get("authorization_token")
-        if not auth_token:
-            print(f"   ❌ Brak authorization_token w odpowiedzi: "
-                  f"{resp.text[:200]}")
+
+        token_data = resp.json()
+        access_token = token_data.get("access_token")
+        if not access_token:
+            print(f"   ❌ Brak access_token w odpowiedzi. Klucze: "
+                  f"{list(token_data.keys())}")
             return False
-        print(f"   ✅ authorization_token: {auth_token[:20]}...")
+        print(f"   ✅ access_token: {access_token[:20]}...")
     except Exception as e:
         print(f"   ❌ Błąd krok 1: {e}")
         return False
 
-    # KROK 2: OAuth authorize z PKCE → redirect z ?code=
-    print("   🔐 Krok 2: OAuth authorize (PKCE)...")
+    # KROK 2: Authorization code grant (z Bearer) → authorization_token
+    print("   🔐 Krok 2: Authorization code grant (esa-fantasy + Bearer)...")
     verifier, challenge = _pkce_pair()
     state = _random_state()
     try:
-        resp = session.get(
-            f"{COGNITO_BASE}/oauth/authorize",
-            params={
-                "client_id": CLIENT_ID,
+        resp = session.post(
+            f"{COGNITO_API}/v1/authorization_token",
+            json={
+                "grant_type": "authorization_code",
+                "client_id": FANTASY_CLIENT_ID,
                 "redirect_uri": REDIRECT_URI,
-                "response_type": "code",
                 "scope": SCOPE,
+                "response_type": "code",
                 "code_challenge": challenge,
                 "code_challenge_method": "S256",
                 "state": state,
-                "authorization_token": auth_token,
             },
+            headers={
+                "Authorization": f"Bearer {access_token}",
+            },
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            print(f"   ❌ Authorization code grant HTTP {resp.status_code}: "
+                  f"{resp.text[:300]}")
+            return False
+
+        auth_data = resp.json()
+        authorization_token = auth_data.get("authorization_token")
+        if not authorization_token:
+            print(f"   ❌ Brak authorization_token. Klucze: "
+                  f"{list(auth_data.keys())}")
+            return False
+        print(f"   ✅ authorization_token: {authorization_token[:20]}...")
+    except Exception as e:
+        print(f"   ❌ Błąd krok 2: {e}")
+        return False
+
+    # KROK 3: Przekaż authorization_token do OAuth authorize
+    #         → redirect do /login/check-green-sso?code=...&state=...
+    print("   🔐 Krok 3: OAuth authorize → redirect z code...")
+    try:
+        params = {
+            "authorization_token": authorization_token,
+            "response_type": "code",
+            "client_id": FANTASY_CLIENT_ID,
+            "redirect_uri": REDIRECT_URI,
+            "scope": SCOPE,
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
+            "state": state,
+        }
+        resp = session.get(
+            f"{COGNITO_API}/oauth/authorize",
+            params=params,
             allow_redirects=False,
             timeout=15,
         )
@@ -99,13 +155,14 @@ def login(session: requests.Session) -> bool:
         if resp.status_code not in (302, 301) or not location:
             print(f"   ❌ Oczekiwano redirect, dostano HTTP "
                   f"{resp.status_code}")
+            print(f"   Body: {resp.text[:200]}")
             return False
 
-        # Wyciągnij code z Location
+        # Wyciągnij code i state z Location
         parsed = urllib.parse.urlparse(location)
-        params = urllib.parse.parse_qs(parsed.query)
-        code = params.get("code", [None])[0]
-        returned_state = params.get("state", [None])[0]
+        qs = urllib.parse.parse_qs(parsed.query)
+        code = qs.get("code", [None])[0]
+        returned_state = qs.get("state", [None])[0]
 
         if not code:
             print(f"   ❌ Brak 'code' w redirect: {location[:200]}")
@@ -115,11 +172,11 @@ def login(session: requests.Session) -> bool:
             return False
         print(f"   ✅ code: {code[:20]}...")
     except Exception as e:
-        print(f"   ❌ Błąd krok 2: {e}")
+        print(f"   ❌ Błąd krok 3: {e}")
         return False
 
-    # KROK 3: check-green-sso → ustawia PHPSESSID
-    print("   🔐 Krok 3: check-green-sso → PHPSESSID...")
+    # KROK 4: check-green-sso → ustawia PHPSESSID
+    print("   🔐 Krok 4: check-green-sso → PHPSESSID...")
     try:
         resp = session.get(
             f"{BASE_URL}/login/check-green-sso",
@@ -134,7 +191,7 @@ def login(session: requests.Session) -> bool:
         print(f"   ✅ Zalogowano! PHPSESSID: {phpsessid[:20]}...")
         return True
     except Exception as e:
-        print(f"   ❌ Błąd krok 3: {e}")
+        print(f"   ❌ Błąd krok 4: {e}")
         return False
 
 
