@@ -156,6 +156,16 @@ def login(session: requests.Session) -> bool:
         )
 
         phpsessid_after = session.cookies.get("PHPSESSID", "")
+        # Debug: co odpowiedział serwer?
+        print(f"   🔍 /connect status: {resp.status_code}, url po redirectach: {resp.url}")
+        print(f"   🔍 /connect response headers: {dict(resp.headers)}")
+        print(f"   🔍 /connect response cookies: {dict(resp.cookies)}")
+        if resp.history:
+            print(f"   🔍 /connect redirect chain ({len(resp.history)} hops):")
+            for h in resp.history:
+                print(f"      {h.status_code} → {h.url}, cookies: {dict(h.cookies)}")
+        print(f"   🔍 /connect body (500 znaków): {resp.text[:500]}")
+        print(f"   🔍 PHPSESSID po /connect: {phpsessid_after!r}")
         # Sprawdź czy serwer zmienił fake PHPSESSID na prawdziwy token
         if not phpsessid_after or phpsessid_after == "init_session_000":
             print("   ❌ /connect nie ustawiło nowego PHPSESSID – sesja nie została utworzona")
