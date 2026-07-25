@@ -143,6 +143,9 @@ def login(session: requests.Session) -> bool:
         session.cookies.set("PHPSESSID", "init_session_000", domain="fantasy.ekstraklasa.org")
         session.get(BASE_URL, timeout=15)
 
+        # Zapamiętaj fake PHPSESSID żeby sprawdzić czy serwer go zmienił
+        phpsessid_before = session.cookies.get("PHPSESSID", "")
+
         # Teraz GET /connect z hashem
         resp = session.get(
             f"{BASE_URL}/connect",
@@ -155,8 +158,9 @@ def login(session: requests.Session) -> bool:
             allow_redirects=True,
         )
 
-        if not dict(session.cookies).get("PHPSESSID"):
-            print("   ❌ /connect nie ustawiło PHPSESSID – sesja nie została utworzona")
+        phpsessid_after = session.cookies.get("PHPSESSID", "")
+        if not phpsessid_after or phpsessid_after == phpsessid_before:
+            print("   ❌ /connect nie ustawiło nowego PHPSESSID – sesja nie została utworzona")
             session.headers.clear()
             session.headers.update(saved_headers)
             return False  # krytyczny błąd – bez PHPSESSID sesja jest nieautoryzowana
