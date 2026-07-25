@@ -142,6 +142,7 @@ def login(session: requests.Session) -> bool:
         # Najpierw GET na stronę z fałszywym PHPSESSID — wymusza PHP backend
         session.cookies.set("PHPSESSID", "init_session_000", domain="fantasy.ekstraklasa.org")
         session.get(BASE_URL, timeout=15)
+        print(f"   🔍 PHPSESSID po BASE_URL GET: {session.cookies.get('PHPSESSID', '')!r}")
 
         # Teraz GET /connect z hashem
         resp = session.get(
@@ -155,23 +156,16 @@ def login(session: requests.Session) -> bool:
             allow_redirects=True,
         )
 
-        phpsessid_after = session.cookies.get("PHPSESSID", "")
-        # Debug: co odpowiedział serwer?
-        print(f"   🔍 /connect status: {resp.status_code}, url po redirectach: {resp.url}")
-        print(f"   🔍 /connect response headers: {dict(resp.headers)}")
-        print(f"   🔍 /connect response cookies: {dict(resp.cookies)}")
+        # Debug: /connect – pokaż redirect headers (tam może być Set-Cookie)
+        print(f"   🔍 /connect final status: {resp.status_code}, url: {resp.url}")
         if resp.history:
             print(f"   🔍 /connect redirect chain ({len(resp.history)} hops):")
             for h in resp.history:
-                print(f"      {h.status_code} → {h.url}, cookies: {dict(h.cookies)}")
-        print(f"   🔍 /connect body (500 znaków): {resp.text[:500]}")
-        print(f"   🔍 PHPSESSID po /connect: {phpsessid_after!r}")
-        # Sprawdź czy serwer zmienił fake PHPSESSID na prawdziwy token
-        if not phpsessid_after or phpsessid_after == "init_session_000":
-            print("   ❌ /connect nie ustawiło nowego PHPSESSID – sesja nie została utworzona")
-            session.headers.clear()
-            session.headers.update(saved_headers)
-            return False  # krytyczny błąd – bez PHPSESSID sesja jest nieautoryzowana
+                set_cookie = h.headers.get("Set-Cookie", "")
+                print(f"      {h.status_code} → {h.url}")
+                if set_cookie:
+                    print(f"         Set-Cookie: {set_cookie[:200]}")
+        print(f"   🔍 PHPSESSID po /connect: {session.cookies.get('PHPSESSID', '')!r}")
 
     except Exception as e:
         print(f"   ❌ Błąd /connect: {e}")
@@ -179,7 +173,7 @@ def login(session: requests.Session) -> bool:
         session.headers.update(saved_headers)
         return False  # krytyczny błąd – /connect się nie powiodło
 
-    # Krok 5: POST /login-sso — autoryzuje sesję
+    # Krok 5: POST /login-sso — autoryzuje sesję (prawdopodobnie ustawia PHPSESSID)
     try:
         resp = session.post(
             LOGIN_SSO_URL,
@@ -200,11 +194,29 @@ def login(session: requests.Session) -> bool:
             session.headers.update(saved_headers)
             print(f"   ❌ Login SSO nie powiódł się: HTTP {resp.status_code}")
             return False
+
+        print(f"   🔍 /login-sso status: {resp.status_code}, url: {resp.url}")
+        if resp.history:
+            print(f"   🔍 /login-sso redirect chain ({len(resp.history)} hops):")
+            for h in resp.history:
+                set_cookie = h.headers.get("Set-Cookie", "")
+                print(f"      {h.status_code} → {h.url}")
+                if set_cookie:
+                    print(f"         Set-Cookie: {set_cookie[:200]}")
+
+        # Guard: PHPSESSID musi być ustawiony i nie może być fake wartością
+        phpsessid_final = session.cookies.get("PHPSESSID", "")
+        if not phpsessid_final or phpsessid_final == "init_session_000":
+            print(f"   ❌ PHPSESSID nie został ustawiony (wartość: {phpsessid_final!r})")
+            session.headers.clear()
+            session.headers.update(saved_headers)
+            return False
+
         # Przywróć oryginalne headers sesji
         session.headers.clear()
         session.headers.update(saved_headers)
 
-        print(f"   ✅ Zalogowano! Cookies: {dict(session.cookies)}")
+        print(f"   ✅ Zalogowano! PHPSESSID: {phpsessid_final[:20]}...")
         return True
 
     except Exception as e:
