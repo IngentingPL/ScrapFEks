@@ -52,11 +52,6 @@ SCRIPT_START = time.time()
 OUTPUT_DIR = "output"
 
 BASE_URL = "https://fantasy.ekstraklasa.org"
-LOGIN_API_URL = "https://wicket-api.ekstraklasa-prod.tisagroup.ch/p/user/login/"
-TOKEN_CREATE_URL = "https://wicket-api.ekstraklasa-prod.tisagroup.ch/p/anonymous/token/create"
-LOGIN_SSO_URL = f"{BASE_URL}/login-sso"
-APPLICATION_ID = "sHCKWvfuCwRdu7s0vWwlPgBBjtHahTCvVgzTVZ8osyBGYKpikt"
-
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
