@@ -142,10 +142,11 @@ def login(session: requests.Session) -> bool:
         }
         session.headers.update(browser_hdrs)
 
-        # Najpierw GET na stronę z fałszywym PHPSESSID — wymusza PHP backend
-        session.cookies.set("PHPSESSID", "init_session_000", domain="fantasy.ekstraklasa.org")
-        session.get(BASE_URL, timeout=15)
-        print(f"   🔍 PHPSESSID po BASE_URL GET: {session.cookies.get('PHPSESSID', '')!r}")
+        # Wyczyść ciasteczka dla domeny – symuluj PIERWSZĄ wizytę na stronie
+        # (w prawdziwej przeglądarce /connect to pierwszy request na fantasy.ekstraklasa.org,
+        #  więc serwer ustawia świeże PHPSESSID. Fake cookie blokowałoby to.)
+        session.cookies.clear(domain="fantasy.ekstraklasa.org")
+        print("   🔍 Cookies przed /connect (wyczyszczone):", dict(session.cookies))
 
         # Teraz GET /connect z hashem
         resp = session.get(
