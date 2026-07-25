@@ -119,9 +119,12 @@ def login(session: requests.Session) -> bool:
 
         if not connect_hash:
             print("   ❌ Brak connect_hash w odpowiedzi token/create – nie można dokończyć logowania")
+            print(f"   🔍 token/create response keys: {list(create_data.keys())}")
+            print(f"   🔍 token/create response (500 znaków): {str(create_data)[:500]}")
             return False  # krytyczny błąd – bez connect_hash /connect nie zadziała
 
         print(f"   ✅ Connect hash: {str(connect_hash)[:50]}...")
+        print(f"   🔍 token/create full response keys: {list(create_data.keys())}")
 
     except Exception as e:
         print(f"   ❌ Błąd token/create: {e}")
@@ -156,16 +159,21 @@ def login(session: requests.Session) -> bool:
             allow_redirects=True,
         )
 
-        # Debug: /connect – pokaż redirect headers (tam może być Set-Cookie)
+        # Debug: /connect – pokaż redirect Location i Set-Cookie
         print(f"   🔍 /connect final status: {resp.status_code}, url: {resp.url}")
+        final_set_cookie = resp.headers.get("Set-Cookie", "")
+        if final_set_cookie:
+            print(f"   🔍 /connect final Set-Cookie: {final_set_cookie[:200]}")
         if resp.history:
             print(f"   🔍 /connect redirect chain ({len(resp.history)} hops):")
             for h in resp.history:
+                location = h.headers.get("Location", "")
                 set_cookie = h.headers.get("Set-Cookie", "")
-                print(f"      {h.status_code} → {h.url}")
+                print(f"      {h.status_code} → Location: {location[:120]}")
                 if set_cookie:
                     print(f"         Set-Cookie: {set_cookie[:200]}")
         print(f"   🔍 PHPSESSID po /connect: {session.cookies.get('PHPSESSID', '')!r}")
+        print(f"   🔍 Wszystkie cookies po /connect: {dict(session.cookies)}")
 
     except Exception as e:
         print(f"   ❌ Błąd /connect: {e}")
@@ -195,12 +203,16 @@ def login(session: requests.Session) -> bool:
             print(f"   ❌ Login SSO nie powiódł się: HTTP {resp.status_code}")
             return False
 
-        print(f"   🔍 /login-sso status: {resp.status_code}, url: {resp.url}")
+        print(f"   🔍 /login-sso final status: {resp.status_code}, url: {resp.url}")
+        final_set_cookie = resp.headers.get("Set-Cookie", "")
+        if final_set_cookie:
+            print(f"   🔍 /login-sso final Set-Cookie: {final_set_cookie[:200]}")
         if resp.history:
             print(f"   🔍 /login-sso redirect chain ({len(resp.history)} hops):")
             for h in resp.history:
+                location = h.headers.get("Location", "")
                 set_cookie = h.headers.get("Set-Cookie", "")
-                print(f"      {h.status_code} → {h.url}")
+                print(f"      {h.status_code} → Location: {location[:120]}")
                 if set_cookie:
                     print(f"         Set-Cookie: {set_cookie[:200]}")
 
