@@ -73,7 +73,7 @@ def login(session: requests.Session) -> bool:
             data={
                 "grant_type": "password",
                 "client_id": SSO_CLIENT_ID,
-                "email": FANTASY_EMAIL,
+                "username": FANTASY_EMAIL,
                 "password": FANTASY_PASSWORD,
                 "scope": SCOPE,
             },
