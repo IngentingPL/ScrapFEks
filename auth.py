@@ -139,6 +139,7 @@ def login(session: requests.Session) -> bool:
     try:
         params = {
             "authorization_token": authorization_token,
+            "grant_type": "authorization_code",
             "response_type": "code",
             "client_id": FANTASY_CLIENT_ID,
             "redirect_uri": REDIRECT_URI,
