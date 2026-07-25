@@ -74,6 +74,7 @@ def login(session: requests.Session) -> bool:
                 "email": FANTASY_EMAIL,
                 "password": FANTASY_PASSWORD,
                 "scope": SCOPE,
+                "redirect_uri": REDIRECT_URI,
             },
             timeout=15,
         )
