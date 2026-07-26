@@ -91,7 +91,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 125,Maciej Załęcki,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 126,Hubert Laskowski,korona kielce,NAP,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 127,Michał Przybyła,korona kielce,NAP,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-128,Łukasz Sekulski,wisła płock,NAP,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+128,Łukasz Sekulski,wisła płock,NAP,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 129,Adam Zawierucha,korona kielce,NAP,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 130,Jasmin Burić,zagłębie lubin,BR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 132,Adam Makuchowski,lech poznań,BR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -128,7 +128,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 187,Grzegorz Kuświk,wisła płock,NAP,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 191,Radosław Cierzniak,legia warszawa,BR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 192,Radosław Majecki,legia warszawa,BR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-195,Bartosz Bereszyński,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+195,Bartosz Bereszyński,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 196,Łukasz Broź,śląsk wrocław,OBR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 200,Igor Lewczuk,legia warszawa,OBR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 201,Michał Pazdan,jagiellonia białystok,OBR,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -157,9 +157,9 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 236,Gerard Badía,piast gliwice,POM,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 237,Dominik Budzik,piast gliwice,POM,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 238,Martin Bukata,piast gliwice,POM,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-239,Marcin Flis,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+239,Marcin Flis,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 243,Mateusz Mak,gks katowice,POM,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-244,Radosław Murawski,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+244,Radosław Murawski,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 245,Igor Sapała,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 248,Saša Živec,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 249,Josip Barišić,piast gliwice,NAP,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -424,7 +424,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 698,Alan Czerwiński,gks katowice,OBR,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 699,Adam Matuszczyk,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 700,Jakub Świerczok,śląsk wrocław,NAP,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-701,Patryk Kun,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+701,Patryk Kun,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 704,Christian Gytkjær,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 706,Kamil Wojtkowski,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 707,Damian Pietras,korona kielce,OBR,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -477,7 +477,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 771,Marcin Wasilewski,wisła kraków,OBR,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 772,Dominik Lasik,górnik zabrze,NAP,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 773,Mathieu Scalet,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-774,Sebastian Bergier,widzew łódź,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+774,Sebastian Bergier,widzew łódź,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 776,Sebastian Strózik,cracovia,NAP,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 777,Mateusz Żukowski,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 778,Alves da Silva Eduardo,legia warszawa,NAP,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -556,14 +556,14 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 971,Szymon Lewicki,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 972,Vamara Sanogo,górnik zabrze,NAP,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 976,Karol Danielak,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-979,Oskar Repka,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+979,Oskar Repka,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 983,Gerard Oliva,cracovia,NAP,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 984,Radosław Kruppa,cracovia,OBR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 985,Robert Ożóg,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 986,Michał Wiśniewski,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 989,Adam Ryczkowski,górnik zabrze,NAP,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 990,Kamil Surowiec,górnik zabrze,OBR,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-992,Przemysław Wiśniewski,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+992,Przemysław Wiśniewski,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 993,Wato Arweladze,korona kielce,NAP,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 994,Lukas Klemenz,gks katowice,OBR,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 995,Mateusz Machaj,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -632,7 +632,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1089,Marcel Zapytowski,korona kielce,BR,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1091,Marko Poletanovič,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1092,Piotr Samiec-Talar,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
-1094,Filip Marchwiński,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1094,Filip Marchwiński,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1095,Santeri Hostikka,pogoń szczecin,POM,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1096,Hubert Sobol,widzew łódź,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1103,Sergiu Hanca,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -655,7 +655,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1125,Justinas Marazas,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1126,Kamil Piątkowski,legia warszawa,OBR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1127,Patryk Mucha,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1136,Mateusz Praszelik,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1136,Mateusz Praszelik,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1137,Lubambo Musonda,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1138,Lukáš Hroššo,cracovia,BR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1140,Timur Żamaletdinow,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -680,7 +680,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1164,Aleksandar Bjelica,korona kielce,OBR,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1166,Jake McGing,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1167,Tobiasz Weinzettel,wisła kraków,BR,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1168,Patryk Makuch,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1168,Patryk Makuch,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1169,Mateusz Skrzypczak,lech poznań,OBR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1170,Daniel Hoyo-Kowalski,wisła kraków,OBR,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1171,Krzysztof Kołodziej,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -771,7 +771,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1296,Milan Radin,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1297,Ivan Obradović,legia warszawa,OBR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1298,Ołeh Horin,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1299,Jean Carlos Silva,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1299,Jean Carlos Silva,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1300,Alasana Manneh,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1301,David Kopacz,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1304,Suad Sahiti,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -798,7 +798,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1334,Conrado Buchanelli Holz,radomiak radom,OBR,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1339,Paweł Cibicki,pogoń szczecin,NAP,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1340,David Tijanić,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1341,Fran Tudor,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1341,Fran Tudor,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1342,Nikola Kuveljić,wisła kraków,POM,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1343,Lubomir Tupta,widzew łódź,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1344,Torgil Gjertsen,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -851,7 +851,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1406,Szymon Włodarczyk,górnik zabrze,NAP,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1407,Radosław Seweryś,korona kielce,OBR,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1409,Mateusz Grudziński,legia warszawa,POM,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1411,Rafał Leszczyński,wisła płock,BR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1411,Rafał Leszczyński,wisła płock,BR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1415,Bartosz Jaroch,wisła kraków,OBR,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1416,Aleksander Komor,gks katowice,OBR,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1424,Mateusz Marzec,gks katowice,POM,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -901,7 +901,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1511,Marko Malenica,lech poznań,BR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1512,Dušan Lagator,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1513,Yaw Yeboah,wisła kraków,POM,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1514,Ioánnis Papanikoláou,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1514,Ioánnis Papanikoláou,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1515,Maciej Bortniczuk,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1516,Adi Mehremić,wisła kraków,OBR,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1517,Daniel Bielica,górnik zabrze,BR,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -912,7 +912,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1523,Lorenco Šimić,zagłębie lubin,OBR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1526,Wiktor Preuss,piast gliwice,POM,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1528,Konrad Gruszkowski,gks katowice,OBR,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1529,Mariusz Fornalczyk,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1529,Mariusz Fornalczyk,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1531,Søren Reese,zagłębie lubin,OBR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1532,Jan Sýkora,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1533,Marcel Żurek,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -963,7 +963,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1595,Luka Šušnjara,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1596,Souleymane Koné,wisła kraków,OBR,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1597,Bojan Nastić,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1598,Mateusz Łęgowski,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1598,Mateusz Łęgowski,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1599,Jan Ziewiec,cracovia,OBR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1600,Michał Litwa,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1601,Nika Kwekweskiri,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -999,7 +999,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1636,Bartłomiej Frasik,śląsk wrocław,BR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1638,Norbert Pacławski,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1639,Milan Posmyk,zagłębie lubin,OBR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1653,Adam Radwański,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1653,Adam Radwański,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1654,Ernest Terpiłowski,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1660,Kacper Śpiewak,motor lublin,NAP,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1673,Przemysław Banaszak,śląsk wrocław,NAP,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
@@ -1038,18 +1038,18 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1708,Kacper Tabiś,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1709,Oliwier Wojciechowski,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1711,Barry Douglas,lech poznań,OBR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1712,Joel Pereira,lech poznań,OBR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1712,Joel Pereira,lech poznań,OBR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1713,Kacper Wachowiak,lech poznań,OBR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1714,Patryk Waliś,lech poznań,OBR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1715,Kacper Tobiasz,legia warszawa,BR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1717,Mattias Johansson,legia warszawa,OBR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1719,Michael Ameyaw,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1719,Michael Ameyaw,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1720,Miguel Muñoz,piast gliwice,OBR,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1721,Alberto Toril,piast gliwice,NAP,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1722,Bartosz Klebaniuk,pogoń szczecin,BR,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1723,Lindsay Rose,legia warszawa,OBR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1724,Vladan Kovačević,legia warszawa,BR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1725,Mahir Emreli,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1725,Mahir Emreli,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1729,Maksymilian Boruc,śląsk wrocław,BR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1731,Józef Burta,śląsk wrocław,BR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1732,Diogo Verdasca,śląsk wrocław,OBR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1079,7 +1079,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1766,Jakub Mądrzyk,raków częstochowa,BR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1767,Gabriel Kirejczyk,piast gliwice,NAP,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1769,Gabor Żukowski,jagiellonia białystok,OBR,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1770,Tomasz Pieńko,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1770,Tomasz Pieńko,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1772,Kacper Lepczyński,zagłębie lubin,OBR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1774,Adrian Dziedzic,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1775,Arsen Hrosu,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1146,7 +1146,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1850,Dennis Jastrzembski,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1851,Filip Wilak,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1852,Daníel Grétarsson,śląsk wrocław,OBR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1853,Bogdan Racovițan,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1853,Bogdan Racovițan,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1854,Nikodem Zielonka,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1855,Miłosz Skowronek,jagiellonia białystok,OBR,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1856,Kamil Wilczek,piast gliwice,NAP,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1175,13 +1175,13 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1889,Kacper Łukasiak,gks katowice,POM,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1890,Kamil Sobczak,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1891,Radosław Zyśk,jagiellonia białystok,NAP,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1893,Dani Pacheco,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1893,Dani Pacheco,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1894,Benjamin Verbič,legia warszawa,POM,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1896,Bartłomiej Korbecki,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1897,Diego Silva Carioca,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1898,Marc Gual,legia warszawa,NAP,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1899,Luka Gagnidze,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1900,Władysław Koczerhin,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1900,Władysław Koczerhin,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1902,Heorhij Citaiszwili,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1904,Patryk Czerech,jagiellonia białystok,OBR,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1905,Mateusz Ziółkowski,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1197,17 +1197,17 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1919,Wojciech Łaski,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1920,Rui Filipe Nene,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1921,Artur Rudko,lech poznań,BR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1922,Dominik Piła,cracovia,OBR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1922,Dominik Piła,cracovia,OBR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1923,Blaż Kramer,legia warszawa,NAP,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1924,Michał Jerke,radomiak radom,BR,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1925,Gabriel Kobylak,gks katowice,BR,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1926,Roberto Alves,radomiak radom,POM,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
-1928,Stratos Svarnas,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1928,Stratos Svarnas,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1930,John Yeboah,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1931,Steve Kapuadi,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1932,Martin Sulek,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1933,Antonio Álvarez,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1935,Juljan Shehu,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1935,Juljan Shehu,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1936,Hubert Szulc,korona kielce,NAP,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1940,Mattia Montini,widzew łódź,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1941,Bartosz Guzdek,widzew łódź,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1239,14 +1239,14 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1986,Michał Grudniewski,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1987,Jordi Sánchez,wisła kraków,NAP,Piast Gliwice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1989,Kevin Broll,górnik zabrze,BR,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1990,Fabian Hiszpański,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1990,Fabian Hiszpański,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1991,Pontus Almqvist,pogoń szczecin,NAP,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1993,Dalibor Takáč,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1994,Miłosz Strzeboński,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1995,Janusz Nojszewski,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1996,Kacper Bojańczyk,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 1997,Szymon Majewski,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-1998,Olaf Kobacki,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+1998,Olaf Kobacki,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 1999,Jonatan Kotzke,górnik zabrze,OBR,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2000,Lisandro Semedo,wieczysta kraków,POM,Lech Poznań,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2001,Nahuel Leiva,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1257,7 +1257,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2007,Michał Matys,zagłębie lubin,BR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2008,Kacper Terlecki,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2009,Takuto Oshima,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2010,Saïd Hamulic,wisła płock,NAP,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2010,Saïd Hamulic,wisła płock,NAP,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2014,Kacper Jodłowski,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2015,Milan Kvocera,wisła płock,NAP,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2016,Jakub Lewicki,piast gliwice,OBR,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1374,7 +1374,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2216,Antónis Tsiftsís,raków częstochowa,BR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2217,Dawid Barnowski,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2222,Aleks Petkow,śląsk wrocław,OBR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2225,Fran Álvarez,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2225,Fran Álvarez,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2226,Kamil Cybulski,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2227,Hubert Lenart,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2228,Filip Przybułek,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1448,7 +1448,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2321,Rahil Mammadov,radomiak radom,OBR,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2323,Vágner Dias,radomiak radom,POM,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2324,Baráth Baráth,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2325,Erick Otieno,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2325,Erick Otieno,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2329,Alen Mustafić,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2330,Lewuis Peña,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2331,Simeon Petrow,śląsk wrocław,OBR,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1509,15 +1509,15 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2396,Igor Kornobis,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2406,Maksym Chłań,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2414,Oskar Jeż,motor lublin,BR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2415,Marek Bartoš,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2415,Marek Bartoš,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2416,Bohdan Krywołapow,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2417,Filip Luberecki,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2417,Filip Luberecki,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2418,Konrad Magnuszewski,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2419,Piotr Ceglarz,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2420,Marcel Gąsior,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2421,Sebastian Koziej,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2422,Rafał Król,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2423,Mbaye N'Diaye,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2423,Mbaye N'Diaye,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2424,Bartosz Wolski,gks katowice,POM,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2425,Filip Wójcik,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2426,Sebastian Sikora,motor lublin,NAP,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1534,7 +1534,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2441,Simon Schierack,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2442,Kreshnik Hajrizi,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2443,Samuel Kozlovský,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2444,Marcel Krajewski,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2444,Marcel Krajewski,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2445,Václav Sejk,zagłębie lubin,NAP,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2446,Kristoffer Klaesson,raków częstochowa,BR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2447,João Moutinho,lech poznań,OBR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1600,7 +1600,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2513,Kacper Nowakowski,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2515,Sylvester Jasper,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2516,Shaocong Wu,radomiak radom,OBR,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2517,Adam Basse,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2517,Adam Basse,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2518,Yegor Sharabura,śląsk wrocław,POM,Raków Częstochowa,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2519,Oskar Pietuszewski,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2520,Mateusz Pomietło,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1683,10 +1683,10 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2616,Kamil Jakubczyk,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2629,Morgan Faßbender,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2636,Oskar Klon,wisła płock,BR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2637,Marcin Kamiński,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2637,Marcin Kamiński,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2638,Aleksandre Kalandadze,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2639,Andrias Edmundsson,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2640,Marcus Haglind-Sangré,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2640,Marcus Haglind-Sangré,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2641,Przemyslaw Misiak,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2642,Marcin Więckowski,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2643,Filip Zając,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1695,10 +1695,10 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2646,Oskar Tomczyk,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2647,Jakub Serwach,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2648,Jakub Lejman,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2649,Jorge Jiménez,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2649,Jorge Jiménez,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2650,Iban Salvador,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2651,Maciej Famulak,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2652,Krystian Pomorski,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2652,Krystian Pomorski,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2653,Adrian Bielka,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2654,Amin Al-Hamawi,wisła płock,NAP,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2655,Bastien Donio,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
@@ -1717,7 +1717,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2668,Tamar Svetlin,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2669,Matus Vojtko,wieczysta kraków,OBR,Lech Poznań,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2670,Petar Stojanović,legia warszawa,OBR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2671,Karol Czubak,motor lublin,NAP,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2671,Karol Czubak,motor lublin,NAP,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2672,Florian Haxha,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2673,Kacper Karasek,radomiak radom,POM,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2674,Mikolaj Kosior,motor lublin,NAP,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1733,10 +1733,10 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2684,Vasco Lopes,radomiak radom,POM,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2685,Apóstolos Konstantópoulos,jagiellonia białystok,OBR,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2686,Samuel Akere,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2687,Ángel Baena,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2687,Ángel Baena,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2688,Dion Gallapeni,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2689,Lindon Selahi,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2690,Ricardo Visus,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2690,Ricardo Visus,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2691,Luka Lučić,zagłębie lubin,OBR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2692,Wojciech Szafranek,zagłębie lubin,NAP,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2694,Alejandro Cantero,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1744,7 +1744,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2696,Mateusz Głowiński,korona kielce,NAP,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2697,Kacper Szymanek,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2698,Leo Bengtsson,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
-2699,Ivo Rodrigues,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2699,Ivo Rodrigues,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2700,Paskal Meyer,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2701,Kacper Plichta,motor lublin,NAP,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2702,Stjepan Davidović,korona kielce,POM,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1771,11 +1771,11 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2729,Dijon Kameri,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2731,Aziel Jackson,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2732,Tonio Teklić,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2733,Luis Palma,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2733,Luis Palma,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2734,Piotr Pietryga,górnik zabrze,BR,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2735,Miłosz Swatowski,gks katowice,POM,Radomiak Radom,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2736,Cyprian Popielec,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2737,Marko Bulat,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2737,Marko Bulat,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2738,Kuba Bochniarz,pogoń szczecin,BR,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2739,Konrad Cymerys,cracovia,BR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2740,Quentin Lecoeuche,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1802,18 +1802,18 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2763,Brahim Traoré,cracovia,OBR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2765,Kamil Jakóbczyk,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2766,Noah Weißhaupt,legia warszawa,POM,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2767,Yannick Agnero,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2767,Yannick Agnero,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2769,Bogdan Mirčetić,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2770,Veljko Ilić,widzew łódź,BR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2772,Sergio Lozano,jagiellonia białystok,POM,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2773,Pape Meïssa Ba,widzew łódź,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2774,Milan Aleksić,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2775,Fábio Ronaldo,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2775,Fábio Ronaldo,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2776,Joshua Wilson-Esbrand,radomiak radom,OBR,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2777,Andy Pelmard,jagiellonia białystok,OBR,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2778,Mateusz Skoczylas,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2779,Deni Jurić,wisła płock,NAP,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2781,Žan Rogelj,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2781,Žan Rogelj,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2782,Gabriel Charpentier,cracovia,NAP,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2783,Andi Zeqiri,widzew łódź,NAP,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2784,Benjamin Mendy,pogoń szczecin,OBR,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1830,8 +1830,8 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2796,Płamen Andrejew,lech poznań,BR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2798,Samuel Kováčik,legia warszawa,POM,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2799,Osman Bukari,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2800,Christopher Cheng,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2801,Bartłomiej Drągowski,widzew łódź,BR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2800,Christopher Cheng,widzew łódź,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
+2801,Bartłomiej Drągowski,widzew łódź,BR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2803,Matwiej Bochno,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2804,Borisław Rupanow,górnik zabrze,NAP,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2805,Otto Hindrich,legia warszawa,BR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
@@ -1843,7 +1843,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2814,Isak Brusberg,raków częstochowa,NAP,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2815,Guilherme Montóia,jagiellonia białystok,OBR,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2816,Paweł Dawidowicz,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2817,Emil Kornvig,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2817,Emil Kornvig,widzew łódź,POM,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2818,Mateusz Tabisz,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2819,Samed Baždar,jagiellonia białystok,NAP,Motor Lublin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2820,Beno Selan,cracovia,POM,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
@@ -1860,7 +1860,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2831,Oliwier Maziarz,piast gliwice,POM,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2832,Jakub Grelich,piast gliwice,BR,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2833,Mihael Mlinarić,zagłębie lubin,NAP,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2834,Jerzy Napieraj,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2834,Jerzy Napieraj,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2835,Jacek Czapliński,pogoń szczecin,POM,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2836,Marin Karamarko,wisła płock,OBR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2837,Sebastian Rojek,pogoń szczecin,POM,Cracovia,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1869,9 +1869,9 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2840,Salifou Soumah,radomiak radom,POM,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2841,Yvan Ikia Dimi,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2842,Jean Batoum,cracovia,NAP,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2843,Wiktor Żołneczko,raków częstochowa,BR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2843,Wiktor Żołneczko,raków częstochowa,BR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2844,Wojciech Szymczak,lech poznań,NAP,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2845,Thomas Santos,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2845,Thomas Santos,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2846,Filip Čuić,pogoń szczecin,NAP,Cracovia,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2847,Mads Agger,pogoń szczecin,POM,Cracovia,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2848,Ondřej Zmrzlý,górnik zabrze,OBR,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
@@ -1936,11 +1936,11 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2914,Michał Synoś,górnik zabrze,OBR,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2915,Patryk Warczak,górnik zabrze,OBR,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2916,Marcel Kalemba,górnik zabrze,POM,Korona Kielce,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2917,Allahyar Sayyadmanesh,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2917,Allahyar Sayyadmanesh,lech poznań,POM,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2918,Terry Yegbe,lech poznań,OBR,Wieczysta Kraków,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2919,Robert Deziel,legia warszawa,OBR,Zagłębie Lubin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2920,Makan Aïko,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2921,Mihai Popa,motor lublin,BR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2921,Mihai Popa,motor lublin,BR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2922,Artem Akatov,motor lublin,OBR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2923,Marcel Złomańczuk,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2924,Domen Gril,piast gliwice,BR,Wisła Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1953,8 +1953,8 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2931,Jakub Jendryka,raków częstochowa,OBR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2932,Tarik Karić,raków częstochowa,BR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2933,Oliwier Kwiatkowski,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2934,Ádin Molnár,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2935,Jurica Pršir,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2934,Ádin Molnár,raków częstochowa,POM,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
+2935,Jurica Pršir,wisła płock,POM,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2936,David Čolina,zagłębie lubin,OBR,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2937,Paweł Kosmalski,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2938,Szymon Łyczko,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
@@ -1972,8 +1972,8 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2950,Szymon Wadas,wisła płock,BR,Widzew Łódź,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2951,Nikola Čavlina,wieczysta kraków,BR,Lech Poznań,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2952,Ché Nunnely,radomiak radom,POM,GKS Katowice,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
-2953,Yacine Bourhane,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
-2954,Vincent Burlet,cracovia,OBR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
+2953,Yacine Bourhane,motor lublin,POM,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
+2954,Vincent Burlet,cracovia,OBR,Pogoń Szczecin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,1
 2955,Igor Chmielewski,korona kielce,OBR,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2956,Kornel Toboła,korona kielce,NAP,Górnik Zabrze,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1
 2957,Patryk Dziekoński,zagłębie lubin,POM,Legia Warszawa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,1

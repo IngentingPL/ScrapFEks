@@ -16332,8 +16332,8 @@
     "position": "Napastnik",
     "total_points": 0,
     "price": 2.6,
-    "popularity_pct": "40%",
-    "popularity": 40.0,
+    "popularity_pct": "39%",
+    "popularity": 39.0,
     "country": "Polska",
     "previous_club": "Panathinaïkós AO)",
     "rounds": [
@@ -22053,7 +22053,7 @@
     "name": "Łukasz Sekulski",
     "team": "Wisła Płock",
     "position": "Napastnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 2.1,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -22064,14 +22064,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 27,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -31121,7 +31121,7 @@
     "name": "Bartosz Bereszyński",
     "team": "Motor Lublin",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 1,
     "price": 1.9,
     "popularity_pct": "10%",
     "popularity": 10.0,
@@ -31131,14 +31131,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -37999,25 +37999,25 @@
     "name": "Marcin Flis",
     "team": "Wisła Płock",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 9,
     "price": 1.7,
     "popularity_pct": "2%",
     "popularity": 2.0,
     "country": "Polska",
     "previous_club": "Pogoń Siedlce",
-    "image_url": "/static/img/v2/player.svg ",
+    "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9d9f-aa2d-719f-bf9f-0e4f0de6f69c.png?width=400&format=webp",
     "rounds": [
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
-        "goals": 0,
+        "minutes": 90,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 9,
+        "played": true
       },
       {
         "round": 2,
@@ -103820,7 +103820,7 @@
     "name": "Patryk Kun",
     "team": "Wisła Płock",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.7,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -103831,14 +103831,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -116752,7 +116752,7 @@
     "name": "Sebastian Bergier",
     "team": "Widzew Łódź",
     "position": "Napastnik",
-    "total_points": 0,
+    "total_points": 4,
     "price": 2.4,
     "popularity_pct": "18%",
     "popularity": 18.0,
@@ -116763,14 +116763,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
-        "goals": 0,
+        "minutes": 90,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 4,
+        "played": true
       },
       {
         "round": 2,
@@ -136580,7 +136580,7 @@
     "name": "Oskar Repka",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 2.0,
     "popularity_pct": "4%",
     "popularity": 4.0,
@@ -136590,14 +136590,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -138323,7 +138323,7 @@
     "name": "Przemysław Wiśniewski",
     "team": "Widzew Łódź",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 3,
     "price": 2.0,
     "popularity_pct": "28%",
     "popularity": 28.0,
@@ -138334,14 +138334,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -166731,25 +166731,25 @@
     "name": "Patryk Makuch",
     "team": "Raków Częstochowa",
     "position": "Napastnik",
-    "total_points": 0,
+    "total_points": 6,
     "price": 1.9,
     "popularity_pct": "8%",
     "popularity": 8.0,
     "country": "Polska",
     "previous_club": "Cracovia",
-    "image_url": "https://d2vzq0pwftw3zc.cloudfront.net/fit-in/300x300/filters:quality(50)/de5a136b-59d1-40ce-8b51-c043a004751b/1752834039_12250_Patryk_Makuch.png",
+    "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9d9b-087d-723c-9a2b-0ce556fdc5f1.png?width=400&format=webp",
     "rounds": [
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
-        "goals": 0,
+        "minutes": 90,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 6,
+        "played": true
       },
       {
         "round": 2,
@@ -188730,7 +188730,7 @@
     "name": "Jean Carlos Silva",
     "team": "Raków Częstochowa",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 3,
     "price": 2.2,
     "popularity_pct": "24%",
     "popularity": 24.0,
@@ -188741,14 +188741,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -193560,8 +193560,8 @@
     "position": "Pomocnik",
     "total_points": 5,
     "price": 1.8,
-    "popularity_pct": "10%",
-    "popularity": 10.0,
+    "popularity_pct": "11%",
+    "popularity": 11.0,
     "country": "Polska",
     "previous_club": "Legia Warszawa",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9936-7a3a-74e2-9b70-63fe438624c8.png?width=400&format=webp",
@@ -195332,14 +195332,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
         "points": 0,
-        "played": false
+        "played": true
       },
       {
         "round": 2,
@@ -208043,7 +208043,7 @@
     "name": "Rafał Leszczyński",
     "team": "Wisła Płock",
     "position": "Bramkarz",
-    "total_points": 0,
+    "total_points": 4,
     "price": 1.8,
     "popularity_pct": "3%",
     "popularity": 3.0,
@@ -208054,14 +208054,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 0,
+        "assist_lotto": 4,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 4,
+        "played": true
       },
       {
         "round": 2,
@@ -220918,102 +220918,18 @@
   },
   {
     "name": "Ioánnis Papanikoláou",
-    "team": "Raków Częstochowa",
+    "team": "Widzew Łódź",
     "position": "Pomocnik",
     "total_points": 0,
-    "price": 1.9,
+    "price": 2.0,
     "popularity_pct": "0%",
     "popularity": 0.0,
     "country": "Grecja",
-    "previous_club": "Paniónios GSS",
+    "previous_club": "Çaykur Rizespor Kulübü",
     "image_url": "https://umpire-esa-images-production.s3.eu-central-1.amazonaws.com/de5a136b-59d1-40ce-8b51-c043a004751b/2023_2024/Sk%C5%82ady%20dru%C5%BCyn/RCZ/12569_Giannis_Papanikolaou.png",
     "rounds": [
       {
         "round": 1,
-        "opponent": "WPŁ (D)",
-        "minutes": 0,
-        "goals": 0,
-        "assists": 0,
-        "assist_lotto": 0,
-        "yellow_cards": 0,
-        "red_cards": 0,
-        "points": 0,
-        "played": false
-      },
-      {
-        "round": 2,
-        "opponent": "ŚLA (W)",
-        "minutes": 0,
-        "goals": 0,
-        "assists": 0,
-        "assist_lotto": 0,
-        "yellow_cards": 0,
-        "red_cards": 0,
-        "points": 0,
-        "played": false
-      },
-      {
-        "round": 3,
-        "opponent": "ZAG (D)",
-        "minutes": 0,
-        "goals": 0,
-        "assists": 0,
-        "assist_lotto": 0,
-        "yellow_cards": 0,
-        "red_cards": 0,
-        "points": 0,
-        "played": false
-      },
-      {
-        "round": 4,
-        "opponent": "CRA (W)",
-        "minutes": 0,
-        "goals": 0,
-        "assists": 0,
-        "assist_lotto": 0,
-        "yellow_cards": 0,
-        "red_cards": 0,
-        "points": 0,
-        "played": false
-      },
-      {
-        "round": 5,
-        "opponent": "GÓR (D)",
-        "minutes": 0,
-        "goals": 0,
-        "assists": 0,
-        "assist_lotto": 0,
-        "yellow_cards": 0,
-        "red_cards": 0,
-        "points": 0,
-        "played": false
-      },
-      {
-        "round": 6,
-        "opponent": "JAG (D)",
-        "minutes": 0,
-        "goals": 0,
-        "assists": 0,
-        "assist_lotto": 0,
-        "yellow_cards": 0,
-        "red_cards": 0,
-        "points": 0,
-        "played": false
-      },
-      {
-        "round": 7,
-        "opponent": "LPO (W)",
-        "minutes": 0,
-        "goals": 0,
-        "assists": 0,
-        "assist_lotto": 0,
-        "yellow_cards": 0,
-        "red_cards": 0,
-        "points": 0,
-        "played": false
-      },
-      {
-        "round": 8,
         "opponent": "MOT (D)",
         "minutes": 0,
         "goals": 0,
@@ -221025,8 +220941,8 @@
         "played": false
       },
       {
-        "round": 9,
-        "opponent": "KOR (W)",
+        "round": 2,
+        "opponent": "WPŁ (W)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -221037,8 +220953,8 @@
         "played": false
       },
       {
-        "round": 10,
-        "opponent": "GKS (D)",
+        "round": 3,
+        "opponent": "JAG (W)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -221049,8 +220965,8 @@
         "played": false
       },
       {
-        "round": 11,
-        "opponent": "WIE (W)",
+        "round": 4,
+        "opponent": "KOR (D)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -221061,8 +220977,8 @@
         "played": false
       },
       {
-        "round": 12,
-        "opponent": "WIS (W)",
+        "round": 5,
+        "opponent": "ŚLA (W)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -221073,8 +220989,8 @@
         "played": false
       },
       {
-        "round": 13,
-        "opponent": "POG (D)",
+        "round": 6,
+        "opponent": "LPO (D)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -221085,7 +221001,19 @@
         "played": false
       },
       {
-        "round": 14,
+        "round": 7,
+        "opponent": "RAD (D)",
+        "minutes": 0,
+        "goals": 0,
+        "assists": 0,
+        "assist_lotto": 0,
+        "yellow_cards": 0,
+        "red_cards": 0,
+        "points": 0,
+        "played": false
+      },
+      {
+        "round": 8,
         "opponent": "LEG (W)",
         "minutes": 0,
         "goals": 0,
@@ -221097,8 +221025,80 @@
         "played": false
       },
       {
+        "round": 9,
+        "opponent": "WIE (D)",
+        "minutes": 0,
+        "goals": 0,
+        "assists": 0,
+        "assist_lotto": 0,
+        "yellow_cards": 0,
+        "red_cards": 0,
+        "points": 0,
+        "played": false
+      },
+      {
+        "round": 10,
+        "opponent": "PIA (W)",
+        "minutes": 0,
+        "goals": 0,
+        "assists": 0,
+        "assist_lotto": 0,
+        "yellow_cards": 0,
+        "red_cards": 0,
+        "points": 0,
+        "played": false
+      },
+      {
+        "round": 11,
+        "opponent": "WIS (D)",
+        "minutes": 0,
+        "goals": 0,
+        "assists": 0,
+        "assist_lotto": 0,
+        "yellow_cards": 0,
+        "red_cards": 0,
+        "points": 0,
+        "played": false
+      },
+      {
+        "round": 12,
+        "opponent": "GÓR (D)",
+        "minutes": 0,
+        "goals": 0,
+        "assists": 0,
+        "assist_lotto": 0,
+        "yellow_cards": 0,
+        "red_cards": 0,
+        "points": 0,
+        "played": false
+      },
+      {
+        "round": 13,
+        "opponent": "GKS (W)",
+        "minutes": 0,
+        "goals": 0,
+        "assists": 0,
+        "assist_lotto": 0,
+        "yellow_cards": 0,
+        "red_cards": 0,
+        "points": 0,
+        "played": false
+      },
+      {
+        "round": 14,
+        "opponent": "POG (D)",
+        "minutes": 0,
+        "goals": 0,
+        "assists": 0,
+        "assist_lotto": 0,
+        "yellow_cards": 0,
+        "red_cards": 0,
+        "points": 0,
+        "played": false
+      },
+      {
         "round": 15,
-        "opponent": "WID (D)",
+        "opponent": "RCZ (W)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -221110,7 +221110,7 @@
       },
       {
         "round": 16,
-        "opponent": "PIA (D)",
+        "opponent": "ZAG (D)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -221122,7 +221122,7 @@
       },
       {
         "round": 17,
-        "opponent": "RAD (W)",
+        "opponent": "CRA (W)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -221134,7 +221134,7 @@
       },
       {
         "round": 18,
-        "opponent": "WPŁ (W)",
+        "opponent": "MOT (W)",
         "minutes": 0,
         "goals": 0,
         "assists": 0,
@@ -223573,24 +223573,25 @@
     "name": "Mariusz Fornalczyk",
     "team": "Widzew Łódź",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 8,
     "price": 2.0,
     "popularity_pct": "17%",
     "popularity": 17.0,
     "country": "Polska",
     "previous_club": "Korona Kielce",
+    "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9ebc-9937-72c8-9a48-0a197b7356ed.png?width=400&format=webp",
     "rounds": [
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
-        "goals": 0,
+        "minutes": 90,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 8,
+        "played": true
       },
       {
         "round": 2,
@@ -235841,14 +235842,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
         "points": 0,
-        "played": false
+        "played": true
       },
       {
         "round": 2,
@@ -244614,7 +244615,7 @@
     "name": "Adam Radwański",
     "team": "Wisła Płock",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -244624,14 +244625,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 87,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -255331,7 +255332,7 @@
     "name": "Michael Ameyaw",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 1,
     "price": 2.1,
     "popularity_pct": "4%",
     "popularity": 4.0,
@@ -255342,14 +255343,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 34,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -256740,7 +256741,7 @@
     "name": "Mahir Emreli",
     "team": "Raków Częstochowa",
     "position": "Napastnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 2.3,
     "popularity_pct": "12%",
     "popularity": 12.0,
@@ -256750,14 +256751,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 56,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -264270,7 +264271,7 @@
     "name": "Tomasz Pieńko",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 2.0,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -264281,14 +264282,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 82,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -280271,7 +280272,7 @@
     "name": "Bogdan Racovițan",
     "team": "Raków Częstochowa",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 1,
     "price": 2.0,
     "popularity_pct": "3%",
     "popularity": 3.0,
@@ -280282,14 +280283,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -287249,7 +287250,7 @@
     "name": "Dani Pacheco",
     "team": "Wisła Płock",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -287260,14 +287261,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -288673,7 +288674,7 @@
     "name": "Władysław Koczerhin",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 2.0,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -288684,14 +288685,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 56,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -293725,7 +293726,7 @@
     "name": "Stratos Svarnas",
     "team": "Raków Częstochowa",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 2,
     "price": 2.1,
     "popularity_pct": "6%",
     "popularity": 6.0,
@@ -293736,14 +293737,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 24,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -294936,7 +294937,7 @@
     "name": "Juljan Shehu",
     "team": "Widzew Łódź",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 3,
     "price": 2.0,
     "popularity_pct": "3%",
     "popularity": 3.0,
@@ -294947,14 +294948,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -302856,7 +302857,7 @@
     "name": "Fabian Hiszpański",
     "team": "Wisła Płock",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -302867,14 +302868,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 3,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -304516,7 +304517,7 @@
     "name": "Olaf Kobacki",
     "team": "Wisła Płock",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -304527,14 +304528,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -307117,7 +307118,7 @@
     "name": "Saïd Hamulic",
     "team": "Wisła Płock",
     "position": "Napastnik",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -307127,14 +307128,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 63,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -314172,7 +314173,7 @@
     "popularity": 2.0,
     "country": "Polska",
     "previous_club": "Motor Lublin",
-    "image_url": "https://umpire-esa-images-production.s3.eu-central-1.amazonaws.com/de5a136b-59d1-40ce-8b51-c043a004751b/2023_2024/Sk%C5%82ady%20dru%C5%BCyn/CRA/9605_Sebastian_Madejski.png",
+    "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9d96-eb20-743b-bcaa-b270b1fd4639.png?width=400&format=webp",
     "rounds": [
       {
         "round": 1,
@@ -336498,7 +336499,7 @@
     "name": "Fran Álvarez",
     "team": "Widzew Łódź",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 3,
     "price": 2.0,
     "popularity_pct": "8%",
     "popularity": 8.0,
@@ -336509,14 +336510,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -347566,7 +347567,7 @@
         "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 4,
+        "assist_lotto": 5,
         "yellow_cards": 0,
         "red_cards": 0,
         "points": 3,
@@ -354531,7 +354532,7 @@
     "name": "Erick Otieno",
     "team": "Raków Częstochowa",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 1,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -354542,14 +354543,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 56,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -366260,8 +366261,8 @@
     "position": "Obrońca",
     "total_points": 6,
     "price": 1.8,
-    "popularity_pct": "1%",
-    "popularity": 1.0,
+    "popularity_pct": "2%",
+    "popularity": 2.0,
     "country": "Hiszpania",
     "previous_club": "Ruch Chorzów",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9936-82b6-748a-acc5-0807ffcc803a.png?width=400&format=webp",
@@ -368768,8 +368769,8 @@
     "position": "Pomocnik",
     "total_points": 3,
     "price": 2.5,
-    "popularity_pct": "33%",
-    "popularity": 33.0,
+    "popularity_pct": "32%",
+    "popularity": 32.0,
     "country": "Ukraina",
     "previous_club": "Zoria Ługańsk",
     "image_url": "https://media.cms.ekstraklasa.org/de5a136b-59d1-40ce-8b51-c043a004751b/1756300438_13589_Maksym_Chlan.png?width=400&format=webp",
@@ -369360,7 +369361,7 @@
     "name": "Marek Bartoš",
     "team": "Motor Lublin",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 1,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -369371,14 +369372,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -369840,14 +369841,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
         "points": 0,
-        "played": false
+        "played": true
       },
       {
         "round": 2,
@@ -371237,7 +371238,7 @@
     "name": "Mbaye N'Diaye",
     "team": "Motor Lublin",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 2.4,
     "popularity_pct": "8%",
     "popularity": 8.0,
@@ -371248,14 +371249,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -375300,10 +375301,10 @@
     "name": "Marcel Krajewski",
     "team": "Widzew Łódź",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.8,
-    "popularity_pct": "2%",
-    "popularity": 2.0,
+    "popularity_pct": "1%",
+    "popularity": 1.0,
     "country": "Polska",
     "previous_club": "Znicz Pruszków",
     "image_url": "https://d2vzq0pwftw3zc.cloudfront.net/fit-in/300x300/filters:quality(50)/de5a136b-59d1-40ce-8b51-c043a004751b/1752832531_13546_Marcel_Krajewski.png",
@@ -375311,14 +375312,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -390909,7 +390910,7 @@
     "name": "Adam Basse",
     "team": "Raków Częstochowa",
     "position": "Napastnik",
-    "total_points": 0,
+    "total_points": 1,
     "price": 0.7,
     "popularity_pct": "6%",
     "popularity": 6.0,
@@ -390919,14 +390920,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 8,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -393741,8 +393742,8 @@
     "position": "Pomocnik",
     "total_points": 0,
     "price": 0.7,
-    "popularity_pct": "3%",
-    "popularity": 3.0,
+    "popularity_pct": "2%",
+    "popularity": 2.0,
     "country": "Polska",
     "previous_club": "Champion Warszawa",
     "image_url": "https://d2vzq0pwftw3zc.cloudfront.net/fit-in/300x300/filters:quality(50)/de5a136b-59d1-40ce-8b51-c043a004751b/1752826725_13820_Franciszek_Lewandowski.png",
@@ -410990,7 +410991,7 @@
     "name": "Marcin Kamiński",
     "team": "Wisła Płock",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.9,
     "popularity_pct": "3%",
     "popularity": 3.0,
@@ -411001,14 +411002,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -411695,7 +411696,7 @@
     "name": "Marcus Haglind-Sangré",
     "team": "Wisła Płock",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -411706,14 +411707,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -413805,7 +413806,7 @@
     "name": "Jorge Jiménez",
     "team": "Wisła Płock",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -413816,14 +413817,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 70,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -414509,7 +414510,7 @@
     "name": "Krystian Pomorski",
     "team": "Wisła Płock",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -414519,14 +414520,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 20,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -418970,7 +418971,7 @@
     "name": "Karol Czubak",
     "team": "Motor Lublin",
     "position": "Napastnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 3.0,
     "popularity_pct": "24%",
     "popularity": 24.0,
@@ -418980,14 +418981,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -422726,25 +422727,25 @@
     "name": "Ángel Baena",
     "team": "Widzew Łódź",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 6,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
     "country": "Hiszpania",
     "previous_club": "Wisła Kraków",
-    "image_url": "https://d2vzq0pwftw3zc.cloudfront.net/fit-in/300x300/filters:quality(50)/de5a136b-59d1-40ce-8b51-c043a004751b/1752832529_13880_Angel_Baena.png",
+    "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9ebc-b8f7-71da-a187-6cf71c5ba6a4.png?width=400&format=webp",
     "rounds": [
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
-        "assists": 0,
+        "assists": 1,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 6,
+        "played": true
       },
       {
         "round": 2,
@@ -423431,7 +423432,7 @@
     "name": "Ricardo Visus",
     "team": "Widzew Łódź",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -423442,14 +423443,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -425326,25 +425327,24 @@
     "name": "Ivo Rodrigues",
     "team": "Motor Lublin",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 4,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
     "country": "Portugalia",
     "previous_club": "Moreirense FC",
-    "image_url": "https://d2vzq0pwftw3zc.cloudfront.net/fit-in/300x300/filters:quality(50)/de5a136b-59d1-40ce-8b51-c043a004751b/1752826726_13924_Ivo_Rodrigues.png",
     "rounds": [
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 0,
+        "assist_lotto": 1,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 4,
+        "played": true
       },
       {
         "round": 2,
@@ -432722,7 +432722,7 @@
     "name": "Marko Bulat",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 1,
     "price": 2.0,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -432733,14 +432733,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 34,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -440287,8 +440287,8 @@
     "position": "Pomocnik",
     "total_points": 5,
     "price": 1.9,
-    "popularity_pct": "0%",
-    "popularity": 0.0,
+    "popularity_pct": "1%",
+    "popularity": 1.0,
     "country": "Hiszpania",
     "previous_club": "Levante UD",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f987a-706b-7608-ab08-af1b762b2b56.png?width=400&format=webp",
@@ -440988,7 +440988,7 @@
     "name": "Fábio Ronaldo",
     "team": "Motor Lublin",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 2.0,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -440999,14 +440999,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
@@ -442180,25 +442180,25 @@
     "name": "Žan Rogelj",
     "team": "Wisła Płock",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 9,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
     "country": "Słowenia",
     "previous_club": "Royal Charleroi SC",
-    "image_url": "/static/img/v2/player.svg ",
+    "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9d9f-e118-7216-9c0c-d5d7938e30ad.png?width=400&format=webp",
     "rounds": [
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
-        "goals": 0,
+        "minutes": 90,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 9,
+        "played": true
       },
       {
         "round": 2,
@@ -446200,7 +446200,7 @@
     "name": "Christopher Cheng",
     "team": "Widzew Łódź",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "5%",
     "popularity": 5.0,
@@ -446211,14 +446211,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -446435,7 +446435,7 @@
     "name": "Bartłomiej Drągowski",
     "team": "Widzew Łódź",
     "position": "Bramkarz",
-    "total_points": 0,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "16%",
     "popularity": 16.0,
@@ -446446,14 +446446,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 0,
+        "assist_lotto": 2,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -449755,7 +449755,7 @@
     "name": "Emil Kornvig",
     "team": "Widzew Łódź",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 3,
     "price": 2.1,
     "popularity_pct": "7%",
     "popularity": 7.0,
@@ -449766,14 +449766,14 @@
       {
         "round": 1,
         "opponent": "MOT (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 2,
@@ -453748,14 +453748,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 66,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
         "points": 0,
-        "played": false
+        "played": true
       },
       {
         "round": 2,
@@ -455845,7 +455845,7 @@
     "name": "Wiktor Żołneczko",
     "team": "Raków Częstochowa",
     "position": "Bramkarz",
-    "total_points": 0,
+    "total_points": 1,
     "price": 0.7,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -455855,14 +455855,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 0,
+        "assist_lotto": 1,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -456314,7 +456314,7 @@
     "name": "Thomas Santos",
     "team": "Motor Lublin",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 1,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -456324,14 +456324,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -472592,7 +472592,7 @@
     "name": "Mihai Popa",
     "team": "Motor Lublin",
     "position": "Bramkarz",
-    "total_points": 0,
+    "total_points": 1,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -472602,14 +472602,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -475634,7 +475634,7 @@
     "name": "Ádin Molnár",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 1,
     "price": 2.1,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -475644,14 +475644,14 @@
       {
         "round": 1,
         "opponent": "WPŁ (D)",
-        "minutes": 0,
+        "minutes": 34,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 2,
@@ -475868,7 +475868,7 @@
     "name": "Jurica Pršir",
     "team": "Wisła Płock",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": -1,
     "price": 1.9,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -475878,14 +475878,14 @@
       {
         "round": 1,
         "opponent": "RCZ (W)",
-        "minutes": 0,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": -1,
+        "played": true
       },
       {
         "round": 2,
@@ -480082,7 +480082,7 @@
     "name": "Yacine Bourhane",
     "team": "Motor Lublin",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -480092,14 +480092,14 @@
       {
         "round": 1,
         "opponent": "WID (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 2,
