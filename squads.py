@@ -130,9 +130,21 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
                if round_num is not None
                else f"{BASE_URL}/user-team/view/{slug}")
 
+        # TYMCZASOWY DEBUG — do usunięcia po diagnozie
+        _cookies = dict(session.cookies)
+        print(f"      DEBUG squad URL: {url}")
+        print(f"      DEBUG cookies keys: {list(_cookies.keys())}")
+        print(f"      DEBUG PHPSESSID: {_cookies.get('PHPSESSID', 'BRAK')[:20] if _cookies.get('PHPSESSID') else 'BRAK'}")
+
         # Thread-safe: użyj requests.get() z cookies z sesji (z retry)
         resp = _request_with_retry(requests.get, url,
             headers=browser_headers, cookies=dict(session.cookies), timeout=15)
+        print(f"      DEBUG resp.status: {resp.status_code}")
+        print(f"      DEBUG resp.url: {resp.url}")
+        print(f"      DEBUG HTML len: {len(resp.text)}")
+        print(f"      DEBUG squad.push in HTML: {'squad.push' in resp.text}")
+        _all_pushes = re.findall(r'(\$?\w+)\.push\(', resp.text)
+        print(f"      DEBUG wszystkie .push(): {set(_all_pushes)}")
         if resp is None:
             return {"slug": slug, "players": [], "captain_id": None}
 
