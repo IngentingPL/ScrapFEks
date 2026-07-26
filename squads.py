@@ -123,7 +123,7 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
         # Czyste headery przeglądarki — bez X-Requested-With
         browser_headers = {
             **BROWSER_HEADERS,
-            "Referer": f"{BASE_URL}/",
+            "Upgrade-Insecure-Requests": "1",
         }
 
         url = (f"{BASE_URL}/user-team/view/{slug}/{round_num}"
