@@ -192,6 +192,15 @@ def login(session: requests.Session) -> bool:
             print("   ❌ /login/check-green-sso nie ustawiło PHPSESSID")
             return False
         print(f"   ✅ Zalogowano! PHPSESSID: {phpsessid[:20]}...")
+
+        # Cookie wymagany przez serwer do dostępu do stron drużyn
+        # Normalnie ustawiany przez JavaScript po zalogowaniu
+        session.cookies.set(
+            "premium-show", "1",
+            domain="fantasy.ekstraklasa.org",
+            path="/",
+        )
+        print("   ✅ Cookie premium-show=1 ustawiony")
         return True
     except Exception as e:
         print(f"   ❌ Błąd krok 4: {e}")
