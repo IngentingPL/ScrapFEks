@@ -200,6 +200,13 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
                 if i >= 11:
                     p["is_reserve"] = True
 
+        # TYMCZASOWY DEBUG
+        if not players:
+            print(f"      ⚠️ Pusty skład dla {slug}: status={resp.status_code}, "
+                  f"url={resp.url}, html_len={len(resp.text)}, "
+                  f"squad_push={'squad.push' in resp.text}, "
+                  f"redirect={'id.ekstraklasa.org' in resp.url}")
+
         return {
             "slug": slug,
             "players": players,
