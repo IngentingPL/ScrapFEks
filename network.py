@@ -14,14 +14,22 @@ import requests
 from config import OUTPUT_DIR
 
 
-def _request_with_retry(method, url, max_retries=3, **kwargs):
+def _request_with_retry(method, url, max_retries=3, session=None, **kwargs):
     """
     Wykonuje request HTTP z retry (exponential backoff: 1s, 2s, 4s).
     method: requests.get lub requests.post
+    Jeśli session podana — używa session.get() / session.post(),
+    co zapewnia poprawne zarządzanie cookies (CookieJar).
     Zwraca response albo None jeśli wszystkie próby zawiodły.
     """
     for attempt in range(max_retries):
         try:
+            if session is not None:
+                # Użyj metody z sesji zamiast modułowej — cookies z CookieJar
+                if method == requests.get:
+                    return session.get(url, **kwargs)
+                elif method == requests.post:
+                    return session.post(url, **kwargs)
             return method(url, **kwargs)
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
             if attempt < max_retries - 1:

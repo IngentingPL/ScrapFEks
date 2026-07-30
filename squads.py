@@ -130,9 +130,10 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
                if round_num is not None
                else f"{BASE_URL}/user-team/view/{slug}")
 
-        # Thread-safe: użyj requests.get() z cookies z sesji (z retry)
+        # Thread-safe: przekaż sesję — sama zarządza cookies (CookieJar)
         resp = _request_with_retry(requests.get, url,
-            headers=browser_headers, cookies=dict(session.cookies), timeout=15)
+            session=session,
+            headers=browser_headers, timeout=15)
         if resp is None:
             return {"slug": slug, "players": [], "captain_id": None}
 
