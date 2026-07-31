@@ -126,13 +126,19 @@ def scrape_team_squad(session: requests.Session, slug: str, debug: bool = False,
             "Upgrade-Insecure-Requests": "1",
         }
 
+        # Utwórz lokalną kopię sesji — requests.Session nie jest thread-safe
+        import requests as _requests
+        local_session = _requests.Session()
+        local_session.cookies.update(session.cookies)
+        local_session.headers.update(session.headers)
+
         url = (f"{BASE_URL}/user-team/view/{slug}/{round_num}"
                if round_num is not None
                else f"{BASE_URL}/user-team/view/{slug}")
 
-        # Thread-safe: przekaż sesję — sama zarządza cookies (CookieJar)
+        # Thread-safe: każdy wątek ma własną sesję z skopiowanymi cookies/headers
         resp = _request_with_retry(requests.get, url,
-            session=session,
+            session=local_session,
             headers=browser_headers, timeout=15)
         if resp is None:
             return {"slug": slug, "players": [], "captain_id": None}
