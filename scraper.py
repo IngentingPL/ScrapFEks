@@ -680,24 +680,43 @@ def main():
                     max_pts_lookup[t["slug"]] = t.get("max_points", 0)
 
             # Wzbogać league_teams_detail o dane hokejowe
+            # Wykrywamy, w której połowie sezonu jesteśmy:
+            # - jesień (current_round <= AUTUMN_LAST_ROUND): bieżące punkty = jesienne
+            # - wiosna (current_round > AUTUMN_LAST_ROUND): bieżące punkty = wiosenne
+            in_autumn = current_round and current_round <= AUTUMN_LAST_ROUND
             spring_seen_slugs = set()
             matched_any = False
             for t in league_teams_detail:
                 slug = t.get("slug", "")
                 spring_seen_slugs.add(slug)
                 autumn_info = autumn_lookup.get(slug)
-                if autumn_info:
-                    matched_any = True
-                    t["autumn_pts"] = autumn_info["points"]
-                    t["best_gw_autumn"] = autumn_info["best_gw"]
-                    t["display_name"] = autumn_info["display_name"] or slug.replace("-", " ").title()
-                else:
-                    t["autumn_pts"] = 0
-                    t["best_gw_autumn"] = 0
+                best_gw = max_pts_lookup.get(slug, 0)
+                if in_autumn:
+                    # Jesień — bieżące punkty z API to punkty jesienne
+                    if autumn_info and autumn_info["points"] > 0:
+                        # autumn_points.json ma rzeczywiste dane z zeszłego sezonu
+                        t["autumn_pts"] = autumn_info["points"]
+                        t["best_gw_autumn"] = autumn_info["best_gw"]
+                    else:
+                        # Świeży plik (zera) — używamy bieżących punktów jako jesiennych
+                        t["autumn_pts"] = t["pts"]
+                        t["best_gw_autumn"] = best_gw if best_gw else 0
+                    t["spring_pts"] = 0
+                    t["best_gw_spring"] = 0
                     t["display_name"] = slug.replace("-", " ").title()
-                best_gw_spring = max_pts_lookup.get(slug, 0)
-                t["best_gw_spring"] = best_gw_spring if best_gw_spring else 0
-                t["spring_pts"] = t["pts"]
+                else:
+                    # Wiosna — bieżące punkty z API to punkty wiosenne
+                    if autumn_info:
+                        matched_any = True
+                        t["autumn_pts"] = autumn_info["points"]
+                        t["best_gw_autumn"] = autumn_info["best_gw"]
+                        t["display_name"] = autumn_info["display_name"] or slug.replace("-", " ").title()
+                    else:
+                        t["autumn_pts"] = 0
+                        t["best_gw_autumn"] = 0
+                        t["display_name"] = slug.replace("-", " ").title()
+                    t["best_gw_spring"] = best_gw if best_gw else 0
+                    t["spring_pts"] = t["pts"]
                 t["total_pts"] = t["autumn_pts"] + t["spring_pts"]
                 t["autumn_only"] = False
                 t["spring_only"] = slug not in autumn_lookup
