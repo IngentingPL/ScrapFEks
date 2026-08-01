@@ -283,6 +283,8 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
 
     # --- Krok 3: Modyfikator FDR ---
     opponent = next_fixture.get("opponent", "")
+    if opponent and opponent not in fdr_data:
+        print(f"[FDR fallback] Brak dopasowania dla '{opponent}', używam FDR_NEUTRAL")
     opponent_fdr = fdr_data.get(opponent, {"atk": FDR_NEUTRAL, "def": FDR_NEUTRAL})  # domyślnie średni
     fdr_mod = get_fdr_modifier(
         fdr_atk=opponent_fdr["atk"],
@@ -355,6 +357,7 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
         next_fix = fixtures.get(team)
 
         if not next_fix:
+            print(f"[Prognoza skip] Brak meczu dla '{team}' — pomijam '{player.get('name', '')}'")
             continue  # Brak info o następnym meczu → pomijamy
 
         pred = predict_points(player, fdr_data, next_fix, lookback=lookback)
