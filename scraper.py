@@ -566,7 +566,7 @@ def main():
         for team_fdr in fdr_data["teams"]:
             for fix in team_fdr.get("fixtures", []):
                 if fix.get("gw") == next_gw:
-                    fdr_by_team[team_fdr["name"]] = {
+                    fdr_by_team[_normalize_team(team_fdr["name"])] = {
                         "opponent": fix.get("opponent", ""),
                         "opponent_short": fix.get("opponent_short", ""),
                         "home": fix.get("home", True),
