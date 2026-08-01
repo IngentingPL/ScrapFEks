@@ -1814,6 +1814,8 @@ function renderPredictions() {{
   let data = [...PREDICTIONS].filter(p => p.predicted_points !== null && p.predicted_points !== undefined);
   if (predPos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === predPos);
   if (!data.length) return '<div class="empty-msg">Brak prognoz dla wybranej pozycji</div>';
+  const hasRealPredictions = data.some(p => !p.unavailable);
+  if (!hasRealPredictions) return '<div class="empty-msg">Brak prognoz — potrzebne minimum 2 rozegrane kolejki</div>';
 
   // Sort
   const s = sorts.predictions;
