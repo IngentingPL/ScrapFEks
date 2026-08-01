@@ -579,7 +579,7 @@ def main():
             pred["opponent_short"] = fi.get("opponent_short", "")
             pred["fdr_atk_team"] = fi.get("atk", 3)
             pred["fdr_def_team"] = fi.get("def", 3)
-            pred["round_number"] = current_round  # kolejka której dotyczy prognoza
+            pred["round_number"] = next_gw  # kolejka której dotyczy prognoza
 
         # Zapisz CSV z prognozami
         if predictions_data:
