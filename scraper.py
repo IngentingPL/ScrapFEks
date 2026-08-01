@@ -609,7 +609,7 @@ def main():
             accuracy_data = evaluate_predictions(prev_pred_csv, players, current_round)
 
     # Wczytaj historię trafności dla dashboardu
-    accuracy_history = load_accuracy_history()
+    accuracy_history = load_accuracy_history() or []
 
     # 8.8c Auto-tuning parametrów predictora (po zebraniu min. 4 kolejek)
     # Uruchamiamy PO ewaluacji trafności — dane są już aktualne

@@ -238,8 +238,9 @@ def load_accuracy_history():
     try:
         with open(ACCURACY_HISTORY_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except (json.JSONDecodeError, IOError):
-        return []
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"[accuracy] BŁĄD: {ACCURACY_HISTORY_FILE} istnieje ale jest uszkodzony ({e})")
+        return None
 
 
 def save_accuracy_history(history):
@@ -250,8 +251,10 @@ def save_accuracy_history(history):
     danych strukturalnych — czytelny zarówno dla ludzi, jak i komputerów.
     """
     os.makedirs(os.path.dirname(ACCURACY_HISTORY_FILE), exist_ok=True)
-    with open(ACCURACY_HISTORY_FILE, "w", encoding="utf-8") as f:
+    tmp_path = ACCURACY_HISTORY_FILE + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(history, f, ensure_ascii=False, indent=2)
+    os.replace(tmp_path, ACCURACY_HISTORY_FILE)
 
 
 def find_latest_predictions_csv(output_dir="output"):
@@ -332,6 +335,10 @@ def evaluate_predictions(predictions_csv_path, current_players_data, round_numbe
 
     # Wczytaj historię i dodaj nowy wynik
     history = load_accuracy_history()
+    if history is None:
+        print(f"[accuracy] Pomijam zapis historii — plik uszkodzony, nie chcę nadpisać danych. "
+              f"Napraw ręcznie (np. z gita: git log -- output/accuracy_history.json) i uruchom ponownie.")
+        return None
 
     # Sprawdź czy ta kolejka już jest w historii — jeśli tak, nadpisz
     history = [h for h in history if h.get("round") != round_number]
