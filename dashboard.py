@@ -797,6 +797,18 @@ const LEAGUE_HISTORY = {league_history_json};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
   Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
 
+// 📖 Normalizacja nazw drużyn — usuwa znaki diakrytyczne, mapuje polskie litery,
+// lowercase, trim. Używana do bezpiecznego porównywania nazw drużyn z FDR_DATA.
+function normalizeTeamNameJS(s) {{
+  if (!s) return '';
+  return s.normalize('NFKD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/ł/g, 'l')
+          .replace(/Ł/g, 'L')
+          .toLowerCase()
+          .trim();
+}}
+
 let tab = 'players', pos = 'ALL', scope = '{{default_scope}}';
 let selectedTeam = '';
 let selectedDuet = '';
@@ -2599,7 +2611,7 @@ function renderComparison() {{
     const formAvg = played.length ? (played.reduce((s,f) => s + f.pts, 0) / played.length).toFixed(1) : '—';
     const predPts = p.predicted_points != null ? p.predicted_points.toFixed(1) : '—';
     // 📖 Następny rywal z FDR — szukamy w FDR_DATA
-    const teamFdr = (FDR_DATA.teams || []).find(t => t.name === p.team);
+    const teamFdr = (FDR_DATA.teams || []).find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(p.team));
     const nextFix = teamFdr ? (teamFdr.fixtures || [])[0] : null;
     const nextOpp = nextFix ? nextFix.opponent_short : (p.next_opponent || '—');
     const nextFdrAtk = nextFix ? nextFix.atk : (p.fdr_atk_opponent || 3);
@@ -2744,13 +2756,13 @@ function renderComparison() {{
     h += '<div class="cmp-fdr-wrap">';
     h += '<div class="cmp-fdr-title">📅 Trudność najbliższych meczów (FDR)</div>';
     h += '<div class="cmp-fdr-table"><table><thead><tr><th style="text-align:left">Kolejka</th>';
-    selected.forEach((p,i) => {{ h += '<th style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + ' (' + (fdrTeams.find(t=>t.name===p.team)||{{}}).short + ')</th>'; }});
+    selected.forEach((p,i) => {{ h += '<th style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + ' (' + ((fdrTeams.find(t=>normalizeTeamNameJS(t.name)===normalizeTeamNameJS(p.team))||{{}}).short || '—') + ')</th>'; }});
     h += '</tr></thead><tbody>';
 
     fdrGws.forEach(gw => {{
       h += '<tr><td style="text-align:left;font-weight:700;color:#94a3b8">' + gw + '</td>';
       selected.forEach((p, pi) => {{
-        const teamFdr = fdrTeams.find(t => t.name === p.team);
+        const teamFdr = fdrTeams.find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(p.team));
         const fix = teamFdr ? (teamFdr.fixtures || []).find(f => f.gw === gw) : null;
         if (fix) {{
           const pk = POS_ID[p.position] || p.position || '';
