@@ -187,17 +187,23 @@
   },
   {
     "round": 2,
-    "timestamp": "2026-08-01T08:58:48",
+    "timestamp": "2026-08-01T16:42:28",
     "teams": [
       {
         "slug": "lubliniankakonskie",
         "display_name": "Lubliniankakonskie",
-        "total_pts": 79,
+        "total_pts": 81,
         "players": []
       },
       {
         "slug": "lowcy-blanczurow",
         "display_name": "Lowcy Blanczurow",
+        "total_pts": 73,
+        "players": []
+      },
+      {
+        "slug": "makkabi-bialystok",
+        "display_name": "Makkabi Bialystok",
         "total_pts": 73,
         "players": []
       },
@@ -208,21 +214,21 @@
         "players": []
       },
       {
+        "slug": "kosciol-klubu-kuby",
+        "display_name": "Kosciol Klubu Kuby",
+        "total_pts": 69,
+        "players": []
+      },
+      {
         "slug": "mcroyal-polska",
         "display_name": "Mcroyal Polska",
         "total_pts": 69,
         "players": []
       },
       {
-        "slug": "kosciol-klubu-kuby",
-        "display_name": "Kosciol Klubu Kuby",
-        "total_pts": 68,
-        "players": []
-      },
-      {
         "slug": "ks-wojtkovia",
         "display_name": "Ks Wojtkovia",
-        "total_pts": 68,
+        "total_pts": 67,
         "players": []
       },
       {
@@ -232,9 +238,15 @@
         "players": []
       },
       {
-        "slug": "makkabi-bialystok",
-        "display_name": "Makkabi Bialystok",
-        "total_pts": 64,
+        "slug": "gouda-team",
+        "display_name": "Gouda Team",
+        "total_pts": 66,
+        "players": []
+      },
+      {
+        "slug": "mewy-1fc",
+        "display_name": "Mewy 1Fc",
+        "total_pts": 60,
         "players": []
       },
       {
@@ -244,45 +256,39 @@
         "players": []
       },
       {
+        "slug": "fc-abw",
+        "display_name": "Fc Abw",
+        "total_pts": 60,
+        "players": []
+      },
+      {
+        "slug": "duma-koziego-grodu",
+        "display_name": "Duma Koziego Grodu",
+        "total_pts": 59,
+        "players": []
+      },
+      {
+        "slug": "fc-przypal",
+        "display_name": "Fc Przypal",
+        "total_pts": 58,
+        "players": []
+      },
+      {
         "slug": "batory-bandit",
         "display_name": "Batory Bandit",
         "total_pts": 58,
         "players": []
       },
       {
-        "slug": "duma-koziego-grodu",
-        "display_name": "Duma Koziego Grodu",
+        "slug": "negative-szczecin",
+        "display_name": "Negative Szczecin",
         "total_pts": 58,
-        "players": []
-      },
-      {
-        "slug": "fc-przypal",
-        "display_name": "Fc Przypal",
-        "total_pts": 57,
         "players": []
       },
       {
         "slug": "ks-rozanka",
         "display_name": "Ks Rozanka",
         "total_pts": 57,
-        "players": []
-      },
-      {
-        "slug": "gouda-team",
-        "display_name": "Gouda Team",
-        "total_pts": 57,
-        "players": []
-      },
-      {
-        "slug": "mewy-1fc",
-        "display_name": "Mewy 1Fc",
-        "total_pts": 56,
-        "players": []
-      },
-      {
-        "slug": "negative-szczecin",
-        "display_name": "Negative Szczecin",
-        "total_pts": 56,
         "players": []
       },
       {
@@ -298,9 +304,15 @@
         "players": []
       },
       {
-        "slug": "fc-abw",
-        "display_name": "Fc Abw",
-        "total_pts": 50,
+        "slug": "polski-kibel",
+        "display_name": "Polski Kibel",
+        "total_pts": 54,
+        "players": []
+      },
+      {
+        "slug": "wynalazcy-wslizgu",
+        "display_name": "Wynalazcy Wslizgu",
+        "total_pts": 52,
         "players": []
       },
       {
@@ -316,44 +328,32 @@
         "players": []
       },
       {
-        "slug": "polski-kibel",
-        "display_name": "Polski Kibel",
-        "total_pts": 44,
-        "players": []
-      },
-      {
-        "slug": "wynalazcy-wslizgu",
-        "display_name": "Wynalazcy Wslizgu",
-        "total_pts": 43,
-        "players": []
-      },
-      {
         "slug": "dunder-mifflin",
         "display_name": "Dunder Mifflin",
-        "total_pts": 43,
-        "players": []
-      },
-      {
-        "slug": "ks-bialy-sad",
-        "display_name": "Ks Bialy Sad",
-        "total_pts": 42,
+        "total_pts": 45,
         "players": []
       },
       {
         "slug": "ks-blueface",
         "display_name": "Ks Blueface",
-        "total_pts": 42,
+        "total_pts": 44,
         "players": []
       },
       {
         "slug": "poznan-festung",
         "display_name": "Poznan Festung",
-        "total_pts": 42,
+        "total_pts": 44,
         "players": []
       },
       {
         "slug": "mauroball",
         "display_name": "Mauroball",
+        "total_pts": 44,
+        "players": []
+      },
+      {
+        "slug": "ks-bialy-sad",
+        "display_name": "Ks Bialy Sad",
         "total_pts": 42,
         "players": []
       },
@@ -366,7 +366,7 @@
       {
         "slug": "medi-top-glonovia",
         "display_name": "Medi Top Glonovia",
-        "total_pts": 28,
+        "total_pts": 30,
         "players": []
       }
     ]
