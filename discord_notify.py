@@ -69,13 +69,14 @@ def _load_sent_log():
     📖 LEKCJA: Zaczynamy od 0, bo żadna kolejka nie była jeszcze obsłużona.
     """
     if not os.path.exists(DISCORD_SENT_FILE):
-        return {"pre_round": 0, "post_round": 0, "captains_round": 0}
+        return {"pre_round": 0, "post_round": 0, "captains_round": 0, "experts_round": 0}
     try:
         with open(DISCORD_SENT_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, IOError):
         # Jeśli plik jest uszkodzony — zacznij od nowa
-        return {"pre_round": 0, "post_round": 0, "captains_round": 0}
+        print(f"[discord_sent] Uszkodzony {DISCORD_SENT_FILE} — reset liczników do zera")
+        return {"pre_round": 0, "post_round": 0, "captains_round": 0, "experts_round": 0}
 
 
 def _save_sent_log(log):
@@ -1372,33 +1373,47 @@ def send_expert_predictions(all_data: dict, webhook_url: str, deepseek_key: str 
         gemini_key: klucz Gemini API (fallback)
         round_number: numer kolejki
     """
+    # --- Anti-duplicate: sprawdź czy eksperci dla tej kolejki już byli wysłani ---
+    sent_log = _load_sent_log()
+    if sent_log.get("experts_round", 0) >= round_number:
+        print(f"  ℹ️  Discord experts K{round_number} już wysłani — pomijam duplikat")
+        return False
+
     # Generuj prognozy przez AI (DeepSeek + Gemini fallback)
     rabbti, tlinf = generate_expert_predictions(all_data, deepseek_key=deepseek_key, gemini_key=gemini_key)
-    
+
     # Wyślij każdą prognozę jako osobną wiadomość Discord
     predictions_to_send = [rabbti, tlinf]
-    
+    any_sent = False
+
     for expert in predictions_to_send:
         name = expert["name"]
         text = expert["text"]
         error = expert.get("error")
-        
+
         if error:
             print(f"  ⚠️  {name}: pomijam wysyłkę - {error}")
             continue
-        
+
         if not text:
             print(f"  ⚠️  {name}: pusta odpowiedź - pomijam")
             continue
-        
+
         # Przytnij jeśli za długa (limity Discord)
         if len(text) > 2000:
             text = text[:1997] + "..."
             print(f"  ℹ️  {name}: obcięto do 2000 znaków")
-        
+
         # Wyślij na Discord
         success = _send_content(webhook_url, text)
         if success:
             print(f"  ✅ {name}: wysłano na Discord")
+            any_sent = True
         else:
             print(f"  ⚠️  {name}: błąd wysyłki na Discord")
+
+    if any_sent:
+        sent_log["experts_round"] = round_number
+        _save_sent_log(sent_log)
+        return True
+    return False
