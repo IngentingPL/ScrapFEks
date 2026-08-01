@@ -2112,7 +2112,7 @@
     "name": "Kamil Pestka",
     "team": "Wieczysta Kraków",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 1,
     "price": 1.7,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -2135,14 +2135,14 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 0,
+        "minutes": 29,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -24163,7 +24163,7 @@
     "name": "Robert Gumny",
     "team": "Lech Poznań",
     "position": "Obrońca",
-    "total_points": 5,
+    "total_points": 7,
     "price": 1.8,
     "popularity_pct": "4%",
     "popularity": 4.0,
@@ -24186,14 +24186,14 @@
       {
         "round": 2,
         "opponent": "WIE (W)",
-        "minutes": 0,
+        "minutes": 13,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 3,
@@ -38489,7 +38489,7 @@
     "name": "Radosław Murawski",
     "team": "Lech Poznań",
     "position": "Pomocnik",
-    "total_points": 1,
+    "total_points": 3,
     "price": 1.7,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -38512,14 +38512,14 @@
       {
         "round": 2,
         "opponent": "WIE (W)",
-        "minutes": 0,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 3,
@@ -47527,7 +47527,7 @@
     "name": "Kamil Dankowski",
     "team": "Wieczysta Kraków",
     "position": "Obrońca",
-    "total_points": 1,
+    "total_points": 5,
     "price": 1.6,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -47552,11 +47552,11 @@
         "opponent": "LPO (D)",
         "minutes": 90,
         "goals": 0,
-        "assists": 0,
+        "assists": 1,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 1,
+        "points": 5,
         "played": true
       },
       {
@@ -143914,7 +143914,7 @@
     "name": "Mateusz Lis",
     "team": "Lech Poznań",
     "position": "Bramkarz",
-    "total_points": 11,
+    "total_points": 8,
     "price": 1.8,
     "popularity_pct": "17%",
     "popularity": 17.0,
@@ -143943,7 +143943,7 @@
         "assist_lotto": 1,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 6,
+        "points": 3,
         "played": true
       },
       {
@@ -166970,7 +166970,7 @@
     "name": "Mateusz Skrzypczak",
     "team": "Lech Poznań",
     "position": "Obrońca",
-    "total_points": 6,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -166999,7 +166999,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 6,
+        "points": 3,
         "played": true
       },
       {
@@ -186542,8 +186542,8 @@
     "position": "Pomocnik",
     "total_points": 6,
     "price": 2.0,
-    "popularity_pct": "7%",
-    "popularity": 7.0,
+    "popularity_pct": "6%",
+    "popularity": 6.0,
     "country": "Brazylia",
     "previous_club": "CD Santa Clara",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f93e3-c21e-755f-858f-4312be13ce85.png?width=400&format=webp",
@@ -200895,7 +200895,7 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 90,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
@@ -231298,7 +231298,7 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 90,
+        "minutes": 87,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
@@ -242948,7 +242948,7 @@
     "name": "Antoni Kozubal",
     "team": "Lech Poznań",
     "position": "Pomocnik",
-    "total_points": 7,
+    "total_points": 6,
     "price": 2.0,
     "popularity_pct": "10%",
     "popularity": 10.0,
@@ -242977,7 +242977,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 4,
+        "points": 3,
         "played": true
       },
       {
@@ -254131,7 +254131,7 @@
     "name": "Joel Pereira",
     "team": "Lech Poznań",
     "position": "Obrońca",
-    "total_points": 7,
+    "total_points": 3,
     "price": 2.1,
     "popularity_pct": "9%",
     "popularity": 9.0,
@@ -254158,9 +254158,9 @@
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
-        "points": 6,
+        "points": 2,
         "played": true
       },
       {
@@ -275989,7 +275989,7 @@
     "name": "Antoni Mikułko",
     "team": "Wieczysta Kraków",
     "position": "Bramkarz",
-    "total_points": 2,
+    "total_points": 3,
     "price": 1.7,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -276015,10 +276015,10 @@
         "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 2,
+        "assist_lotto": 5,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 1,
+        "points": 2,
         "played": true
       },
       {
@@ -327121,7 +327121,7 @@
     "name": "Michał Gurgul",
     "team": "Lech Poznań",
     "position": "Obrońca",
-    "total_points": 5,
+    "total_points": 7,
     "price": 2.3,
     "popularity_pct": "13%",
     "popularity": 13.0,
@@ -327144,14 +327144,14 @@
       {
         "round": 2,
         "opponent": "WIE (W)",
-        "minutes": 0,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 3,
@@ -362009,7 +362009,7 @@
     "name": "Wojciech Mońka",
     "team": "Lech Poznań",
     "position": "Obrońca",
-    "total_points": 11,
+    "total_points": 8,
     "price": 2.1,
     "popularity_pct": "17%",
     "popularity": 17.0,
@@ -362038,7 +362038,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 6,
+        "points": 3,
         "played": true
       },
       {
@@ -367211,7 +367211,7 @@
     "name": "Miki Villar",
     "team": "Wieczysta Kraków",
     "position": "Pomocnik",
-    "total_points": 4,
+    "total_points": 5,
     "price": 1.7,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -367234,14 +367234,14 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 0,
+        "minutes": 15,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -376017,7 +376017,7 @@
     "name": "João Moutinho",
     "team": "Lech Poznań",
     "position": "Obrońca",
-    "total_points": 6,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -376040,13 +376040,13 @@
       {
         "round": 2,
         "opponent": "WIE (W)",
-        "minutes": 90,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 6,
+        "points": 3,
         "played": true
       },
       {
@@ -383544,7 +383544,7 @@
     "name": "Daniel Håkans",
     "team": "Lech Poznań",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 2,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -383567,14 +383567,14 @@
       {
         "round": 2,
         "opponent": "WIE (W)",
-        "minutes": 0,
+        "minutes": 29,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 3,
@@ -386684,7 +386684,7 @@
     "name": "Patrik Wålemark",
     "team": "Lech Poznań",
     "position": "Pomocnik",
-    "total_points": 7,
+    "total_points": 6,
     "price": 2.3,
     "popularity_pct": "29%",
     "popularity": 29.0,
@@ -386707,13 +386707,13 @@
       {
         "round": 2,
         "opponent": "WIE (W)",
-        "minutes": 90,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 4,
+        "points": 3,
         "played": true
       },
       {
@@ -418541,7 +418541,7 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 90,
+        "minutes": 61,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
@@ -420168,7 +420168,6 @@
     "popularity": 0.0,
     "country": "Ghana",
     "previous_club": "FC Dallas",
-    "image_url": "https://d2vzq0pwftw3zc.cloudfront.net/fit-in/300x300/filters:quality(50)/de5a136b-59d1-40ce-8b51-c043a004751b/1753439698_13966_Emmanuel_Twumasi.png",
     "rounds": [
       {
         "round": 1,
@@ -428487,7 +428486,7 @@
     "name": "Pablo Rodríguez",
     "team": "Lech Poznań",
     "position": "Pomocnik",
-    "total_points": 9,
+    "total_points": 8,
     "price": 2.0,
     "popularity_pct": "4%",
     "popularity": 4.0,
@@ -428516,7 +428515,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 6,
+        "points": 5,
         "played": true
       },
       {
@@ -431810,7 +431809,7 @@
     "name": "Luis Palma",
     "team": "Lech Poznań",
     "position": "Pomocnik",
-    "total_points": 8,
+    "total_points": 7,
     "price": 3.5,
     "popularity_pct": "17%",
     "popularity": 17.0,
@@ -431833,13 +431832,13 @@
       {
         "round": 2,
         "opponent": "WIE (W)",
-        "minutes": 90,
+        "minutes": 77,
         "goals": 0,
         "assists": 1,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 7,
+        "points": 6,
         "played": true
       },
       {
@@ -467030,7 +467029,7 @@
     "name": "Duje Dujmovic",
     "team": "Wieczysta Kraków",
     "position": "Obrońca",
-    "total_points": 1,
+    "total_points": 2,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -467052,14 +467051,14 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 0,
+        "minutes": 3,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -467733,7 +467732,7 @@
     "name": "Nikola Knezevic",
     "team": "Wieczysta Kraków",
     "position": "Pomocnik",
-    "total_points": 0,
+    "total_points": 1,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -467761,7 +467760,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
+        "points": 1,
         "played": true
       },
       {
@@ -467989,7 +467988,7 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 90,
+        "minutes": 61,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
@@ -468201,7 +468200,7 @@
     "name": "Lucas Piazón",
     "team": "Wieczysta Kraków",
     "position": "Pomocnik",
-    "total_points": 4,
+    "total_points": 8,
     "price": 1.7,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -468224,12 +468223,12 @@
         "round": 2,
         "opponent": "LPO (D)",
         "minutes": 90,
-        "goals": 0,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
-        "points": 2,
+        "points": 6,
         "played": true
       },
       {
@@ -468691,7 +468690,7 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 90,
+        "minutes": 75,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
@@ -469372,7 +469371,7 @@
     "name": "Paulo Rafael Pereira Araujo",
     "team": "Wieczysta Kraków",
     "position": "Napastnik",
-    "total_points": 1,
+    "total_points": 2,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -469394,14 +469393,14 @@
       {
         "round": 2,
         "opponent": "LPO (D)",
-        "minutes": 0,
+        "minutes": 29,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -471717,7 +471716,7 @@
     "name": "Allahyar Sayyadmanesh",
     "team": "Lech Poznań",
     "position": "Pomocnik",
-    "total_points": 10,
+    "total_points": 9,
     "price": 2.2,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -471740,13 +471739,13 @@
       {
         "round": 2,
         "opponent": "WIE (W)",
-        "minutes": 90,
+        "minutes": 61,
         "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 9,
+        "points": 8,
         "played": true
       },
       {
@@ -474537,8 +474536,8 @@
     "position": "Napastnik",
     "total_points": 0,
     "price": 1.9,
-    "popularity_pct": "1%",
-    "popularity": 1.0,
+    "popularity_pct": "0%",
+    "popularity": 0.0,
     "country": "Angola",
     "previous_club": "UD Santarém",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f93e3-fd5f-71a2-a2b9-c005f73ddb80.png?width=400&format=webp",
