@@ -1,19 +1,60 @@
 """
-test_squad_auth.py — tymczasowy test diagnostyczny: warianty nagłówków dla /user-team/view/{slug}.
+test_squad_auth.py — tymczasowy test diagnostyczny: warianty nagłówków + porównanie własna vs cudza drużyna.
 Używa prawdziwych funkcji z auth.py.
 NIE commituje, NIE pushuje, NIE woła discord_notify.
 """
+import sys
 import requests
-from config import BASE_URL, BROWSER_HEADERS
+from config import BASE_URL, BROWSER_HEADERS, RANKING_HEADERS, LEAGUE_SLUG, LEAGUE_ID
 from auth import get_session
 
-SLUG = "lubliniankakonskie"
-LEAGUE_SLUG = "fmforumdiscord-iii"
+SLUG_CUDZA = "lubliniankakonskie"
+LEAGUE_SLUG_LOCAL = LEAGUE_SLUG
 
 
-def run_variant(session, name, headers):
+def cookie_names(session):
+    return sorted(c.name for c in session.cookies)
+
+
+def fetch_league_teams_with_names(session):
+    """
+    Pobiera listę drużyn z ligi prywatnej, zwraca listę {slug, name, position}.
+    Używa tego samego endpointu co squads.fetch_league_teams().
+    """
+    print(f"Pobieranie drużyn z ligi (slug={LEAGUE_SLUG_LOCAL}, id={LEAGUE_ID})...")
+    teams = []
+    try:
+        payload = f"start=0&length=100&league={LEAGUE_ID}&round=0"
+        resp = session.post(
+            f"{BASE_URL}/ranking-list",
+            data=payload,
+            headers={**RANKING_HEADERS, "Referer": f"{BASE_URL}/league/{LEAGUE_SLUG_LOCAL}"},
+            timeout=30,
+        )
+        if resp.status_code != 200:
+            print(f"   ⚠️  HTTP {resp.status_code}")
+            return teams
+
+        data = resp.json()
+        for team in data.get("data", []):
+            slug = team.get("slug", "")
+            name = team.get("name", "")  # nazwa wyświetlana
+            if slug:
+                teams.append({
+                    "slug": slug,
+                    "name": name,
+                    "position": team.get("pos"),
+                })
+        print(f"   ✅ Pobrano {len(teams)} drużyn")
+    except Exception as e:
+        print(f"   ⚠️  Błąd: {e}")
+
+    return teams
+
+
+def run_variant(session, slug, name, headers):
     """Wykonuje GET /user-team/view/{slug} i zwraca wynik."""
-    url = f"{BASE_URL}/user-team/view/{SLUG}"
+    url = f"{BASE_URL}/user-team/view/{slug}"
     resp = session.get(url, headers=headers, timeout=15)
 
     is_redirect = "login" in resp.url.lower()
@@ -22,6 +63,7 @@ def run_variant(session, name, headers):
 
     return {
         "name": name,
+        "slug": slug,
         "status_code": resp.status_code,
         "is_redirect": is_redirect,
         "has_squad": has_squad,
@@ -30,92 +72,71 @@ def run_variant(session, name, headers):
 
 
 def main():
-    print("=== Eksperyment: warianty nagłówków dla /user-team/view/ ===\n")
-    print(f"Slug: {SLUG}")
-    print(f"Liga: {LEAGUE_SLUG}\n")
+    print("=== Eksperyment: warianty nagłówków + własna vs cudza ===\n")
 
     # Logowanie
     print("Logowanie (get_session)...")
     session = get_session()
     print()
 
-    # Definicje wariantów
-    variants = [
-        (
-            "A (baseline)",
-            {
-                **BROWSER_HEADERS,
-                "Upgrade-Insecure-Requests": "1",
-            },
-        ),
-        (
-            "B (+Referer root)",
-            {
-                **BROWSER_HEADERS,
-                "Upgrade-Insecure-Requests": "1",
-                "Referer": "https://fantasy.ekstraklasa.org/",
-            },
-        ),
-        (
-            "C (+Referer league)",
-            {
-                **BROWSER_HEADERS,
-                "Upgrade-Insecure-Requests": "1",
-                "Referer": f"https://fantasy.ekstraklasa.org/league/{LEAGUE_SLUG}",
-            },
-        ),
-        (
-            "D (-Upgrade-IR +Referer league)",
-            {
-                **BROWSER_HEADERS,
-                "Referer": f"https://fantasy.ekstraklasa.org/league/{LEAGUE_SLUG}",
-            },
-        ),
-        (
-            "E (+X-Requested-With +Referer league)",
-            {
-                **BROWSER_HEADERS,
-                "Upgrade-Insecure-Requests": "1",
-                "X-Requested-With": "XMLHttpRequest",
-                "Referer": f"https://fantasy.ekstraklasa.org/league/{LEAGUE_SLUG}",
-            },
-        ),
-    ]
+    # Warianty nagłówków — tylko A (baseline) dla porównania
+    headers_a = {
+        **BROWSER_HEADERS,
+        "Upgrade-Insecure-Requests": "1",
+    }
 
-    results = []
+    # ----- CUDZA drużyna (lubliniankakonskie) -----
+    print("=== CUDZA drużyna ===")
+    r_cudza = run_variant(session, SLUG_CUDZA, "CUDZA (lubliniankakonskie)", headers_a)
+    print(f"    status_code:  {r_cudza['status_code']}")
+    print(f"    redirect:     {'TAK' if r_cudza['is_redirect'] else 'nie'}")
+    print(f"    $squad.push:  {'TAK' if r_cudza['has_squad'] else 'nie'}")
+    print(f"    preview:      {r_cudza['preview']}")
+    print()
 
-    for name, headers in variants:
-        print(f"--- {name} ---")
-        # pokaż tylko niestandardowe headery (bez UA/Accept/Language)
-        relevant = {
-            k: v for k, v in headers.items()
-            if k not in ("User-Agent", "Accept", "Accept-Language")
-        }
-        print(f"    Headery: {relevant}")
+    # ----- WŁASNA drużyna (Tokusatsu Soccer) -----
+    league_teams = fetch_league_teams_with_names(session)
+    print()
 
-        r = run_variant(session, name, headers)
-        results.append(r)
+    # Szukaj "Tokusatsu Soccer" po nazwie
+    własna = None
+    for t in league_teams:
+        if t["name"].lower() == "tokusatsu soccer":
+            własna = t
+            break
 
-        print(f"    status_code:  {r['status_code']}")
-        print(f"    redirect:     {r['is_redirect']}")
-        print(f"    $squad.push:  {r['has_squad']}")
-        print(f"    preview:      {r['preview']}")
-        print()
+    if własna is None:
+        print("❌ Nie znaleziono drużyny 'Tokusatsu Soccer' w lidze.")
+        print("   Pełna lista drużyn w lidze:")
+        for i, t in enumerate(league_teams):
+            print(f"   {i+1}. slug={t['slug']:<40} name={t.get('name', '(brak)')}")
+        sys.exit(1)
 
-    # Tabela porównawcza
-    print("=" * 90)
-    print("TABELA PORÓWNAWCZA")
-    print("=" * 90)
-    print(f"{'Wariant':<38} {'Status':>6} {'Redirect':>8} {'$squad':>7}  Preview")
-    print("-" * 90)
-    for r in results:
-        redirect = "TAK" if r["is_redirect"] else "nie"
-        squad = "TAK" if r["has_squad"] else "nie"
-        preview_short = r["preview"][:55]
-        print(
-            f"{r['name']:<38} {r['status_code']:>6} "
-            f"{redirect:>8} {squad:>7}  {preview_short}"
-        )
+    print(f"Znaleziono: slug={własna['slug']}, name={własna['name']}, position={własna.get('position', '?')}")
+    print()
+
+    print("=== WŁASNA drużyna ===")
+    r_wlasna = run_variant(session, własna["slug"], f"WŁASNA ({własna['name']})", headers_a)
+    print(f"    status_code:  {r_wlasna['status_code']}")
+    print(f"    redirect:     {'TAK' if r_wlasna['is_redirect'] else 'nie'}")
+    print(f"    $squad.push:  {'TAK' if r_wlasna['has_squad'] else 'nie'}")
+    print(f"    preview:      {r_wlasna['preview']}")
+    print()
+
+    # ----- Podsumowanie -----
+    print("=" * 60)
+    print("PORÓWNANIE: WŁASNA vs CUDZA drużyna")
+    print("=" * 60)
+    for r in [r_wlasna, r_cudza]:
+        success = r["status_code"] == 200 and r["has_squad"] and not r["is_redirect"]
+        redirect = r["is_redirect"]
+        if success:
+            status = "SUKCES (200 + $squad.push)"
+        elif redirect:
+            status = "REDIRECT → prawdopodobnie login"
+        else:
+            status = f"NIEPOWODZENIE (HTTP {r['status_code']}, $squad.push={r['has_squad']})"
+        print(f"   {r['name']}: [{status}]")
     print()
 
 
