@@ -4942,7 +4942,7 @@
     "name": "Karol Niemczycki",
     "team": "Śląsk Wrocław",
     "position": "Bramkarz",
-    "total_points": 5,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -4968,10 +4968,10 @@
         "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 1,
+        "assist_lotto": 2,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 5,
+        "points": 3,
         "played": true
       },
       {
@@ -20399,7 +20399,7 @@
     "name": "Michał Mokrzycki",
     "team": "Śląsk Wrocław",
     "position": "Pomocnik",
-    "total_points": 2,
+    "total_points": 7,
     "price": 1.6,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -20421,14 +20421,14 @@
       {
         "round": 2,
         "opponent": "RCZ (D)",
-        "minutes": 0,
+        "minutes": 20,
         "goals": 0,
-        "assists": 0,
+        "assists": 1,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 5,
+        "played": true
       },
       {
         "round": 3,
@@ -29900,7 +29900,7 @@
     "name": "Rafał Wolski",
     "team": "Radomiak Radom",
     "position": "Pomocnik",
-    "total_points": 4,
+    "total_points": 8,
     "price": 2.2,
     "popularity_pct": "6%",
     "popularity": 6.0,
@@ -29923,14 +29923,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 4,
+        "played": true
       },
       {
         "round": 3,
@@ -70905,7 +70905,7 @@
     "name": "Bartosz Nowak",
     "team": "GKS Katowice",
     "position": "Pomocnik",
-    "total_points": 5,
+    "total_points": 7,
     "price": 3.3,
     "popularity_pct": "28%",
     "popularity": 28.0,
@@ -70928,14 +70928,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -90767,7 +90767,7 @@
     "name": "Mateusz Wdowiak",
     "team": "GKS Katowice",
     "position": "Pomocnik",
-    "total_points": 1,
+    "total_points": 3,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -90790,14 +90790,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -103119,7 +103119,7 @@
     "name": "Alan Czerwiński",
     "team": "GKS Katowice",
     "position": "Obrońca",
-    "total_points": 1,
+    "total_points": 2,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -103142,14 +103142,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -115098,8 +115098,8 @@
     "position": "Pomocnik",
     "total_points": 7,
     "price": 3.5,
-    "popularity_pct": "25%",
-    "popularity": 25.0,
+    "popularity_pct": "24%",
+    "popularity": 24.0,
     "country": "Hiszpania",
     "previous_club": "Wisła Kraków",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f987a-4a7a-7521-9a82-02a4f9df5306.png?width=400&format=webp",
@@ -134197,7 +134197,7 @@
     "name": "Arkadiusz Jędrych",
     "team": "GKS Katowice",
     "position": "Obrońca",
-    "total_points": 1,
+    "total_points": 3,
     "price": 2.3,
     "popularity_pct": "12%",
     "popularity": 12.0,
@@ -134220,14 +134220,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -136582,7 +136582,7 @@
     "name": "Oskar Repka",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 5,
+    "total_points": 4,
     "price": 2.0,
     "popularity_pct": "4%",
     "popularity": 4.0,
@@ -136611,7 +136611,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 3,
+        "points": 2,
         "played": true
       },
       {
@@ -142418,7 +142418,7 @@
     "name": "Mariusz Malec",
     "team": "Śląsk Wrocław",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 2,
     "price": 1.7,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -142440,14 +142440,14 @@
       {
         "round": 2,
         "opponent": "RCZ (D)",
-        "minutes": 0,
+        "minutes": 1,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 3,
@@ -154787,7 +154787,7 @@
     "name": "Piotr Samiec-Talar",
     "team": "Śląsk Wrocław",
     "position": "Pomocnik",
-    "total_points": 8,
+    "total_points": 13,
     "price": 2.0,
     "popularity_pct": "10%",
     "popularity": 10.0,
@@ -154811,12 +154811,12 @@
         "round": 2,
         "opponent": "RCZ (D)",
         "minutes": 90,
-        "goals": 0,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 3,
+        "points": 8,
         "played": true
       },
       {
@@ -166758,7 +166758,7 @@
       {
         "round": 2,
         "opponent": "ŚLA (W)",
-        "minutes": 90,
+        "minutes": 85,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
@@ -176378,7 +176378,7 @@
     "name": "Jan Grzesik",
     "team": "Radomiak Radom",
     "position": "Obrońca",
-    "total_points": 14,
+    "total_points": 20,
     "price": 2.0,
     "popularity_pct": "29%",
     "popularity": 29.0,
@@ -176401,14 +176401,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 6,
+        "played": true
       },
       {
         "round": 3,
@@ -186540,7 +186540,7 @@
     "name": "Lucas Luquinhas",
     "team": "Radomiak Radom",
     "position": "Pomocnik",
-    "total_points": 6,
+    "total_points": 10,
     "price": 2.0,
     "popularity_pct": "7%",
     "popularity": 7.0,
@@ -186563,14 +186563,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 4,
+        "played": true
       },
       {
         "round": 3,
@@ -188760,7 +188760,7 @@
         "opponent": "ŚLA (W)",
         "minutes": 90,
         "goals": 0,
-        "assists": 0,
+        "assists": 1,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
@@ -192339,8 +192339,8 @@
     "position": "Obrońca",
     "total_points": 18,
     "price": 2.0,
-    "popularity_pct": "32%",
-    "popularity": 32.0,
+    "popularity_pct": "33%",
+    "popularity": 33.0,
     "country": "Polska",
     "previous_club": "1.FC Union Berlin",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f94d4-6fc5-7426-ba8b-0bc7555b68d5.png?width=640&format=webp",
@@ -194085,7 +194085,7 @@
     "name": "Erik Jirka",
     "team": "GKS Katowice",
     "position": "Obrońca",
-    "total_points": 1,
+    "total_points": 3,
     "price": 1.9,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -194108,14 +194108,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -194554,7 +194554,7 @@
     "name": "Conrado Buchanelli Holz",
     "team": "Radomiak Radom",
     "position": "Obrońca",
-    "total_points": 2,
+    "total_points": 8,
     "price": 1.7,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -194577,14 +194577,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 6,
+        "played": true
       },
       {
         "round": 3,
@@ -206138,7 +206138,7 @@
     "name": "Kryspin Szcześniak",
     "team": "Radomiak Radom",
     "position": "Obrońca",
-    "total_points": 3,
+    "total_points": 9,
     "price": 1.7,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -206161,14 +206161,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 6,
+        "played": true
       },
       {
         "round": 3,
@@ -215945,7 +215945,7 @@
     "name": "Kacper Trelowski",
     "team": "Raków Częstochowa",
     "position": "Bramkarz",
-    "total_points": 5,
+    "total_points": 2,
     "price": 1.9,
     "popularity_pct": "8%",
     "popularity": 8.0,
@@ -215971,10 +215971,10 @@
         "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 1,
+        "assist_lotto": 3,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 5,
+        "points": 2,
         "played": true
       },
       {
@@ -219502,8 +219502,8 @@
     "position": "Napastnik",
     "total_points": 10,
     "price": 2.1,
-    "popularity_pct": "11%",
-    "popularity": 11.0,
+    "popularity_pct": "12%",
+    "popularity": 12.0,
     "country": "Polska",
     "previous_club": "Polonia Warszawa",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f94d4-8b9e-7260-b594-fbe2884655ae.png?width=640&format=webp",
@@ -232954,7 +232954,7 @@
     "name": "Yehor Matsenko",
     "team": "Śląsk Wrocław",
     "position": "Obrońca",
-    "total_points": 3,
+    "total_points": 1,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -232977,13 +232977,13 @@
       {
         "round": 2,
         "opponent": "RCZ (D)",
-        "minutes": 90,
+        "minutes": 89,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 5,
+        "points": 3,
         "played": true
       },
       {
@@ -245629,7 +245629,7 @@
     "name": "Przemysław Banaszak",
     "team": "Śląsk Wrocław",
     "position": "Napastnik",
-    "total_points": 8,
+    "total_points": 9,
     "price": 2.0,
     "popularity_pct": "5%",
     "popularity": 5.0,
@@ -245651,13 +245651,13 @@
       {
         "round": 2,
         "opponent": "RCZ (D)",
-        "minutes": 90,
+        "minutes": 61,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 2,
+        "points": 3,
         "played": true
       },
       {
@@ -245881,7 +245881,7 @@
     "name": "Filip Majchrowicz",
     "team": "Radomiak Radom",
     "position": "Bramkarz",
-    "total_points": 3,
+    "total_points": 10,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -245904,14 +245904,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 0,
+        "assist_lotto": 3,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 7,
+        "played": true
       },
       {
         "round": 3,
@@ -255340,7 +255340,7 @@
     "name": "Michael Ameyaw",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 4,
+    "total_points": 3,
     "price": 2.1,
     "popularity_pct": "4%",
     "popularity": 4.0,
@@ -255369,7 +255369,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 3,
+        "points": 2,
         "played": true
       },
       {
@@ -256749,7 +256749,7 @@
     "name": "Mahir Emreli",
     "team": "Raków Częstochowa",
     "position": "Napastnik",
-    "total_points": 4,
+    "total_points": 8,
     "price": 2.3,
     "popularity_pct": "10%",
     "popularity": 10.0,
@@ -256771,13 +256771,13 @@
       {
         "round": 2,
         "opponent": "ŚLA (W)",
-        "minutes": 90,
-        "goals": 0,
+        "minutes": 73,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 2,
+        "points": 6,
         "played": true
       },
       {
@@ -264279,7 +264279,7 @@
     "name": "Tomasz Pieńko",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 5,
+    "total_points": 4,
     "price": 2.0,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -264302,13 +264302,13 @@
       {
         "round": 2,
         "opponent": "ŚLA (W)",
-        "minutes": 90,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 3,
+        "points": 2,
         "played": true
       },
       {
@@ -280280,7 +280280,7 @@
     "name": "Bogdan Racovițan",
     "team": "Raków Częstochowa",
     "position": "Obrońca",
-    "total_points": 5,
+    "total_points": 1,
     "price": 2.0,
     "popularity_pct": "3%",
     "popularity": 3.0,
@@ -280309,7 +280309,7 @@
         "assist_lotto": 0,
         "yellow_cards": 1,
         "red_cards": 0,
-        "points": 4,
+        "points": 0,
         "played": true
       },
       {
@@ -284861,7 +284861,7 @@
     "name": "Ilja Szkurin",
     "team": "GKS Katowice",
     "position": "Napastnik",
-    "total_points": 2,
+    "total_points": 4,
     "price": 2.1,
     "popularity_pct": "3%",
     "popularity": 3.0,
@@ -284884,14 +284884,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -286538,7 +286538,7 @@
     "name": "Kacper Łukasiak",
     "team": "GKS Katowice",
     "position": "Pomocnik",
-    "total_points": 2,
+    "total_points": 4,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -286561,14 +286561,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -288682,7 +288682,7 @@
     "name": "Władysław Koczerhin",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 5,
+    "total_points": 4,
     "price": 2.0,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -288705,13 +288705,13 @@
       {
         "round": 2,
         "opponent": "ŚLA (W)",
-        "minutes": 90,
+        "minutes": 73,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 3,
+        "points": 2,
         "played": true
       },
       {
@@ -293246,7 +293246,7 @@
     "name": "Gabriel Kobylak",
     "team": "GKS Katowice",
     "position": "Bramkarz",
-    "total_points": 1,
+    "total_points": 3,
     "price": 1.7,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -293269,14 +293269,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 0,
+        "assist_lotto": 1,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -321118,7 +321118,7 @@
     "name": "Chrístos Dónis",
     "team": "Radomiak Radom",
     "position": "Pomocnik",
-    "total_points": 1,
+    "total_points": 5,
     "price": 1.6,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -321141,14 +321141,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 4,
+        "played": true
       },
       {
         "round": 3,
@@ -330660,7 +330660,7 @@
     "name": "Adrián Diéguez",
     "team": "Radomiak Radom",
     "position": "Obrońca",
-    "total_points": 3,
+    "total_points": 9,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -330683,14 +330683,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 6,
+        "played": true
       },
       {
         "round": 3,
@@ -354542,7 +354542,7 @@
     "name": "Erick Otieno",
     "team": "Raków Częstochowa",
     "position": "Obrońca",
-    "total_points": 6,
+    "total_points": 2,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -354571,7 +354571,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 5,
+        "points": 1,
         "played": true
       },
       {
@@ -371485,7 +371485,7 @@
     "name": "Bartosz Wolski",
     "team": "GKS Katowice",
     "position": "Pomocnik",
-    "total_points": 2,
+    "total_points": 4,
     "price": 2.4,
     "popularity_pct": "5%",
     "popularity": 5.0,
@@ -371508,14 +371508,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -373635,7 +373635,7 @@
     "name": "Zié Ouattara",
     "team": "Radomiak Radom",
     "position": "Obrońca",
-    "total_points": 3,
+    "total_points": 9,
     "price": 1.8,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -373658,14 +373658,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 6,
+        "played": true
       },
       {
         "round": 3,
@@ -377661,7 +377661,7 @@
     "name": "Pau Resta",
     "team": "GKS Katowice",
     "position": "Obrońca",
-    "total_points": 0,
+    "total_points": 2,
     "price": 1.9,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -377683,14 +377683,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -390924,7 +390924,7 @@
     "name": "Adam Basse",
     "team": "Raków Częstochowa",
     "position": "Napastnik",
-    "total_points": 1,
+    "total_points": 2,
     "price": 0.7,
     "popularity_pct": "6%",
     "popularity": 6.0,
@@ -390946,14 +390946,14 @@
       {
         "round": 2,
         "opponent": "ŚLA (W)",
-        "minutes": 0,
+        "minutes": 5,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -395416,7 +395416,7 @@
     "name": "Marc Llinares",
     "team": "Śląsk Wrocław",
     "position": "Obrońca",
-    "total_points": 6,
+    "total_points": 4,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -395445,7 +395445,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 5,
+        "points": 3,
         "played": true
       },
       {
@@ -399874,7 +399874,7 @@
     "name": "Abdoul Tapsoba",
     "team": "Radomiak Radom",
     "position": "Napastnik",
-    "total_points": 2,
+    "total_points": 5,
     "price": 1.7,
     "popularity_pct": "3%",
     "popularity": 3.0,
@@ -399897,14 +399897,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 3,
+        "played": true
       },
       {
         "round": 3,
@@ -426287,7 +426287,7 @@
     "name": "Ibrahima Camará",
     "team": "Radomiak Radom",
     "position": "Pomocnik",
-    "total_points": 3,
+    "total_points": 12,
     "price": 1.7,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -426310,14 +426310,14 @@
       {
         "round": 2,
         "opponent": "GKS (W)",
-        "minutes": 0,
-        "goals": 0,
+        "minutes": 90,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 9,
+        "played": true
       },
       {
         "round": 3,
@@ -432747,7 +432747,7 @@
     "name": "Marko Bulat",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 1,
+    "total_points": 2,
     "price": 2.0,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -432770,14 +432770,14 @@
       {
         "round": 2,
         "opponent": "ŚLA (W)",
-        "minutes": 0,
+        "minutes": 17,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -437693,7 +437693,7 @@
     "name": "Eman Markovic",
     "team": "GKS Katowice",
     "position": "Pomocnik",
-    "total_points": 2,
+    "total_points": 4,
     "price": 2.2,
     "popularity_pct": "4%",
     "popularity": 4.0,
@@ -437716,14 +437716,14 @@
       {
         "round": 2,
         "opponent": "RAD (D)",
-        "minutes": 0,
+        "minutes": 90,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 4,
@@ -449080,7 +449080,7 @@
     "name": "Isak Brusberg",
     "team": "Raków Częstochowa",
     "position": "Napastnik",
-    "total_points": 0,
+    "total_points": 1,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -449102,14 +449102,14 @@
       {
         "round": 2,
         "opponent": "ŚLA (W)",
-        "minutes": 0,
+        "minutes": 17,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -463752,7 +463752,7 @@
     "name": "Irodotos Christodoulou",
     "team": "Śląsk Wrocław",
     "position": "Obrońca",
-    "total_points": 6,
+    "total_points": 4,
     "price": 1.8,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -463780,7 +463780,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 5,
+        "points": 3,
         "played": true
       },
       {
@@ -463986,7 +463986,7 @@
     "name": "Lamine Ba",
     "team": "Śląsk Wrocław",
     "position": "Obrońca",
-    "total_points": 5,
+    "total_points": 3,
     "price": 1.7,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -464014,7 +464014,7 @@
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 5,
+        "points": 3,
         "played": true
       },
       {
@@ -464710,7 +464710,7 @@
       {
         "round": 2,
         "opponent": "RCZ (D)",
-        "minutes": 90,
+        "minutes": 70,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
@@ -465390,7 +465390,7 @@
     "name": "Alex Timossi Andersson",
     "team": "Śląsk Wrocław",
     "position": "Pomocnik",
-    "total_points": 1,
+    "total_points": 3,
     "price": 2.0,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -465412,14 +465412,14 @@
       {
         "round": 2,
         "opponent": "RCZ (D)",
-        "minutes": 0,
+        "minutes": 29,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 2,
+        "played": true
       },
       {
         "round": 3,
@@ -465646,7 +465646,7 @@
       {
         "round": 2,
         "opponent": "RCZ (D)",
-        "minutes": 90,
+        "minutes": 61,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
@@ -465858,7 +465858,7 @@
     "name": "Luka Marjanac",
     "team": "Śląsk Wrocław",
     "position": "Pomocnik",
-    "total_points": 5,
+    "total_points": 10,
     "price": 1.9,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -465881,12 +465881,12 @@
         "round": 2,
         "opponent": "RCZ (D)",
         "minutes": 90,
-        "goals": 0,
+        "goals": 1,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 3,
+        "points": 8,
         "played": true
       },
       {
@@ -466326,7 +466326,7 @@
     "name": "Malaly Dembélé",
     "team": "Śląsk Wrocław",
     "position": "Napastnik",
-    "total_points": 1,
+    "total_points": 5,
     "price": 1.9,
     "popularity_pct": "1%",
     "popularity": 1.0,
@@ -466348,14 +466348,14 @@
       {
         "round": 2,
         "opponent": "RCZ (D)",
-        "minutes": 0,
+        "minutes": 29,
         "goals": 0,
         "assists": 0,
-        "assist_lotto": 0,
+        "assist_lotto": 1,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 4,
+        "played": true
       },
       {
         "round": 3,
@@ -474770,7 +474770,7 @@
     "name": "Dieudonné Debohi",
     "team": "Raków Częstochowa",
     "position": "Obrońca",
-    "total_points": 5,
+    "total_points": 0,
     "price": 1.9,
     "popularity_pct": "0%",
     "popularity": 0.0,
@@ -474797,9 +474797,9 @@
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
-        "yellow_cards": 0,
+        "yellow_cards": 1,
         "red_cards": 0,
-        "points": 5,
+        "points": 0,
         "played": true
       },
       {
@@ -475709,7 +475709,7 @@
     "name": "Ádin Molnár",
     "team": "Raków Częstochowa",
     "position": "Pomocnik",
-    "total_points": 1,
+    "total_points": 2,
     "price": 2.1,
     "popularity_pct": "2%",
     "popularity": 2.0,
@@ -475732,14 +475732,14 @@
       {
         "round": 2,
         "opponent": "ŚLA (W)",
-        "minutes": 0,
+        "minutes": 45,
         "goals": 0,
         "assists": 0,
         "assist_lotto": 0,
         "yellow_cards": 0,
         "red_cards": 0,
-        "points": 0,
-        "played": false
+        "points": 1,
+        "played": true
       },
       {
         "round": 4,
@@ -477356,8 +477356,8 @@
     "position": "Pomocnik",
     "total_points": 3,
     "price": 1.9,
-    "popularity_pct": "2%",
-    "popularity": 2.0,
+    "popularity_pct": "1%",
+    "popularity": 1.0,
     "country": "Francja",
     "previous_club": "Hibernian FC",
     "image_url": "https://media.cms.ekstraklasa.org/images/originals/019f9f44-f6c1-7273-b38b-3270f26cc06a.png?width=400&format=webp",

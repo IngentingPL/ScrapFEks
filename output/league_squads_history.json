@@ -187,8 +187,20 @@
   },
   {
     "round": 2,
-    "timestamp": "2026-08-02T16:36:09",
+    "timestamp": "2026-08-02T19:31:53",
     "teams": [
+      {
+        "slug": "widzewbaluty",
+        "display_name": "Widzewbaluty",
+        "total_pts": 105,
+        "players": []
+      },
+      {
+        "slug": "huragan-primore",
+        "display_name": "Huragan Primore",
+        "total_pts": 101,
+        "players": []
+      },
       {
         "slug": "lubliniankakonskie",
         "display_name": "Lubliniankakonskie",
@@ -196,9 +208,21 @@
         "players": []
       },
       {
-        "slug": "widzewbaluty",
-        "display_name": "Widzewbaluty",
-        "total_pts": 88,
+        "slug": "makkabi-bialystok",
+        "display_name": "Makkabi Bialystok",
+        "total_pts": 95,
+        "players": []
+      },
+      {
+        "slug": "lelek-kozodoj",
+        "display_name": "Lelek Kozodoj",
+        "total_pts": 94,
+        "players": []
+      },
+      {
+        "slug": "mcroyal-polska",
+        "display_name": "Mcroyal Polska",
+        "total_pts": 92,
         "players": []
       },
       {
@@ -208,51 +232,51 @@
         "players": []
       },
       {
-        "slug": "makkabi-bialystok",
-        "display_name": "Makkabi Bialystok",
-        "total_pts": 85,
-        "players": []
-      },
-      {
-        "slug": "huragan-primore",
-        "display_name": "Huragan Primore",
-        "total_pts": 84,
-        "players": []
-      },
-      {
         "slug": "kosciol-klubu-kuby",
         "display_name": "Kosciol Klubu Kuby",
-        "total_pts": 81,
-        "players": []
-      },
-      {
-        "slug": "lelek-kozodoj",
-        "display_name": "Lelek Kozodoj",
-        "total_pts": 81,
-        "players": []
-      },
-      {
-        "slug": "duma-koziego-grodu",
-        "display_name": "Duma Koziego Grodu",
-        "total_pts": 81,
-        "players": []
-      },
-      {
-        "slug": "mcroyal-polska",
-        "display_name": "Mcroyal Polska",
-        "total_pts": 79,
-        "players": []
-      },
-      {
-        "slug": "gouda-team",
-        "display_name": "Gouda Team",
-        "total_pts": 79,
+        "total_pts": 87,
         "players": []
       },
       {
         "slug": "ks-rozanka",
         "display_name": "Ks Rozanka",
-        "total_pts": 77,
+        "total_pts": 85,
+        "players": []
+      },
+      {
+        "slug": "batory-bandit",
+        "display_name": "Batory Bandit",
+        "total_pts": 84,
+        "players": []
+      },
+      {
+        "slug": "duma-koziego-grodu",
+        "display_name": "Duma Koziego Grodu",
+        "total_pts": 84,
+        "players": []
+      },
+      {
+        "slug": "kauno-zalgiris",
+        "display_name": "Kauno Zalgiris",
+        "total_pts": 82,
+        "players": []
+      },
+      {
+        "slug": "gouda-team",
+        "display_name": "Gouda Team",
+        "total_pts": 82,
+        "players": []
+      },
+      {
+        "slug": "fc-przypal",
+        "display_name": "Fc Przypal",
+        "total_pts": 79,
+        "players": []
+      },
+      {
+        "slug": "wszystko-czuj",
+        "display_name": "Wszystko Czuj",
+        "total_pts": 76,
         "players": []
       },
       {
@@ -262,33 +286,15 @@
         "players": []
       },
       {
-        "slug": "fc-przypal",
-        "display_name": "Fc Przypal",
-        "total_pts": 73,
-        "players": []
-      },
-      {
         "slug": "ks-wojtkovia",
         "display_name": "Ks Wojtkovia",
-        "total_pts": 72,
+        "total_pts": 74,
         "players": []
       },
       {
         "slug": "polski-kibel",
         "display_name": "Polski Kibel",
         "total_pts": 72,
-        "players": []
-      },
-      {
-        "slug": "kauno-zalgiris",
-        "display_name": "Kauno Zalgiris",
-        "total_pts": 72,
-        "players": []
-      },
-      {
-        "slug": "batory-bandit",
-        "display_name": "Batory Bandit",
-        "total_pts": 70,
         "players": []
       },
       {
@@ -304,6 +310,24 @@
         "players": []
       },
       {
+        "slug": "mewy-1fc",
+        "display_name": "Mewy 1Fc",
+        "total_pts": 66,
+        "players": []
+      },
+      {
+        "slug": "glks-klomnice",
+        "display_name": "Glks Klomnice",
+        "total_pts": 66,
+        "players": []
+      },
+      {
+        "slug": "vfb-osterode",
+        "display_name": "Vfb Osterode",
+        "total_pts": 66,
+        "players": []
+      },
+      {
         "slug": "fc-abw",
         "display_name": "Fc Abw",
         "total_pts": 65,
@@ -316,20 +340,8 @@
         "players": []
       },
       {
-        "slug": "mewy-1fc",
-        "display_name": "Mewy 1Fc",
-        "total_pts": 63,
-        "players": []
-      },
-      {
-        "slug": "glks-klomnice",
-        "display_name": "Glks Klomnice",
-        "total_pts": 63,
-        "players": []
-      },
-      {
-        "slug": "wszystko-czuj",
-        "display_name": "Wszystko Czuj",
+        "slug": "mauroball",
+        "display_name": "Mauroball",
         "total_pts": 59,
         "players": []
       },
@@ -340,33 +352,21 @@
         "players": []
       },
       {
-        "slug": "vfb-osterode",
-        "display_name": "Vfb Osterode",
-        "total_pts": 54,
-        "players": []
-      },
-      {
-        "slug": "mauroball",
-        "display_name": "Mauroball",
-        "total_pts": 53,
-        "players": []
-      },
-      {
         "slug": "ks-bialy-sad",
         "display_name": "Ks Bialy Sad",
-        "total_pts": 45,
+        "total_pts": 49,
         "players": []
       },
       {
         "slug": "misterna-porazka",
         "display_name": "Misterna Porazka",
-        "total_pts": 43,
+        "total_pts": 45,
         "players": []
       },
       {
         "slug": "medi-top-glonovia",
         "display_name": "Medi Top Glonovia",
-        "total_pts": 30,
+        "total_pts": 38,
         "players": []
       }
     ]
