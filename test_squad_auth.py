@@ -1,13 +1,25 @@
 """
-test_squad_auth.py — EKSPERYMENT: warianty nagłówków (A-G) + własna vs cudza.
+test_squad_auth.py — EKSPERYMENT: warianty nagłówków (A-H) + własna vs cudza.
+Wariant H: PKCE code_challenge/state pobrane ze stronicowego /login redirect
+(zamiast samodzielnie generowanych).
 Działa poza repo — /tmp/, czysto diagnostyczne.
 NIE zmienia squads.py/auth.py/scraper.py.
 """
 import sys
+import urllib.parse
 import requests
 import curl_cffi
-from config import BASE_URL, BROWSER_HEADERS, RANKING_HEADERS, LEAGUE_SLUG, LEAGUE_ID
-from auth import get_session
+from config import (
+    BASE_URL, BROWSER_HEADERS, RANKING_HEADERS,
+    LEAGUE_SLUG, LEAGUE_ID,
+    FANTASY_EMAIL, FANTASY_PASSWORD,
+)
+from auth import (
+    get_session,
+    COGNITO_BASE, COGNITO_API,
+    SSO_CLIENT_ID, FANTASY_CLIENT_ID,
+    REDIRECT_URI, SCOPE,
+)
 
 SLUG_CUDZA = "lubliniankakonskie"
 LEAGUE_SLUG_LOCAL = LEAGUE_SLUG
@@ -20,6 +32,202 @@ def cookie_names(session):
 def cookies_as_dict(requests_session):
     """Wyciąga cookies z requests.Session jako zwykły słownik (dla curl_cffi)."""
     return {c.name: c.value for c in requests_session.cookies}
+
+
+def login_variant_h():
+    """
+    WARIANT H: logowanie przez OAuth 2.0 + PKCE, gdzie code_challenge i state
+    pochodzą ze stronicowego redirectu /login → id.ekstraklasa.org/oauth/authorize.
+    Nie generujemy własnych wartości PKCE — używamy tych, które wygenerował
+    serwer fantasy.ekstraklasa.org.
+    """
+    print("\n--- Wariant H: logowanie (PKCE ze stronicowego /login) ---")
+    session = requests.Session()
+
+    # KROK 0: GET /login → wyciągnij prawdziwe PKCE z redirectu
+    print("   🔐 Krok 0: GET /login → parsowanie PKCE z Location...")
+    try:
+        resp = session.get(
+            f"{BASE_URL}/login",
+            allow_redirects=False,
+            timeout=15,
+        )
+        location = resp.headers.get("Location", "")
+        if not location:
+            print(f"   ❌ Brak Location w odpowiedzi (HTTP {resp.status_code})")
+            print(f"   Headers: {dict(resp.headers)}")
+            return None
+
+        print(f"   Location: {location[:120]}...")
+        parsed = urllib.parse.urlparse(location)
+        if "id.ekstraklasa.org" not in parsed.netloc:
+            print(f"   ❌ Nieoczekiwany redirect (nie id.ekstraklasa.org): "
+                  f"{parsed.netloc}")
+            print(f"   Pełny Location: {location}")
+            return None
+
+        qs = urllib.parse.parse_qs(parsed.query)
+        srv_client_id = qs.get("client_id", [None])[0]
+        srv_challenge = qs.get("code_challenge", [None])[0]
+        srv_challenge_method = qs.get("code_challenge_method", [None])[0]
+        srv_state = qs.get("state", [None])[0]
+        srv_redirect_uri = qs.get("redirect_uri", [None])[0]
+        srv_scope = qs.get("scope", [None])[0]
+
+        missing = []
+        if not srv_client_id: missing.append("client_id")
+        if not srv_challenge: missing.append("code_challenge")
+        if not srv_state: missing.append("state")
+        if not srv_redirect_uri: missing.append("redirect_uri")
+        if not srv_scope: missing.append("scope")
+        if missing:
+            print(f"   ❌ Brak parametrów w Location: {missing}")
+            return None
+
+        print(f"   ✅ client_id:            {srv_client_id}")
+        print(f"   ✅ code_challenge:       {srv_challenge[:20]}...")
+        print(f"   ✅ code_challenge_method:{srv_challenge_method or '(brak)'}")
+        print(f"   ✅ state:               {srv_state[:20]}...")
+        print(f"   ✅ redirect_uri:        {srv_redirect_uri[:60]}...")
+        print(f"   ✅ scope:               {srv_scope}")
+    except Exception as e:
+        print(f"   ❌ Błąd krok 0: {e}")
+        return None
+
+    # KROK 1: Password grant → access_token (bez zmian)
+    print("   🔐 Krok 1: Password grant (sso-client, /oauth/token)...")
+    try:
+        resp = session.post(
+            f"{COGNITO_API}/oauth/token",
+            data={
+                "grant_type": "password",
+                "client_id": SSO_CLIENT_ID,
+                "username": FANTASY_EMAIL,
+                "password": FANTASY_PASSWORD,
+                "scope": srv_scope,
+            },
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            print(f"   ❌ Password grant HTTP {resp.status_code}: "
+                  f"{resp.text[:300]}")
+            return None
+
+        token_data = resp.json()
+        access_token = token_data.get("access_token")
+        if not access_token:
+            print(f"   ❌ Brak access_token. Klucze: {list(token_data.keys())}")
+            return None
+        print(f"   ✅ access_token: {access_token[:20]}...")
+    except Exception as e:
+        print(f"   ❌ Błąd krok 1: {e}")
+        return None
+
+    # KROK 2: Authorization code grant → authorization_token
+    #         UŻYWA PKCE OD SERWERA (nie generujemy własnych!)
+    print("   🔐 Krok 2: Authorization code grant (esa-fantasy + Bearer + PKCE serwera)...")
+    try:
+        resp = session.post(
+            f"{COGNITO_API}/v1/authorization_token",
+            json={
+                "grant_type": "authorization_code",
+                "client_id": srv_client_id,
+                "redirect_uri": srv_redirect_uri,
+                "scope": srv_scope,
+                "response_type": "code",
+                "code_challenge": srv_challenge,
+                "code_challenge_method": srv_challenge_method or "S256",
+                "state": srv_state,
+            },
+            headers={
+                "Authorization": f"Bearer {access_token}",
+            },
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            print(f"   ❌ Authorization code grant HTTP {resp.status_code}: "
+                  f"{resp.text[:300]}")
+            return None
+
+        auth_data = resp.json()
+        authorization_token = auth_data.get("authorization_token")
+        if not authorization_token:
+            print(f"   ❌ Brak authorization_token. Klucze: "
+                  f"{list(auth_data.keys())}")
+            return None
+        print(f"   ✅ authorization_token: {authorization_token[:20]}...")
+    except Exception as e:
+        print(f"   ❌ Błąd krok 2: {e}")
+        return None
+
+    # KROK 3: OAuth authorize → redirect z code
+    print("   🔐 Krok 3: OAuth authorize → redirect z code...")
+    try:
+        params = {
+            "authorization_token": authorization_token,
+            "grant_type": "authorization_code",
+            "response_type": "code",
+            "client_id": srv_client_id,
+            "redirect_uri": srv_redirect_uri,
+            "scope": srv_scope,
+            "code_challenge": srv_challenge,
+            "code_challenge_method": srv_challenge_method or "S256",
+            "state": srv_state,
+        }
+        resp = session.get(
+            f"{COGNITO_API}/oauth/authorize",
+            params=params,
+            allow_redirects=False,
+            timeout=15,
+        )
+        location = resp.headers.get("Location", "")
+        if resp.status_code not in (302, 301) or not location:
+            print(f"   ❌ Oczekiwano redirect, dostano HTTP {resp.status_code}")
+            print(f"   Body: {resp.text[:200]}")
+            return None
+
+        parsed = urllib.parse.urlparse(location)
+        qs = urllib.parse.parse_qs(parsed.query)
+        code = qs.get("code", [None])[0]
+        returned_state = qs.get("state", [None])[0]
+
+        if not code:
+            print(f"   ❌ Brak 'code' w redirect: {location[:200]}")
+            return None
+        if returned_state != srv_state:
+            print(f"   ❌ State mismatch: {returned_state} != {srv_state}")
+            return None
+        print(f"   ✅ code: {code[:20]}...")
+    except Exception as e:
+        print(f"   ❌ Błąd krok 3: {e}")
+        return None
+
+    # KROK 4: check-green-sso → PHPSESSID
+    print("   🔐 Krok 4: check-green-sso → PHPSESSID...")
+    try:
+        resp = session.get(
+            f"{BASE_URL}/login/check-green-sso",
+            params={"code": code, "state": srv_state},
+            allow_redirects=True,
+            timeout=15,
+        )
+        phpsessid = session.cookies.get("PHPSESSID", "")
+        if not phpsessid:
+            print("   ❌ /login/check-green-sso nie ustawiło PHPSESSID")
+            return None
+        print(f"   ✅ Zalogowano! PHPSESSID: {phpsessid[:20]}...")
+
+        # Cookie premium-show=1
+        session.cookies.set(
+            "premium-show", "1",
+            domain="fantasy.ekstraklasa.org",
+            path="/",
+        )
+        print("   ✅ Cookie premium-show=1 ustawiony")
+        return session
+    except Exception as e:
+        print(f"   ❌ Błąd krok 4: {e}")
+        return None
 
 
 def fetch_league_teams_with_names(session):
@@ -91,7 +299,7 @@ def _parse_response(resp, name, slug):
 
 
 def main():
-    print("=== Eksperyment: warianty nagłówków A-G + własna vs cudza ===\n")
+    print("=== Eksperyment: warianty nagłówków A-H + własna vs cudza ===\n")
     print(f"Slug testowy (cudza): {SLUG_CUDZA}")
 
     # curl_cffi info
@@ -213,6 +421,75 @@ def main():
             f"{r['name']:<42} {r['status_code']:>6} "
             f"{redirect:>8} {squad:>7}  {preview_short}"
         )
+
+    # ========================================================================
+    # CZĘŚĆ 1B: Wariant H — logowanie z PKCE od serwera
+    # ========================================================================
+    print("\n" + "=" * 70)
+    print("CZĘŚĆ 1B: Wariant H — logowanie z PKCE od serwera (ze stronicowego /login)")
+    print("=" * 70)
+
+    session_h = login_variant_h()
+    if session_h is None:
+        print("\n❌ Wariant H: logowanie NIEUDANE — pomijam test.")
+        r_h = {
+            "name": "H (PKCE od serwera → login FAIL)",
+            "slug": SLUG_CUDZA,
+            "status_code": 0,
+            "is_redirect": False,
+            "has_squad": False,
+            "preview": "(logowanie nieudane)",
+        }
+    else:
+        cookies_h = cookies_as_dict(session_h)
+        print(f"\n   Cookies po H: {list(cookies_h.keys())}")
+        print()
+
+        headers_a = {
+            **BROWSER_HEADERS,
+            "Upgrade-Insecure-Requests": "1",
+        }
+        print(f"--- Wariant H (PKCE od serwera) + Variant A headers ---")
+        r_h = run_variant_requests(session_h, SLUG_CUDZA,
+                                   "H (PKCE od serwera, test A headers)", headers_a)
+        print(f"    status_code:  {r_h['status_code']}")
+        print(f"    redirect:     {'TAK' if r_h['is_redirect'] else 'nie'}")
+        print(f"    $squad.push:  {'TAK' if r_h['has_squad'] else 'nie'}")
+        print(f"    preview:      {r_h['preview']}")
+
+    results_all = results + [r_h]
+
+    # Tabela porównawcza A-H
+    print("\n" + "=" * 90)
+    print("TABELA PORÓWNAWCZA (A-H)")
+    print("=" * 90)
+    print(f"{'Wariant':<48} {'Status':>6} {'Redirect':>8} {'$squad':>7}  Preview")
+    print("-" * 90)
+    for r in results_all:
+        redirect = "TAK" if r["is_redirect"] else "nie"
+        squad = "TAK" if r["has_squad"] else "nie"
+        preview_short = r["preview"][:50]
+        print(
+            f"{r['name']:<48} {r['status_code']:>6} "
+            f"{redirect:>8} {squad:>7}  {preview_short}"
+        )
+
+    # Podsumowanie H vs reszta
+    print("\n" + "=" * 70)
+    print("PODSUMOWANIE: Wariant H (PKCE od serwera) vs dotychczasowe A-G")
+    print("=" * 70)
+    for r in results_all:
+        success = r["status_code"] == 200 and r["has_squad"] and not r["is_redirect"]
+        redirect = r["is_redirect"]
+        if success:
+            status = "SUKCES (200 + $squad.push)"
+        elif r["status_code"] == 0:
+            status = "LOGOWANIE NIEUDANE"
+        elif redirect:
+            status = "REDIRECT → prawdopodobnie login"
+        else:
+            status = f"NIEPOWODZENIE (HTTP {r['status_code']}, $squad.push={r['has_squad']})"
+        print(f"   {r['name']}: [{status}]")
 
     # ====================================================================
     # CZĘŚĆ 2: Własna vs cudza (Variant A)
