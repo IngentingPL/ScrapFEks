@@ -29,7 +29,6 @@ from tuner import run_tuning
 from utils import normalize_team_name, _normalize_team, _normalize_name
 from players import fetch_all_players
 from external_stats import fetch_ekstraklasa_table, fetch_extra_player_stats
-from conceptually_client import fetch_conceptually_stats
 from karpinski_client import fetch_karpinski_data, build_id_bridge, get_karpinski_stats
 from fdr import compute_fdr
 from config import (
@@ -489,18 +488,6 @@ def main():
         p["percentile_xa"] = stats.get("percentile_xa") if stats else None
         p["percentile_xg"] = stats.get("percentile_xg") if stats else None
         p["karpinski_slug"] = stats.get("slug") if stats else None
-
-    # TODO: usunąć po weryfikacji karpinski_client
-    # # Wzbogać o statystyki z conceptuallyfootball.com (xA, percentyle)
-    # if cf_stats:
-    #     for p in players:
-    #         norm = _normalize_name(p.get("name", ""))
-    #         cf = cf_stats.get(norm, {})
-    #         p["xa_per_90"] = cf.get("xa_per_90")
-    #         p["percentile_xa"] = cf.get("percentile_xa")
-    #         p["percentile_xg"] = cf.get("percentile_xg")
-    #         p["goals_per_90"] = cf.get("goals_per_90")
-    #         p["assists_per_90"] = cf.get("assists_per_90")
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
     remaining_rounds = sum(1 for r in fixtures_data.get("rounds", []) if r >= (current_round or 0))
