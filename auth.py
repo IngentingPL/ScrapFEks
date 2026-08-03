@@ -1,23 +1,21 @@
 """
 auth.py - logowanie do fantasy.ekstraklasa.org przez OAuth 2.0 + PKCE.
-Nowy flow (2026/27): api.id.ekstraklasa.org → id.ekstraklasa.org → PHPSESSID
-Stary flow (AES + wicket-api) usunięty.
+Flow (2026/27): api.id.ekstraklasa.org → id.ekstraklasa.org → PHPSESSID
 
-Flow (reverse-engineered z kodu JS Cognito):
-  1. POST /v1/authorization_token (password grant, sso-client)
+Flow:
+  0. GET fantasy.ekstraklasa.org/login (allow_redirects=False)
+     → parsujemy z Location: client_id, code_challenge, code_challenge_method,
+       state, redirect_uri, scope (WYGENEROWANE PRZEZ SERWER fantasy, nie nasze)
+  1. POST /oauth/token (password grant, sso-client)
      → access_token + refresh_token
-  2. Generujemy własny PKCE challenge + state
-  3. POST /v1/authorization_token (authorization_code grant, esa-fantasy,
-     Bearer access_token z kroku 1)
+  2. POST /v1/authorization_token (authorization_code grant, esa-fantasy,
+     Bearer access_token z kroku 1, PKCE z kroku 0)
      → authorization_token
-  4. GET api.id.ekstraklasa.org/oauth/authorize?authorization_token=...
+  3. GET api.id.ekstraklasa.org/oauth/authorize?authorization_token=...
      → 302 do /login/check-green-sso?code=...&state=...
-  5. GET /login/check-green-sso?code=...&state=...
+  4. GET /login/check-green-sso?code=...&state=...
      → 302 z Set-Cookie: PHPSESSID
 """
-import base64
-import hashlib
-import os
 import sys
 import urllib.parse
 import requests
@@ -40,28 +38,65 @@ REDIRECT_URI = f"{BASE_URL}/login/check-green-sso"
 SCOPE        = "profile"
 
 
-def _pkce_pair():
-    """Generuje parę code_verifier / code_challenge (S256)."""
-    verifier = base64.urlsafe_b64encode(
-        os.urandom(32)).rstrip(b'=').decode()
-    challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(verifier.encode()).digest()
-    ).rstrip(b'=').decode()
-    return verifier, challenge
-
-
-def _random_state():
-    """Losowy state dla OAuth."""
-    return base64.urlsafe_b64encode(
-        os.urandom(8)).rstrip(b'=').decode()
-
-
 def login(session: requests.Session) -> bool:
     """
     Loguje się do fantasy.ekstraklasa.org przez OAuth 2.0 + PKCE.
     Po sukcesie session.cookies zawiera prawdziwy PHPSESSID.
     Zwraca True jeśli PHPSESSID został ustawiony, False przy błędzie.
     """
+
+    # KROK 0: GET /login → wyciągnij prawdziwe PKCE z redirectu serwera
+    #         Serwer fantasy.ekstraklasa.org generuje code_challenge i state,
+    #         które są częścią sesji logowania. Użycie własnych wartości
+    #         skutkuje odrzuceniem przez serwer przy dostępie do /user-team/view/.
+    print("   🔐 Krok 0: GET /login → parsowanie PKCE z Location...")
+    try:
+        resp = session.get(
+            f"{BASE_URL}/login",
+            allow_redirects=False,
+            timeout=15,
+        )
+        location = resp.headers.get("Location", "")
+        if not location:
+            print(f"   ❌ Brak Location w odpowiedzi (HTTP {resp.status_code})")
+            print(f"   Headers: {dict(resp.headers)}")
+            return False
+
+        print(f"   Location: {location[:120]}...")
+        parsed = urllib.parse.urlparse(location)
+        if "id.ekstraklasa.org" not in parsed.netloc:
+            print(f"   ❌ Nieoczekiwany redirect (nie id.ekstraklasa.org): "
+                  f"{parsed.netloc}")
+            print(f"   Pełny Location: {location}")
+            return False
+
+        qs = urllib.parse.parse_qs(parsed.query)
+        srv_client_id = qs.get("client_id", [None])[0]
+        srv_challenge = qs.get("code_challenge", [None])[0]
+        srv_challenge_method = qs.get("code_challenge_method", [None])[0]
+        srv_state = qs.get("state", [None])[0]
+        srv_redirect_uri = qs.get("redirect_uri", [None])[0]
+        srv_scope = qs.get("scope", [None])[0]
+
+        missing = []
+        if not srv_client_id: missing.append("client_id")
+        if not srv_challenge: missing.append("code_challenge")
+        if not srv_state: missing.append("state")
+        if not srv_redirect_uri: missing.append("redirect_uri")
+        if not srv_scope: missing.append("scope")
+        if missing:
+            print(f"   ❌ Brak parametrów w Location: {missing}")
+            return False
+
+        print(f"   ✅ client_id:            {srv_client_id}")
+        print(f"   ✅ code_challenge:       {srv_challenge[:20]}...")
+        print(f"   ✅ code_challenge_method:{srv_challenge_method or '(brak)'}")
+        print(f"   ✅ state:               {srv_state[:20]}...")
+        print(f"   ✅ redirect_uri:        {srv_redirect_uri[:60]}...")
+        print(f"   ✅ scope:               {srv_scope}")
+    except Exception as e:
+        print(f"   ❌ Błąd krok 0: {e}")
+        return False
 
     # KROK 1: Password grant → access_token
     # Używa /oauth/token (standardowy Cognito endpoint),
@@ -75,7 +110,7 @@ def login(session: requests.Session) -> bool:
                 "client_id": SSO_CLIENT_ID,
                 "username": FANTASY_EMAIL,
                 "password": FANTASY_PASSWORD,
-                "scope": SCOPE,
+                "scope": srv_scope,
             },
             timeout=15,
         )
@@ -96,21 +131,20 @@ def login(session: requests.Session) -> bool:
         return False
 
     # KROK 2: Authorization code grant (z Bearer) → authorization_token
+    #         Używamy PKCE od serwera (krok 0), nie generujemy własnego!
     print("   🔐 Krok 2: Authorization code grant (esa-fantasy + Bearer)...")
-    verifier, challenge = _pkce_pair()
-    state = _random_state()
     try:
         resp = session.post(
             f"{COGNITO_API}/v1/authorization_token",
             json={
                 "grant_type": "authorization_code",
-                "client_id": FANTASY_CLIENT_ID,
-                "redirect_uri": REDIRECT_URI,
-                "scope": SCOPE,
+                "client_id": srv_client_id,
+                "redirect_uri": srv_redirect_uri,
+                "scope": srv_scope,
                 "response_type": "code",
-                "code_challenge": challenge,
-                "code_challenge_method": "S256",
-                "state": state,
+                "code_challenge": srv_challenge,
+                "code_challenge_method": srv_challenge_method or "S256",
+                "state": srv_state,
             },
             headers={
                 "Authorization": f"Bearer {access_token}",
@@ -141,12 +175,12 @@ def login(session: requests.Session) -> bool:
             "authorization_token": authorization_token,
             "grant_type": "authorization_code",
             "response_type": "code",
-            "client_id": FANTASY_CLIENT_ID,
-            "redirect_uri": REDIRECT_URI,
-            "scope": SCOPE,
-            "code_challenge": challenge,
-            "code_challenge_method": "S256",
-            "state": state,
+            "client_id": srv_client_id,
+            "redirect_uri": srv_redirect_uri,
+            "scope": srv_scope,
+            "code_challenge": srv_challenge,
+            "code_challenge_method": srv_challenge_method or "S256",
+            "state": srv_state,
         }
         resp = session.get(
             f"{COGNITO_API}/oauth/authorize",
@@ -170,8 +204,8 @@ def login(session: requests.Session) -> bool:
         if not code:
             print(f"   ❌ Brak 'code' w redirect: {location[:200]}")
             return False
-        if returned_state != state:
-            print(f"   ❌ State mismatch: {returned_state} != {state}")
+        if returned_state != srv_state:
+            print(f"   ❌ State mismatch: {returned_state} != {srv_state}")
             return False
         print(f"   ✅ code: {code[:20]}...")
     except Exception as e:
@@ -183,7 +217,7 @@ def login(session: requests.Session) -> bool:
     try:
         resp = session.get(
             f"{BASE_URL}/login/check-green-sso",
-            params={"code": code, "state": state},
+            params={"code": code, "state": srv_state},
             allow_redirects=True,
             timeout=15,
         )
