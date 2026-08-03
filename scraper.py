@@ -30,6 +30,7 @@ from utils import normalize_team_name, _normalize_team, _normalize_name
 from players import fetch_all_players
 from external_stats import fetch_ekstraklasa_table, fetch_extra_player_stats
 from conceptually_client import fetch_conceptually_stats
+from karpinski_client import fetch_karpinski_data, build_id_bridge, get_karpinski_stats
 from fdr import compute_fdr
 from config import (
     TARGET_ROUND, MAX_PLAYER_ID,
@@ -461,10 +462,13 @@ def main():
     with ThreadPoolExecutor(max_workers=3) as ex:
         fut_table = ex.submit(fetch_ekstraklasa_table)
         fut_extra = ex.submit(fetch_extra_player_stats)
-        fut_cf = ex.submit(fetch_conceptually_stats)
+        fut_karp = ex.submit(fetch_karpinski_data)  # Karpinski zamiast conceptually_client
         ekstra_stats = fut_table.result()
         extra_player_stats = fut_extra.result()
-        cf_stats = fut_cf.result()
+        karp_players, adv_table, karp_season = fut_karp.result()
+
+    # Zaktualizuj most ID (dopisuje nowych graczy Fantasy do mostu z danymi Karpińskiego)
+    build_id_bridge(players, karp_players)
 
     # Oblicz sumę minut dla każdego zawodnika (do przeliczania na per 90)
     player_minutes = {}
@@ -477,16 +481,26 @@ def main():
     # Wzbogać dane zawodników o statystyki per 90 (xG, strzały, podania)
     players = compute_player_stats_per90(extra_player_stats, players, player_minutes)
 
-    # Wzbogać o statystyki z conceptuallyfootball.com (xA, percentyle)
-    if cf_stats:
-        for p in players:
-            norm = _normalize_name(p.get("name", ""))
-            cf = cf_stats.get(norm, {})
-            p["xa_per_90"] = cf.get("xa_per_90")
-            p["percentile_xa"] = cf.get("percentile_xa")
-            p["percentile_xg"] = cf.get("percentile_xg")
-            p["goals_per_90"] = cf.get("goals_per_90")
-            p["assists_per_90"] = cf.get("assists_per_90")
+    # Wzbogać o statystyki z API Karpińskiego (xA, percentyle) — zastępuje conceptually_client
+    # Dane są w adv_table.json, dostęp przez most ID (player_id_bridge.json)
+    for p in players:
+        stats = get_karpinski_stats(int(p["player_id"]))
+        p["xa_per_90"] = stats.get("expected_assists") if stats else None
+        p["percentile_xa"] = stats.get("percentile_xa") if stats else None
+        p["percentile_xg"] = stats.get("percentile_xg") if stats else None
+        p["karpinski_slug"] = stats.get("slug") if stats else None
+
+    # TODO: usunąć po weryfikacji karpinski_client
+    # # Wzbogać o statystyki z conceptuallyfootball.com (xA, percentyle)
+    # if cf_stats:
+    #     for p in players:
+    #         norm = _normalize_name(p.get("name", ""))
+    #         cf = cf_stats.get(norm, {})
+    #         p["xa_per_90"] = cf.get("xa_per_90")
+    #         p["percentile_xa"] = cf.get("percentile_xa")
+    #         p["percentile_xg"] = cf.get("percentile_xg")
+    #         p["goals_per_90"] = cf.get("goals_per_90")
+    #         p["assists_per_90"] = cf.get("assists_per_90")
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
     remaining_rounds = sum(1 for r in fixtures_data.get("rounds", []) if r >= (current_round or 0))
