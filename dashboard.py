@@ -1948,7 +1948,7 @@ function renderPredictions() {{
     const rowStyle = isUnavailable ? ' style="opacity:0.55"' : '';
     h += '<tr'+rowStyle+'>';
     h += '<td class="c-muted fw-600">'+(i+1)+'</td>';
-    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+p.name+(isUnavailable ? ' <span style="font-size:11px;color:#ef4444">⛔ '+unavailableReason+'</span>' : '')+'</td>';
+    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+p.name+(p.karpinski_slug ? ' <a href="https://arturkarpinski.com/ekstraklasa-scouting/#sel='+p.karpinski_slug+'" target="_blank" rel="noopener" style="font-size:10px;color:#64748b;text-decoration:none" title="Profil na ekstraklasa-scouting">↗</a>' : '')+(isUnavailable ? ' <span style="font-size:11px;color:#ef4444">⛔ '+unavailableReason+'</span>' : '')+'</td>';
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
 
@@ -2003,6 +2003,12 @@ function renderPredictions() {{
   }});
 
   h += '</tbody></table></div>';
+
+  // Atrybucja źródła statystyk xA/xG
+  h += '<div style="font-size:11px;color:#64748b;text-align:center;margin-top:12px">'
+     + 'Statystyki xA/xG: Sofascore, via <a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener" style="color:#64748b;text-decoration:underline">ekstraklasa-scouting</a>'
+     + '</div>';
+
   return h;
 }}
 
