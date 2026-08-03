@@ -461,7 +461,7 @@ def main():
     with ThreadPoolExecutor(max_workers=3) as ex:
         fut_table = ex.submit(fetch_ekstraklasa_table)
         fut_extra = ex.submit(fetch_extra_player_stats)
-        fut_karp = ex.submit(fetch_karpinski_data)  # Karpinski zamiast conceptually_client
+        fut_karp = ex.submit(fetch_karpinski_data)  # API Karpińskiego
         ekstra_stats = fut_table.result()
         extra_player_stats = fut_extra.result()
         karp_players, adv_table, karp_season = fut_karp.result()
@@ -480,7 +480,7 @@ def main():
     # Wzbogać dane zawodników o statystyki per 90 (xG, strzały, podania)
     players = compute_player_stats_per90(extra_player_stats, players, player_minutes)
 
-    # Wzbogać o statystyki z API Karpińskiego (xA, percentyle) — zastępuje conceptually_client
+    # Wzbogać o statystyki z API Karpińskiego (xA, percentyle)
     # Dane są w adv_table.json, dostęp przez most ID (player_id_bridge.json)
     for p in players:
         stats = get_karpinski_stats(int(p["player_id"]))
