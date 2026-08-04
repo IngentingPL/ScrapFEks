@@ -246,6 +246,8 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
             "unavailable": True,
             "availability_reason": availability,
             "confidence": "unavailable",
+            "percentile": player.get("percentile_xa") if player.get("percentile_xa") is not None else player.get("percentile_xg"),
+            "confidence_rank": -1,
             "detail": f"⛔ {availability} — zawodnik niedostępny"
         }
 
@@ -265,6 +267,8 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         return {
             "predicted_points": None,
             "confidence": "insufficient_data",
+            "percentile": player.get("percentile_xa") if player.get("percentile_xa") is not None else player.get("percentile_xg"),
+            "confidence_rank": 0,
             "detail": f"Za mało danych ({n_rounds}/{MIN_ROUNDS_FOR_PREDICTION} kolejek)"
         }
 
@@ -341,6 +345,11 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         "rounds_used": n_rounds,
         "used_fdr_value": used_fdr_value,
         "potential_value": round(potential_value, 2),
+        # percentile — fallback: xA percentyl, potem xG percentyl, potem None
+        # Dokładnie ta sama logika co w dashboard JS (sortowanie kolumny Percentyl)
+        "percentile": player.get("percentile_xa") if player.get("percentile_xa") is not None else player.get("percentile_xg"),
+        # confidence_rank — numeryczna ranga do sortowania (string confidence bez zmian do wyświetlania)
+        "confidence_rank": {"high": 3, "medium": 2, "low": 1, "insufficient_data": 0, "unavailable": -1}.get(confidence, -1),
         "confidence": confidence,
         "detail": (
             f"Śr. {round(base_avg, 1)} × FDR {round(fdr_mod, 2)} "
@@ -468,3 +477,148 @@ if __name__ == "__main__":
     result = predict_points(test_defender, test_fdr, {"opponent": "Legia", "is_home": True})
     print(f"  Prognoza: {result['predicted_points']} pkt")
     print(f"  Szczegóły: {result['detail']}")
+    print()
+
+    # ============================================================
+    # Test 4: percentile i confidence_rank — różne poziomy pewności
+    # ============================================================
+    print("=" * 70)
+    print("Test 4: percentile & confidence_rank — sprawdzenie rangowania")
+    print("=" * 70)
+    print()
+
+    import sys, os, tempfile
+
+    # Gracz z wysoką pewnością (4+ kolejek), ma percentile_xa ale bez percentile_xg
+    player_high = {
+        **test_player,
+        "name": "Gracz High",
+        "percentile_xa": 85,
+        "percentile_xg": None,
+        "rounds": [
+            {"round": 20, "played": True, "points": 10, "minutes": 90},
+            {"round": 19, "played": True, "points": 6, "minutes": 90},
+            {"round": 18, "played": True, "points": 5, "minutes": 78},
+            {"round": 17, "played": True, "points": 8, "minutes": 90},
+        ]
+    }
+
+    # Gracz ze średnią pewnością (2-3 kolejki), ma percentile_xg zamiast xa
+    player_med = {
+        **test_player,
+        "name": "Gracz Medium",
+        "percentile_xa": None,
+        "percentile_xg": 60,
+        "rounds": [
+            {"round": 20, "played": True, "points": 7, "minutes": 90},
+            {"round": 19, "played": True, "points": 4, "minutes": 85},
+        ]
+    }
+
+    # Gracz z niską pewnością — symulujemy ręcznie (predict_points da insufficient_data
+    # dla 2 kolejek gdy MIN_ROUNDS_FOR_PREDICTION=2, więc potrzebujemy 3+ kolejek
+    # do low confidence — dajemy dokładnie 2 kolejki (czyli >=MIN ale <4 → medium!).
+    # Poprawka: low confidence wymaga n_rounds w [MIN_ROUNDS_FOR_PREDICTION, 4),
+    # czyli dla MIN=2 → 2 lub 3 kolejki. Więc 2 kolejki = medium (>=2), 3 kolejki = medium.
+    # Żeby dostać low, potrzebujemy mniej niż MIN_ROUNDS_FOR_PREDICTION kolejek...
+    # Ale wtedy insufficient_data! Więc "low" jest obecnie nieosiągalne przy domyślnych
+    # ustawieniach (MIN_ROUNDS=2 → >=2 to medium, >=4 to high, brak stanu pośredniego).
+    # Symulujemy "low" przez bezpośredni dict (bez predict_points) żeby przetestować
+    # confidence_rank dla wszystkich wartości.
+
+    # Zamiast kombinować – użyjemy predict_points dla gracza który ma confidence "low"
+    # robiąc override MIN_ROUNDS_FOR_PREDICTION lub podając gracza z 1 kolejką.
+    # predict_points zwróci insufficient_data dla 1 kolejki (1 < MIN=2).
+    # Wniosek: przy domyślnych stałych "low" nie występuje, ale kod wciąż
+    # uwzględnia tę wartość w mapowaniu confidence_rank.
+    # Testujemy: high (4 kolejki), medium (2-3 kolejki), insufficient_data (0-1 kolejki).
+    # Potem ręcznie weryfikujemy że low=1 i unavailable=-1 są w mapowaniu.
+
+    # --- high confidence (4 kolejki) ---
+    r_high = predict_points(player_high, test_fdr, {"opponent": "GKS", "is_home": True})
+    print(f"[high]   {player_high['name']}: confidence={r_high['confidence']}, "
+          f"confidence_rank={r_high['confidence_rank']}, "
+          f"percentile={r_high['percentile']}")
+
+    # --- medium confidence (2 kolejki, >=MIN, <4) ---
+    r_med = predict_points(player_med, test_fdr, {"opponent": "GKS", "is_home": True})
+    print(f"[medium] {player_med['name']}: confidence={r_med['confidence']}, "
+          f"confidence_rank={r_med['confidence_rank']}, "
+          f"percentile={r_med['percentile']}")
+
+    # --- insufficient_data (gracz z 0 rozegranych kolejek) ---
+    player_no_data = {
+        **test_player,
+        "name": "Gracz NoData",
+        "percentile_xa": None,
+        "percentile_xg": None,
+        "rounds": []
+    }
+    r_no = predict_points(player_no_data, test_fdr, {"opponent": "GKS", "is_home": True})
+    print(f"[insuf]  {player_no_data['name']}: confidence={r_no['confidence']}, "
+          f"confidence_rank={r_no['confidence_rank']}, "
+          f"percentile={r_no['percentile']}")
+
+    # --- unavailable (kontuzja) ---
+    player_injured = {
+        **test_player,
+        "name": "Gracz Kontuzjowany",
+        "availability_status": "Kontuzja – pauzuje 2 tygodnie",
+        "percentile_xa": 90,
+        "percentile_xg": 88,
+    }
+    r_inj = predict_points(player_injured, test_fdr, {"opponent": "GKS", "is_home": True})
+    print(f"[unavail] {player_injured['name']}: confidence={r_inj['confidence']}, "
+          f"confidence_rank={r_inj['confidence_rank']}, "
+          f"percentile={r_inj['percentile']}")
+
+    print()
+
+    # --- Weryfikacja kolejności confidence_rank ---
+    results = [r_high, r_med, r_no, r_inj]
+    # Sortuj malejąco po confidence_rank
+    sorted_by_rank = sorted(results, key=lambda r: r["confidence_rank"], reverse=True)
+    confidences = [r["confidence"] for r in sorted_by_rank]
+    ranks = [r["confidence_rank"] for r in sorted_by_rank]
+
+    print("Kolejność po confidence_rank (malejąco):")
+    for i, r in enumerate(sorted_by_rank):
+        print(f"  {i+1}. {r['confidence']:20s} (rank={r['confidence_rank']})")
+
+    expected_order = ["high", "medium", "insufficient_data", "unavailable"]
+    passed = confidences == expected_order
+    print(f"\n{'✅' if passed else '❌'} Oczekiwano: {expected_order}")
+    print(f"   Otrzymano:  {confidences}")
+    print()
+
+    # --- Weryfikacja percentile (fallback xa → xg → None) ---
+    # high: percentile_xa=85, percentile_xg=None → wynik=85
+    assert r_high["percentile"] == 85, f"Expected 85, got {r_high['percentile']}"
+    # medium: percentile_xa=None, percentile_xg=60 → wynik=60
+    assert r_med["percentile"] == 60, f"Expected 60, got {r_med['percentile']}"
+    # insufficient_data: oba None → wynik=None
+    assert r_no["percentile"] is None, f"Expected None, got {r_no['percentile']}"
+    # unavailable: percentile_xa=90, percentile_xg=88 → wynik=90 (xa ma priorytet)
+    assert r_inj["percentile"] == 90, f"Expected 90, got {r_inj['percentile']}"
+
+    print("✅ Wszystkie asercje percentile() przeszły.")
+    print()
+
+    # --- Zapis logu do /tmp ---
+    log_path = "/tmp/predictor_test_confidence_rank.log"
+    with open(log_path, "w", encoding="utf-8") as log:
+        log.write("=== Test confidence_rank & percentile ===\n")
+        for r in results:
+            log.write(f"  {r.get('detail', '')} | confidence={r['confidence']} "
+                      f"| rank={r['confidence_rank']} | percentile={r['percentile']}\n")
+        log.write(f"\nSortowanie: {confidences}\n")
+        log.write(f"Oczekiwano: {expected_order}\n")
+        log.write(f"Wynik: {'PASS' if passed else 'FAIL'}\n")
+
+    print(f"📄 Log zapisany do: {log_path}")
+
+    if not passed:
+        print("\n❌ TEST NIEZALICZONY — confidence_rank nie odzwierciedla oczekiwanej kolejności!")
+        sys.exit(1)
+
+    print("✅ Test confidence_rank zakończony sukcesem.")
