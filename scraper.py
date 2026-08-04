@@ -488,6 +488,12 @@ def main():
         p["percentile_xa"] = stats.get("percentile_xa") if stats else None
         p["percentile_xg"] = stats.get("percentile_xg") if stats else None
         p["karpinski_slug"] = stats.get("slug") if stats else None
+        p["xg_per_90"] = stats.get("expected_goals") if stats else None
+        p["shots_per_90"] = stats.get("shots_per_90") if stats else None
+        p["chances_created_per_90"] = stats.get("chances_created_per_90") if stats else None
+        p["clean_sheet_rate"] = stats.get("clean_sheet_rate") if stats else None
+        p["goals_conceded_per_90"] = stats.get("goals_conceded_per_90") if stats else None
+        p["karpinski_rating"] = stats.get("rating") if stats else None
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)
     remaining_rounds = sum(1 for r in fixtures_data.get("rounds", []) if r >= (current_round or 0))

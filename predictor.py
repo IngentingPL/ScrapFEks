@@ -377,6 +377,12 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             "percentile_xa": player.get("percentile_xa"),
             "percentile_xg": player.get("percentile_xg"),
             "karpinski_slug": player.get("karpinski_slug"),
+            "xg_per_90": player.get("xg_per_90"),
+            "shots_per_90": player.get("shots_per_90"),
+            "chances_created_per_90": player.get("chances_created_per_90"),
+            "clean_sheet_rate": player.get("clean_sheet_rate"),
+            "goals_conceded_per_90": player.get("goals_conceded_per_90"),
+            "karpinski_rating": player.get("karpinski_rating"),
             **pred,  # 📖 ** "rozpakuje" dict — dodaje wszystkie klucze z pred do tego dicta
         })
 

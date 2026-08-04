@@ -458,6 +458,11 @@ def get_karpinski_stats(fantasy_player_id):
             "expected_goals": 1.05,          # expected_goals[0] — per 90
             "percentile_xa": 92.4,           # expected_assists[2] — percentyl per 90
             "percentile_xg": 88.7,           # expected_goals[2] — percentyl per 90
+            "shots_per_90": 3.0,             # adv_table["shots"][0] — per 90
+            "chances_created_per_90": 1.5,   # adv_table["chances_created"][0] — per 90
+            "clean_sheet_rate": 0.33,        # adv_table["clean_sheet_team_title"][0] — per 90
+            "goals_conceded_per_90": 1.2,    # adv_table["goals_conceded"][0] — per 90
+            "rating": 7.15,                  # players.json — ocena (float lub None)
         }
         None jeśli gracza nie ma w moście lub nie ma go w adv_table.
     """
@@ -499,12 +504,39 @@ def get_karpinski_stats(fantasy_player_id):
     xa_raw = adv.get("expected_assists")
     xg_raw = adv.get("expected_goals")
 
+    # Nowe pola z adv_table (indeks 0 = per 90)
+    shots_raw = adv.get("shots")
+    chances_raw = adv.get("chances_created")
+    cs_raw = adv.get("clean_sheet_team_title")
+    gc_raw = adv.get("goals_conceded")
+
+    # Ocena gracza z players.json (Karpińskiego) — wyszukaj po slugu
+    rating = None
+    karp_players = _load_json(KARP_PLAYERS_CACHE)
+    if karp_players:
+        for kp in karp_players:
+            if isinstance(kp, dict) and kp.get("slug") == slug:
+                raw_rating = kp.get("rating")
+                if raw_rating not in (None, ""):
+                    try:
+                        rating = float(raw_rating)
+                    except (ValueError, TypeError):
+                        rating = None
+                break
+
     result = {
         "slug": slug,
         "expected_assists": _safe_idx(xa_raw, 0),
         "expected_goals": _safe_idx(xg_raw, 0),
         "percentile_xa": _safe_idx(xa_raw, 2),
         "percentile_xg": _safe_idx(xg_raw, 2),
+        # Nowe pola z adv_table, per 90
+        "shots_per_90": _safe_idx(shots_raw, 0),
+        "chances_created_per_90": _safe_idx(chances_raw, 0),
+        "clean_sheet_rate": _safe_idx(cs_raw, 0),
+        "goals_conceded_per_90": _safe_idx(gc_raw, 0),
+        # Ocena z players.json
+        "rating": rating,
     }
 
     return result
