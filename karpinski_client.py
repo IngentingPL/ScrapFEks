@@ -511,12 +511,15 @@ def get_karpinski_stats(fantasy_player_id):
     gc_raw = adv.get("goals_conceded")
 
     # Ocena gracza z players.json (Karpińskiego) — wyszukaj po slugu
+    # rating jest zagnieżdżone pod seasons[sezon]["rating"], tak samo
+    # jak appearances, minutes, goals itd. — nie na górnym poziomie rekordu.
     rating = None
     karp_players = _load_json(KARP_PLAYERS_CACHE)
     if karp_players:
         for kp in karp_players:
             if isinstance(kp, dict) and kp.get("slug") == slug:
-                raw_rating = kp.get("rating")
+                season_data = kp.get("seasons", {}).get(season, {})
+                raw_rating = season_data.get("rating")
                 if raw_rating not in (None, ""):
                     try:
                         rating = float(raw_rating)
