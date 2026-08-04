@@ -1881,6 +1881,24 @@ function renderPredictions() {{
     return '<span class="pred-fdr-used" style="color:'+color+'">'+label+' ×'+fdr_mod.toFixed(2)+'</span>';
   }}
 
+  // Kolumna adaptacyjna "Aktywność" — wzorowana na fdrUsedLabel
+  function activityLabel(position, shots, chances, csRate, gcPer90) {{
+    const pk = POS_ID[position] || position;
+    // NAP/POM: strzały/90, w tooltipie szanse stworzone/90
+    if (pk === 'NAP' || pk === 'POM') {{
+      const s = shots != null ? shots.toFixed(1) : '—';
+      const cc = chances != null ? chances.toFixed(1) : '—';
+      return '<span title="' + cc + ' szans stworzonych">' + s + '</span>';
+    }}
+    // OBR/BR: czyste konta/90, w tooltipie stracone/90
+    if (pk === 'OBR' || pk === 'BR') {{
+      const cs = csRate != null ? csRate.toFixed(1) : '—';
+      const gc = gcPer90 != null ? gcPer90.toFixed(1) : '—';
+      return '<span title="' + gc + ' straconych/90">' + cs + '</span>';
+    }}
+    return '—';
+  }}
+
   function confidenceBadge(conf) {{
     const map = {{
       high: {{emoji:'🟢', label:'high', cls:'pred-conf-high'}},
@@ -1923,11 +1941,14 @@ function renderPredictions() {{
   h += '<th class="text-center">D/W</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="predicted_points">Prognoza'+predArrow('predicted_points')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="base_avg">Śr. pkt'+predArrow('base_avg')+'</th>';
+  h += '<th class="text-right sortable" data-tab="predictions" data-col="karpinski_rating">Ocena'+predArrow('karpinski_rating')+'</th>';
   h += '<th class="text-center">FDR ATK</th>';
   h += '<th class="text-center">FDR DEF</th>';
   h += '<th class="text-center">Użyty FDR</th>';
+  h += '<th class="text-center">Aktywność</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="avg_minutes">Śr. min'+predArrow('avg_minutes')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="xa_per_90">xA/90'+predArrow('xa_per_90')+'</th>';
+  h += '<th class="text-right sortable" data-tab="predictions" data-col="xg_per_90">xG/90'+predArrow('xg_per_90')+'</th>';
   h += '<th class="text-center sortable" data-tab="predictions" data-col="percentile">Percentyl'+predArrow('percentile')+'</th>';
   h += '<th class="text-center sortable" data-tab="predictions" data-col="confidence">Pewność'+predArrow('confidence')+'</th>';
   h += '</tr></thead><tbody>';
@@ -1972,6 +1993,10 @@ function renderPredictions() {{
     const avgC = baseAvg >= 6 ? '#22d3ee' : baseAvg >= 3 ? '#10b981' : '#94a3b8';
     h += '<td class="text-right fw-600" style="color:'+avgC+'">'+baseAvg.toFixed(1)+'</td>';
 
+    // Ocena Karpińskiego (1-10)
+    const karpRating = p.karpinski_rating;
+    h += '<td class="text-right c-muted">'+(karpRating != null ? karpRating.toFixed(1) : '—')+'</td>';
+
     // FDR ATK/DEF rywala
     h += '<td class="text-center">'+fdrTile(oppFdrAtk)+'</td>';
     h += '<td class="text-center">'+fdrTile(oppFdrDef)+'</td>';
@@ -1979,12 +2004,19 @@ function renderPredictions() {{
     // Użyty FDR
     h += '<td class="text-center">'+fdrUsedLabel(p.position, fdrMod)+'</td>';
 
+    // Aktywność — adaptacyjna wg pozycji (strzały/90 dla NAP/POM, czyste konta/90 dla OBR/BR)
+    h += '<td class="text-center c-muted">'+activityLabel(p.position, p.shots_per_90, p.chances_created_per_90, p.clean_sheet_rate, p.goals_conceded_per_90)+'</td>';
+
     // Średnie minuty
     h += '<td class="text-right c-muted">'+Math.round(avgMin)+'&prime;</td>';
 
     // xA/90 (expected assists per 90 min)
     const xa90 = p.xa_per_90;
     h += '<td class="text-right c-muted">'+(xa90 != null ? xa90.toFixed(2) : '—')+'</td>';
+
+    // xG/90 (expected goals per 90 min)
+    const xg90 = p.xg_per_90;
+    h += '<td class="text-right c-muted">'+(xg90 != null ? xg90.toFixed(2) : '—')+'</td>';
 
     // Percentyl xA (fallback: xG) z kolorowaniem tła
     const pctl = p.percentile_xa != null ? p.percentile_xa : p.percentile_xg;
