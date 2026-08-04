@@ -1911,13 +1911,14 @@ function renderPredictions() {{
     return '<span class="pred-confidence '+m.cls+'">'+m.emoji+' '+m.label+'</span>';
   }}
 
-  let h = '<div class="section-title"><span style="font-size:22px">🔮</span><h2>Prognoza punktów — następna kolejka</h2><div class="line"></div></div>';
+   let h = '<div class="section-title"><span style="font-size:22px">🔮</span><h2>Prognoza punktów — następna kolejka</h2><a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener" style="font-size:11px;color:#64748b;text-decoration:none;white-space:nowrap">Powered by Ekstraklasa Scouting</a><div class="line"></div></div>';
 
   // Legend
-  h += '<div class="pred-legend">';
-  h += '<b>NAP</b> / <b>POM</b> → FDR DEF rywala (słabsza obrona = wyższa prognoza) &nbsp;|&nbsp; ';
-  h += '<b>BR</b> / <b>OBR</b> → FDR ATK rywala (słabszy atak = wyższa prognoza)';
-  h += '</div>';
+   h += '<div class="pred-legend">';
+   h += '<b>NAP</b> / <b>POM</b> → FDR DEF rywala (słabsza obrona = wyższa prognoza) &nbsp;|&nbsp; ';
+   h += '<b>BR</b> / <b>OBR</b> → FDR ATK rywala (słabszy atak = wyższa prognoza) &nbsp;|&nbsp; ';
+   h += '<b>Potencjał</b> → POM/NAP: strzały + szanse stworzone na 90 min &nbsp;|&nbsp; OBR/BR: czyste konta − stracone bramki/90 ÷ 3';
+   h += '</div>';
 
   // Position filters
   h += '<div class="pred-filters">';
@@ -1937,15 +1938,15 @@ function renderPredictions() {{
   h += '<th class="text-left sortable" data-tab="predictions" data-col="name">Zawodnik'+predArrow('name')+'</th>';
   h += '<th class="text-center sortable" data-tab="predictions" data-col="position">Poz'+predArrow('position')+'</th>';
   h += '<th class="text-left sortable" data-tab="predictions" data-col="team">Drużyna'+predArrow('team')+'</th>';
-  h += '<th class="text-center">Rywal</th>';
+   h += '<th class="text-center sortable" data-tab="predictions" data-col="next_opponent">Rywal'+predArrow('next_opponent')+'</th>';
   h += '<th class="text-center">D/W</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="predicted_points">Prognoza'+predArrow('predicted_points')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="base_avg">Śr. pkt'+predArrow('base_avg')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="karpinski_rating">Ocena'+predArrow('karpinski_rating')+'</th>';
-  h += '<th class="text-center">FDR ATK</th>';
-  h += '<th class="text-center">FDR DEF</th>';
-  h += '<th class="text-center">Użyty FDR</th>';
-  h += '<th class="text-center">Aktywność</th>';
+   h += '<th class="text-center sortable" data-tab="predictions" data-col="fdr_atk_opponent">FDR ATK'+predArrow('fdr_atk_opponent')+'</th>';
+   h += '<th class="text-center sortable" data-tab="predictions" data-col="fdr_def_opponent">FDR DEF'+predArrow('fdr_def_opponent')+'</th>';
+   h += '<th class="text-center sortable" data-tab="predictions" data-col="used_fdr_value">Użyty FDR'+predArrow('used_fdr_value')+'</th>';
+   h += '<th class="text-center sortable" data-tab="predictions" data-col="potential_value">Potencjał'+predArrow('potential_value')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="avg_minutes">Śr. min'+predArrow('avg_minutes')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="xa_per_90">xA/90'+predArrow('xa_per_90')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="xg_per_90">xG/90'+predArrow('xg_per_90')+'</th>';
@@ -1969,7 +1970,7 @@ function renderPredictions() {{
     const rowStyle = isUnavailable ? ' style="opacity:0.55"' : '';
     h += '<tr'+rowStyle+'>';
     h += '<td class="c-muted fw-600">'+(i+1)+'</td>';
-    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+p.name+(p.karpinski_slug ? ' <a href="https://arturkarpinski.com/ekstraklasa-scouting/#sel='+p.karpinski_slug+'" target="_blank" rel="noopener" style="font-size:10px;color:#64748b;text-decoration:none" title="Profil na ekstraklasa-scouting">↗</a>' : '')+(isUnavailable ? ' <span style="font-size:11px;color:#ef4444">⛔ '+unavailableReason+'</span>' : '')+'</td>';
+    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+(p.karpinski_slug ? '<a href="https://arturkarpinski.com/ekstraklasa-scouting/#sel='+p.karpinski_slug+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted #64748b" title="Profil na ekstraklasa-scouting">'+p.name+'</a>' : p.name)+(isUnavailable ? ' <span style="font-size:11px;color:#ef4444">⛔ '+unavailableReason+'</span>' : '')+'</td>';
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
 
@@ -2004,8 +2005,14 @@ function renderPredictions() {{
     // Użyty FDR
     h += '<td class="text-center">'+fdrUsedLabel(p.position, fdrMod)+'</td>';
 
-    // Aktywność — adaptacyjna wg pozycji (strzały/90 dla NAP/POM, czyste konta/90 dla OBR/BR)
-    h += '<td class="text-center c-muted">'+activityLabel(p.position, p.shots_per_90, p.chances_created_per_90, p.clean_sheet_rate, p.goals_conceded_per_90)+'</td>';
+    // Potencjał — wartość z predictor.py, tooltip z rozbiciem na składowe
+    const isAttacker = (pk === 'NAP' || pk === 'POM');
+    const potTitle = isAttacker
+      ? (p.shots_per_90 != null ? p.shots_per_90.toFixed(1) : '—') + ' strz/90 + ' + (p.chances_created_per_90 != null ? p.chances_created_per_90.toFixed(1) : '—') + ' szans/90'
+      : (p.clean_sheet_rate != null ? p.clean_sheet_rate.toFixed(1) : '—') + ' CS/90 − ' + (p.goals_conceded_per_90 != null ? p.goals_conceded_per_90.toFixed(1) : '—') + ' str/90 ÷3';
+    h += '<td class="text-center" title="'+potTitle+'">'
+      +(p.potential_value!=null ? (p.potential_value>=0?'+':'')+p.potential_value.toFixed(2) : '—')
+      +'</td>';
 
     // Średnie minuty
     h += '<td class="text-right c-muted">'+Math.round(avgMin)+'&prime;</td>';
