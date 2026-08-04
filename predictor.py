@@ -315,6 +315,20 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     else:
         confidence = "low"
 
+    # --- Krok 6.5: Dodatkowe wskaźniki do sortowania / analizy ---
+    # used_fdr_value — surowa wartość FDR (1-5) faktycznie użyta do prognozy
+    # Dla NAP/POM liczy się defensywa rywala, dla OBR/BR — ofensywa rywala
+    if position in ("NAP", "POM"):
+        used_fdr_value = opponent_fdr["def"]
+    else:
+        used_fdr_value = opponent_fdr["atk"]
+
+    # potential_value — wskaźnik "Potencjał" (statystyki per 90 z mostu Karpińskiego)
+    if position in ("NAP", "POM"):
+        potential_value = (player.get("shots_per_90") or 0) + (player.get("chances_created_per_90") or 0)
+    else:
+        potential_value = (player.get("clean_sheet_rate") or 0) - ((player.get("goals_conceded_per_90") or 0) / 3)
+
     return {
         "predicted_points": predicted,
         "base_avg": round(base_avg, 1),
@@ -325,6 +339,8 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         "home_away_factor": round(ha_factor, 2),
         "avg_minutes": round(avg_minutes, 0),
         "rounds_used": n_rounds,
+        "used_fdr_value": used_fdr_value,
+        "potential_value": round(potential_value, 2),
         "confidence": confidence,
         "detail": (
             f"Śr. {round(base_avg, 1)} × FDR {round(fdr_mod, 2)} "
