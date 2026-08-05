@@ -1951,7 +1951,7 @@ function renderPredictions() {{
   h += '<th class="text-right sortable" data-tab="predictions" data-col="xa_per_90">xA/90'+predArrow('xa_per_90')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="xg_per_90">xG/90'+predArrow('xg_per_90')+'</th>';
   h += '<th class="text-center sortable" data-tab="predictions" data-col="percentile">Percentyl'+predArrow('percentile')+'</th>';
-  h += '<th class="text-center sortable" data-tab="predictions" data-col="confidence">Pewność'+predArrow('confidence')+'</th>';
+   h += '<th class="text-center sortable" data-tab="predictions" data-col="confidence_rank">Pewność'+predArrow('confidence_rank')+'</th>';
   h += '</tr></thead><tbody>';
 
   data.forEach((p, i) => {{
@@ -2026,7 +2026,7 @@ function renderPredictions() {{
     h += '<td class="text-right c-muted">'+(xg90 != null ? xg90.toFixed(2) : '—')+'</td>';
 
     // Percentyl xA (fallback: xG) z kolorowaniem tła
-    const pctl = p.percentile_xa != null ? p.percentile_xa : p.percentile_xg;
+    const pctl = p.percentile;
     let pctlClass = '';
     if (pctl != null && pctl >= 80) {{
       pctlClass = ' pred-pctl-high';
