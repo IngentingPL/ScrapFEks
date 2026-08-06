@@ -1917,7 +1917,7 @@ function renderPredictions() {{
    h += '<div class="pred-legend">';
    h += '<b>NAP</b> / <b>POM</b> → FDR DEF rywala (słabsza obrona = wyższa prognoza) &nbsp;|&nbsp; ';
    h += '<b>BR</b> / <b>OBR</b> → FDR ATK rywala (słabszy atak = wyższa prognoza) &nbsp;|&nbsp; ';
-   h += '<b>Potencjał</b> → POM/NAP: strzały + szanse stworzone na 90 min &nbsp;|&nbsp; OBR/BR: czyste konta − stracone bramki/90 ÷ 3';
+   h += '<b>Potencjał</b> → BR: obrony ponad xG + czyste konta &nbsp;|&nbsp; OBR: obrona (CS − stracone/90÷3) + xG + xA + szanse×0.1 &nbsp;|&nbsp; POM/NAP: strzały + szanse stworzone na 90 min';
    h += '</div>';
 
   // Position filters
