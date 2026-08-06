@@ -493,6 +493,7 @@ def main():
         p["chances_created_per_90"] = stats.get("chances_created_per_90") if stats else None
         p["clean_sheet_rate"] = stats.get("clean_sheet_rate") if stats else None
         p["goals_conceded_per_90"] = stats.get("goals_conceded_per_90") if stats else None
+        p["goals_prevented"] = stats.get("goals_prevented") if stats else None
         p["karpinski_rating"] = stats.get("rating") if stats else None
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)

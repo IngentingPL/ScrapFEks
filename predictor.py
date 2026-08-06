@@ -328,10 +328,17 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         used_fdr_value = opponent_fdr["atk"]
 
     # potential_value — wskaźnik "Potencjał" (statystyki per 90 z mostu Karpińskiego)
-    if position in ("NAP", "POM"):
-        potential_value = (player.get("shots_per_90") or 0) + (player.get("chances_created_per_90") or 0)
+    # Trzy osobne formuły dla BR, OBR i POM/NAP
+    if position == "BR":
+        # Bramkarze: goals_prevented + clean_sheet_rate
+        potential_value = (player.get("goals_prevented") or 0) + (player.get("clean_sheet_rate") or 0)
+    elif position == "OBR":
+        # Obrońcy: baza defensywna + xG + xA + szanse kreowane
+        baza = (player.get("clean_sheet_rate") or 0) - ((player.get("goals_conceded_per_90") or 0) / 3)
+        potential_value = baza + (player.get("xg_per_90") or 0) + (player.get("xa_per_90") or 0) + ((player.get("chances_created_per_90") or 0) * 0.1)
     else:
-        potential_value = (player.get("clean_sheet_rate") or 0) - ((player.get("goals_conceded_per_90") or 0) / 3)
+        # POM / NAP: strzały + szanse kreowane (bez zmian)
+        potential_value = (player.get("shots_per_90") or 0) + (player.get("chances_created_per_90") or 0)
 
     return {
         "predicted_points": predicted,
@@ -407,6 +414,7 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             "chances_created_per_90": player.get("chances_created_per_90"),
             "clean_sheet_rate": player.get("clean_sheet_rate"),
             "goals_conceded_per_90": player.get("goals_conceded_per_90"),
+            "goals_prevented": player.get("goals_prevented"),
             "karpinski_rating": player.get("karpinski_rating"),
             **pred,  # 📖 ** "rozpakuje" dict — dodaje wszystkie klucze z pred do tego dicta
         })

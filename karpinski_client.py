@@ -509,6 +509,7 @@ def get_karpinski_stats(fantasy_player_id):
     chances_raw = adv.get("chances_created")
     cs_raw = adv.get("clean_sheet_team_title")
     gc_raw = adv.get("goals_conceded")
+    gp_raw = adv.get("goals_prevented")  # tylko dla bramkarzy — brak klucza dla graczy z pola
 
     # Ocena gracza z players.json (Karpińskiego) — wyszukaj po slugu
     # rating jest zagnieżdżone pod seasons[sezon]["rating"], tak samo
@@ -538,6 +539,8 @@ def get_karpinski_stats(fantasy_player_id):
         "chances_created_per_90": _safe_idx(chances_raw, 0),
         "clean_sheet_rate": _safe_idx(cs_raw, 0),
         "goals_conceded_per_90": _safe_idx(gc_raw, 0),
+        # goals_prevented: tylko dla bramkarzy (brak klucza → None)
+        "goals_prevented": _safe_idx(gp_raw, 0) if gp_raw is not None else None,
         # Ocena z players.json
         "rating": rating,
     }
