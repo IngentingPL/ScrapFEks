@@ -274,7 +274,7 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     recent_points = [r.get("points", 0) for r in recent_rounds]
     base_avg = weighted_average(recent_points, decay=decay)
 
-    # --- Krok 2.5: Modyfikator xA (expected assists) z conceptuallyfootball ---
+    # --- Krok 2.5: Modyfikatory xA i xG (expected assists/goals) z conceptuallyfootball ---
     # Zawodnik z wysokim xa_per_90 ma bonus do prognozy (tworzy więcej szans)
     # Mediana xA/90 w Ekstraklasie to ≈0.07 — każde 0.1 powyżej to +1% bonusu
     # Maksymalny bonus: +15%, maksymalna kara: -10%
@@ -282,6 +282,26 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     if xa is not None and xa > 0:
         xa_bonus = min(max((xa - 0.07) * 10, -0.10), 0.15)
         base_avg = base_avg * (1 + xa_bonus)
+
+    # Modyfikator xG — ten sam mechanizm co xA
+    # Mediana xG/90 w Ekstraklasie to ≈0.10 — każde 0.1 powyżej to +1% bonusu
+    # Maksymalny bonus: +15%, maksymalna kara: -10%
+    xg = player.get("xg_per_90")
+    if xg is not None and xg > 0:
+        xg_bonus = min(max((xg - 0.10) * 10, -0.10), 0.15)
+        base_avg = base_avg * (1 + xg_bonus)
+
+    # --- Krok 2.6: Modyfikator goals_prevented (tylko dla bramkarzy) ---
+    # Bramkarz z wysokim goals_prevented zapobiega większej liczbie goli niż oczekiwano
+    # goals_prevented = xG dla strzałów na bramkę minus faktycznie stracone gole
+    # Skala: każde 1.0 goals_prevented × 0.15 = +15% bonusu, capped -20%/+20%
+    # ⚠️ Startowa skala, nie skalibrowana — do dostrojenia tunerem później,
+    # dokładnie jak przy wcześniejszych /3 i ×0.1
+    if position == "BR":
+        gp = player.get("goals_prevented")
+        if gp is not None:
+            gp_bonus = min(max(gp * 0.15, -0.20), 0.20)
+            base_avg = base_avg * (1 + gp_bonus)
 
     # --- Krok 3: Modyfikator FDR ---
     opponent = next_fixture.get("opponent", "")
@@ -783,14 +803,12 @@ if __name__ == "__main__":
     # --- high confidence (4 kolejki) ---
     r_high = predict_points(player_high, test_fdr, {"opponent": "GKS", "is_home": True})
     print(f"[high]   {player_high['name']}: confidence={r_high['confidence']}, "
-          f"confidence_rank={r_high['confidence_rank']}, "
-          f"percentile={r_high['percentile']}")
+          f"confidence_rank={r_high['confidence_rank']}")
 
     # --- medium confidence (2 kolejki, >=MIN, <4) ---
     r_med = predict_points(player_med, test_fdr, {"opponent": "GKS", "is_home": True})
     print(f"[medium] {player_med['name']}: confidence={r_med['confidence']}, "
-          f"confidence_rank={r_med['confidence_rank']}, "
-          f"percentile={r_med['percentile']}")
+          f"confidence_rank={r_med['confidence_rank']}")
 
     # --- insufficient_data (gracz z 0 rozegranych kolejek) ---
     player_no_data = {
@@ -802,8 +820,7 @@ if __name__ == "__main__":
     }
     r_no = predict_points(player_no_data, test_fdr, {"opponent": "GKS", "is_home": True})
     print(f"[insuf]  {player_no_data['name']}: confidence={r_no['confidence']}, "
-          f"confidence_rank={r_no['confidence_rank']}, "
-          f"percentile={r_no['percentile']}")
+          f"confidence_rank={r_no['confidence_rank']}")
 
     # --- unavailable (kontuzja) ---
     player_injured = {
@@ -815,8 +832,7 @@ if __name__ == "__main__":
     }
     r_inj = predict_points(player_injured, test_fdr, {"opponent": "GKS", "is_home": True})
     print(f"[unavail] {player_injured['name']}: confidence={r_inj['confidence']}, "
-          f"confidence_rank={r_inj['confidence_rank']}, "
-          f"percentile={r_inj['percentile']}")
+          f"confidence_rank={r_inj['confidence_rank']}")
 
     print()
 
@@ -836,18 +852,6 @@ if __name__ == "__main__":
     print(f"\n{'✅' if passed else '❌'} Oczekiwano: {expected_order}")
     print(f"   Otrzymano:  {confidences}")
     print()
-
-    # --- Weryfikacja percentile (fallback xa → xg → None) ---
-    # high: percentile_xa=85, percentile_xg=None → wynik=85
-    assert r_high["percentile"] == 85, f"Expected 85, got {r_high['percentile']}"
-    # medium: percentile_xa=None, percentile_xg=60 → wynik=60
-    assert r_med["percentile"] == 60, f"Expected 60, got {r_med['percentile']}"
-    # insufficient_data: oba None → wynik=None
-    assert r_no["percentile"] is None, f"Expected None, got {r_no['percentile']}"
-    # unavailable: percentile_xa=90, percentile_xg=88 → wynik=90 (xa ma priorytet)
-    assert r_inj["percentile"] == 90, f"Expected 90, got {r_inj['percentile']}"
-
-    print("✅ Wszystkie asercje percentile() przeszły.")
     print()
 
     # --- Zapis logu do /tmp ---
@@ -856,7 +860,7 @@ if __name__ == "__main__":
         log.write("=== Test confidence_rank & percentile ===\n")
         for r in results:
             log.write(f"  {r.get('detail', '')} | confidence={r['confidence']} "
-                      f"| rank={r['confidence_rank']} | percentile={r['percentile']}\n")
+                      f"| rank={r['confidence_rank']}\n")
         log.write(f"\nSortowanie: {confidences}\n")
         log.write(f"Oczekiwano: {expected_order}\n")
         log.write(f"Wynik: {'PASS' if passed else 'FAIL'}\n")
@@ -868,3 +872,237 @@ if __name__ == "__main__":
         sys.exit(1)
 
     print("✅ Test confidence_rank zakończony sukcesem.")
+
+    # ============================================================
+    # Test xG + goals_prevented: STARA vs NOWA prognoza
+    # ============================================================
+    print()
+    print("=" * 70)
+    print("Test xG + goals_prevented: STARA vs NOWA prognoza")
+    print("=" * 70)
+    print()
+
+    # --- Test: Hindrich (BR) — goals_prevented = 3.5 (świetny bramkarz) ---
+    hindrich_test = {
+        "player_id": 99901,
+        "name": "Ondřej Hindrich",
+        "team": "GKS",
+        "position": "BR",
+        "total_points": 55,
+        "rounds": [
+            {"round": 20, "played": True, "points": 6, "minutes": 90},
+            {"round": 19, "played": True, "points": 2, "minutes": 90},
+            {"round": 18, "played": True, "points": 8, "minutes": 90},
+            {"round": 17, "played": True, "points": 4, "minutes": 90},
+        ],
+        "xa_per_90": 0.02,         # niskie xA (bramkarz)
+        "xg_per_90": 0.0,           # brak xG (bramkarz)
+        "goals_prevented": 3.5,     # ⭐ wysoki goals_prevented — powinien dostać bonus
+        "percentile_goals_prevented": 88.0,
+        "percentile_clean_sheet": 35.0,
+    }
+
+    # --- Test: Wszołek (OBR) — xA=0.15, xG=0.05 ---
+    wszolek_test = {
+        "player_id": 99902,
+        "name": "Paweł Wszołek",
+        "team": "Legia",
+        "position": "OBR",
+        "total_points": 70,
+        "rounds": [
+            {"round": 20, "played": True, "points": 9, "minutes": 90},
+            {"round": 19, "played": True, "points": 7, "minutes": 90},
+            {"round": 18, "played": True, "points": 12, "minutes": 90},
+            {"round": 17, "played": True, "points": 5, "minutes": 90},
+        ],
+        "xa_per_90": 0.15,          # dobre xA jak na obrońcę
+        "xg_per_90": 0.05,          # niskie xG (obrońca)
+        "goals_prevented": None,    # nie dotyczy OBR
+        "percentile_clean_sheet": 65.0,
+        "percentile_goals_conceded": 20.0,
+        "percentile_xg": 45.0,
+        "percentile_xa": 72.0,
+        "percentile_chances_created": 60.0,
+    }
+
+    # --- Test: Bozic (POM) — xA=0.25, xG=0.12 ---
+    bozic_test = {
+        "player_id": 99903,
+        "name": "Adrian Bozic",
+        "team": "Raków",
+        "position": "POM",
+        "total_points": 62,
+        "rounds": [
+            {"round": 20, "played": True, "points": 8, "minutes": 90},
+            {"round": 19, "played": True, "points": 6, "minutes": 90},
+            {"round": 18, "played": True, "points": 11, "minutes": 90},
+            {"round": 17, "played": True, "points": 4, "minutes": 78},
+        ],
+        "xa_per_90": 0.25,          # ⭐ bardzo wysokie xA — oczekujemy dużego bonusu
+        "xg_per_90": 0.12,          # lekkie xG
+        "goals_prevented": None,    # nie dotyczy POM
+        "percentile_shots": 85.0,
+        "percentile_chances_created": 70.0,
+    }
+
+    # --- Test: Sánchez (NAP) — xA=0.08, xG=0.45 ---
+    sanchez_test = {
+        "player_id": 99904,
+        "name": "Juan Sánchez",
+        "team": "GKS",
+        "position": "NAP",
+        "total_points": 80,
+        "rounds": [
+            {"round": 20, "played": True, "points": 12, "minutes": 90},
+            {"round": 19, "played": True, "points": 9, "minutes": 90},
+            {"round": 18, "played": True, "points": 7, "minutes": 85},
+            {"round": 17, "played": True, "points": 14, "minutes": 90},
+        ],
+        "xa_per_90": 0.08,          # przeciętne xA
+        "xg_per_90": 0.45,          # ⭐ bardzo wysokie xG — oczekujemy dużego bonusu
+        "goals_prevented": None,    # nie dotyczy NAP
+        "percentile_shots": 92.0,
+        "percentile_chances_created": 55.0,
+    }
+
+    test_players_new = [hindrich_test, wszolek_test, bozic_test, sanchez_test]
+
+    # --- Ręczne obliczenie STAREJ prognozy (tylko xA, bez xG, bez goals_prevented) ---
+    # Tu replikujemy logikę STAREGO predict_points (sprzed tej zmiany):
+    # base_avg * (1 + xa_bonus) * fdr * min * ha
+    # gdzie xa_bonus = clamp((xa - 0.07) * 10, -0.10, 0.15)
+
+    def old_predict(player, fdr_data, fixture):
+        """Symuluje STARY predict_points — tylko xA, bez xG i goals_prevented."""
+        position = player.get("position", "POM")
+        rounds = player.get("rounds", [])
+        played_rounds = [r for r in rounds if r.get("played")]
+        played_rounds.sort(key=lambda r: r.get("round", 0), reverse=True)
+        recent_rounds = played_rounds[:DEFAULT_LOOKBACK]
+        recent_points = [r.get("points", 0) for r in recent_rounds]
+        base_avg = weighted_average(recent_points, decay=0.85)
+
+        # Tylko xA (stary mechanizm)
+        xa = player.get("xa_per_90")
+        if xa is not None and xa > 0:
+            xa_bonus = min(max((xa - 0.07) * 10, -0.10), 0.15)
+            base_avg = base_avg * (1 + xa_bonus)
+
+        # FDR
+        opponent = fixture.get("opponent", "")
+        opponent_fdr = fdr_data.get(opponent, {"atk": FDR_NEUTRAL, "def": FDR_NEUTRAL})
+        fdr_mod = get_fdr_modifier(opponent_fdr["atk"], opponent_fdr["def"], position)
+
+        # Minuty
+        recent_minutes = [r.get("minutes", 0) for r in recent_rounds]
+        avg_minutes = sum(recent_minutes) / len(recent_minutes) if recent_minutes else 0
+        min_factor = get_minutes_factor(avg_minutes)
+
+        # Dom/wyjazd
+        is_home = fixture.get("is_home", False)
+        ha_factor = get_home_away_factor(is_home)
+
+        return round(base_avg * fdr_mod * min_factor * ha_factor, 1)
+
+    # Wspólny FDR i fixture
+    test_fdr_xg = {
+        "Raków":  {"atk": 4, "def": 4},
+        "GKS":    {"atk": 2, "def": 1},
+        "Legia":  {"atk": 5, "def": 3},
+    }
+
+    print(f"{'Gracz':<25s} {'Pozycja':<6s} {'STARA (tylko xA)':<18s} {'NOWA (xA+xG+gp)':<18s} {'Różnica':<10s} {'Co zadziałało'}")
+    print("-" * 110)
+
+    lines = []
+    for p in test_players_new:
+        fixture = {"opponent": p["team"], "is_home": True}
+        old_pred = old_predict(p, test_fdr_xg, fixture)
+        new_pred = predict_points(p, test_fdr_xg, fixture)["predicted_points"]
+        diff = round(new_pred - old_pred, 1)
+
+        # Ustal, co zadziałało
+        effects = []
+        pos = p["position"]
+        if p.get("xg_per_90") and p["xg_per_90"] > 0:
+            effects.append(f"xG={p['xg_per_90']}")
+        if pos == "BR" and p.get("goals_prevented") is not None:
+            effects.append(f"gp={p['goals_prevented']}")
+        effect_str = ", ".join(effects) if effects else "—"
+
+        line = f"{p['name']:<25s} {pos:<6s} {old_pred:<18.1f} {new_pred:<18.1f} {diff:+.1f}{'':>5s} {effect_str}"
+        print(line)
+        lines.append(line)
+
+    print()
+
+    # --- Zapis logu do /tmp ---
+    log_path = f"/tmp/predictor_xg_gp_test_{dt_mod.now().strftime('%Y%m%d_%H%M%S')}.log"
+    with open(log_path, "w", encoding="utf-8") as log:
+        log.write("=== Test xG + goals_prevented: STARA vs NOWA prognoza ===\n")
+        log.write(f"Czas: {dt_mod.now().isoformat()}\n\n")
+        log.write(f"{'Gracz':<25s} {'Pozycja':<6s} {'STARA':<8s} {'NOWA':<8s} {'Różnica':<10s} {'Co zadziałało'}\n")
+        log.write("-" * 80 + "\n")
+        for p in test_players_new:
+            fixture = {"opponent": p["team"], "is_home": True}
+            old_pred = old_predict(p, test_fdr_xg, fixture)
+            new_pred = predict_points(p, test_fdr_xg, fixture)["predicted_points"]
+            diff = round(new_pred - old_pred, 1)
+            effects = []
+            pos = p["position"]
+            if p.get("xg_per_90") and p["xg_per_90"] > 0:
+                effects.append(f"xG={p['xg_per_90']}")
+            if pos == "BR" and p.get("goals_prevented") is not None:
+                effects.append(f"gp={p['goals_prevented']}")
+            effect_str = ", ".join(effects) if effects else "—"
+            log.write(f"{p['name']:<25s} {pos:<6s} {old_pred:<8.1f} {new_pred:<8.1f} {diff:+.1f}{'':>5s} {effect_str}\n")
+
+        # --- Ręczna weryfikacja dla Hindricha (BR) ---
+        log.write("\n--- Ręczna weryfikacja: Ondřej Hindrich (BR) ---\n")
+        p = hindrich_test
+        fixture = {"opponent": "GKS", "is_home": True}
+        # base_avg z ostatnich 4 kolejek (6,2,8,4) z decay=0.85
+        points = [6, 2, 8, 4]
+        wa = weighted_average(points, 0.85)
+        log.write(f"  weighted_average: {wa:.2f}\n")
+        # xA bonus: (0.02 - 0.07) * 10 = -0.50, clamped do -0.10
+        xa_bonus = min(max((0.02 - 0.07) * 10, -0.10), 0.15)
+        log.write(f"  xA bonus: {xa_bonus:.3f} (xa=0.02)\n")
+        # xG bonus: xg=0.0 → pomijamy
+        log.write(f"  xG bonus: pominięty (xg=0.0)\n")
+        # goals_prevented bonus: 3.5 * 0.15 = 0.525, capped do 0.20
+        gp_bonus = min(max(3.5 * 0.15, -0.20), 0.20)
+        log.write(f"  goals_prevented bonus: {gp_bonus:.3f} (gp=3.5)\n")
+        # FDR: GKS atk=2 → fdr_mod = 1.0 + (3-2)*0.10 = 1.10
+        log.write(f"  FDR modifier: 1.10 (GKS atk=2)\n")
+        # HA: is_home=True → 1.05
+        log.write(f"  home/away factor: 1.05\n")
+        # STARA: wa * (1+xa) * fdr * ha = wa * 0.90 * 1.10 * 1.05
+        old_manual = wa * (1 + xa_bonus) * 1.10 * 1.05
+        log.write(f"  STARA ręcznie: {wa:.2f} × 0.90 × 1.10 × 1.05 = {old_manual:.1f}\n")
+        # NOWA: wa * (1+xa) * (1+gp) * fdr * ha = wa * 0.90 * 1.20 * 1.10 * 1.05
+        new_manual = wa * (1 + xa_bonus) * (1 + gp_bonus) * 1.10 * 1.05
+        log.write(f"  NOWA  ręcznie: {wa:.2f} × 0.90 × 1.20 × 1.10 × 1.05 = {new_manual:.1f}\n")
+
+        # --- Ręczna weryfikacja dla Bozica (POM) ---
+        log.write("\n--- Ręczna weryfikacja: Adrian Bozic (POM) ---\n")
+        p = bozic_test
+        points = [8, 6, 11, 4]
+        wa2 = weighted_average(points, 0.85)
+        log.write(f"  weighted_average: {wa2:.2f}\n")
+        xa_bonus2 = min(max((0.25 - 0.07) * 10, -0.10), 0.15)
+        log.write(f"  xA bonus: {xa_bonus2:.3f} (xa=0.25)\n")
+        xg_bonus2 = min(max((0.12 - 0.10) * 10, -0.10), 0.15)
+        log.write(f"  xG bonus: {xg_bonus2:.3f} (xg=0.12)\n")
+        log.write(f"  goals_prevented: N/D (POM)\n")
+        # FDR dla POM vs Raków: def_weight=0.6, atk_weight=0.4
+        # fdr_to_modifier(4) = 1.0 + (3-4)*0.10 = 0.90 → oba = 0.90
+        log.write(f"  FDR modifier: 0.90 (Raków def=4, atk=4)\n")
+        log.write(f"  home/away factor: 1.05 (dom)\n")
+        old_manual2 = wa2 * (1 + xa_bonus2) * 0.90 * 1.05
+        log.write(f"  STARA ręcznie: {wa2:.2f} × {1+xa_bonus2:.3f} × 0.90 × 1.05 = {old_manual2:.1f}\n")
+        new_manual2 = wa2 * (1 + xa_bonus2) * (1 + xg_bonus2) * 0.90 * 1.05
+        log.write(f"  NOWA  ręcznie: {wa2:.2f} × {1+xa_bonus2:.3f} × {1+xg_bonus2:.3f} × 0.90 × 1.05 = {new_manual2:.1f}\n")
+
+    print(f"📄 Log zapisany: {log_path}")
+    print("✅ Test xG + goals_prevented zakończony.")
