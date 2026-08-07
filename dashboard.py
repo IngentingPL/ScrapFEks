@@ -1867,6 +1867,15 @@ function renderPredictions() {{
     return 'background:rgba(100,116,139,0.1);color:#64748b';
   }}
 
+  // Percentyle 0-100 — analogiczny gradient do predGradient
+  function potentialGradient(val) {{
+    if (val >= 80) return 'background:rgba(16,185,129,0.25);color:#10b981';
+    if (val >= 60) return 'background:rgba(34,211,238,0.2);color:#22d3ee';
+    if (val >= 40) return 'background:rgba(251,191,36,0.2);color:#fbbf24';
+    if (val >= 20) return 'background:rgba(148,163,184,0.15);color:#94a3b8';
+    return 'background:rgba(100,116,139,0.1);color:#64748b';
+  }}
+
   function fdrTile(val) {{
     const c = FDR_COLORS[val] || FDR_COLORS[3];
     return '<span class="pred-fdr-tile" style="background:'+c.bg+';color:'+c.fg+'">'+val+'</span>';
@@ -1917,7 +1926,7 @@ function renderPredictions() {{
    h += '<div class="pred-legend">';
    h += '<b>NAP</b> / <b>POM</b> → FDR DEF rywala (słabsza obrona = wyższa prognoza) &nbsp;|&nbsp; ';
    h += '<b>BR</b> / <b>OBR</b> → FDR ATK rywala (słabszy atak = wyższa prognoza) &nbsp;|&nbsp; ';
-   h += '<b>Potencjał</b> → BR: obrony ponad xG + czyste konta &nbsp;|&nbsp; OBR: obrona (CS − stracone/90÷3) + xG + xA + szanse×0.1 &nbsp;|&nbsp; POM/NAP: strzały + szanse stworzone na 90 min';
+   h += '<b>Potencjał</b> → średnia percentyli pozycyjnych (0-100, wyżej = lepiej) &nbsp;|&nbsp; BR: obrony+CS &nbsp;|&nbsp; OBR: CS+stracone+xG+xA+szanse &nbsp;|&nbsp; POM/NAP: strzały+szanse';
    h += '</div>';
 
   // Position filters
@@ -2005,13 +2014,19 @@ function renderPredictions() {{
     // Użyty FDR
     h += '<td class="text-center">'+fdrUsedLabel(p.position, fdrMod)+'</td>';
 
-    // Potencjał — wartość z predictor.py, tooltip z rozbiciem na składowe
-    const isAttacker = (pk === 'NAP' || pk === 'POM');
-    const potTitle = isAttacker
-      ? (p.shots_per_90 != null ? p.shots_per_90.toFixed(1) : '—') + ' strz/90 + ' + (p.chances_created_per_90 != null ? p.chances_created_per_90.toFixed(1) : '—') + ' szans/90'
-      : (p.clean_sheet_rate != null ? p.clean_sheet_rate.toFixed(1) : '—') + ' CS/90 − ' + (p.goals_conceded_per_90 != null ? p.goals_conceded_per_90.toFixed(1) : '—') + ' str/90 ÷3';
-    h += '<td class="text-center" title="'+potTitle+'">'
-      +(p.potential_value!=null ? (p.potential_value>=0?'+':'')+p.potential_value.toFixed(2) : '—')
+    // Potencjał — średnia percentyli pozycyjnych (0-100), tooltip z rozbiciem na percentyle składowe
+    function pctStr(val) {{ return val != null ? Math.round(val) : '—'; }}
+    let potTooltip;
+    if (pk === 'BR') {{
+      potTooltip = 'obrony: ' + pctStr(p.percentile_goals_prevented) + ' percentyl, czyste konta: ' + pctStr(p.percentile_clean_sheet) + ' percentyl';
+    }} else if (pk === 'OBR') {{
+      potTooltip = 'CS: ' + pctStr(p.percentile_clean_sheet) + ' pc, stracone: ' + pctStr(p.percentile_goals_conceded) + ' pc (odwr.), xG: ' + pctStr(p.percentile_xg) + ' pc, xA: ' + pctStr(p.percentile_xa) + ' pc, szanse: ' + pctStr(p.percentile_chances_created) + ' pc';
+    }} else {{
+      potTooltip = 'strzały: ' + pctStr(p.percentile_shots) + ' percentyl, szanse: ' + pctStr(p.percentile_chances_created) + ' percentyl';
+    }}
+    const potVal = p.potential_value;
+    h += '<td class="text-center" style="' + (potVal != null ? potentialGradient(potVal) : '') + '" title="'+potTooltip+'">'
+      +(potVal != null ? Math.round(potVal) : '—')
       +'</td>';
 
     // Średnie minuty
