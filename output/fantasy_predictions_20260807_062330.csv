@@ -64,7 +64,6 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2588,Mauro Perković,cracovia,OBR,Śląsk Wrocław,False,2.5,2.6,1.0,1.0,0.97,90.0,medium,Śr. 2.6 × FDR 1.0 × min 1.0 × wyjazd 0.97 = 2.5,,,3
 2801,Bartłomiej Drągowski,widzew łódź,BR,Jagiellonia Białystok,False,2.5,3.3,0.8,1.0,0.97,90.0,medium,Śr. 3.3 × FDR 0.8 × min 1.0 × wyjazd 0.97 = 2.5,,,3
 184,Rafał Wolski,radomiak radom,POM,Górnik Zabrze,True,2.4,2.7,0.84,1.0,1.05,82.0,medium,Śr. 2.7 × FDR 0.84 × min 1.0 × dom 1.05 = 2.4,,,3
-392,Filip Jagiełło,lech poznań,POM,Piast Gliwice,True,2.4,3.0,1.1,0.7,1.05,38.0,medium,Śr. 3.0 × FDR 1.1 × min 0.7 × dom 1.05 = 2.4,,,3
 2345,Wojciech Urbański,legia warszawa,POM,Korona Kielce,False,2.4,2.7,1.02,0.9,0.97,74.0,medium,Śr. 2.7 × FDR 1.02 × min 0.9 × wyjazd 0.97 = 2.4,,,3
 2538,Marc Llinares,śląsk wrocław,OBR,Cracovia,True,2.4,1.9,1.2,1.0,1.05,90.0,medium,Śr. 1.9 × FDR 1.2 × min 1.0 × dom 1.05 = 2.4,,,3
 2708,Mileta Rajović,legia warszawa,NAP,Korona Kielce,False,2.4,3.0,0.9,0.9,0.97,80.0,medium,Śr. 3.0 × FDR 0.9 × min 0.9 × wyjazd 0.97 = 2.4,,,3
@@ -210,6 +209,7 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2958,Franciszek Nowak,zagłębie lubin,BR,Raków Częstochowa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,3
 2968,Adrian Żulewski,śląsk wrocław,OBR,Cracovia,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,3
 1747,Igor Drapiński,piast gliwice,OBR,Lech Poznań,False,-0.4,-0.6,0.8,1.0,0.97,90.0,medium,Śr. -0.6 × FDR 0.8 × min 1.0 × wyjazd 0.97 = -0.4,,,3
+392,Filip Jagiełło,lech poznań,POM,Piast Gliwice,True,0,,,,,,unavailable,⛔ Kontuzjowany — zawodnik niedostępny,True,Kontuzjowany,3
 1094,Filip Marchwiński,cracovia,POM,Śląsk Wrocław,False,0,,,,,,unavailable,⛔ Kontuzjowany — zawodnik niedostępny,True,Kontuzjowany,3
 2698,Leo Bengtsson,lech poznań,POM,Piast Gliwice,True,0,,,,,,unavailable,⛔ Kontuzjowany — zawodnik niedostępny,True,Kontuzjowany,3
 2906,Stefan Feiertag,wieczysta kraków,NAP,GKS Katowice,False,0,,,,,,unavailable,⛔ Kontuzjowany — zawodnik niedostępny,True,Kontuzjowany,3
