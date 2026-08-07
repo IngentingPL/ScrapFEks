@@ -1006,17 +1006,10 @@ def main():
                 fdr_data=fdr_data,
             )
 
-            # Prognozy eksperckie (Rabbti + Tlinf) — wysyłane TYLKO w dzień przed meczem
-            # (nie w dzień meczu, bo wtedy wysyła się też captains summary)
-            from datetime import date
-            from discord_notify import _get_round_date_range
-            first_date, _ = _get_round_date_range(fixtures_data, discord_next_gw)
-            is_day_before = date.today() == (first_date - __import__('datetime').timedelta(days=1)) if first_date else False
-            
-            # Tylko dzień przed meczem (nie w dzień meczu!)
+            # Prognozy eksperckie (Rabbti + Tlinf) — generowane zawsze razem z prognozą
             deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "")
             gemini_key = os.environ.get("GEMINI_API_KEY", "")
-            if (deepseek_key or gemini_key) and is_day_before:
+            if (deepseek_key or gemini_key):
                 # Buduj mapę slug → display_name dla ładniejszych nazw drużyn
                 display_name_map = {
                     t.get("slug", ""): t.get("display_name", "")
@@ -1050,11 +1043,8 @@ def main():
                     round_number=discord_next_gw,
                 )
             else:
-                # Rozróżnij przyczynę pominięcia: brak kluczy vs nie ten dzień
-                if not deepseek_key and not gemini_key:
-                    print("  ℹ️  Eksperci: brak kluczy API (DEEPSEEK_API_KEY ani GEMINI_API_KEY) — pomijam generowanie")
-                elif not is_day_before:
-                    print("  ℹ️  Eksperci: nie dzień przed meczem — pomijam generowanie")
+                # Brak kluczy API — pomijamy generowanie ekspertów
+                print("  ℹ️  Eksperci: brak kluczy API (DEEPSEEK_API_KEY ani GEMINI_API_KEY) — pomijam generowanie")
 
         # POST-ROUND: wyślij dzień po ostatnim meczu kolejki.
         # Wzbogacamy league_teams o display_name z league_teams_detail jeśli dostępne,
