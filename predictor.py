@@ -246,7 +246,6 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
             "unavailable": True,
             "availability_reason": availability,
             "confidence": "unavailable",
-            "percentile": player.get("percentile_xa") if player.get("percentile_xa") is not None else player.get("percentile_xg"),
             "confidence_rank": -1,
             "detail": f"⛔ {availability} — zawodnik niedostępny"
         }
@@ -267,7 +266,6 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         return {
             "predicted_points": None,
             "confidence": "insufficient_data",
-            "percentile": player.get("percentile_xa") if player.get("percentile_xa") is not None else player.get("percentile_xg"),
             "confidence_rank": 0,
             "detail": f"Za mało danych ({n_rounds}/{MIN_ROUNDS_FOR_PREDICTION} kolejek)"
         }
@@ -368,9 +366,6 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         "rounds_used": n_rounds,
         "used_fdr_value": used_fdr_value,
         "potential_value": round(potential_value, 2) if potential_value is not None else None,
-        # percentile — fallback: xA percentyl, potem xG percentyl, potem None
-        # Dokładnie ta sama logika co w dashboard JS (sortowanie kolumny Percentyl)
-        "percentile": player.get("percentile_xa") if player.get("percentile_xa") is not None else player.get("percentile_xg"),
         # confidence_rank — numeryczna ranga do sortowania (string confidence bez zmian do wyświetlania)
         "confidence_rank": {"high": 3, "medium": 2, "low": 1, "insufficient_data": 0, "unavailable": -1}.get(confidence, -1),
         "confidence": confidence,

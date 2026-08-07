@@ -1959,7 +1959,7 @@ function renderPredictions() {{
   h += '<th class="text-right sortable" data-tab="predictions" data-col="avg_minutes">Śr. min'+predArrow('avg_minutes')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="xa_per_90">xA/90'+predArrow('xa_per_90')+'</th>';
   h += '<th class="text-right sortable" data-tab="predictions" data-col="xg_per_90">xG/90'+predArrow('xg_per_90')+'</th>';
-  h += '<th class="text-center sortable" data-tab="predictions" data-col="percentile">Percentyl'+predArrow('percentile')+'</th>';
+
    h += '<th class="text-center sortable" data-tab="predictions" data-col="confidence_rank">Pewność'+predArrow('confidence_rank')+'</th>';
   h += '</tr></thead><tbody>';
 
@@ -2040,15 +2040,7 @@ function renderPredictions() {{
     const xg90 = p.xg_per_90;
     h += '<td class="text-right c-muted">'+(xg90 != null ? xg90.toFixed(2) : '—')+'</td>';
 
-    // Percentyl xA (fallback: xG) z kolorowaniem tła
-    const pctl = p.percentile;
-    let pctlClass = '';
-    if (pctl != null && pctl >= 80) {{
-      pctlClass = ' pred-pctl-high';
-    }} else if (pctl != null && pctl < 50) {{
-      pctlClass = ' pred-pctl-low';
-    }}
-    h += '<td class="text-center' + pctlClass + '" style="font-weight:700">' + (pctl != null ? Math.round(pctl) : '—') + '</td>';
+
 
     // Pewność
     h += '<td class="text-center">'+confidenceBadge(p.confidence)+'</td>';
