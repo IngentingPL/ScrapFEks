@@ -462,6 +462,12 @@ def get_karpinski_stats(fantasy_player_id):
             "chances_created_per_90": 1.5,   # adv_table["chances_created"][0] — per 90
             "clean_sheet_rate": 0.33,        # adv_table["clean_sheet_team_title"][0] — per 90
             "goals_conceded_per_90": 1.2,    # adv_table["goals_conceded"][0] — per 90
+            "goals_prevented": 0.5,          # adv_table["goals_prevented"][0] (tylko BR)
+            "percentile_shots": 78.0,        # adv_table["shots"][2] — percentyl per 90
+            "percentile_chances_created": 65.0,    # adv_table["chances_created"][2]
+            "percentile_clean_sheet": 40.0,        # adv_table["clean_sheet_team_title"][2]
+            "percentile_goals_conceded": 30.0,     # adv_table["goals_conceded"][2]
+            "percentile_goals_prevented": 85.0,    # adv_table["goals_prevented"][2] (tylko BR)
             "rating": 7.15,                  # players.json — ocena (float lub None)
         }
         None jeśli gracza nie ma w moście lub nie ma go w adv_table.
@@ -541,6 +547,13 @@ def get_karpinski_stats(fantasy_player_id):
         "goals_conceded_per_90": _safe_idx(gc_raw, 0),
         # goals_prevented: tylko dla bramkarzy (brak klucza → None)
         "goals_prevented": _safe_idx(gp_raw, 0) if gp_raw is not None else None,
+        # Nowe percentyle z adv_table (indeks 2 = percentyl per 90, NIE total)
+        "percentile_shots": _safe_idx(shots_raw, 2),
+        "percentile_chances_created": _safe_idx(chances_raw, 2),
+        "percentile_clean_sheet": _safe_idx(cs_raw, 2),
+        "percentile_goals_conceded": _safe_idx(gc_raw, 2),
+        # goals_prevented percentyl: tylko dla BR (brak klucza dla outfield → None przez .get())
+        "percentile_goals_prevented": _safe_idx(gp_raw, 2) if gp_raw is not None else None,
         # Ocena z players.json
         "rating": rating,
     }

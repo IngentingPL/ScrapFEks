@@ -494,6 +494,11 @@ def main():
         p["clean_sheet_rate"] = stats.get("clean_sheet_rate") if stats else None
         p["goals_conceded_per_90"] = stats.get("goals_conceded_per_90") if stats else None
         p["goals_prevented"] = stats.get("goals_prevented") if stats else None
+        p["percentile_shots"] = stats.get("percentile_shots") if stats else None
+        p["percentile_chances_created"] = stats.get("percentile_chances_created") if stats else None
+        p["percentile_clean_sheet"] = stats.get("percentile_clean_sheet") if stats else None
+        p["percentile_goals_conceded"] = stats.get("percentile_goals_conceded") if stats else None
+        p["percentile_goals_prevented"] = stats.get("percentile_goals_prevented") if stats else None
         p["karpinski_rating"] = stats.get("rating") if stats else None
 
     # 8.7 Oblicz FDR (Fixture Difficulty Rating)

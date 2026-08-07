@@ -327,18 +327,34 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
     else:
         used_fdr_value = opponent_fdr["atk"]
 
-    # potential_value — wskaźnik "Potencjał" (statystyki per 90 z mostu Karpińskiego)
-    # Trzy osobne formuły dla BR, OBR i POM/NAP
+    # potential_value — średnia percentyli Karpińskiego, pozycyjnie znormalizowana
+    # Każda pozycja ma własny zestaw składników. Pomijamy None, średnia tylko z dostępnych.
+    # Dla OBR: percentile_goals_conceded jest ODWRÓCONY (wysoki percentyl straconych = źle)
     if position == "BR":
-        # Bramkarze: goals_prevented + clean_sheet_rate
-        potential_value = (player.get("goals_prevented") or 0) + (player.get("clean_sheet_rate") or 0)
+        components = [
+            player.get("percentile_goals_prevented"),
+            player.get("percentile_clean_sheet"),
+        ]
     elif position == "OBR":
-        # Obrońcy: baza defensywna + xG + xA + szanse kreowane
-        baza = (player.get("clean_sheet_rate") or 0) - ((player.get("goals_conceded_per_90") or 0) / 3)
-        potential_value = baza + (player.get("xg_per_90") or 0) + (player.get("xa_per_90") or 0) + ((player.get("chances_created_per_90") or 0) * 0.1)
+        pgc = player.get("percentile_goals_conceded")
+        components = [
+            player.get("percentile_clean_sheet"),
+            (100 - pgc) if pgc is not None else None,  # ⚠️ ODWRÓCONE: wysoki percentyl straconych = źle
+            player.get("percentile_xg"),
+            player.get("percentile_xa"),
+            player.get("percentile_chances_created"),
+        ]
+    else:  # POM / NAP
+        components = [
+            player.get("percentile_shots"),
+            player.get("percentile_chances_created"),
+        ]
+
+    valid = [c for c in components if c is not None]
+    if valid:
+        potential_value = sum(valid) / len(valid)
     else:
-        # POM / NAP: strzały + szanse kreowane (bez zmian)
-        potential_value = (player.get("shots_per_90") or 0) + (player.get("chances_created_per_90") or 0)
+        potential_value = None
 
     return {
         "predicted_points": predicted,
@@ -351,7 +367,7 @@ def predict_points(player, fdr_data, next_fixture, lookback=DEFAULT_LOOKBACK, de
         "avg_minutes": round(avg_minutes, 0),
         "rounds_used": n_rounds,
         "used_fdr_value": used_fdr_value,
-        "potential_value": round(potential_value, 2),
+        "potential_value": round(potential_value, 2) if potential_value is not None else None,
         # percentile — fallback: xA percentyl, potem xG percentyl, potem None
         # Dokładnie ta sama logika co w dashboard JS (sortowanie kolumny Percentyl)
         "percentile": player.get("percentile_xa") if player.get("percentile_xa") is not None else player.get("percentile_xg"),
@@ -415,6 +431,11 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             "clean_sheet_rate": player.get("clean_sheet_rate"),
             "goals_conceded_per_90": player.get("goals_conceded_per_90"),
             "goals_prevented": player.get("goals_prevented"),
+            "percentile_shots": player.get("percentile_shots"),
+            "percentile_chances_created": player.get("percentile_chances_created"),
+            "percentile_clean_sheet": player.get("percentile_clean_sheet"),
+            "percentile_goals_conceded": player.get("percentile_goals_conceded"),
+            "percentile_goals_prevented": player.get("percentile_goals_prevented"),
             "karpinski_rating": player.get("karpinski_rating"),
             **pred,  # 📖 ** "rozpakuje" dict — dodaje wszystkie klucze z pred do tego dicta
         })
@@ -486,6 +507,228 @@ if __name__ == "__main__":
     print(f"  Prognoza: {result['predicted_points']} pkt")
     print(f"  Szczegóły: {result['detail']}")
     print()
+
+    # ============================================================
+    # Test POTENTIAL_VALUE: średnia percentyli wg pozycji
+    # ============================================================
+    print("=" * 70)
+    print("Test POTENTIAL_VALUE: średnia percentyli (pozycyjnie znormalizowana)")
+    print("=" * 70)
+    print()
+
+    # Wspólne FDR / fixture dla wszystkich testowanych graczy
+    test_fdr = {
+        "Raków":  {"atk": 4, "def": 4},
+        "GKS":    {"atk": 2, "def": 1},
+        "Legia":  {"atk": 5, "def": 3},
+    }
+
+    # --- BR: Ondřej Hindrich (simulowane dane) ---
+    # Składniki: [percentile_goals_prevented, percentile_clean_sheet]
+    hindrich = {
+        "player_id": 99901,
+        "name": "Ondřej Hindrich",
+        "team": "GKS",
+        "position": "BR",
+        "total_points": 55,
+        "rounds": [
+            {"round": 20, "played": True, "points": 6, "minutes": 90},
+            {"round": 19, "played": True, "points": 2, "minutes": 90},
+            {"round": 18, "played": True, "points": 8, "minutes": 90},
+            {"round": 17, "played": True, "points": 4, "minutes": 90},
+        ],
+        "percentile_goals_prevented": 88.0,
+        "percentile_clean_sheet": 35.0,
+    }
+
+    # --- OBR: Paweł Wszołek (simulowane dane) ---
+    # Składniki: [percentile_clean_sheet, (100 - percentile_goals_conceded), percentile_xg, percentile_xa, percentile_chances_created]
+    # ⚠️ percentile_goals_conceded jest ODWRÓCONY
+    wszolek = {
+        "player_id": 99902,
+        "name": "Paweł Wszołek",
+        "team": "Legia",
+        "position": "OBR",
+        "total_points": 70,
+        "rounds": [
+            {"round": 20, "played": True, "points": 9, "minutes": 90},
+            {"round": 19, "played": True, "points": 7, "minutes": 90},
+            {"round": 18, "played": True, "points": 12, "minutes": 90},
+            {"round": 17, "played": True, "points": 5, "minutes": 90},
+        ],
+        "percentile_clean_sheet": 65.0,
+        "percentile_goals_conceded": 20.0,   # ⚠️ niski percentyl straconych = DOBRZE → (100-20)=80
+        "percentile_xg": 45.0,
+        "percentile_xa": 72.0,
+        "percentile_chances_created": 60.0,
+    }
+
+    # --- POM: Adrian Bozic (simulowane dane) ---
+    # Składniki: [percentile_shots, percentile_chances_created]
+    bozic = {
+        "player_id": 99903,
+        "name": "Adrian Bozic",
+        "team": "Raków",
+        "position": "POM",
+        "total_points": 62,
+        "rounds": [
+            {"round": 20, "played": True, "points": 8, "minutes": 90},
+            {"round": 19, "played": True, "points": 6, "minutes": 90},
+            {"round": 18, "played": True, "points": 11, "minutes": 90},
+            {"round": 17, "played": True, "points": 4, "minutes": 78},
+        ],
+        "percentile_shots": 85.0,
+        "percentile_chances_created": 70.0,
+    }
+
+    # --- NAP: Juan Sánchez (simulowane dane) ---
+    # Składniki: [percentile_shots, percentile_chances_created]
+    sanchez = {
+        "player_id": 99904,
+        "name": "Juan Sánchez",
+        "team": "GKS",
+        "position": "NAP",
+        "total_points": 80,
+        "rounds": [
+            {"round": 20, "played": True, "points": 12, "minutes": 90},
+            {"round": 19, "played": True, "points": 9, "minutes": 90},
+            {"round": 18, "played": True, "points": 7, "minutes": 85},
+            {"round": 17, "played": True, "points": 14, "minutes": 90},
+        ],
+        "percentile_shots": 92.0,
+        "percentile_chances_created": 55.0,
+    }
+
+    # Uruchom predykcję i zbierz potential_value
+    test_players = [hindrich, wszolek, bozic, sanchez]
+    results = {}
+    for tp in test_players:
+        res = predict_points(tp, test_fdr, {"opponent": tp["team"], "is_home": True})
+        results[tp["name"]] = res
+        pos = tp["position"]
+        pv = res["potential_value"]
+        print(f"[{pos}] {tp['name']:20s} → potential_value = {pv}")
+
+    print()
+
+    # Rozpiska składników (ręczna weryfikacja)
+    print("─" * 70)
+    print("RĘCZNA WERYFIKACJA SKŁADNIKÓW:")
+    print("─" * 70)
+
+    # BR — Hindrich
+    br_comp = [88.0, 35.0]  # percentile_goals_prevented, percentile_clean_sheet
+    br_avg = sum(br_comp) / len(br_comp)
+    print(f"\n[BR] Ondřej Hindrich:")
+    print(f"  percentile_goals_prevented  = 88.0")
+    print(f"  percentile_clean_sheet       = 35.0")
+    print(f"  → składniki (wszystkie):     {br_comp}")
+    print(f"  → średnia:                   {br_avg}  (oczekiwane: {results['Ondřej Hindrich']['potential_value']})")
+    assert results["Ondřej Hindrich"]["potential_value"] == br_avg, f"BR mismatch: {results['Ondřej Hindrich']['potential_value']} != {br_avg}"
+
+    # OBR — Wszołek
+    obr_comp = [
+        65.0,      # percentile_clean_sheet
+        100 - 20.0, # (100 - percentile_goals_conceded) = 80
+        45.0,       # percentile_xg
+        72.0,       # percentile_xa
+        60.0,       # percentile_chances_created
+    ]
+    obr_avg = sum(obr_comp) / len(obr_comp)
+    print(f"\n[OBR] Paweł Wszołek:")
+    print(f"  percentile_clean_sheet       = 65.0")
+    print(f"  percentile_goals_conceded    = 20.0 → ODWRÓCONE: (100-20) = 80.0")
+    print(f"  percentile_xg                = 45.0")
+    print(f"  percentile_xa                = 72.0")
+    print(f"  percentile_chances_created   = 60.0")
+    print(f"  → składniki (wszystkie):     {obr_comp}")
+    print(f"  → średnia:                   {obr_avg}  (oczekiwane: {results['Paweł Wszołek']['potential_value']})")
+    assert results["Paweł Wszołek"]["potential_value"] == obr_avg, f"OBR mismatch: {results['Paweł Wszołek']['potential_value']} != {obr_avg}"
+
+    # POM — Bozic
+    pom_comp = [85.0, 70.0]  # percentile_shots, percentile_chances_created
+    pom_avg = sum(pom_comp) / len(pom_comp)
+    print(f"\n[POM] Adrian Bozic:")
+    print(f"  percentile_shots             = 85.0")
+    print(f"  percentile_chances_created   = 70.0")
+    print(f"  → składniki (wszystkie):     {pom_comp}")
+    print(f"  → średnia:                   {pom_avg}  (oczekiwane: {results['Adrian Bozic']['potential_value']})")
+    assert results["Adrian Bozic"]["potential_value"] == pom_avg, f"POM mismatch: {results['Adrian Bozic']['potential_value']} != {pom_avg}"
+
+    # NAP — Sánchez
+    nap_comp = [92.0, 55.0]  # percentile_shots, percentile_chances_created
+    nap_avg = sum(nap_comp) / len(nap_comp)
+    print(f"\n[NAP] Juan Sánchez:")
+    print(f"  percentile_shots             = 92.0")
+    print(f"  percentile_chances_created   = 55.0")
+    print(f"  → składniki (wszystkie):     {nap_comp}")
+    print(f"  → średnia:                   {nap_avg}  (oczekiwane: {results['Juan Sánchez']['potential_value']})")
+    assert results["Juan Sánchez"]["potential_value"] == nap_avg, f"NAP mismatch: {results['Juan Sánchez']['potential_value']} != {nap_avg}"
+
+    # --- Test edge-case: OBR z None percentile_goals_conceded (powinno być pominięte) ---
+    obr_missing = {
+        "player_id": 99905,
+        "name": "Test OBR (brak pgc)",
+        "team": "Legia",
+        "position": "OBR",
+        "total_points": 40,
+        "rounds": [
+            {"round": 20, "played": True, "points": 5, "minutes": 90},
+            {"round": 19, "played": True, "points": 3, "minutes": 90},
+            {"round": 18, "played": True, "points": 6, "minutes": 90},
+            {"round": 17, "played": True, "points": 4, "minutes": 90},
+        ],
+        "percentile_clean_sheet": 50.0,
+        "percentile_goals_conceded": None,
+        "percentile_xg": 30.0,
+        "percentile_xa": 40.0,
+        "percentile_chances_created": 55.0,
+    }
+    r_missing = predict_points(obr_missing, test_fdr, {"opponent": "Legia", "is_home": True})
+    expected_missing = (50.0 + 30.0 + 40.0 + 55.0) / 4  # pgc None → pominięty
+    print(f"\n[OBR*] Test OBR (brak pgc):")
+    print(f"  składniki (bez pgc):         [50.0, 30.0, 40.0, 55.0]")
+    print(f"  → średnia:                   {expected_missing}  (oczekiwane: {r_missing['potential_value']})")
+    assert r_missing["potential_value"] == expected_missing, f"OBR missing pgc mismatch"
+
+    # --- Test edge-case: wszystkie składniki None → potential_value = None ---
+    all_none = {
+        "player_id": 99906,
+        "name": "Test All None",
+        "team": "GKS",
+        "position": "POM",
+        "total_points": 20,
+        "rounds": [
+            {"round": 20, "played": True, "points": 2, "minutes": 90},
+            {"round": 19, "played": True, "points": 1, "minutes": 90},
+            {"round": 18, "played": True, "points": 3, "minutes": 90},
+            {"round": 17, "played": True, "points": 2, "minutes": 90},
+        ],
+        "percentile_shots": None,
+        "percentile_chances_created": None,
+    }
+    r_none = predict_points(all_none, test_fdr, {"opponent": "GKS", "is_home": True})
+    print(f"\n[POM*] Test All None:")
+    print(f"  składniki:                   [] (wszystkie None)")
+    print(f"  → potential_value:           {r_none['potential_value']} (oczekiwane: None)")
+    assert r_none["potential_value"] is None, f"All-none should return None, got {r_none['potential_value']}"
+
+    # --- Zapis logu do /tmp ---
+    from datetime import datetime as dt_mod
+    log_path = f"/tmp/potential_value_test_{dt_mod.now().strftime('%Y%m%d_%H%M%S')}.log"
+    with open(log_path, "w", encoding="utf-8") as log:
+        log.write("=== Test POTENTIAL_VALUE — średnia percentyli ===\n")
+        log.write(f"Czas: {dt_mod.now().isoformat()}\n\n")
+        for name, r in results.items():
+            log.write(f"{name:25s} potential_value = {r['potential_value']}\n")
+        log.write(f"\nEdge case (OBR bez pgc): potential_value = {r_missing['potential_value']} "
+                  f"(expected: {expected_missing})\n")
+        log.write(f"Edge case (all None):    potential_value = {r_none['potential_value']} "
+                  f"(expected: None)\n")
+        log.write(f"\nWszystkie asercje: {'✅ PASS' if True else '❌ FAIL'}\n")
+
+    print(f"\n📄 Log zapisany: {log_path}")
+    print(f"✅ Wszystkie testy potential_value przeszły.\n")
 
     # ============================================================
     # Test 4: percentile i confidence_rank — różne poziomy pewności
