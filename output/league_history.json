@@ -434,18 +434,18 @@
       "round": 3,
       "standings": [
         {
+          "team": "makkabi bialystok",
+          "slug": "makkabi-bialystok",
+          "total_points": 129,
+          "position": 1,
+          "round_points": 18
+        },
+        {
           "team": "lubliniankakonskie",
           "slug": "lubliniankakonskie",
           "total_points": 125,
-          "position": 1,
-          "round_points": 6
-        },
-        {
-          "team": "makkabi bialystok",
-          "slug": "makkabi-bialystok",
-          "total_points": 121,
           "position": 2,
-          "round_points": 10
+          "round_points": 6
         },
         {
           "team": "huragan primore",
@@ -462,25 +462,25 @@
           "round_points": 0
         },
         {
+          "team": "lelek kozodoj",
+          "slug": "lelek-kozodoj",
+          "total_points": 116,
+          "position": 5,
+          "round_points": 6
+        },
+        {
           "team": "lowcy blanczurow",
           "slug": "lowcy-blanczurow",
           "total_points": 116,
-          "position": 5,
+          "position": 6,
           "round_points": 14
         },
         {
           "team": "kosciol klubu kuby",
           "slug": "kosciol-klubu-kuby",
           "total_points": 114,
-          "position": 6,
-          "round_points": 20
-        },
-        {
-          "team": "lelek kozodoj",
-          "slug": "lelek-kozodoj",
-          "total_points": 113,
           "position": 7,
-          "round_points": 3
+          "round_points": 20
         },
         {
           "team": "batory bandit",
@@ -511,81 +511,81 @@
           "round_points": 6
         },
         {
+          "team": "polski kibel",
+          "slug": "polski-kibel",
+          "total_points": 103,
+          "position": 12,
+          "round_points": 21
+        },
+        {
+          "team": "mewy 1fc",
+          "slug": "mewy-1fc",
+          "total_points": 102,
+          "position": 13,
+          "round_points": 14
+        },
+        {
           "team": "ks wojtkovia",
           "slug": "ks-wojtkovia",
           "total_points": 101,
-          "position": 12,
+          "position": 14,
           "round_points": 3
         },
         {
           "team": "gouda team",
           "slug": "gouda-team",
           "total_points": 101,
-          "position": 13,
+          "position": 15,
           "round_points": 10
         },
         {
-          "team": "polski kibel",
-          "slug": "polski-kibel",
+          "team": "glks klomnice",
+          "slug": "glks-klomnice",
           "total_points": 96,
-          "position": 14,
-          "round_points": 14
+          "position": 16,
+          "round_points": 22
         },
         {
-          "team": "mewy 1fc",
-          "slug": "mewy-1fc",
+          "team": "dunder mifflin",
+          "slug": "dunder-mifflin",
+          "total_points": 96,
+          "position": 17,
+          "round_points": 20
+        },
+        {
+          "team": "wszystko czuj",
+          "slug": "wszystko-czuj",
           "total_points": 95,
-          "position": 15,
-          "round_points": 7
+          "position": 18,
+          "round_points": 6
         },
         {
           "team": "wynalazcy wslizgu",
           "slug": "wynalazcy-wslizgu",
           "total_points": 95,
-          "position": 16,
+          "position": 19,
           "round_points": 14
         },
         {
           "team": "negative szczecin",
           "slug": "negative-szczecin",
           "total_points": 94,
-          "position": 17,
+          "position": 20,
           "round_points": 14
         },
         {
-          "team": "glks klomnice",
-          "slug": "glks-klomnice",
-          "total_points": 93,
-          "position": 18,
+          "team": "ks blueface",
+          "slug": "ks-blueface",
+          "total_points": 90,
+          "position": 21,
           "round_points": 19
-        },
-        {
-          "team": "dunder mifflin",
-          "slug": "dunder-mifflin",
-          "total_points": 93,
-          "position": 19,
-          "round_points": 17
-        },
-        {
-          "team": "wszystko czuj",
-          "slug": "wszystko-czuj",
-          "total_points": 89,
-          "position": 20,
-          "round_points": 0
         },
         {
           "team": "fc abw",
           "slug": "fc-abw",
           "total_points": 88,
-          "position": 21,
-          "round_points": 8
-        },
-        {
-          "team": "ks blueface",
-          "slug": "ks-blueface",
-          "total_points": 87,
           "position": 22,
-          "round_points": 16
+          "round_points": 8
         },
         {
           "team": "kauno zalgiris",
@@ -595,46 +595,46 @@
           "round_points": 0
         },
         {
+          "team": "mauroball",
+          "slug": "mauroball",
+          "total_points": 85,
+          "position": 24,
+          "round_points": 20
+        },
+        {
           "team": "vfb osterode",
           "slug": "vfb-osterode",
           "total_points": 84,
-          "position": 24,
+          "position": 25,
           "round_points": -3
         },
         {
           "team": "duma koziego grodu",
           "slug": "duma-koziego-grodu",
-          "total_points": 82,
-          "position": 25,
-          "round_points": -6
+          "total_points": 84,
+          "position": 26,
+          "round_points": -4
         },
         {
-          "team": "mauroball",
-          "slug": "mauroball",
-          "total_points": 82,
-          "position": 26,
-          "round_points": 17
+          "team": "poznan festung",
+          "slug": "poznan-festung",
+          "total_points": 78,
+          "position": 27,
+          "round_points": 5
         },
         {
           "team": "medi top glonovia",
           "slug": "medi-top-glonovia",
           "total_points": 78,
-          "position": 27,
-          "round_points": 13
-        },
-        {
-          "team": "poznan festung",
-          "slug": "poznan-festung",
-          "total_points": 76,
           "position": 28,
-          "round_points": 3
+          "round_points": 13
         },
         {
           "team": "misterna porazka",
           "slug": "misterna-porazka",
-          "total_points": 68,
+          "total_points": 71,
           "position": 29,
-          "round_points": 1
+          "round_points": 4
         },
         {
           "team": "ks bialy sad",
