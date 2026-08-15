@@ -2,13 +2,13 @@
   {
     "slug": "widzewbaluty",
     "rank": 1,
-    "pts": 201,
+    "pts": 205,
     "players": [
       {
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": true,
         "VC": false,
@@ -31,7 +31,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -131,7 +131,7 @@
         "pid": "2225",
         "name": "Fran Álvarez",
         "pos": "Pomocnik",
-        "pts": 16,
+        "pts": 15,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -154,7 +154,7 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
@@ -460,12 +460,12 @@
         ]
       }
     ],
-    "autumn_pts": 201,
+    "autumn_pts": 205,
     "best_gw_autumn": 63,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Widzewbaluty",
-    "total_pts": 201,
+    "total_pts": 205,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -474,7 +474,7 @@
   {
     "slug": "makkabi-bialystok",
     "rank": 2,
-    "pts": 195,
+    "pts": 199,
     "players": [
       {
         "pid": "1319",
@@ -566,7 +566,7 @@
         "pid": "1529",
         "name": "Mariusz Fornalczyk",
         "pos": "Pomocnik",
-        "pts": 16,
+        "pts": 15,
         "price": 2.0,
         "C": false,
         "VC": true,
@@ -589,7 +589,7 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
@@ -726,7 +726,7 @@
         "pid": "2801",
         "name": "Bartłomiej Drągowski",
         "pos": "Bramkarz",
-        "pts": 20,
+        "pts": 17,
         "price": 1.8,
         "C": false,
         "VC": false,
@@ -749,7 +749,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 2,
             "p": true
           }
         ]
@@ -911,12 +911,12 @@
         "form": []
       }
     ],
-    "autumn_pts": 195,
+    "autumn_pts": 199,
     "best_gw_autumn": 65,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Makkabi Bialystok",
-    "total_pts": 195,
+    "total_pts": 199,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -925,13 +925,13 @@
   {
     "slug": "lubliniankakonskie",
     "rank": 3,
-    "pts": 188,
+    "pts": 191,
     "players": [
       {
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -954,7 +954,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -1054,7 +1054,7 @@
         "pid": "1529",
         "name": "Mariusz Fornalczyk",
         "pos": "Pomocnik",
-        "pts": 16,
+        "pts": 15,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -1077,7 +1077,7 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
@@ -1393,12 +1393,12 @@
         ]
       }
     ],
-    "autumn_pts": 188,
+    "autumn_pts": 191,
     "best_gw_autumn": 61,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Lubliniankakonskie",
-    "total_pts": 188,
+    "total_pts": 191,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 2,
@@ -1407,7 +1407,7 @@
   {
     "slug": "ks-rozanka",
     "rank": 4,
-    "pts": 188,
+    "pts": 190,
     "players": [
       {
         "pid": "2805",
@@ -1786,21 +1786,503 @@
         ]
       }
     ],
-    "autumn_pts": 188,
+    "autumn_pts": 190,
     "best_gw_autumn": 57,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Ks Rozanka",
-    "total_pts": 188,
+    "total_pts": 190,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 2,
     "hockey_pos": 4
   },
   {
-    "slug": "lelek-kozodoj",
+    "slug": "lowcy-blanczurow",
     "rank": 5,
-    "pts": 184,
+    "pts": 187,
+    "players": [
+      {
+        "pid": "774",
+        "name": "Sebastian Bergier",
+        "pos": "Napastnik",
+        "pts": 13,
+        "price": 2.4,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1225",
+        "name": "Jan Grzesik",
+        "pos": "Obrońca",
+        "pts": 12,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 14,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": -2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1987",
+        "name": "Jordi Sánchez",
+        "pos": "Napastnik",
+        "pts": 27,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2423",
+        "name": "Mbaye N'Diaye",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 2.4,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2431",
+        "name": "Rúben Vinagre",
+        "pos": "Obrońca",
+        "pts": 28,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 10,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 10,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2481",
+        "name": "Ajdin Hasić",
+        "pos": "Pomocnik",
+        "pts": 7,
+        "price": 2.2,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2801",
+        "name": "Bartłomiej Drągowski",
+        "pos": "Bramkarz",
+        "pts": 17,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1319",
+        "name": "Paweł Wszołek",
+        "pos": "Obrońca",
+        "pts": 34,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 14,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "480",
+        "name": "Bartosz Nowak",
+        "pos": "Pomocnik",
+        "pts": 14,
+        "price": 3.3,
+        "C": false,
+        "VC": true,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "1092",
+        "name": "Piotr Samiec-Talar",
+        "pos": "Pomocnik",
+        "pts": 24,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 7,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2225",
+        "name": "Fran Álvarez",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2786",
+        "name": "Antoni Bałabuch",
+        "pos": "Bramkarz",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2925",
+        "name": "Maciek Kucharski",
+        "pos": "Napastnik",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2850",
+        "name": "Oskar Markiewicz",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2899",
+        "name": "Kacper Zagrodzki",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      }
+    ],
+    "autumn_pts": 187,
+    "best_gw_autumn": 53,
+    "spring_pts": 0,
+    "best_gw_spring": 0,
+    "display_name": "Lowcy Blanczurow",
+    "total_pts": 187,
+    "autumn_only": false,
+    "spring_only": false,
+    "rank_change": -2,
+    "hockey_pos": 5
+  },
+  {
+    "slug": "lelek-kozodoj",
+    "rank": 6,
+    "pts": 186,
     "players": [
       {
         "pid": "2477",
@@ -1833,7 +2315,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -1856,7 +2338,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -1924,7 +2406,7 @@
         "pid": "992",
         "name": "Przemysław Wiśniewski",
         "pos": "Obrońca",
-        "pts": 18,
+        "pts": 14,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -1947,7 +2429,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 1,
             "p": true
           }
         ]
@@ -2248,487 +2730,21 @@
         ]
       }
     ],
-    "autumn_pts": 184,
+    "autumn_pts": 186,
     "best_gw_autumn": 63,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Lelek Kozodoj",
-    "total_pts": 184,
+    "total_pts": 186,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": -1,
-    "hockey_pos": 5
-  },
-  {
-    "slug": "lowcy-blanczurow",
-    "rank": 6,
-    "pts": 181,
-    "players": [
-      {
-        "pid": "774",
-        "name": "Sebastian Bergier",
-        "pos": "Napastnik",
-        "pts": 14,
-        "price": 2.4,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1225",
-        "name": "Jan Grzesik",
-        "pos": "Obrońca",
-        "pts": 12,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 14,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": -2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1987",
-        "name": "Jordi Sánchez",
-        "pos": "Napastnik",
-        "pts": 27,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2423",
-        "name": "Mbaye N'Diaye",
-        "pos": "Pomocnik",
-        "pts": 15,
-        "price": 2.4,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2431",
-        "name": "Rúben Vinagre",
-        "pos": "Obrońca",
-        "pts": 28,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 10,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 10,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2481",
-        "name": "Ajdin Hasić",
-        "pos": "Pomocnik",
-        "pts": 7,
-        "price": 2.2,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2801",
-        "name": "Bartłomiej Drągowski",
-        "pos": "Bramkarz",
-        "pts": 20,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1319",
-        "name": "Paweł Wszołek",
-        "pos": "Obrońca",
-        "pts": 34,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 14,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "480",
-        "name": "Bartosz Nowak",
-        "pos": "Pomocnik",
-        "pts": 14,
-        "price": 3.3,
-        "C": false,
-        "VC": true,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "1092",
-        "name": "Piotr Samiec-Talar",
-        "pos": "Pomocnik",
-        "pts": 24,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 7,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2225",
-        "name": "Fran Álvarez",
-        "pos": "Pomocnik",
-        "pts": 16,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 3,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2786",
-        "name": "Bałabuch",
-        "pos": "",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": []
-      },
-      {
-        "pid": "2925",
-        "name": "Maciek Kucharski",
-        "pos": "Napastnik",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2850",
-        "name": "Oskar Markiewicz",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2899",
-        "name": "Kacper Zagrodzki",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      }
-    ],
-    "autumn_pts": 181,
-    "best_gw_autumn": 53,
-    "spring_pts": 0,
-    "best_gw_spring": 0,
-    "display_name": "Lowcy Blanczurow",
-    "total_pts": 181,
-    "autumn_only": false,
-    "spring_only": false,
-    "rank_change": -3,
+    "rank_change": -2,
     "hockey_pos": 6
   },
   {
     "slug": "fc-przypal",
     "rank": 7,
-    "pts": 177,
+    "pts": 178,
     "players": [
       {
         "pid": "480",
@@ -2761,7 +2777,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -2784,7 +2800,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -3181,27 +3197,919 @@
         ]
       }
     ],
-    "autumn_pts": 177,
+    "autumn_pts": 178,
     "best_gw_autumn": 55,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Fc Przypal",
-    "total_pts": 177,
+    "total_pts": 178,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 1,
     "hockey_pos": 7
   },
   {
-    "slug": "huragan-primore",
+    "slug": "negative-szczecin",
     "rank": 8,
-    "pts": 167,
+    "pts": 172,
     "players": [
       {
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
+        "pts": 13,
+        "price": 2.4,
+        "C": false,
+        "VC": true,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1931",
+        "name": "Steve Kapuadi",
+        "pos": "Obrońca",
+        "pts": 17,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 7,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1987",
+        "name": "Jordi Sánchez",
+        "pos": "Napastnik",
+        "pts": 27,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2353",
+        "name": "Mikkel Maigaard",
+        "pos": "Pomocnik",
+        "pts": 4,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": -1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 3,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2386",
+        "name": "Hellebrand",
+        "pos": "3",
+        "pts": 0,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": []
+      },
+      {
+        "pid": "2577",
+        "name": "Josip Ćorluka",
+        "pos": "Obrońca",
+        "pts": 19,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 13,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2943",
+        "name": "Peter González",
+        "pos": "Pomocnik",
+        "pts": 13,
+        "price": 1.9,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 13,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2805",
+        "name": "Otto Hindrich",
+        "pos": "Bramkarz",
+        "pts": 19,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 6,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2879",
+        "name": "Maciej Kuziemka",
+        "pos": "Pomocnik",
+        "pts": 7,
+        "price": 1.7,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "1299",
+        "name": "Jean Carlos Silva",
+        "pos": "Obrońca",
+        "pts": 8,
+        "price": 2.2,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "1126",
+        "name": "Kamil Piątkowski",
+        "pos": "Obrońca",
+        "pts": 22,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 6,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2659",
+        "name": "Marcel Łubik",
+        "pos": "Bramkarz",
+        "pts": 9,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 4,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2733",
+        "name": "Luis Palma",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 3.5,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2939",
+        "name": "Nik Prelec",
+        "pos": "Napastnik",
+        "pts": 13,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2829",
+        "name": "Maciej Urbański",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      }
+    ],
+    "autumn_pts": 172,
+    "best_gw_autumn": 53,
+    "spring_pts": 0,
+    "best_gw_spring": 0,
+    "display_name": "Negative Szczecin",
+    "total_pts": 172,
+    "autumn_only": false,
+    "spring_only": false,
+    "rank_change": 5,
+    "hockey_pos": 8
+  },
+  {
+    "slug": "mcroyal-polska",
+    "rank": 9,
+    "pts": 172,
+    "players": [
+      {
+        "pid": "480",
+        "name": "Bartosz Nowak",
+        "pos": "Pomocnik",
         "pts": 14,
+        "price": 3.3,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "774",
+        "name": "Sebastian Bergier",
+        "pos": "Napastnik",
+        "pts": 13,
+        "price": 2.4,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "992",
+        "name": "Przemysław Wiśniewski",
+        "pos": "Obrońca",
+        "pts": 14,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1299",
+        "name": "Jean Carlos Silva",
+        "pos": "Obrońca",
+        "pts": 8,
+        "price": 2.2,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "1319",
+        "name": "Paweł Wszołek",
+        "pos": "Obrońca",
+        "pts": 34,
+        "price": 2.1,
+        "C": false,
+        "VC": true,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 14,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1987",
+        "name": "Jordi Sánchez",
+        "pos": "Napastnik",
+        "pts": 27,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2431",
+        "name": "Rúben Vinagre",
+        "pos": "Obrońca",
+        "pts": 28,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 10,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 10,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2481",
+        "name": "Ajdin Hasić",
+        "pos": "Pomocnik",
+        "pts": 7,
+        "price": 2.2,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2801",
+        "name": "Bartłomiej Drągowski",
+        "pos": "Bramkarz",
+        "pts": 17,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1327",
+        "name": "Kacper Urbański",
+        "pos": "Pomocnik",
+        "pts": 14,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "1092",
+        "name": "Piotr Samiec-Talar",
+        "pos": "Pomocnik",
+        "pts": 24,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 7,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2304",
+        "name": "Głogowski",
+        "pos": "",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": []
+      },
+      {
+        "pid": "1909",
+        "name": "Rafał Adamski",
+        "pos": "Napastnik",
+        "pts": 14,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 7,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2002",
+        "name": "Léo Borges",
+        "pos": "Obrońca",
+        "pts": 17,
+        "price": 1.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 13,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1464",
+        "name": "Kajetan Szmyt",
+        "pos": "Pomocnik",
+        "pts": 12,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 4,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      }
+    ],
+    "autumn_pts": 172,
+    "best_gw_autumn": 51,
+    "spring_pts": 0,
+    "best_gw_spring": 0,
+    "display_name": "Mcroyal Polska",
+    "total_pts": 172,
+    "autumn_only": false,
+    "spring_only": false,
+    "rank_change": 1,
+    "hockey_pos": 9
+  },
+  {
+    "slug": "gouda-team",
+    "rank": 10,
+    "pts": 169,
+    "players": [
+      {
+        "pid": "774",
+        "name": "Sebastian Bergier",
+        "pos": "Napastnik",
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -3224,7 +4132,458 @@
           },
           {
             "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "992",
+        "name": "Przemysław Wiśniewski",
+        "pos": "Obrońca",
+        "pts": 14,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1092",
+        "name": "Piotr Samiec-Talar",
+        "pos": "Pomocnik",
+        "pts": 24,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 7,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1319",
+        "name": "Paweł Wszołek",
+        "pos": "Obrońca",
+        "pts": 34,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 3,
             "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 14,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1529",
+        "name": "Mariusz Fornalczyk",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 2.0,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1540",
+        "name": "Norbert Wojtuszek",
+        "pos": "Obrońca",
+        "pts": 10,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1987",
+        "name": "Jordi Sánchez",
+        "pos": "Napastnik",
+        "pts": 27,
+        "price": 1.9,
+        "C": false,
+        "VC": true,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2805",
+        "name": "Otto Hindrich",
+        "pos": "Bramkarz",
+        "pts": 19,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 6,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2878",
+        "name": "Frederico Duarte",
+        "pos": "Pomocnik",
+        "pts": 8,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2880",
+        "name": "Marko Bozic",
+        "pos": "Pomocnik",
+        "pts": 18,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "87",
+        "name": "Szymański",
+        "pos": "3",
+        "pts": 0,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": []
+      },
+      {
+        "pid": "2007",
+        "name": "Michał Matys",
+        "pos": "Bramkarz",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2517",
+        "name": "Adam Basse",
+        "pos": "Napastnik",
+        "pts": 2,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2829",
+        "name": "Maciej Urbański",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2899",
+        "name": "Kacper Zagrodzki",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      }
+    ],
+    "autumn_pts": 169,
+    "best_gw_autumn": 47,
+    "spring_pts": 0,
+    "best_gw_spring": 0,
+    "display_name": "Gouda Team",
+    "total_pts": 169,
+    "autumn_only": false,
+    "spring_only": false,
+    "rank_change": 4,
+    "hockey_pos": 10
+  },
+  {
+    "slug": "huragan-primore",
+    "rank": 11,
+    "pts": 168,
+    "players": [
+      {
+        "pid": "774",
+        "name": "Sebastian Bergier",
+        "pos": "Napastnik",
+        "pts": 13,
+        "price": 2.4,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
             "p": true
           }
         ]
@@ -3658,472 +5017,21 @@
         ]
       }
     ],
-    "autumn_pts": 167,
+    "autumn_pts": 168,
     "best_gw_autumn": 53,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Huragan Primore",
-    "total_pts": 167,
+    "total_pts": 168,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": -1,
-    "hockey_pos": 8
-  },
-  {
-    "slug": "mcroyal-polska",
-    "rank": 9,
-    "pts": 167,
-    "players": [
-      {
-        "pid": "480",
-        "name": "Bartosz Nowak",
-        "pos": "Pomocnik",
-        "pts": 14,
-        "price": 3.3,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "774",
-        "name": "Sebastian Bergier",
-        "pos": "Napastnik",
-        "pts": 14,
-        "price": 2.4,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "992",
-        "name": "Przemysław Wiśniewski",
-        "pos": "Obrońca",
-        "pts": 18,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1299",
-        "name": "Jean Carlos Silva",
-        "pos": "Obrońca",
-        "pts": 8,
-        "price": 2.2,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "1319",
-        "name": "Paweł Wszołek",
-        "pos": "Obrońca",
-        "pts": 34,
-        "price": 2.1,
-        "C": false,
-        "VC": true,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 14,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1987",
-        "name": "Jordi Sánchez",
-        "pos": "Napastnik",
-        "pts": 27,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2431",
-        "name": "Rúben Vinagre",
-        "pos": "Obrońca",
-        "pts": 28,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 10,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 10,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2481",
-        "name": "Ajdin Hasić",
-        "pos": "Pomocnik",
-        "pts": 7,
-        "price": 2.2,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2801",
-        "name": "Bartłomiej Drągowski",
-        "pos": "Bramkarz",
-        "pts": 20,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1327",
-        "name": "Kacper Urbański",
-        "pos": "Pomocnik",
-        "pts": 14,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "1092",
-        "name": "Piotr Samiec-Talar",
-        "pos": "Pomocnik",
-        "pts": 24,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 7,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2304",
-        "name": "Głogowski",
-        "pos": "",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": []
-      },
-      {
-        "pid": "1909",
-        "name": "Rafał Adamski",
-        "pos": "Napastnik",
-        "pts": 14,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 7,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2002",
-        "name": "Léo Borges",
-        "pos": "Obrońca",
-        "pts": 17,
-        "price": 1.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 13,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1464",
-        "name": "Kajetan Szmyt",
-        "pos": "Pomocnik",
-        "pts": 12,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 4,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      }
-    ],
-    "autumn_pts": 167,
-    "best_gw_autumn": 51,
-    "spring_pts": 0,
-    "best_gw_spring": 0,
-    "display_name": "Mcroyal Polska",
-    "total_pts": 167,
-    "autumn_only": false,
-    "spring_only": false,
-    "rank_change": 1,
-    "hockey_pos": 9
+    "rank_change": -4,
+    "hockey_pos": 11
   },
   {
     "slug": "polski-kibel",
-    "rank": 10,
-    "pts": 164,
+    "rank": 12,
+    "pts": 167,
     "players": [
       {
         "pid": "184",
@@ -4161,7 +5069,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -4184,7 +5092,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -4412,7 +5320,7 @@
         "pid": "2801",
         "name": "Bartłomiej Drągowski",
         "pos": "Bramkarz",
-        "pts": 20,
+        "pts": 17,
         "price": 1.8,
         "C": false,
         "VC": false,
@@ -4435,7 +5343,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 2,
             "p": true
           }
         ]
@@ -4570,749 +5478,51 @@
         ]
       }
     ],
-    "autumn_pts": 164,
+    "autumn_pts": 167,
     "best_gw_autumn": 56,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Polski Kibel",
-    "total_pts": 164,
+    "total_pts": 167,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": 1,
-    "hockey_pos": 10
+    "rank_change": -1,
+    "hockey_pos": 12
   },
   {
-    "slug": "gouda-team",
-    "rank": 11,
-    "pts": 163,
-    "players": [
-      {
-        "pid": "774",
-        "name": "Sebastian Bergier",
-        "pos": "Napastnik",
-        "pts": 14,
-        "price": 2.4,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "992",
-        "name": "Przemysław Wiśniewski",
-        "pos": "Obrońca",
-        "pts": 18,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1092",
-        "name": "Piotr Samiec-Talar",
-        "pos": "Pomocnik",
-        "pts": 24,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 7,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1319",
-        "name": "Paweł Wszołek",
-        "pos": "Obrońca",
-        "pts": 34,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 14,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1529",
-        "name": "Mariusz Fornalczyk",
-        "pos": "Pomocnik",
-        "pts": 16,
-        "price": 2.0,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 3,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1540",
-        "name": "Norbert Wojtuszek",
-        "pos": "Obrońca",
-        "pts": 10,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 1,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1987",
-        "name": "Jordi Sánchez",
-        "pos": "Napastnik",
-        "pts": 27,
-        "price": 1.9,
-        "C": false,
-        "VC": true,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2805",
-        "name": "Otto Hindrich",
-        "pos": "Bramkarz",
-        "pts": 19,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 6,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2878",
-        "name": "Frederico Duarte",
-        "pos": "Pomocnik",
-        "pts": 8,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2880",
-        "name": "Marko Bozic",
-        "pos": "Pomocnik",
-        "pts": 18,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "87",
-        "name": "Szymański",
-        "pos": "3",
-        "pts": 0,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": []
-      },
-      {
-        "pid": "2007",
-        "name": "Michał Matys",
-        "pos": "Bramkarz",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2517",
-        "name": "Adam Basse",
-        "pos": "Napastnik",
-        "pts": 2,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2829",
-        "name": "Maciej Urbański",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2899",
-        "name": "Kacper Zagrodzki",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      }
-    ],
-    "autumn_pts": 163,
-    "best_gw_autumn": 47,
-    "spring_pts": 0,
-    "best_gw_spring": 0,
-    "display_name": "Gouda Team",
-    "total_pts": 163,
-    "autumn_only": false,
-    "spring_only": false,
-    "rank_change": 3,
-    "hockey_pos": 11
-  },
-  {
-    "slug": "negative-szczecin",
-    "rank": 12,
+    "slug": "kosciol-klubu-kuby",
+    "rank": 13,
     "pts": 161,
     "players": [
       {
-        "pid": "774",
-        "name": "Sebastian Bergier",
+        "pid": "95",
+        "name": "Karol Świderski",
         "pos": "Napastnik",
-        "pts": 14,
-        "price": 2.4,
-        "C": false,
-        "VC": true,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1931",
-        "name": "Steve Kapuadi",
-        "pos": "Obrońca",
-        "pts": 15,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1987",
-        "name": "Jordi Sánchez",
-        "pos": "Napastnik",
-        "pts": 27,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2353",
-        "name": "Mikkel Maigaard",
-        "pos": "Pomocnik",
-        "pts": 4,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": -1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 3,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2386",
-        "name": "Hellebrand",
-        "pos": "3",
-        "pts": 0,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": []
-      },
-      {
-        "pid": "2577",
-        "name": "Josip Ćorluka",
-        "pos": "Obrońca",
-        "pts": 19,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 13,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2943",
-        "name": "Peter González",
-        "pos": "Pomocnik",
-        "pts": 13,
-        "price": 1.9,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 3,
-            "pts": 13,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2805",
-        "name": "Otto Hindrich",
-        "pos": "Bramkarz",
-        "pts": 19,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 6,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2879",
-        "name": "Maciej Kuziemka",
-        "pos": "Pomocnik",
         "pts": 7,
-        "price": 1.7,
+        "price": 2.5,
         "C": false,
         "VC": false,
         "R": false,
         "form": [
           {
             "r": 1,
-            "pts": 3,
+            "pts": 1,
             "p": true
           },
           {
             "r": 2,
-            "pts": 2,
+            "pts": 1,
             "p": true
           },
           {
             "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "1299",
-        "name": "Jean Carlos Silva",
-        "pos": "Obrońca",
-        "pts": 8,
-        "price": 2.2,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
             "pts": 3,
             "p": true
           },
           {
-            "r": 2,
-            "pts": 5,
-            "p": true
-          },
-          {
             "r": 4,
-            "pts": 0,
-            "p": false
+            "pts": 2,
+            "p": true
           }
         ]
       },
@@ -5349,18 +5559,18 @@
         ]
       },
       {
-        "pid": "2659",
-        "name": "Marcel Łubik",
-        "pos": "Bramkarz",
-        "pts": 9,
-        "price": 1.8,
+        "pid": "1225",
+        "name": "Jan Grzesik",
+        "pos": "Obrońca",
+        "pts": 12,
+        "price": 2.0,
         "C": false,
         "VC": false,
-        "R": true,
+        "R": false,
         "form": [
           {
             "r": 1,
-            "pts": 4,
+            "pts": 14,
             "p": true
           },
           {
@@ -5370,7 +5580,71 @@
           },
           {
             "r": 3,
-            "pts": 5,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": -2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1529",
+        "name": "Mariusz Fornalczyk",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2869",
+        "name": "Jakub Krzyżanowski",
+        "pos": "Obrońca",
+        "pts": 5,
+        "price": 1.6,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": -1,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
             "p": true
           },
           {
@@ -5381,11 +5655,231 @@
         ]
       },
       {
-        "pid": "2733",
-        "name": "Luis Palma",
+        "pid": "2423",
+        "name": "Mbaye N'Diaye",
         "pos": "Pomocnik",
         "pts": 15,
-        "price": 3.5,
+        "price": 2.4,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2878",
+        "name": "Frederico Duarte",
+        "pos": "Pomocnik",
+        "pts": 8,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2881",
+        "name": "Ángel Rodado",
+        "pos": "Napastnik",
+        "pts": 13,
+        "price": 2.2,
+        "C": false,
+        "VC": true,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 4,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2805",
+        "name": "Otto Hindrich",
+        "pos": "Bramkarz",
+        "pts": 19,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 6,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "480",
+        "name": "Bartosz Nowak",
+        "pos": "Pomocnik",
+        "pts": 14,
+        "price": 3.3,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2477",
+        "name": "Marcel Reguła",
+        "pos": "Pomocnik",
+        "pts": 13,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2304",
+        "name": "Głogowski",
+        "pos": "",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": []
+      },
+      {
+        "pid": "1386",
+        "name": "Ariel Mosór",
+        "pos": "Obrońca",
+        "pts": 6,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2517",
+        "name": "Adam Basse",
+        "pos": "Napastnik",
+        "pts": 2,
+        "price": 0.7,
         "C": false,
         "VC": false,
         "R": true,
@@ -5397,46 +5891,8 @@
           },
           {
             "r": 2,
-            "pts": 6,
+            "pts": 1,
             "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2939",
-        "name": "Prelec",
-        "pos": "",
-        "pts": 0,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": []
-      },
-      {
-        "pid": "2829",
-        "name": "Maciej Urbański",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
           },
           {
             "r": 4,
@@ -5444,23 +5900,50 @@
             "p": false
           }
         ]
+      },
+      {
+        "pid": "1540",
+        "name": "Norbert Wojtuszek",
+        "pos": "Obrońca",
+        "pts": 10,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 1,
+            "p": true
+          }
+        ]
       }
     ],
     "autumn_pts": 161,
-    "best_gw_autumn": 53,
+    "best_gw_autumn": 61,
     "spring_pts": 0,
     "best_gw_spring": 0,
-    "display_name": "Negative Szczecin",
+    "display_name": "Kosciol Klubu Kuby",
     "total_pts": 161,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": 1,
-    "hockey_pos": 12
+    "rank_change": -4,
+    "hockey_pos": 13
   },
   {
     "slug": "batory-bandit",
-    "rank": 13,
-    "pts": 158,
+    "rank": 14,
+    "pts": 159,
     "players": [
       {
         "pid": "10",
@@ -5771,7 +6254,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -5794,7 +6277,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -5918,21 +6401,21 @@
         ]
       }
     ],
-    "autumn_pts": 158,
+    "autumn_pts": 159,
     "best_gw_autumn": 62,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Batory Bandit",
-    "total_pts": 158,
+    "total_pts": 159,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": -1,
-    "hockey_pos": 13
+    "rank_change": -2,
+    "hockey_pos": 14
   },
   {
-    "slug": "kosciol-klubu-kuby",
-    "rank": 14,
-    "pts": 157,
+    "slug": "glks-klomnice",
+    "rank": 15,
+    "pts": 155,
     "players": [
       {
         "pid": "95",
@@ -6034,7 +6517,7 @@
         "pid": "1529",
         "name": "Mariusz Fornalczyk",
         "pos": "Pomocnik",
-        "pts": 16,
+        "pts": 15,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -6057,49 +6540,17 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
       },
       {
-        "pid": "2869",
-        "name": "Jakub Krzyżanowski",
-        "pos": "Obrońca",
-        "pts": 5,
-        "price": 1.6,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": -1,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2423",
-        "name": "Mbaye N'Diaye",
-        "pos": "Pomocnik",
-        "pts": 15,
-        "price": 2.4,
+        "pid": "1987",
+        "name": "Jordi Sánchez",
+        "pos": "Napastnik",
+        "pts": 27,
+        "price": 1.9,
         "C": false,
         "VC": false,
         "R": false,
@@ -6111,12 +6562,12 @@
           },
           {
             "r": 2,
-            "pts": 5,
+            "pts": 11,
             "p": true
           },
           {
             "r": 3,
-            "pts": 2,
+            "pts": 8,
             "p": true
           },
           {
@@ -6127,11 +6578,43 @@
         ]
       },
       {
-        "pid": "2878",
-        "name": "Frederico Duarte",
+        "pid": "2225",
+        "name": "Fran Álvarez",
         "pos": "Pomocnik",
-        "pts": 8,
+        "pts": 15,
         "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2406",
+        "name": "Maksym Chłań",
+        "pos": "Pomocnik",
+        "pts": 6,
+        "price": 2.5,
         "C": false,
         "VC": false,
         "R": false,
@@ -6142,13 +6625,67 @@
             "p": true
           },
           {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2659",
+        "name": "Marcel Łubik",
+        "pos": "Bramkarz",
+        "pts": 9,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 4,
+            "p": true
+          },
+          {
             "r": 2,
-            "pts": 2,
+            "pts": 0,
             "p": true
           },
           {
             "r": 3,
-            "pts": 3,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "480",
+        "name": "Bartosz Nowak",
+        "pos": "Pomocnik",
+        "pts": 14,
+        "price": 3.3,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
             "p": true
           },
           {
@@ -6191,6 +6728,414 @@
         ]
       },
       {
+        "pid": "1319",
+        "name": "Paweł Wszołek",
+        "pos": "Obrońca",
+        "pts": 34,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 14,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2832",
+        "name": "Jakub Grelich",
+        "pos": "Bramkarz",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2733",
+        "name": "Luis Palma",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 3.5,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2899",
+        "name": "Kacper Zagrodzki",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2829",
+        "name": "Maciej Urbański",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      }
+    ],
+    "autumn_pts": 155,
+    "best_gw_autumn": 57,
+    "spring_pts": 0,
+    "best_gw_spring": 0,
+    "display_name": "Glks Klomnice",
+    "total_pts": 155,
+    "autumn_only": false,
+    "spring_only": false,
+    "rank_change": 0,
+    "hockey_pos": 15
+  },
+  {
+    "slug": "wynalazcy-wslizgu",
+    "rank": 16,
+    "pts": 153,
+    "players": [
+      {
+        "pid": "774",
+        "name": "Sebastian Bergier",
+        "pos": "Napastnik",
+        "pts": 13,
+        "price": 2.4,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1225",
+        "name": "Jan Grzesik",
+        "pos": "Obrońca",
+        "pts": 12,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 14,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": -2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "827",
+        "name": "Mateusz Grzybek",
+        "pos": "Obrońca",
+        "pts": 13,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 10,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 3,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1507",
+        "name": "Łukasz Zjawiński",
+        "pos": "Napastnik",
+        "pts": 22,
+        "price": 2.2,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 5,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1987",
+        "name": "Jordi Sánchez",
+        "pos": "Napastnik",
+        "pts": 27,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2423",
+        "name": "Mbaye N'Diaye",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 2.4,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "992",
+        "name": "Przemysław Wiśniewski",
+        "pos": "Obrońca",
+        "pts": 14,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "480",
+        "name": "Bartosz Nowak",
+        "pos": "Pomocnik",
+        "pts": 14,
+        "price": 3.3,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
         "pid": "2805",
         "name": "Otto Hindrich",
         "pos": "Bramkarz",
@@ -6223,133 +7168,41 @@
         ]
       },
       {
-        "pid": "480",
-        "name": "Bartosz Nowak",
-        "pos": "Pomocnik",
-        "pts": 14,
-        "price": 3.3,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2477",
-        "name": "Marcel Reguła",
+        "pid": "2943",
+        "name": "Peter González",
         "pos": "Pomocnik",
         "pts": 13,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2304",
-        "name": "Głogowski",
-        "pos": "",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": []
-      },
-      {
-        "pid": "1386",
-        "name": "Ariel Mosór",
-        "pos": "Obrońca",
-        "pts": 4,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2517",
-        "name": "Adam Basse",
-        "pos": "Napastnik",
-        "pts": 2,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "1540",
-        "name": "Norbert Wojtuszek",
-        "pos": "Obrońca",
-        "pts": 10,
         "price": 1.9,
         "C": false,
         "VC": false,
-        "R": true,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 13,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2431",
+        "name": "Rúben Vinagre",
+        "pos": "Obrońca",
+        "pts": 28,
+        "price": 1.9,
+        "C": false,
+        "VC": true,
+        "R": false,
         "form": [
           {
             "r": 1,
@@ -6358,31 +7211,138 @@
           },
           {
             "r": 2,
-            "pts": 3,
+            "pts": 10,
             "p": true
           },
           {
             "r": 3,
-            "pts": 1,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 10,
             "p": true
           }
         ]
+      },
+      {
+        "pid": "2863",
+        "name": "Jakub Stępak",
+        "pos": "Bramkarz",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2869",
+        "name": "Jakub Krzyżanowski",
+        "pos": "Obrońca",
+        "pts": 5,
+        "price": 1.6,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": -1,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2733",
+        "name": "Luis Palma",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 3.5,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2530",
+        "name": "Lewandowski",
+        "pos": "",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": []
       }
     ],
-    "autumn_pts": 157,
-    "best_gw_autumn": 61,
+    "autumn_pts": 153,
+    "best_gw_autumn": 46,
     "spring_pts": 0,
     "best_gw_spring": 0,
-    "display_name": "Kosciol Klubu Kuby",
-    "total_pts": 157,
+    "display_name": "Wynalazcy Wslizgu",
+    "total_pts": 153,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": -5,
-    "hockey_pos": 14
+    "rank_change": 0,
+    "hockey_pos": 16
   },
   {
     "slug": "wszystko-czuj",
-    "rank": 15,
+    "rank": 17,
     "pts": 151,
     "players": [
       {
@@ -6823,947 +7783,19 @@
     "total_pts": 151,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": 7,
-    "hockey_pos": 15
-  },
-  {
-    "slug": "wynalazcy-wslizgu",
-    "rank": 16,
-    "pts": 151,
-    "players": [
-      {
-        "pid": "774",
-        "name": "Sebastian Bergier",
-        "pos": "Napastnik",
-        "pts": 14,
-        "price": 2.4,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1225",
-        "name": "Jan Grzesik",
-        "pos": "Obrońca",
-        "pts": 12,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 14,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": -2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "827",
-        "name": "Mateusz Grzybek",
-        "pos": "Obrońca",
-        "pts": 13,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 10,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 3,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1507",
-        "name": "Łukasz Zjawiński",
-        "pos": "Napastnik",
-        "pts": 22,
-        "price": 2.2,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1987",
-        "name": "Jordi Sánchez",
-        "pos": "Napastnik",
-        "pts": 27,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2423",
-        "name": "Mbaye N'Diaye",
-        "pos": "Pomocnik",
-        "pts": 15,
-        "price": 2.4,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "992",
-        "name": "Przemysław Wiśniewski",
-        "pos": "Obrońca",
-        "pts": 18,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "480",
-        "name": "Bartosz Nowak",
-        "pos": "Pomocnik",
-        "pts": 14,
-        "price": 3.3,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2805",
-        "name": "Otto Hindrich",
-        "pos": "Bramkarz",
-        "pts": 19,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 6,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2943",
-        "name": "Peter González",
-        "pos": "Pomocnik",
-        "pts": 13,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 3,
-            "pts": 13,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2431",
-        "name": "Rúben Vinagre",
-        "pos": "Obrońca",
-        "pts": 28,
-        "price": 1.9,
-        "C": false,
-        "VC": true,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 10,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 10,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2863",
-        "name": "Jakub Stępak",
-        "pos": "Bramkarz",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2869",
-        "name": "Jakub Krzyżanowski",
-        "pos": "Obrońca",
-        "pts": 5,
-        "price": 1.6,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": -1,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2733",
-        "name": "Luis Palma",
-        "pos": "Pomocnik",
-        "pts": 15,
-        "price": 3.5,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2530",
-        "name": "Lewandowski",
-        "pos": "",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": []
-      }
-    ],
-    "autumn_pts": 151,
-    "best_gw_autumn": 46,
-    "spring_pts": 0,
-    "best_gw_spring": 0,
-    "display_name": "Wynalazcy Wslizgu",
-    "total_pts": 151,
-    "autumn_only": false,
-    "spring_only": false,
-    "rank_change": 0,
-    "hockey_pos": 16
-  },
-  {
-    "slug": "glks-klomnice",
-    "rank": 17,
-    "pts": 149,
-    "players": [
-      {
-        "pid": "95",
-        "name": "Karol Świderski",
-        "pos": "Napastnik",
-        "pts": 7,
-        "price": 2.5,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1126",
-        "name": "Kamil Piątkowski",
-        "pos": "Obrońca",
-        "pts": 22,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 6,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1225",
-        "name": "Jan Grzesik",
-        "pos": "Obrońca",
-        "pts": 12,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 14,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": -2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1529",
-        "name": "Mariusz Fornalczyk",
-        "pos": "Pomocnik",
-        "pts": 16,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 3,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1987",
-        "name": "Jordi Sánchez",
-        "pos": "Napastnik",
-        "pts": 27,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2225",
-        "name": "Fran Álvarez",
-        "pos": "Pomocnik",
-        "pts": 16,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 3,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2406",
-        "name": "Maksym Chłań",
-        "pos": "Pomocnik",
-        "pts": 6,
-        "price": 2.5,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2659",
-        "name": "Marcel Łubik",
-        "pos": "Bramkarz",
-        "pts": 9,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 4,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "480",
-        "name": "Bartosz Nowak",
-        "pos": "Pomocnik",
-        "pts": 14,
-        "price": 3.3,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2881",
-        "name": "Ángel Rodado",
-        "pos": "Napastnik",
-        "pts": 13,
-        "price": 2.2,
-        "C": false,
-        "VC": true,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 4,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "1319",
-        "name": "Paweł Wszołek",
-        "pos": "Obrońca",
-        "pts": 34,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 14,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2832",
-        "name": "Jakub Grelich",
-        "pos": "Bramkarz",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2733",
-        "name": "Luis Palma",
-        "pos": "Pomocnik",
-        "pts": 15,
-        "price": 3.5,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2899",
-        "name": "Kacper Zagrodzki",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2829",
-        "name": "Maciej Urbański",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      }
-    ],
-    "autumn_pts": 149,
-    "best_gw_autumn": 57,
-    "spring_pts": 0,
-    "best_gw_spring": 0,
-    "display_name": "Glks Klomnice",
-    "total_pts": 149,
-    "autumn_only": false,
-    "spring_only": false,
-    "rank_change": -2,
+    "rank_change": 5,
     "hockey_pos": 17
   },
   {
     "slug": "dunder-mifflin",
     "rank": 18,
-    "pts": 146,
+    "pts": 149,
     "players": [
       {
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -7786,7 +7818,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -7886,7 +7918,7 @@
         "pid": "1529",
         "name": "Mariusz Fornalczyk",
         "pos": "Pomocnik",
-        "pts": 16,
+        "pts": 15,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -7909,7 +7941,7 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
@@ -8215,12 +8247,12 @@
         ]
       }
     ],
-    "autumn_pts": 146,
+    "autumn_pts": 149,
     "best_gw_autumn": 49,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Dunder Mifflin",
-    "total_pts": 146,
+    "total_pts": 149,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -1,
@@ -8229,7 +8261,7 @@
   {
     "slug": "kauno-zalgiris",
     "rank": 19,
-    "pts": 146,
+    "pts": 147,
     "players": [
       {
         "pid": "480",
@@ -8262,7 +8294,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": true,
@@ -8285,7 +8317,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -8661,12 +8693,12 @@
         ]
       }
     ],
-    "autumn_pts": 146,
+    "autumn_pts": 147,
     "best_gw_autumn": 48,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Kauno Zalgiris",
-    "total_pts": 146,
+    "total_pts": 147,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -8675,7 +8707,7 @@
   {
     "slug": "ks-wojtkovia",
     "rank": 20,
-    "pts": 145,
+    "pts": 146,
     "players": [
       {
         "pid": "480",
@@ -8708,7 +8740,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -8731,7 +8763,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -9086,12 +9118,12 @@
         ]
       }
     ],
-    "autumn_pts": 145,
+    "autumn_pts": 146,
     "best_gw_autumn": 58,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Ks Wojtkovia",
-    "total_pts": 145,
+    "total_pts": 146,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -9100,7 +9132,7 @@
   {
     "slug": "fc-abw",
     "rank": 21,
-    "pts": 141,
+    "pts": 146,
     "players": [
       {
         "pid": "480",
@@ -9229,7 +9261,7 @@
         "pid": "1529",
         "name": "Mariusz Fornalczyk",
         "pos": "Pomocnik",
-        "pts": 16,
+        "pts": 15,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -9252,7 +9284,7 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
@@ -9325,7 +9357,7 @@
         "pid": "2801",
         "name": "Bartłomiej Drągowski",
         "pos": "Bramkarz",
-        "pts": 20,
+        "pts": 17,
         "price": 1.8,
         "C": false,
         "VC": false,
@@ -9348,7 +9380,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 2,
             "p": true
           }
         ]
@@ -9389,7 +9421,7 @@
         "pid": "2940",
         "name": "Mario García",
         "pos": "Obrońca",
-        "pts": 21,
+        "pts": 17,
         "price": 1.9,
         "C": false,
         "VC": false,
@@ -9412,7 +9444,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 1,
             "p": true
           }
         ]
@@ -9547,12 +9579,12 @@
         ]
       }
     ],
-    "autumn_pts": 141,
+    "autumn_pts": 146,
     "best_gw_autumn": 44,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Fc Abw",
-    "total_pts": 141,
+    "total_pts": 146,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -3,
@@ -9561,7 +9593,7 @@
   {
     "slug": "ks-blueface",
     "rank": 22,
-    "pts": 140,
+    "pts": 141,
     "players": [
       {
         "pid": "195",
@@ -9578,7 +9610,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": true,
@@ -9601,7 +9633,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -9956,12 +9988,12 @@
         ]
       }
     ],
-    "autumn_pts": 140,
+    "autumn_pts": 141,
     "best_gw_autumn": 44,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Ks Blueface",
-    "total_pts": 140,
+    "total_pts": 141,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 1,
@@ -9970,7 +10002,7 @@
   {
     "slug": "mauroball",
     "rank": 23,
-    "pts": 135,
+    "pts": 139,
     "players": [
       {
         "pid": "2902",
@@ -10035,7 +10067,7 @@
         "pid": "992",
         "name": "Przemysław Wiśniewski",
         "pos": "Obrońca",
-        "pts": 18,
+        "pts": 14,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -10058,7 +10090,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 1,
             "p": true
           }
         ]
@@ -10131,7 +10163,7 @@
         "pid": "2817",
         "name": "Emil Kornvig",
         "pos": "Pomocnik",
-        "pts": 11,
+        "pts": 10,
         "price": 2.1,
         "C": false,
         "VC": false,
@@ -10154,7 +10186,7 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
@@ -10249,7 +10281,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -10272,7 +10304,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -10397,12 +10429,12 @@
         "form": []
       }
     ],
-    "autumn_pts": 135,
+    "autumn_pts": 139,
     "best_gw_autumn": 44,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Mauroball",
-    "total_pts": 135,
+    "total_pts": 139,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 3,
@@ -10411,7 +10443,7 @@
   {
     "slug": "vfb-osterode",
     "rank": 24,
-    "pts": 132,
+    "pts": 138,
     "players": [
       {
         "pid": "951",
@@ -10444,7 +10476,7 @@
         "pid": "1400",
         "name": "Xavier Dziekoński",
         "pos": "Bramkarz",
-        "pts": 10,
+        "pts": 9,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -10462,7 +10494,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 4,
             "p": true
           }
         ]
@@ -10471,7 +10503,7 @@
         "pid": "1529",
         "name": "Mariusz Fornalczyk",
         "pos": "Pomocnik",
-        "pts": 16,
+        "pts": 15,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -10494,7 +10526,7 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
@@ -10837,12 +10869,12 @@
         ]
       }
     ],
-    "autumn_pts": 132,
+    "autumn_pts": 138,
     "best_gw_autumn": 47,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Vfb Osterode",
-    "total_pts": 132,
+    "total_pts": 138,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 1,
@@ -10851,13 +10883,13 @@
   {
     "slug": "duma-koziego-grodu",
     "rank": 25,
-    "pts": 132,
+    "pts": 135,
     "players": [
       {
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": true,
@@ -10880,7 +10912,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -10985,7 +11017,7 @@
         "pid": "1529",
         "name": "Mariusz Fornalczyk",
         "pos": "Pomocnik",
-        "pts": 16,
+        "pts": 15,
         "price": 2.0,
         "C": false,
         "VC": false,
@@ -11008,7 +11040,7 @@
           },
           {
             "r": 4,
-            "pts": 3,
+            "pts": 2,
             "p": true
           }
         ]
@@ -11262,21 +11294,492 @@
         ]
       }
     ],
-    "autumn_pts": 132,
+    "autumn_pts": 135,
     "best_gw_autumn": 44,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Duma Koziego Grodu",
-    "total_pts": 132,
+    "total_pts": 135,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -1,
     "hockey_pos": 25
   },
   {
-    "slug": "misterna-porazka",
+    "slug": "ks-bialy-sad",
     "rank": 26,
-    "pts": 132,
+    "pts": 133,
+    "players": [
+      {
+        "pid": "95",
+        "name": "Karol Świderski",
+        "pos": "Napastnik",
+        "pts": 7,
+        "price": 2.5,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1092",
+        "name": "Piotr Samiec-Talar",
+        "pos": "Pomocnik",
+        "pts": 24,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 7,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1225",
+        "name": "Jan Grzesik",
+        "pos": "Obrońca",
+        "pts": 12,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 14,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": -2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1319",
+        "name": "Paweł Wszołek",
+        "pos": "Obrońca",
+        "pts": 34,
+        "price": 2.1,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 14,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1521",
+        "name": "Bartosz Kapustka",
+        "pos": "Pomocnik",
+        "pts": 22,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 4,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 13,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1935",
+        "name": "Juljan Shehu",
+        "pos": "Pomocnik",
+        "pts": 12,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 4,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 5,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2423",
+        "name": "Mbaye N'Diaye",
+        "pos": "Pomocnik",
+        "pts": 15,
+        "price": 2.4,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2805",
+        "name": "Otto Hindrich",
+        "pos": "Bramkarz",
+        "pts": 19,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 6,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2880",
+        "name": "Marko Bozic",
+        "pos": "Pomocnik",
+        "pts": 18,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2940",
+        "name": "Mario García",
+        "pos": "Obrońca",
+        "pts": 17,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 15,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 1,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1987",
+        "name": "Jordi Sánchez",
+        "pos": "Napastnik",
+        "pts": 27,
+        "price": 1.9,
+        "C": false,
+        "VC": true,
+        "R": false,
+        "form": [
+          {
+            "r": 1,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 2,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 3,
+            "pts": 8,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2366",
+        "name": "Konrad Golonka",
+        "pos": "Bramkarz",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2899",
+        "name": "Kacper Zagrodzki",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2751",
+        "name": "Stanowski",
+        "pos": "",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": []
+      },
+      {
+        "pid": "2968",
+        "name": "Adrian Żulewski",
+        "pos": "Obrońca",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 1,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 2,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 3,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 4,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      }
+    ],
+    "autumn_pts": 133,
+    "best_gw_autumn": 60,
+    "spring_pts": 0,
+    "best_gw_spring": 0,
+    "display_name": "Ks Bialy Sad",
+    "total_pts": 133,
+    "autumn_only": false,
+    "spring_only": false,
+    "rank_change": 4,
+    "hockey_pos": 26
+  },
+  {
+    "slug": "misterna-porazka",
+    "rank": 27,
+    "pts": 133,
     "players": [
       {
         "pid": "480",
@@ -11309,7 +11812,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": true,
@@ -11332,7 +11835,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -11687,492 +12190,21 @@
         "form": []
       }
     ],
-    "autumn_pts": 132,
+    "autumn_pts": 133,
     "best_gw_autumn": 36,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Misterna Porazka",
-    "total_pts": 132,
+    "total_pts": 133,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": 2,
-    "hockey_pos": 26
-  },
-  {
-    "slug": "ks-bialy-sad",
-    "rank": 27,
-    "pts": 125,
-    "players": [
-      {
-        "pid": "95",
-        "name": "Karol Świderski",
-        "pos": "Napastnik",
-        "pts": 7,
-        "price": 2.5,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1092",
-        "name": "Piotr Samiec-Talar",
-        "pos": "Pomocnik",
-        "pts": 24,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 7,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1225",
-        "name": "Jan Grzesik",
-        "pos": "Obrońca",
-        "pts": 12,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 14,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": -2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1319",
-        "name": "Paweł Wszołek",
-        "pos": "Obrońca",
-        "pts": 34,
-        "price": 2.1,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 14,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1521",
-        "name": "Bartosz Kapustka",
-        "pos": "Pomocnik",
-        "pts": 22,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 4,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 13,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1935",
-        "name": "Juljan Shehu",
-        "pos": "Pomocnik",
-        "pts": 10,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 4,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 3,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2423",
-        "name": "Mbaye N'Diaye",
-        "pos": "Pomocnik",
-        "pts": 15,
-        "price": 2.4,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2805",
-        "name": "Otto Hindrich",
-        "pos": "Bramkarz",
-        "pts": 19,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 6,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2880",
-        "name": "Marko Bozic",
-        "pos": "Pomocnik",
-        "pts": 18,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2940",
-        "name": "Mario García",
-        "pos": "Obrońca",
-        "pts": 21,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 15,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1987",
-        "name": "Jordi Sánchez",
-        "pos": "Napastnik",
-        "pts": 27,
-        "price": 1.9,
-        "C": false,
-        "VC": true,
-        "R": false,
-        "form": [
-          {
-            "r": 1,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 2,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 3,
-            "pts": 8,
-            "p": true
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2366",
-        "name": "Konrad Golonka",
-        "pos": "Bramkarz",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2899",
-        "name": "Kacper Zagrodzki",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2751",
-        "name": "Stanowski",
-        "pos": "",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": []
-      },
-      {
-        "pid": "2968",
-        "name": "Adrian Żulewski",
-        "pos": "Obrońca",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 1,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 2,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 3,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 4,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      }
-    ],
-    "autumn_pts": 125,
-    "best_gw_autumn": 52,
-    "spring_pts": 0,
-    "best_gw_spring": 0,
-    "display_name": "Ks Bialy Sad",
-    "total_pts": 125,
-    "autumn_only": false,
-    "spring_only": false,
-    "rank_change": 3,
+    "rank_change": 1,
     "hockey_pos": 27
   },
   {
     "slug": "mewy-1fc",
     "rank": 28,
-    "pts": 124,
+    "pts": 125,
     "players": [
       {
         "pid": "184",
@@ -12248,7 +12280,7 @@
         "pid": "774",
         "name": "Sebastian Bergier",
         "pos": "Napastnik",
-        "pts": 14,
+        "pts": 13,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -12271,7 +12303,7 @@
           },
           {
             "r": 4,
-            "pts": 2,
+            "pts": 1,
             "p": true
           }
         ]
@@ -12541,12 +12573,12 @@
         ]
       }
     ],
-    "autumn_pts": 124,
+    "autumn_pts": 125,
     "best_gw_autumn": 47,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Mewy 1Fc",
-    "total_pts": 124,
+    "total_pts": 125,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -7,
@@ -12555,7 +12587,7 @@
   {
     "slug": "poznan-festung",
     "rank": 29,
-    "pts": 122,
+    "pts": 125,
     "players": [
       {
         "pid": "195",
@@ -12813,7 +12845,7 @@
         "pid": "2801",
         "name": "Bartłomiej Drągowski",
         "pos": "Bramkarz",
-        "pts": 20,
+        "pts": 17,
         "price": 1.8,
         "C": false,
         "VC": false,
@@ -12836,7 +12868,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 2,
             "p": true
           }
         ]
@@ -12845,7 +12877,7 @@
         "pid": "2940",
         "name": "Mario García",
         "pos": "Obrońca",
-        "pts": 21,
+        "pts": 17,
         "price": 1.9,
         "C": false,
         "VC": false,
@@ -12868,7 +12900,7 @@
           },
           {
             "r": 4,
-            "pts": 5,
+            "pts": 1,
             "p": true
           }
         ]
@@ -12950,12 +12982,12 @@
         ]
       }
     ],
-    "autumn_pts": 122,
+    "autumn_pts": 125,
     "best_gw_autumn": 41,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Poznan Festung",
-    "total_pts": 122,
+    "total_pts": 125,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -2,
