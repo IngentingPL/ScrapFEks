@@ -119,7 +119,7 @@ NINETYM_TEAM_MAP = {
 }
 
 # ID rozgrywek Ekstraklasy na 90minut.pl (aktualizuj co sezon)
-NINETYM_LIGA_ID = "14072"  # PKO BP Ekstraklasa 2025/2026
+NINETYM_LIGA_ID = "14675"  # PKO Bank Polski Ekstraklasa 2026/2027
 
 # API do statystyk indywidualnych (xG, strzały, podania, dośrodkowania)
 # Używa ukrytego API ekstraklasy (umpire-api.tisagroup.ch)
