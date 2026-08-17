@@ -88,6 +88,7 @@ TEAM_ABBREVS = {
     "Motor Lublin": "MOT", "Piast Gliwice": "PIA", "Pogoń Szczecin": "POG",
     "Radomiak Radom": "RAD", "Raków Częstochowa": "RAK", "Widzew Łódź": "WID",
     "Wisła Płock": "WPŁ", "Zagłębie Lubin": "ZAG",
+    "Wisła Kraków": "WKR", "Śląsk Wrocław": "ŚLĄ", "Wieczysta Kraków": "WIE",
 }
 
 # Mapowanie nazw drużyn z 90minut.pl → nazwy lokalne z terminarz.txt
@@ -116,6 +117,9 @@ NINETYM_TEAM_MAP = {
     "Piast Gliwice": "Piast Gliwice",
     "Radomiak Radom": "Radomiak Radom",
     "Motor Lublin": "Motor Lublin",
+    "Wisła Kraków": "Wisła Kraków",
+    "Śląsk Wrocław": "Śląsk Wrocław",
+    "Wieczysta Kraków": "Wieczysta Kraków",
 }
 
 # ID rozgrywek Ekstraklasy na 90minut.pl (aktualizuj co sezon)

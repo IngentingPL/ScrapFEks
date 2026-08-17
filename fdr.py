@@ -25,9 +25,30 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
     if not teams or not rounds or not ekstra_stats:
         return {"teams": [], "gameweeks": [], "team_strengths": {}}
 
-    # Sprawdź czy mamy dane dom/wyjazd
-    sample = next(iter(ekstra_stats.values()), {})
-    has_ha = "gf_home" in sample and sample.get("mp_home", 0) > 0
+    # Sprawdź czy mamy dane dom/wyjazd — głosowanie większości na ZNANYCH drużynach
+    # (znane = z terminarza/fixtures_data, nie wszystkie klucze ekstra_stats)
+    known_teams = [t for t in teams if t in ekstra_stats]
+    has_ha = False
+    with_ha = bad_ha = 0
+    for t in known_teams:
+        st = ekstra_stats[t]
+        if st.get("mp_home", 0) > 0 and st.get("mp_away", 0) > 0:
+            with_ha += 1
+        # sanity-check: dom + wyjazd muszą się zgadzać z ogółem (tolerancja ±1)
+        try:
+            if abs((st.get("gf_home", 0) + st.get("gf_away", 0)) - st.get("gf", 0)) > 1:
+                bad_ha += 1
+        except (TypeError, ValueError):
+            bad_ha += 1
+    if known_teams:
+        # True tylko gdy >=70% znanych drużyn ma pełne dane dom/wyjazd
+        has_ha = (with_ha / len(known_teams)) >= 0.7
+        # ...a większość NIE ma rozjazdu gf_home+gf_away vs gf
+        if bad_ha > len(known_teams) / 2:
+            has_ha = False
+        print(f"  🏠 FDR: has_ha={has_ha} (pełne dom/wyjazd: {with_ha}/{len(known_teams)}, rozjazd gf: {bad_ha}/{len(known_teams)})")
+    else:
+        print("  🏠 FDR: brak danych 90minut dla znanych drużyn — używam tylko ogółu (has_ha=False)")
 
     # Oblicz średnie ligowe
     total_gf_home = total_ga_home = total_mp_home = 0

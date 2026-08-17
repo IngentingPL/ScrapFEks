@@ -21,60 +21,73 @@ from config import (
 from network import _get_cached_external, _request_with_retry, _save_external_cache
 
 
-def _parse_90min_table(table) -> dict:
-    """Parsuje pojedynczą tabelę ligową z 90minut.pl. Zwraca {raw_name: {gf, ga, mp}}."""
+def _parse_goals(text):
+    """Rozbija tekst 'gf-ga' (lub 'gf:ga') na parę liczb. Zwraca (None, None) gdy nie parsowalne."""
+    parts = re.split(r"[-:]", (text or "").strip())
+    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+        return int(parts[0]), int(parts[1])
+    return None, None
+
+
+def _parse_90min_combined_table(table) -> dict:
+    """Parsuje nową tabelę 90minut.pl z grupami RAZEM/DOM/WYJAZD (jedna tabela).
+
+    Wiersz drużyny ma 22 komórki; indeksy (0-based):
+    1=nazwa (link 'klub'), 2=M. razem, 4-6=Z/R/P razem, 7=bramki RAZEM,
+    8-10=Z/R/P dom, 11=bramki DOM, 12-14=Z/R/P wyjazd, 15=bramki WYJAZD.
+    """
     results = {}
-    rows = table.find_all("tr")
-    for row in rows:
+    for row in table.find_all("tr"):
         cells = row.find_all("td")
-        if len(cells) < 5:
+        if len(cells) < 17:  # nagłówki/segregatory mają mniej komórek
             continue
 
-        # Znajdź nazwę drużyny — szukamy <a> z linkiem do klubu
-        team_name = None
-        for cell in cells:
-            link = cell.find("a")
-            if link:
-                href = link.get("href") or ""
-                if "klub" in href or "druzyna" in href or "/liga/" not in href:
-                    candidate = link.get_text(strip=True)
-                    if candidate and not candidate.isdigit() and len(candidate) > 2:
-                        team_name = candidate
-                        break
+        # Nazwa drużyny: <a> w komórce 2, href musi zawierać "klub"
+        name_cell = cells[1]
+        link = name_cell.find("a")
+        href = (link.get("href") or "") if link else ""
+        if not link or "klub" not in href:
+            print(f"  ⚠️  90minut: pominięto wiersz '{name_cell.get_text(strip=True)}' (brak linku z 'klub' w href)")
+            continue
+        team_name = link.get_text(strip=True)
 
-        if not team_name:
-            for cell in cells[1:4]:
-                text = cell.get_text(strip=True)
-                if text and not text.isdigit() and len(text) > 3:
-                    team_name = text
-                    break
+        # Liczba meczów: M. razem z komórki 3; dom/wyjazd jako suma Z+R+P
+        try:
+            mp = int(cells[2].get_text(strip=True))
+        except ValueError:
+            mp = 0
 
-        if not team_name:
+        def _sum3(indexes):
+            """Sumuje zawartość 3 komórek (Z+R+P), ignoruje nieparsowalne."""
+            total = 0
+            for i in indexes:
+                try:
+                    total += int(cells[i].get_text(strip=True))
+                except (ValueError, IndexError):
+                    pass
+            return total
+
+        mp_home = _sum3([8, 9, 10])
+        mp_away = _sum3([12, 13, 14])
+
+        # Bramki z komórek 8/12/16 (format "gf-ga")
+        gf, ga = _parse_goals(cells[7].get_text(strip=True))
+        gf_home, ga_home = _parse_goals(cells[11].get_text(strip=True))
+        gf_away, ga_away = _parse_goals(cells[15].get_text(strip=True))
+        if gf is None or gf_home is None or gf_away is None:
+            print(f"  ⚠️  90minut: pominięto '{team_name}' (nieparsowalne bramki)")
             continue
 
-        # Znajdź liczbę meczów — pierwsza komórka z samą liczbą (po pozycji i nazwie)
-        mp = 0
-        for cell in cells[2:6]:
-            text = cell.get_text(strip=True)
-            if text.isdigit() and int(text) > 0:
-                mp = int(text)
-                break
-
-        # Znajdź bramki w formacie "XX:XX" lub "XX-XX"
-        goals_text = None
-        for cell in cells:
-            text = cell.get_text(strip=True)
-            if re.match(r"^\d+[:\-]\d+$", text):
-                goals_text = text
-                break
-
-        if not goals_text:
+        # Walidacja spójności: dom + wyjazd muszą dać ogółem (tolerancja ±1)
+        if abs((gf_home + gf_away) - gf) > 1:
+            print(f"  ⚠️  90minut: pominięto '{team_name}' (gf_home+gf_away={gf_home + gf_away} != gf={gf})")
             continue
 
-        parts = re.split(r"[:\-]", goals_text)
-        if len(parts) == 2:
-            results[team_name] = {"gf": int(parts[0]), "ga": int(parts[1]), "mp": mp}
-
+        results[team_name] = {
+            "gf": gf, "ga": ga, "mp": mp,
+            "gf_home": gf_home, "ga_home": ga_home, "mp_home": mp_home,
+            "gf_away": gf_away, "ga_away": ga_away, "mp_away": mp_away,
+        }
     return results
 
 
@@ -88,20 +101,14 @@ def _map_team_name(raw_name: str) -> str:
     return local_name
 
 
-def _find_standings_tables(soup) -> list:
-    """Znajduje tabele z klasyfikacją na stronie 90minut.pl (RAZEM, DOM, WYJAZD)."""
-    tables = soup.find_all("table")
-    standings = []
-    for table in tables:
-        header_text = table.get_text()
-        if "Pkt" in header_text and "Bramki" in header_text:
-            standings.append(table)
-        elif not standings:
-            # Fallback: tabela z >=16 wierszy i formatem bramek X:X
-            rows = table.find_all("tr")
-            if len(rows) >= 16 and re.search(r"\d+:\d+", table.get_text()):
-                standings.append(table)
-    return standings
+def _find_standings_table(soup):
+    """Znajduje właściwą tabelę STRUKTURALNIE: <tr>, którego bezpośrednie
+    <td> zawierają teksty 'RAZEM', 'DOM', 'WYJAZD' (nagłówek grup kolumn)."""
+    for tr in soup.find_all("tr"):
+        texts = [td.get_text(strip=True) for td in tr.find_all("td", recursive=False)]
+        if "RAZEM" in texts and "DOM" in texts and "WYJAZD" in texts:
+            return tr.find_parent("table")
+    return None
 
 
 def fetch_ekstraklasa_table() -> dict:
@@ -130,35 +137,18 @@ def fetch_ekstraklasa_table() -> dict:
         resp.encoding = resp.apparent_encoding or "iso-8859-2"
         soup = BeautifulSoup(resp.text, "lxml")
 
-        standings = _find_standings_tables(soup)
-        if not standings:
-            print(f"  ⚠️  Nie znaleziono tabeli na 90minut.pl")
+        table = _find_standings_table(soup)
+        if table is None:
+            print("  ⚠️  Nie znaleziono tabeli z nagłówkiem RAZEM/DOM/WYJAZD na 90minut.pl")
             return team_stats
 
-        # Tabele w kolejności: RAZEM, DOM, WYJAZD
-        razem = _parse_90min_table(standings[0])
-        dom = _parse_90min_table(standings[1]) if len(standings) >= 2 else {}
-        wyjazd = _parse_90min_table(standings[2]) if len(standings) >= 3 else {}
-
-        for raw_name, data in razem.items():
+        parsed = _parse_90min_combined_table(table)
+        for raw_name, data in parsed.items():
             local_name = _map_team_name(raw_name)
-            entry = {"gf": data["gf"], "ga": data["ga"], "mp": data["mp"]}
+            team_stats[local_name] = data
 
-            # Dodaj dane domowe
-            home = dom.get(raw_name, {})
-            entry["gf_home"] = home.get("gf", 0)
-            entry["ga_home"] = home.get("ga", 0)
-            entry["mp_home"] = home.get("mp", 0)
-
-            # Dodaj dane wyjazdowe
-            away = wyjazd.get(raw_name, {})
-            entry["gf_away"] = away.get("gf", 0)
-            entry["ga_away"] = away.get("ga", 0)
-            entry["mp_away"] = away.get("mp", 0)
-
-            team_stats[local_name] = entry
-
-        has_ha = bool(dom and wyjazd)
+        has_ha = any(e.get("mp_home", 0) > 0 and e.get("mp_away", 0) > 0
+                     for e in team_stats.values())
         print(f"  ⚽ 90minut.pl: pobrano statystyki {len(team_stats)} drużyn"
               f" {'(z podziałem dom/wyjazd)' if has_ha else '(tylko ogółem)'}")
     except Exception as e:
