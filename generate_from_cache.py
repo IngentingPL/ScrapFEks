@@ -3,6 +3,7 @@
 Generuje dashboard HTML z cache'owanych danych JSON.
 Uruchom: python generate_from_cache.py
 """
+import glob
 import json
 import os
 import sys
@@ -14,12 +15,28 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from scraper import generate_dashboard_html
 
 
+def find_latest_cache_file(output_dir):
+    """Znajdź najnowszy plik fantasy_full_*.json w output/.
+
+    Sortowanie po nazwie — ostatni alfabetycznie jest najnowszy, bo nazwa
+    zawiera znacznik czasu (fantasy_full_YYYYMMDD_HHMMSS.json).
+    """
+    pattern = os.path.join(output_dir, "fantasy_full_*.json")
+    files = sorted(glob.glob(pattern))
+    if not files:
+        raise FileNotFoundError(
+            f"Brak plików fantasy_full_*.json w {output_dir}. "
+            f"Uruchom najpierw scraper.py, aby wygenerować dane."
+        )
+    return files[-1]
+
+
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_dir = os.path.join(script_dir, "output")
     
-    # Najnowszy plik JSON
-    cache_file = "/Users/piotr/github/ScrapFEks/output/fantasy_full_20260422_195603.json"
+    # Najnowszy plik JSON (dynamicznie, bez zahardkodowanej ścieżki)
+    cache_file = find_latest_cache_file(output_dir)
     
     print(f"📂 Ładowanie danych z: {cache_file}")
     
