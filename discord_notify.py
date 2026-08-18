@@ -1289,7 +1289,7 @@ def generate_expert_predictions(all_data: dict, deepseek_key: str = "", gemini_k
 Pracujesz na danych i faktach, nie na przeczuciach. Twoje rekomendacje są rzetelne i konkretne.
 
 KONTEKST:
-Poniżej dane o nadchodzącej kolejce {round_number}: terminarz, siła ataku i obrony drużyn ligowych, najlepsze prognozy punktowe oraz przykładowe drużyny z ligi prywatnej.
+Poniżej dane o nadchodzącej kolejce {round_number}: terminarz, siła ataku i obrony drużyn ligowych (gf=gole strzelone, ga=stracone, gd=różnica bramek, ppm=punkty na mecz) oraz najlepsze prognozy punktowe.
 
 ZADANIE:
 Na podstawie powyższych danych przygotuj krótką prognozę przed kolejką {round_number}.
@@ -1322,7 +1322,7 @@ Nie boisz się podważać konsensusu i szukasz nietypowych rozwiązań. Czasem o
 ale zawsze masz argumenty. Lubisz graczy, których nikt nie bierze.
 
 KONTEKST:
-Poniżej dane o nadchodzącej kolejce {round_number}: terminarz, siła ataku i obrony drużyn ligowych, najlepsze prognozy punktowe oraz przykładowe drużyny z ligi prywatnej.
+Poniżej dane o nadchodzącej kolejce {round_number}: terminarz, siła ataku i obrony drużyn ligowych (gf=gole strzelone, ga=stracone, gd=różnica bramek, ppm=punkty na mecz) oraz najlepsze prognozy punktowe.
 
 ZADANIE:
 Na podstawie powyższych danych przygotuj kontrowersyjną prognozę przed kolejką {round_number}.
