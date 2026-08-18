@@ -1208,15 +1208,48 @@ def _build_expert_context(all_data: dict) -> dict:
                 "ownership_pct": cap.get("popularity_pct", "?"),
             }
 
+        # Safe pick — dla Rabbtiego: solidny wybór z najwyższą pewnością prognozy.
+        # Filtrujemy PEŁNĄ listę predictions: confidence == "high" i dostępny.
+        # Fallback: jeśli brak "high", bierzemy "high" + "medium". Jeśli dalej pusto — pomijamy (bez błędu).
+        safe_candidates = [
+            p for p in predictions
+            if p.get("confidence") == "high" and not p.get("unavailable")
+        ]
+        if not safe_candidates:
+            safe_candidates = [
+                p for p in predictions
+                if p.get("confidence") in ("high", "medium") and not p.get("unavailable")
+            ]
+        if safe_candidates:
+            safe_pick = max(safe_candidates, key=lambda p: p.get("predicted_points") or 0)
+            ctx["safe_pick"] = {
+                "name": safe_pick.get("name", "?"),
+                "team": safe_pick.get("team", "?"),
+                "position": safe_pick.get("position", "?"),
+                "predicted_points": round(safe_pick.get("predicted_points") or 0, 1),
+                "ownership_pct": safe_pick.get("popularity_pct", "?"),
+                "confidence": safe_pick.get("confidence", "?"),
+            }
+
         # Contrarian pick — najlepsza prognoza wśród zawodników z niskim ownership (<15%).
         # Dla Tlinfa: kapitan "pod prąd" zamiast popularnego wyboru (captain_pick).
         # Filtrujemy PEŁNĄ listę predictions (nie top_preds), pomijamy niedostępnych i bez minut.
+        # Dodatkowo: wykluczamy confidence == "high" (to domena safe_pick).
         contrarian = [
             p for p in predictions
             if parse_ownership_pct(p.get("popularity_pct", "")) < 15
             and not p.get("unavailable")
             and (p.get("avg_minutes") or 0) > 0
+            and p.get("confidence") != "high"
         ]
+        if not contrarian:
+            # Fallback: obecna logika bez filtra confidence (tak jak działało wcześniej)
+            contrarian = [
+                p for p in predictions
+                if parse_ownership_pct(p.get("popularity_pct", "")) < 15
+                and not p.get("unavailable")
+                and (p.get("avg_minutes") or 0) > 0
+            ]
         if contrarian:
             contrarian_pick = max(contrarian, key=lambda p: p.get("predicted_points") or 0)
             ctx["contrarian_pick"] = {
@@ -1225,6 +1258,7 @@ def _build_expert_context(all_data: dict) -> dict:
                 "position": contrarian_pick.get("position", "?"),
                 "predicted_points": round(contrarian_pick.get("predicted_points") or 0, 1),
                 "ownership_pct": contrarian_pick.get("popularity_pct", "?"),
+                "confidence": contrarian_pick.get("confidence", "?"),
             }
     
     # Ownership i kapitanowie (dla differential picks)
@@ -1312,6 +1346,8 @@ Poniżej dane o nadchodzącej kolejce {round_number}: terminarz, siła ataku i o
 
 ZADANIE:
 Na podstawie powyższych danych przygotuj krótką prognozę przed kolejką {round_number}.
+
+W danych masz "safe_pick" (solidny wybór z wysoką pewnością prognozy) oraz "captain_pick" (ogólny algorytmiczny wybór). Jako kapitana zaproponuj safe_pick, nie captain_pick.
 
 FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 ⚽ Rabbti:
