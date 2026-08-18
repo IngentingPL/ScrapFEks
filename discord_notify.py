@@ -1207,6 +1207,25 @@ def _build_expert_context(all_data: dict) -> dict:
                 "predicted_points": round(cap.get("predicted_points") or 0, 1),
                 "ownership_pct": cap.get("popularity_pct", "?"),
             }
+
+        # Contrarian pick — najlepsza prognoza wśród zawodników z niskim ownership (<15%).
+        # Dla Tlinfa: kapitan "pod prąd" zamiast popularnego wyboru (captain_pick).
+        # Filtrujemy PEŁNĄ listę predictions (nie top_preds), pomijamy niedostępnych i bez minut.
+        contrarian = [
+            p for p in predictions
+            if parse_ownership_pct(p.get("popularity_pct", "")) < 15
+            and not p.get("unavailable")
+            and (p.get("avg_minutes") or 0) > 0
+        ]
+        if contrarian:
+            contrarian_pick = max(contrarian, key=lambda p: p.get("predicted_points") or 0)
+            ctx["contrarian_pick"] = {
+                "name": contrarian_pick.get("name", "?"),
+                "team": contrarian_pick.get("team", "?"),
+                "position": contrarian_pick.get("position", "?"),
+                "predicted_points": round(contrarian_pick.get("predicted_points") or 0, 1),
+                "ownership_pct": contrarian_pick.get("popularity_pct", "?"),
+            }
     
     # Ownership i kapitanowie (dla differential picks)
     league_teams_detail = all_data.get("league_teams_detail", [])
@@ -1326,6 +1345,8 @@ Poniżej dane o nadchodzącej kolejce {round_number}: terminarz, siła ataku i o
 
 ZADANIE:
 Na podstawie powyższych danych przygotuj kontrowersyjną prognozę przed kolejką {round_number}.
+
+W danych masz "captain_pick" (popularny wybór wg algorytmu) oraz "contrarian_pick" (najlepsza prognoza wśród zawodników z niskim ownership, <15%). Jako kapitana zaproponuj contrarian_pick, nie captain_pick.
 
 FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 🛋️ Tlinf:
