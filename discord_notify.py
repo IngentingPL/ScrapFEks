@@ -1220,16 +1220,6 @@ def _build_expert_context(all_data: dict) -> dict:
         if captains:
             ctx["popular_captains"] = captains
     
-    # Składy drużyn (ownership)
-    league_teams = all_data.get("league_teams", [])
-    if league_teams:
-        ownership = []
-        for team in league_teams:
-            slug = team.get("slug", "")
-            display_name = team.get("display_name", slug.replace("-", " ").title())
-            ownership.append(display_name)
-        ctx["league_teams_sample"] = ownership[:15]
-    
     return ctx
 
 
