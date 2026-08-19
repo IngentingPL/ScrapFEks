@@ -1349,6 +1349,8 @@ Na podstawie powyższych danych przygotuj krótką prognozę przed kolejką {rou
 
 W danych masz "safe_pick" (solidny wybór z wysoką pewnością prognozy) oraz "captain_pick" (ogólny algorytmiczny wybór). Jako kapitana zaproponuj safe_pick, nie captain_pick.
 
+Transfery wybieraj wyłącznie z listy top_predictions.
+
 FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 ⚽ Rabbti:
 
@@ -1383,6 +1385,8 @@ ZADANIE:
 Na podstawie powyższych danych przygotuj kontrowersyjną prognozę przed kolejką {round_number}.
 
 W danych masz "captain_pick" (popularny wybór wg algorytmu) oraz "contrarian_pick" (najlepsza prognoza wśród zawodników z niskim ownership, <15%). Jako kapitana zaproponuj contrarian_pick, nie captain_pick.
+
+Transfery wybieraj wyłącznie z listy top_predictions — jeśli to możliwe, preferuj tych z niższym ownership_pct, zgodnie ze swoim stylem.
 
 FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 🛋️ Tlinf:
