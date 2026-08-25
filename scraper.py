@@ -54,7 +54,6 @@ from squads import (
 
 from transfers import compute_league_transfers, compute_player_stats_per90
 from schedule import parse_terminarz, cleanup_old_output_files
-from external_stats import generate_terminarz_from_90minut
 
 
 def get_player_ids_by_scanning(session: requests.Session, max_id: int = 3000) -> list[int]:
@@ -451,103 +450,7 @@ def main():
         from league_tracker import save_round_standings
         save_round_standings(league_teams, current_round, os.path.join(OUTPUT_DIR, "league_history.json"))
 
-    # 8.5 Automatyczna generacja terminarz.txt z 90minut.pl (z walidacją i bezpiecznym zapisem)
-    def _update_terminarz_from_90minut():
-        """
-        Pobiera terminarz z 90minut.pl, waliduje i zapisuje do terminarz.txt.
-        Przy błędzie sieciowym lub nieudanej walidacji — zachowuje stary plik.
-        """
-        try:
-            # Wywołaj generowanie (domyślnie kolejki 1 do AUTUMN_LAST_ROUND)
-            result_path = generate_terminarz_from_90minut()
-            if result_path is None:
-                print("  ⚠️  Nie udało się pobrać terminarza z 90minut.pl — używam istniejącego terminarz.txt")
-                return
-
-            # Wczytaj wygenerowany plik do walidacji
-            with open(result_path, "r", encoding="utf-8") as f:
-                generated_content = f.read()
-
-            # Walidacja 1: policz nagłówki "Kolejka N"
-            import re
-            round_headers = re.findall(r"Kolejka\s+(\d+)", generated_content)
-            found_rounds = len(round_headers)
-            expected_rounds = AUTUMN_LAST_ROUND
-
-            if found_rounds != expected_rounds:
-                print(f"  ⚠️  Walidacja terminarza NIE POWIODŁA SIĘ: znaleziono {found_rounds} kolejek, oczekiwano {expected_rounds}")
-                print("      Używam istniejącego terminarz.txt bez zmian")
-                return
-
-            # Walidacja 2: każda kolejka musi mieć co najmniej 8 meczów
-            # Parsujemy strukturę: nagłówek kolejki -> mecze aż do następnego nagłówka
-            rounds_matches = {}
-            current_round_num = None
-            current_matches = []
-
-            for line in generated_content.split("\n"):
-                line = line.strip()
-                round_match = re.match(r"Kolejka\s+(\d+)", line)
-                if round_match:
-                    # Zapisz poprzednią kolejkę
-                    if current_round_num is not None:
-                        rounds_matches[current_round_num] = current_matches
-                    current_round_num = int(round_match.group(1))
-                    current_matches = []
-                elif line and "\t" in line and current_round_num is not None:
-                    # Linia meczu: zawiera tabulatory (format: home\tscore\taway\tdate)
-                    parts = line.split("\t")
-                    if len(parts) >= 2:
-                        current_matches.append(line)
-
-            # Zapisz ostatnią kolejkę
-            if current_round_num is not None:
-                rounds_matches[current_round_num] = current_matches
-
-            # Sprawdź liczbę meczów per kolejka
-            min_matches_required = 8  # 18 drużyn = 9 meczów, tolerancja -1
-            for round_num in range(1, expected_rounds + 1):
-                match_count = len(rounds_matches.get(round_num, []))
-                if match_count < min_matches_required:
-                    print(f"  ⚠️  Walidacja terminarza NIE POWIODŁA SIĘ: kolejka {round_num} ma tylko {match_count} meczów (min: {min_matches_required})")
-                    print("      Używam istniejącego terminarz.txt bez zmian")
-                    return
-
-            # Walidacja 3: wszystkie nazwy drużyn muszą być w TEAM_ABBREVS
-            from config import TEAM_ABBREVS
-            unknown_teams = set()
-            for line in generated_content.split("\n"):
-                line = line.strip()
-                if "\t" in line:
-                    parts = line.split("\t")
-                    if len(parts) >= 3:
-                        home_team = parts[0].strip()
-                        away_team = parts[2].strip()
-                        if home_team and home_team not in TEAM_ABBREVS:
-                            unknown_teams.add(home_team)
-                        if away_team and away_team not in TEAM_ABBREVS:
-                            unknown_teams.add(away_team)
-
-            if unknown_teams:
-                print(f"  ⚠️  Walidacja terminarza NIE POWIODŁA SIĘ: nieznane nazwy drużyn: {sorted(unknown_teams)}")
-                print("      Używam istniejącego terminarz.txt bez zmian")
-                return
-
-            # Walidacja przeszła — zapisz atomowo do terminarz.txt
-            total_matches = sum(len(matches) for matches in rounds_matches.values())
-            tmp_path = "terminarz.txt.tmp"
-            with open(tmp_path, "w", encoding="utf-8") as f:
-                f.write(generated_content)
-            os.replace(tmp_path, "terminarz.txt")
-            print(f"  ✅ Zaktualizowano terminarz.txt z 90minut.pl: {found_rounds} kolejek, {total_matches} meczów")
-
-        except Exception as e:
-            print(f"  ⚠️  Błąd podczas aktualizacji terminarza: {e}")
-            print("      Używam istniejącego terminarz.txt bez zmian")
-
-    _update_terminarz_from_90minut()
-
-    # 8.6 Parse terminarz for fixture ticker
+    # 8.5 Parse terminarz for fixture ticker
     fixtures_data = parse_terminarz("terminarz.txt")
     if fixtures_data["rounds"]:
         print(f"  📅 Terminarz: {len(fixtures_data['rounds'])} kolejek, {len(fixtures_data['teams'])} drużyn")
