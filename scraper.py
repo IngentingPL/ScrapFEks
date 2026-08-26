@@ -22,6 +22,7 @@ import os
 import sys
 import glob
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from predictor import predict_all_players
 from accuracy import evaluate_predictions, find_latest_predictions_csv, load_accuracy_history
@@ -936,7 +937,7 @@ def main():
         tuned_params=tuned_params,
         league_history=league_history,
         # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona, newsletter_history.json write-only
-        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M"),
+        timestamp=datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
         has_archive=len(glob.glob("docs/archive/sezon-*.html")) > 0,
     )
@@ -1176,7 +1177,7 @@ def save_league_squads_history(league_teams_detail, current_round):
 
     entry = {
         "round": current_round,
-        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "timestamp": datetime.now(ZoneInfo("Europe/Warsaw")).isoformat(timespec="seconds"),
         "teams": teams_snapshot,
     }
 
