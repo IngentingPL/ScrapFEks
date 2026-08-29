@@ -13651,12 +13651,12 @@
   },
   {
     "round": 6,
-    "timestamp": "2026-08-29T19:01:13+02:00",
+    "timestamp": "2026-08-29T20:41:46+02:00",
     "teams": [
       {
         "slug": "lelek-kozodoj",
         "display_name": "Lelek Kozodoj",
-        "total_pts": 299,
+        "total_pts": 306,
         "players": [
           {
             "pid": "1725",
@@ -13768,7 +13768,7 @@
       {
         "slug": "widzewbaluty",
         "display_name": "Widzewbaluty",
-        "total_pts": 290,
+        "total_pts": 297,
         "players": [
           {
             "pid": "1225",
@@ -13880,7 +13880,7 @@
       {
         "slug": "makkabi-bialystok",
         "display_name": "Makkabi Bialystok",
-        "total_pts": 288,
+        "total_pts": 295,
         "players": [
           {
             "pid": "480",
@@ -14104,7 +14104,7 @@
       {
         "slug": "polski-kibel",
         "display_name": "Polski Kibel",
-        "total_pts": 276,
+        "total_pts": 283,
         "players": [
           {
             "pid": "2917",
@@ -14214,9 +14214,121 @@
         ]
       },
       {
+        "slug": "lubliniankakonskie",
+        "display_name": "Lubliniankakonskie",
+        "total_pts": 280,
+        "players": [
+          {
+            "pid": "480",
+            "name": "Bartosz Nowak",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1299",
+            "name": "Jean Carlos Silva",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1319",
+            "name": "Paweł Wszołek",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1987",
+            "name": "Jordi Sánchez",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2123",
+            "name": "Michał Gurgul",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2423",
+            "name": "Mbaye N'Diaye",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": true
+          },
+          {
+            "pid": "2431",
+            "name": "Rúben Vinagre",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2805",
+            "name": "Otto Hindrich",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2880",
+            "name": "Marko Bozic",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2917",
+            "name": "Allahyar Sayyadmanesh",
+            "pos": "Pomocnik",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "2939",
+            "name": "Nik Prelec",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2007",
+            "name": "Michał Matys",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1225",
+            "name": "Jan Grzesik",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1092",
+            "name": "Piotr Samiec-Talar",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2925",
+            "name": "Maciek Kucharski",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          }
+        ]
+      },
+      {
         "slug": "ks-rozanka",
         "display_name": "Ks Rozanka",
-        "total_pts": 273,
+        "total_pts": 280,
         "players": [
           {
             "pid": "195",
@@ -14290,8 +14402,8 @@
           },
           {
             "pid": "2892",
-            "name": "Luka Marjanac",
-            "pos": "Pomocnik",
+            "name": "Marjanac",
+            "pos": "3",
             "C": false,
             "VC": false
           },
@@ -14320,6 +14432,118 @@
             "pid": "2376",
             "name": "Trepka",
             "pos": "",
+            "C": false,
+            "VC": false
+          }
+        ]
+      },
+      {
+        "slug": "vfb-osterode",
+        "display_name": "Vfb Osterode",
+        "total_pts": 276,
+        "players": [
+          {
+            "pid": "951",
+            "name": "Arkadiusz Jędrych",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": true
+          },
+          {
+            "pid": "1319",
+            "name": "Paweł Wszołek",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1400",
+            "name": "Xavier Dziekoński",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1987",
+            "name": "Jordi Sánchez",
+            "pos": "Napastnik",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "2423",
+            "name": "Mbaye N'Diaye",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2431",
+            "name": "Rúben Vinagre",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2481",
+            "name": "Ajdin Hasić",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2671",
+            "name": "Karol Czubak",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2880",
+            "name": "Marko Bozic",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1507",
+            "name": "Łukasz Zjawiński",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2901",
+            "name": "Tobias Christensen",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2863",
+            "name": "Jakub Stępak",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2063",
+            "name": "Liszewski",
+            "pos": "",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1529",
+            "name": "Mariusz Fornalczyk",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2918",
+            "name": "Terry Yegbe",
+            "pos": "Obrońca",
             "C": false,
             "VC": false
           }
@@ -14438,121 +14662,9 @@
         ]
       },
       {
-        "slug": "lubliniankakonskie",
-        "display_name": "Lubliniankakonskie",
-        "total_pts": 270,
-        "players": [
-          {
-            "pid": "480",
-            "name": "Bartosz Nowak",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1299",
-            "name": "Jean Carlos Silva",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1319",
-            "name": "Paweł Wszołek",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1987",
-            "name": "Jordi Sánchez",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2123",
-            "name": "Michał Gurgul",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2423",
-            "name": "Mbaye N'Diaye",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": true
-          },
-          {
-            "pid": "2431",
-            "name": "Rúben Vinagre",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2805",
-            "name": "Otto Hindrich",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2880",
-            "name": "Marko Bozic",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2917",
-            "name": "Allahyar Sayyadmanesh",
-            "pos": "Pomocnik",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "2939",
-            "name": "Nik Prelec",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2007",
-            "name": "Michał Matys",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1225",
-            "name": "Jan Grzesik",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1092",
-            "name": "Piotr Samiec-Talar",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2925",
-            "name": "Maciek Kucharski",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          }
-        ]
-      },
-      {
         "slug": "kauno-zalgiris",
         "display_name": "Kauno Zalgiris",
-        "total_pts": 260,
+        "total_pts": 267,
         "players": [
           {
             "pid": "480",
@@ -14662,16 +14774,30 @@
         ]
       },
       {
-        "slug": "vfb-osterode",
-        "display_name": "Vfb Osterode",
-        "total_pts": 257,
+        "slug": "glks-klomnice",
+        "display_name": "Glks Klomnice",
+        "total_pts": 260,
         "players": [
           {
-            "pid": "951",
-            "name": "Arkadiusz Jędrych",
+            "pid": "480",
+            "name": "Bartosz Nowak",
+            "pos": "Pomocnik",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "1126",
+            "name": "Kamil Piątkowski",
             "pos": "Obrońca",
             "C": false,
-            "VC": true
+            "VC": false
+          },
+          {
+            "pid": "1225",
+            "name": "Jan Grzesik",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
           },
           {
             "pid": "1319",
@@ -14681,9 +14807,107 @@
             "VC": false
           },
           {
-            "pid": "1400",
-            "name": "Xavier Dziekoński",
+            "pid": "1529",
+            "name": "Mariusz Fornalczyk",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1987",
+            "name": "Jordi Sánchez",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2225",
+            "name": "Fran Álvarez",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2659",
+            "name": "Marcel Łubik",
             "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2881",
+            "name": "Ángel Rodado",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": true
+          },
+          {
+            "pid": "2214",
+            "name": "Kouloúris",
+            "pos": "4",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2423",
+            "name": "Mbaye N'Diaye",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2832",
+            "name": "Jakub Grelich",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2733",
+            "name": "Luis Palma",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2899",
+            "name": "Kacper Zagrodzki",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2829",
+            "name": "Maciej Urbański",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          }
+        ]
+      },
+      {
+        "slug": "medi-top-glonovia",
+        "display_name": "Medi Top Glonovia",
+        "total_pts": 257,
+        "players": [
+          {
+            "pid": "480",
+            "name": "Bartosz Nowak",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": true
+          },
+          {
+            "pid": "1092",
+            "name": "Piotr Samiec-Talar",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1507",
+            "name": "Łukasz Zjawiński",
+            "pos": "Napastnik",
             "C": false,
             "VC": false
           },
@@ -14695,9 +14919,9 @@
             "VC": false
           },
           {
-            "pid": "2423",
-            "name": "Mbaye N'Diaye",
-            "pos": "Pomocnik",
+            "pid": "2053",
+            "name": "Sebastian Madejski",
+            "pos": "Bramkarz",
             "C": false,
             "VC": false
           },
@@ -14716,57 +14940,57 @@
             "VC": false
           },
           {
-            "pid": "2671",
-            "name": "Karol Czubak",
+            "pid": "2918",
+            "name": "Terry Yegbe",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2939",
+            "name": "Nik Prelec",
             "pos": "Napastnik",
             "C": false,
             "VC": false
           },
           {
-            "pid": "2880",
-            "name": "Marko Bozic",
+            "pid": "2943",
+            "name": "Peter González",
             "pos": "Pomocnik",
             "C": false,
             "VC": false
           },
           {
-            "pid": "1507",
-            "name": "Łukasz Zjawiński",
-            "pos": "Napastnik",
+            "pid": "951",
+            "name": "Arkadiusz Jędrych",
+            "pos": "Obrońca",
             "C": false,
             "VC": false
           },
           {
-            "pid": "2901",
-            "name": "Tobias Christensen",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2863",
-            "name": "Jakub Stępak",
+            "pid": "2896",
+            "name": "Antoni Kustra",
             "pos": "Bramkarz",
             "C": false,
             "VC": false
           },
           {
-            "pid": "2063",
-            "name": "Liszewski",
-            "pos": "",
+            "pid": "2588",
+            "name": "Mauro Perković",
+            "pos": "Obrońca",
             "C": false,
             "VC": false
           },
           {
-            "pid": "1529",
-            "name": "Mariusz Fornalczyk",
+            "pid": "2629",
+            "name": "Morgan Faßbender",
             "pos": "Pomocnik",
             "C": false,
             "VC": false
           },
           {
-            "pid": "2918",
-            "name": "Terry Yegbe",
+            "pid": "2577",
+            "name": "Josip Ćorluka",
             "pos": "Obrońca",
             "C": false,
             "VC": false
@@ -14815,8 +15039,8 @@
           },
           {
             "pid": "2772",
-            "name": "Sergio Lozano",
-            "pos": "Pomocnik",
+            "name": "Lozano",
+            "pos": "3",
             "C": false,
             "VC": false
           },
@@ -14992,6 +15216,118 @@
             "pid": "2163",
             "name": "Marcel Pięczek",
             "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          }
+        ]
+      },
+      {
+        "slug": "ks-blueface",
+        "display_name": "Ks Blueface",
+        "total_pts": 254,
+        "players": [
+          {
+            "pid": "480",
+            "name": "Bartosz Nowak",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "774",
+            "name": "Sebastian Bergier",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": true
+          },
+          {
+            "pid": "951",
+            "name": "Arkadiusz Jędrych",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1092",
+            "name": "Piotr Samiec-Talar",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1507",
+            "name": "Łukasz Zjawiński",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1987",
+            "name": "Jordi Sánchez",
+            "pos": "Napastnik",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "2058",
+            "name": "Filip Kocaba",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2406",
+            "name": "Maksym Chłań",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2431",
+            "name": "Rúben Vinagre",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2805",
+            "name": "Otto Hindrich",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2002",
+            "name": "Léo Borges",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2366",
+            "name": "Konrad Golonka",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2867",
+            "name": "Kutwa",
+            "pos": "",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2592",
+            "name": "Kilianek",
+            "pos": "",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2733",
+            "name": "Luis Palma",
+            "pos": "Pomocnik",
             "C": false,
             "VC": false
           }
@@ -15222,140 +15558,28 @@
         ]
       },
       {
-        "slug": "medi-top-glonovia",
-        "display_name": "Medi Top Glonovia",
-        "total_pts": 243,
+        "slug": "misterna-porazka",
+        "display_name": "Misterna Porazka",
+        "total_pts": 244,
         "players": [
           {
             "pid": "480",
             "name": "Bartosz Nowak",
             "pos": "Pomocnik",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "774",
+            "name": "Sebastian Bergier",
+            "pos": "Napastnik",
             "C": false,
             "VC": true
           },
           {
-            "pid": "1092",
-            "name": "Piotr Samiec-Talar",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1507",
-            "name": "Łukasz Zjawiński",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1987",
-            "name": "Jordi Sánchez",
-            "pos": "Napastnik",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "2053",
-            "name": "Sebastian Madejski",
+            "pid": "1026",
+            "name": "Mateusz Lis",
             "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2431",
-            "name": "Rúben Vinagre",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2481",
-            "name": "Ajdin Hasić",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2918",
-            "name": "Terry Yegbe",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2939",
-            "name": "Nik Prelec",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2943",
-            "name": "Peter González",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "951",
-            "name": "Arkadiusz Jędrych",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2896",
-            "name": "Antoni Kustra",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2588",
-            "name": "Mauro Perković",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2629",
-            "name": "Morgan Faßbender",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2577",
-            "name": "Josip Ćorluka",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          }
-        ]
-      },
-      {
-        "slug": "glks-klomnice",
-        "display_name": "Glks Klomnice",
-        "total_pts": 242,
-        "players": [
-          {
-            "pid": "480",
-            "name": "Bartosz Nowak",
-            "pos": "Pomocnik",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "1126",
-            "name": "Kamil Piątkowski",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1225",
-            "name": "Jan Grzesik",
-            "pos": "Obrońca",
             "C": false,
             "VC": false
           },
@@ -15367,13 +15591,6 @@
             "VC": false
           },
           {
-            "pid": "1529",
-            "name": "Mariusz Fornalczyk",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
             "pid": "1987",
             "name": "Jordi Sánchez",
             "pos": "Napastnik",
@@ -15381,127 +15598,8 @@
             "VC": false
           },
           {
-            "pid": "2225",
-            "name": "Fran Álvarez",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2659",
-            "name": "Marcel Łubik",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2881",
-            "name": "Ángel Rodado",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": true
-          },
-          {
-            "pid": "2214",
-            "name": "Kouloúris",
-            "pos": "4",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2423",
-            "name": "Mbaye N'Diaye",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2832",
-            "name": "Jakub Grelich",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2733",
-            "name": "Luis Palma",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2899",
-            "name": "Kacper Zagrodzki",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2829",
-            "name": "Maciej Urbański",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          }
-        ]
-      },
-      {
-        "slug": "ks-blueface",
-        "display_name": "Ks Blueface",
-        "total_pts": 240,
-        "players": [
-          {
-            "pid": "480",
-            "name": "Bartosz Nowak",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "774",
-            "name": "Sebastian Bergier",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": true
-          },
-          {
-            "pid": "951",
-            "name": "Arkadiusz Jędrych",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1092",
-            "name": "Piotr Samiec-Talar",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1507",
-            "name": "Łukasz Zjawiński",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1987",
-            "name": "Jordi Sánchez",
-            "pos": "Napastnik",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "2058",
-            "name": "Filip Kocaba",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2406",
-            "name": "Maksym Chłań",
+            "pid": "2901",
+            "name": "Tobias Christensen",
             "pos": "Pomocnik",
             "C": false,
             "VC": false
@@ -15514,44 +15612,170 @@
             "VC": false
           },
           {
-            "pid": "2805",
-            "name": "Otto Hindrich",
-            "pos": "Bramkarz",
+            "pid": "2679",
+            "name": "Paul Mukairu",
+            "pos": "Pomocnik",
             "C": false,
             "VC": false
           },
           {
-            "pid": "2002",
-            "name": "Léo Borges",
+            "pid": "1507",
+            "name": "Łukasz Zjawiński",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1092",
+            "name": "Piotr Samiec-Talar",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2577",
+            "name": "Josip Ćorluka",
             "pos": "Obrońca",
             "C": false,
             "VC": false
           },
           {
-            "pid": "2366",
-            "name": "Konrad Golonka",
+            "pid": "2561",
+            "name": "Michał Mikielewicz",
             "pos": "Bramkarz",
             "C": false,
             "VC": false
           },
           {
-            "pid": "2867",
-            "name": "Kutwa",
+            "pid": "2821",
+            "name": "Attila Szalai",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2406",
+            "name": "Maksym Chłań",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2915",
+            "name": "Warczak",
             "pos": "",
             "C": false,
             "VC": false
+          }
+        ]
+      },
+      {
+        "slug": "mcroyal-polska",
+        "display_name": "Mcroyal Polska",
+        "total_pts": 242,
+        "players": [
+          {
+            "pid": "480",
+            "name": "Bartosz Nowak",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": true
           },
           {
-            "pid": "2592",
-            "name": "Szymon Kilianek",
+            "pid": "1026",
+            "name": "Mateusz Lis",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1319",
+            "name": "Paweł Wszołek",
             "pos": "Obrońca",
             "C": false,
             "VC": false
           },
           {
-            "pid": "2733",
-            "name": "Luis Palma",
+            "pid": "1327",
+            "name": "Kacper Urbański",
             "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1987",
+            "name": "Jordi Sánchez",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2123",
+            "name": "Michał Gurgul",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2431",
+            "name": "Rúben Vinagre",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2671",
+            "name": "Karol Czubak",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2815",
+            "name": "Guilherme Montóia",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2880",
+            "name": "Marko Bozic",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2943",
+            "name": "Peter González",
+            "pos": "Pomocnik",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "2832",
+            "name": "Jakub Grelich",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1168",
+            "name": "Patryk Makuch",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1092",
+            "name": "Piotr Samiec-Talar",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2588",
+            "name": "Mauro Perković",
+            "pos": "Obrońca",
             "C": false,
             "VC": false
           }
@@ -15560,7 +15784,7 @@
       {
         "slug": "wszystko-czuj",
         "display_name": "Wszystko Czuj",
-        "total_pts": 240,
+        "total_pts": 242,
         "players": [
           {
             "pid": "480",
@@ -15648,8 +15872,8 @@
           },
           {
             "pid": "2892",
-            "name": "Luka Marjanac",
-            "pos": "Pomocnik",
+            "name": "Marjanac",
+            "pos": "",
             "C": false,
             "VC": false
           },
@@ -15782,233 +16006,9 @@
         ]
       },
       {
-        "slug": "misterna-porazka",
-        "display_name": "Misterna Porazka",
-        "total_pts": 235,
-        "players": [
-          {
-            "pid": "480",
-            "name": "Bartosz Nowak",
-            "pos": "Pomocnik",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "774",
-            "name": "Sebastian Bergier",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": true
-          },
-          {
-            "pid": "1026",
-            "name": "Mateusz Lis",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1319",
-            "name": "Paweł Wszołek",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1987",
-            "name": "Jordi Sánchez",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2901",
-            "name": "Tobias Christensen",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2431",
-            "name": "Rúben Vinagre",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2679",
-            "name": "Paul Mukairu",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1507",
-            "name": "Łukasz Zjawiński",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1092",
-            "name": "Piotr Samiec-Talar",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2577",
-            "name": "Josip Ćorluka",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2561",
-            "name": "Michał Mikielewicz",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2821",
-            "name": "Attila Szalai",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2406",
-            "name": "Maksym Chłań",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2915",
-            "name": "Warczak",
-            "pos": "",
-            "C": false,
-            "VC": false
-          }
-        ]
-      },
-      {
-        "slug": "mcroyal-polska",
-        "display_name": "Mcroyal Polska",
-        "total_pts": 232,
-        "players": [
-          {
-            "pid": "480",
-            "name": "Bartosz Nowak",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": true
-          },
-          {
-            "pid": "1026",
-            "name": "Mateusz Lis",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1319",
-            "name": "Paweł Wszołek",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1327",
-            "name": "Kacper Urbański",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1987",
-            "name": "Jordi Sánchez",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2123",
-            "name": "Michał Gurgul",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2431",
-            "name": "Rúben Vinagre",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2671",
-            "name": "Karol Czubak",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2815",
-            "name": "Guilherme Montóia",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2880",
-            "name": "Marko Bozic",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2943",
-            "name": "Peter González",
-            "pos": "Pomocnik",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "2832",
-            "name": "Jakub Grelich",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1168",
-            "name": "Patryk Makuch",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1092",
-            "name": "Piotr Samiec-Talar",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2588",
-            "name": "Mauro Perković",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          }
-        ]
-      },
-      {
         "slug": "gouda-team",
         "display_name": "Gouda Team",
-        "total_pts": 230,
+        "total_pts": 237,
         "players": [
           {
             "pid": "480",
@@ -16120,7 +16120,7 @@
       {
         "slug": "fc-abw",
         "display_name": "Fc Abw",
-        "total_pts": 227,
+        "total_pts": 234,
         "players": [
           {
             "pid": "480",
@@ -16342,6 +16342,118 @@
         ]
       },
       {
+        "slug": "poznan-festung",
+        "display_name": "Poznan Festung",
+        "total_pts": 215,
+        "players": [
+          {
+            "pid": "1327",
+            "name": "Kacper Urbański",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1490",
+            "name": "Kacper Trelowski",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1987",
+            "name": "Jordi Sánchez",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": true
+          },
+          {
+            "pid": "2104",
+            "name": "Michal Sáček",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2123",
+            "name": "Michał Gurgul",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2498",
+            "name": "Patrik Wålemark",
+            "pos": "Pomocnik",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "2671",
+            "name": "Karol Czubak",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2917",
+            "name": "Allahyar Sayyadmanesh",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2939",
+            "name": "Nik Prelec",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2943",
+            "name": "Peter González",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2815",
+            "name": "Guilherme Montóia",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2855",
+            "name": "Pańkowski",
+            "pos": "",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2431",
+            "name": "Rúben Vinagre",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "480",
+            "name": "Bartosz Nowak",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2834",
+            "name": "Jerzy Napieraj",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          }
+        ]
+      },
+      {
         "slug": "ks-bialy-sad",
         "display_name": "Ks Bialy Sad",
         "total_pts": 214,
@@ -16448,6 +16560,118 @@
             "pid": "2859",
             "name": "Nikodem Rogowski",
             "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          }
+        ]
+      },
+      {
+        "slug": "mauroball",
+        "display_name": "Mauroball",
+        "total_pts": 214,
+        "players": [
+          {
+            "pid": "765",
+            "name": "Jesús Imaz",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "774",
+            "name": "Sebastian Bergier",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "951",
+            "name": "Arkadiusz Jędrych",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1319",
+            "name": "Paweł Wszołek",
+            "pos": "Obrońca",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "1725",
+            "name": "Mahir Emreli",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1987",
+            "name": "Jordi Sánchez",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2805",
+            "name": "Otto Hindrich",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2902",
+            "name": "Lucas Piazón",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2817",
+            "name": "Kornvig",
+            "pos": "3",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2821",
+            "name": "Attila Szalai",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2943",
+            "name": "Peter González",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": true
+          },
+          {
+            "pid": "2950",
+            "name": "Szymon Wadas",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2560",
+            "name": "Konrad Ciszek",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2942",
+            "name": "Ševčík",
+            "pos": "",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2867",
+            "name": "Kutwa",
+            "pos": "",
             "C": false,
             "VC": false
           }
@@ -16607,8 +16831,8 @@
           },
           {
             "pid": "2980",
-            "name": "Klynge",
-            "pos": "3",
+            "name": "Anders Klynge",
+            "pos": "Pomocnik",
             "C": false,
             "VC": false
           },
@@ -16678,233 +16902,9 @@
         ]
       },
       {
-        "slug": "poznan-festung",
-        "display_name": "Poznan Festung",
-        "total_pts": 208,
-        "players": [
-          {
-            "pid": "1327",
-            "name": "Kacper Urbański",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1490",
-            "name": "Kacper Trelowski",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1987",
-            "name": "Jordi Sánchez",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": true
-          },
-          {
-            "pid": "2104",
-            "name": "Michal Sáček",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2123",
-            "name": "Michał Gurgul",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2498",
-            "name": "Patrik Wålemark",
-            "pos": "Pomocnik",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "2671",
-            "name": "Karol Czubak",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2917",
-            "name": "Allahyar Sayyadmanesh",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2939",
-            "name": "Nik Prelec",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2943",
-            "name": "Peter González",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2815",
-            "name": "Guilherme Montóia",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2855",
-            "name": "Pańkowski",
-            "pos": "",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2431",
-            "name": "Rúben Vinagre",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "480",
-            "name": "Bartosz Nowak",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2834",
-            "name": "Jerzy Napieraj",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          }
-        ]
-      },
-      {
-        "slug": "mauroball",
-        "display_name": "Mauroball",
-        "total_pts": 205,
-        "players": [
-          {
-            "pid": "765",
-            "name": "Jesús Imaz",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "774",
-            "name": "Sebastian Bergier",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "951",
-            "name": "Arkadiusz Jędrych",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1319",
-            "name": "Paweł Wszołek",
-            "pos": "Obrońca",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "1725",
-            "name": "Mahir Emreli",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1987",
-            "name": "Jordi Sánchez",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2805",
-            "name": "Otto Hindrich",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2902",
-            "name": "Lucas Piazón",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2817",
-            "name": "Kornvig",
-            "pos": "3",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2821",
-            "name": "Attila Szalai",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2943",
-            "name": "Peter González",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": true
-          },
-          {
-            "pid": "2950",
-            "name": "Szymon Wadas",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2560",
-            "name": "Konrad Ciszek",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2942",
-            "name": "Ševčík",
-            "pos": "",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2867",
-            "name": "Kutwa",
-            "pos": "",
-            "C": false,
-            "VC": false
-          }
-        ]
-      },
-      {
         "slug": "mewy-1fc",
         "display_name": "Mewy 1Fc",
-        "total_pts": 195,
+        "total_pts": 197,
         "players": [
           {
             "pid": "184",
