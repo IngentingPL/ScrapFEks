@@ -134,7 +134,7 @@ Dzięki temu możesz porównać popularność zawodnika wśród najlepszych grac
 2. **Skanowanie zawodników** — sekwencyjne pobieranie profili (ID 1–4000), statystyki per kolejka, historia cen
 3. **Scrapowanie drużyn** — top 1000 drużyn z rankingu (10 workerów równolegle), parsowanie HTML składów
 4. **Liga prywatna** — pobieranie składów, matching z pełnymi danymi zawodników, wykrywanie transferów
-5. **Siła drużyn i statystyki zewnętrzne** — scrapowanie 3 źródeł: **90minut.pl** (GF/GA drużyn → FDR), **API ekstraklasy** (xG, strzały, podania kluczowe), **conceptuallyfootball.com** (xA, percentyle ligowe)
+5. **Siła drużyn i statystyki zewnętrzne** — scrapowanie 2 źródeł: **90minut.pl** (GF/GA drużyn → FDR), **API Karpińskiego** (xG, xA, strzały, podania kluczowe, percentyle ligowe)
 6. **Obliczenia** — ownership %, średnie pozycyjne (globalne + ligowe), forma (5 ostatnich kolejek)
 7. **Dashboard** — generowanie HTML z osadzonym JS, publikacja na GitHub Pages
 8. **Auto-kontynuacja** — przekroczenie limitu czasu → zapis checkpointu → automatyczny restart workflow
@@ -244,7 +244,7 @@ Artefakty z GitHub Actions przechowywane przez **7 dni**.
 | `fdr.py` | Obliczenia FDR (Fixture Difficulty Rating) |
 | `transfers.py` | Transfery ligowe, statystyki per 90 minut |
 | `schedule.py` | Parsowanie terminarz.txt, czyszczenie starych plików |
-| `conceptually_client.py` | Statystyki xA i percentyle z conceptuallyfootball.com (Sofascore), cache 24h |
+| `karpinski_client.py` | Statystyki xA i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h |
 | `predictor.py` | Logika prognoz punktowych zawodników |
 | `tuner.py` | Auto-tuning parametrów predykcji na podstawie trafności |
 | `accuracy.py` | Śledzenie trafności prognoz kolejka po kolejce |

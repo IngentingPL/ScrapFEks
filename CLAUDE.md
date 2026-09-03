@@ -37,7 +37,7 @@ ScrapFEks/
 ├── players.py                  # Pobieranie i parsowanie danych zawodników
 ├── squads.py                   # Scrapowanie składów drużyn, statystyki kapitanów/ownership
 ├── external_stats.py           # Zewnętrzne statystyki: 90minut.pl i API ekstraklasa.org
-├── conceptually_client.py      # Statystyki xA i percentyle z conceptuallyfootball.com (Sofascore), cache 24h
+├── karpinski_client.py         # Statystyki xA i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h
 ├── fdr.py                      # Obliczenia FDR (Fixture Difficulty Rating)
 ├── transfers.py                # Transfery ligowe, statystyki per 90 minut
 ├── schedule.py                 # Parsowanie terminarz.txt, czyszczenie starych plików
