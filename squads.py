@@ -236,7 +236,7 @@ def _process_team(args):
     captain_id = squad.get("captain_id")
     captain_name = ""
     for p in squad.get("players", []):
-        if p["player_id"] == captain_id:
+        if p.get("player_id") and p["player_id"] == captain_id:
             captain_name = p["name"]
             break
 
@@ -394,7 +394,9 @@ def _compute_squad_stats(team_results: list[dict]) -> list[dict]:
 
     for team in team_results:
         for p in team.get("squad", []):
-            pid = p["player_id"]
+            pid = p.get("player_id")
+            if not pid:
+                continue
             if pid not in player_counts:
                 player_counts[pid] = {
                     "player_id": pid,
