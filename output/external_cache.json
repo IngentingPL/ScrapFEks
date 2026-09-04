@@ -1,6 +1,6 @@
 {
   "90minut_table": {
-    "timestamp": "2026-09-03T20:41:53.931017",
+    "timestamp": "2026-09-04T21:18:16.376428",
     "ttl_hours": 24,
     "data": {
       "Lech Poznań": {
@@ -47,16 +47,27 @@
         "ga_away": 8,
         "mp_away": 3
       },
+      "Piast Gliwice": {
+        "gf": 13,
+        "ga": 13,
+        "mp": 7,
+        "gf_home": 11,
+        "ga_home": 8,
+        "mp_home": 4,
+        "gf_away": 2,
+        "ga_away": 5,
+        "mp_away": 3
+      },
       "GKS Katowice": {
         "gf": 12,
-        "ga": 6,
-        "mp": 5,
+        "ga": 9,
+        "mp": 6,
         "gf_home": 8,
         "ga_home": 1,
         "mp_home": 2,
         "gf_away": 4,
-        "ga_away": 5,
-        "mp_away": 3
+        "ga_away": 8,
+        "mp_away": 4
       },
       "Jagiellonia Białystok": {
         "gf": 9,
@@ -111,17 +122,6 @@
         "mp_home": 3,
         "gf_away": 1,
         "ga_away": 2,
-        "mp_away": 3
-      },
-      "Piast Gliwice": {
-        "gf": 10,
-        "ga": 13,
-        "mp": 6,
-        "gf_home": 8,
-        "ga_home": 8,
-        "mp_home": 3,
-        "gf_away": 2,
-        "ga_away": 5,
         "mp_away": 3
       },
       "Radomiak Radom": {
