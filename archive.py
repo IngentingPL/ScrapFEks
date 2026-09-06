@@ -19,6 +19,7 @@ import shutil
 import glob as glob_module
 import re
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 # ============================================================
@@ -200,7 +201,7 @@ def generate_archive_index(archive_dir: str = "docs/archive"):
           </a>
         </div>'''
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M:%S")
 
     html = f"""<!DOCTYPE html>
 <html lang="pl">

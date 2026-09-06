@@ -21,6 +21,7 @@ import time
 import urllib.request
 import urllib.error
 from datetime import datetime, date, timedelta
+from zoneinfo import ZoneInfo
 from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  # wspólny klient API
 from predictor import parse_ownership_pct, captain_differential_score, FDR_NEUTRAL
 from analytics import find_hidden_gem, find_disappointment, collect_captains
@@ -365,7 +366,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
 
     print(f"\n📣 Discord: przygotowuję pre-round embed dla kolejki {round_number}...")
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M")
 
     # --- SEKCJA 1: CAPTAIN PICK ---
     # Formuła: prognoza × (1 - ownership/100)
@@ -666,7 +667,7 @@ def send_post_round(league_data, players_data, accuracy_data, webhook_url, round
 
     print(f"\n📣 Discord: przygotowuję post-round embed dla kolejki {round_number}...")
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M")
     fields = []
     captain_lines = []
 
@@ -925,7 +926,7 @@ def send_captains_summary(league_teams_detail, cmf_standings, webhook_url, round
 
     print(f"\n📣 Discord: przygotowuję captains embed dla kolejki {round_number}...")
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M")
 
     # ZMIANA 1: POMIŃ drużyny bez kapitana (cap_name != "?")
     # ZMIANA 2: sortuj według cmf_standings (tabela sumaryczna jesień+wiosna)

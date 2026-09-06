@@ -186,12 +186,12 @@ from dashboard import generate_dashboard_html
 # ============================================================
 
 def main():
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y%m%d_%H%M%S")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     print("⚽ Fantasy Ekstraklasa - Scraper")
     print("=" * 50)
-    print(f"🕐 Start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🕐 Start: {datetime.now(ZoneInfo('Europe/Warsaw')).strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
     # 1. Utwórz sesję
@@ -1119,7 +1119,7 @@ def main():
     if predictions_data:
         print(f"   - fantasy_predictions_{timestamp}.csv (prognoza punktów)")
     print(f"   - dashboard.html (interaktywny dashboard)")
-    print(f"🕐 Koniec: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🕐 Koniec: {datetime.now(ZoneInfo('Europe/Warsaw')).strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 def save_league_squads_history(league_teams_detail, current_round):
