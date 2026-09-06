@@ -1,6 +1,7 @@
 player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr_modifier,minutes_factor,home_away_factor,avg_minutes,confidence,detail,unavailable,availability_reason,round_number
-1092,Piotr Samiec-Talar,śląsk wrocław,POM,Korona Kielce,True,9.0,9.7,0.88,1.0,1.05,90.0,high,Śr. 9.7 × FDR 0.88 × min 1.0 × dom 1.05 = 9.0,,,8
 2671,Karol Czubak,motor lublin,NAP,Raków Częstochowa,False,8.9,7.6,1.2,1.0,0.97,90.0,high,Śr. 7.6 × FDR 1.2 × min 1.0 × wyjazd 0.97 = 8.9,,,8
+1092,Piotr Samiec-Talar,śląsk wrocław,POM,Korona Kielce,True,8.6,9.3,0.88,1.0,1.05,89.0,high,Śr. 9.3 × FDR 0.88 × min 1.0 × dom 1.05 = 8.6,,,8
+184,Rafał Wolski,radomiak radom,POM,Piast Gliwice,True,8.5,7.5,1.08,1.0,1.05,87.0,high,Śr. 7.5 × FDR 1.08 × min 1.0 × dom 1.05 = 8.5,,,8
 827,Mateusz Grzybek,zagłębie lubin,OBR,GKS Katowice,True,8.0,6.9,1.1,1.0,1.05,88.0,high,Śr. 6.9 × FDR 1.1 × min 1.0 × dom 1.05 = 8.0,,,8
 1319,Paweł Wszołek,legia warszawa,OBR,Widzew Łódź,True,7.6,8.0,0.9,1.0,1.05,81.0,high,Śr. 8.0 × FDR 0.9 × min 1.0 × dom 1.05 = 7.6,,,8
 2481,Ajdin Hasić,cracovia,POM,Wisła Płock,False,7.6,7.7,1.02,1.0,0.97,89.0,high,Śr. 7.7 × FDR 1.02 × min 1.0 × wyjazd 0.97 = 7.6,,,8
@@ -14,7 +15,6 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2917,Allahyar Sayyadmanesh,lech poznań,POM,Górnik Zabrze,False,6.6,7.4,1.02,0.9,0.97,62.0,high,Śr. 7.4 × FDR 1.02 × min 0.9 × wyjazd 0.97 = 6.6,,,8
 1455,Aleks Ławniczak,zagłębie lubin,OBR,GKS Katowice,True,6.5,5.6,1.1,1.0,1.05,90.0,high,Śr. 5.6 × FDR 1.1 × min 1.0 × dom 1.05 = 6.5,,,8
 2679,Paul Mukairu,pogoń szczecin,POM,Wieczysta Kraków,True,6.4,5.7,1.08,1.0,1.05,84.0,high,Śr. 5.7 × FDR 1.08 × min 1.0 × dom 1.05 = 6.4,,,8
-2901,Tobias Christensen,wieczysta kraków,POM,Pogoń Szczecin,False,6.2,7.1,1.0,0.9,0.97,68.0,high,Śr. 7.1 × FDR 1.0 × min 0.9 × wyjazd 0.97 = 6.2,,,8
 1880,Ilja Szkurin,gks katowice,NAP,Zagłębie Lubin,False,6.1,7.8,0.8,1.0,0.97,88.0,high,Śr. 7.8 × FDR 0.8 × min 1.0 × wyjazd 0.97 = 6.1,,,8
 2577,Josip Ćorluka,zagłębie lubin,OBR,GKS Katowice,True,5.9,5.7,1.1,0.9,1.05,79.0,high,Śr. 5.7 × FDR 1.1 × min 0.9 × dom 1.05 = 5.9,,,8
 2940,Mario García,widzew łódź,OBR,Legia Warszawa,False,5.9,7.6,0.8,1.0,0.97,89.0,high,Śr. 7.6 × FDR 0.8 × min 1.0 × wyjazd 0.97 = 5.9,,,8
@@ -38,21 +38,21 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 1225,Jan Grzesik,radomiak radom,OBR,Piast Gliwice,True,4.5,3.5,1.2,1.0,1.05,90.0,high,Śr. 3.5 × FDR 1.2 × min 1.0 × dom 1.05 = 4.5,,,8
 2286,Valentin Cojocaru,pogoń szczecin,BR,Wieczysta Kraków,True,4.5,4.7,0.9,1.0,1.05,90.0,high,Śr. 4.7 × FDR 0.9 × min 1.0 × dom 1.05 = 4.5,,,8
 681,Michał Nalepa,zagłębie lubin,OBR,GKS Katowice,True,4.4,3.8,1.1,1.0,1.05,90.0,medium,Śr. 3.8 × FDR 1.1 × min 1.0 × dom 1.05 = 4.4,,,8
-765,Jesús Imaz,jagiellonia białystok,POM,Wisła Kraków,False,4.4,5.9,0.84,0.9,0.97,72.0,high,Śr. 5.9 × FDR 0.84 × min 0.9 × wyjazd 0.97 = 4.4,,,8
 2733,Luis Palma,lech poznań,POM,Górnik Zabrze,False,4.4,6.4,1.02,0.7,0.97,59.0,high,Śr. 6.4 × FDR 1.02 × min 0.7 × wyjazd 0.97 = 4.4,,,8
 1507,Łukasz Zjawiński,legia warszawa,NAP,Widzew Łódź,True,4.3,5.1,0.9,0.9,1.05,66.0,high,Śr. 5.1 × FDR 0.9 × min 0.9 × dom 1.05 = 4.3,,,8
 1126,Kamil Piątkowski,legia warszawa,OBR,Widzew Łódź,True,4.2,4.5,0.9,1.0,1.05,90.0,high,Śr. 4.5 × FDR 0.9 × min 1.0 × dom 1.05 = 4.2,,,8
 2123,Michał Gurgul,lech poznań,OBR,Górnik Zabrze,False,4.2,4.8,0.9,1.0,0.97,81.0,high,Śr. 4.8 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 4.2,,,8
 2225,Fran Álvarez,widzew łódź,POM,Legia Warszawa,False,4.1,5.2,0.8,1.0,0.97,88.0,high,Śr. 5.2 × FDR 0.8 × min 1.0 × wyjazd 0.97 = 4.1,,,8
+2939,Nik Prelec,jagiellonia białystok,NAP,Wisła Kraków,False,4.1,5.8,0.8,0.9,0.97,72.0,high,Śr. 5.8 × FDR 0.8 × min 0.9 × wyjazd 0.97 = 4.1,,,8
 1026,Mateusz Lis,lech poznań,BR,Górnik Zabrze,False,4.0,4.6,0.9,1.0,0.97,90.0,high,Śr. 4.6 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 4.0,,,8
 1280,Damian Michalski,zagłębie lubin,OBR,GKS Katowice,True,4.0,3.9,1.1,0.9,1.05,72.0,high,Śr. 3.9 × FDR 1.1 × min 0.9 × dom 1.05 = 4.0,,,8
+1464,Kajetan Szmyt,jagiellonia białystok,POM,Wisła Kraków,False,4.0,5.5,0.84,0.9,0.97,73.0,high,Śr. 5.5 × FDR 0.84 × min 0.9 × wyjazd 0.97 = 4.0,,,8
 1400,Xavier Dziekoński,korona kielce,BR,Śląsk Wrocław,False,3.9,4.0,1.0,1.0,0.97,90.0,high,Śr. 4.0 × FDR 1.0 × min 1.0 × wyjazd 0.97 = 3.9,,,8
 2000,Lisandro Semedo,wieczysta kraków,POM,Pogoń Szczecin,False,3.9,4.4,1.0,0.9,0.97,76.0,high,Śr. 4.4 × FDR 1.0 × min 0.9 × wyjazd 0.97 = 3.9,,,8
 2423,Mbaye N'Diaye,motor lublin,POM,Raków Częstochowa,False,3.9,3.6,1.12,1.0,0.97,89.0,high,Śr. 3.6 × FDR 1.12 × min 1.0 × wyjazd 0.97 = 3.9,,,8
-2676,Emmanuel Twumasi,piast gliwice,OBR,Radomiak Radom,False,3.8,3.9,1.1,0.9,0.97,64.0,high,Śr. 3.9 × FDR 1.1 × min 0.9 × wyjazd 0.97 = 3.8,,,8
-2815,Guilherme Montóia,jagiellonia białystok,OBR,Wisła Kraków,False,3.8,4.3,0.9,1.0,0.97,81.0,high,Śr. 4.3 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 3.8,,,8
+765,Jesús Imaz,jagiellonia białystok,POM,Wisła Kraków,False,3.7,5.1,0.84,0.9,0.97,62.0,high,Śr. 5.1 × FDR 0.84 × min 0.9 × wyjazd 0.97 = 3.7,,,8
 2454,Pau Resta,gks katowice,OBR,Zagłębie Lubin,False,3.6,3.7,1.0,1.0,0.97,81.0,high,Śr. 3.7 × FDR 1.0 × min 1.0 × wyjazd 0.97 = 3.6,,,8
-2939,Nik Prelec,jagiellonia białystok,NAP,Wisła Kraków,False,3.6,6.7,0.8,0.7,0.97,60.0,high,Śr. 6.7 × FDR 0.8 × min 0.7 × wyjazd 0.97 = 3.6,,,8
+86,Taras Romanczuk,jagiellonia białystok,POM,Wisła Kraków,False,3.5,4.3,0.84,1.0,0.97,90.0,high,Śr. 4.3 × FDR 0.84 × min 1.0 × wyjazd 0.97 = 3.5,,,8
 2406,Maksym Chłań,górnik zabrze,POM,Lech Poznań,True,3.5,3.9,0.86,1.0,1.05,87.0,high,Śr. 3.9 × FDR 0.86 × min 1.0 × dom 1.05 = 3.5,,,8
 2659,Marcel Łubik,wisła kraków,BR,Jagiellonia Białystok,True,3.5,4.1,0.8,1.0,1.05,90.0,high,Śr. 4.1 × FDR 0.8 × min 1.0 × dom 1.05 = 3.5,,,8
 2662,Yūki Kobayashi,jagiellonia białystok,OBR,Wisła Kraków,False,3.5,4.5,0.9,0.9,0.97,72.0,high,Śr. 4.5 × FDR 0.9 × min 0.9 × wyjazd 0.97 = 3.5,,,8
@@ -68,30 +68,33 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2384,Borja Galán,gks katowice,OBR,Zagłębie Lubin,False,3.2,4.8,1.0,0.7,0.97,49.0,high,Śr. 4.8 × FDR 1.0 × min 0.7 × wyjazd 0.97 = 3.2,,,8
 1192,Erik Janža,górnik zabrze,OBR,Lech Poznań,True,3.1,4.1,0.8,0.9,1.05,74.0,high,Śr. 4.1 × FDR 0.8 × min 0.9 × dom 1.05 = 3.1,,,8
 1925,Gabriel Kobylak,gks katowice,BR,Zagłębie Lubin,False,3.1,3.2,1.0,1.0,0.97,90.0,high,Śr. 3.2 × FDR 1.0 × min 1.0 × wyjazd 0.97 = 3.1,,,8
-2661,Bernardo Vital,jagiellonia białystok,OBR,Wisła Kraków,False,3.1,3.6,0.9,1.0,0.97,90.0,high,Śr. 3.6 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 3.1,,,8
 1931,Steve Kapuadi,widzew łódź,OBR,Legia Warszawa,False,3.0,3.9,0.8,1.0,0.97,90.0,high,Śr. 3.9 × FDR 0.8 × min 1.0 × wyjazd 0.97 = 3.0,,,8
+2661,Bernardo Vital,jagiellonia białystok,OBR,Wisła Kraków,False,3.0,3.4,0.9,1.0,0.97,90.0,high,Śr. 3.4 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 3.0,,,8
 2759,Eman Markovic,gks katowice,POM,Zagłębie Lubin,False,3.0,5.0,0.88,0.7,0.97,56.0,high,Śr. 5.0 × FDR 0.88 × min 0.7 × wyjazd 0.97 = 3.0,,,8
 2801,Bartłomiej Drągowski,widzew łódź,BR,Legia Warszawa,False,3.0,3.8,0.8,1.0,0.97,90.0,high,Śr. 3.8 × FDR 0.8 × min 1.0 × wyjazd 0.97 = 3.0,,,8
 2104,Michal Sáček,górnik zabrze,OBR,Lech Poznań,True,2.9,3.4,0.8,1.0,1.05,90.0,high,Śr. 3.4 × FDR 0.8 × min 1.0 × dom 1.05 = 2.9,,,8
-1464,Kajetan Szmyt,jagiellonia białystok,POM,Wisła Kraków,False,2.8,3.8,0.84,0.9,0.97,73.0,high,Śr. 3.8 × FDR 0.84 × min 0.9 × wyjazd 0.97 = 2.8,,,8
-86,Taras Romanczuk,jagiellonia białystok,POM,Wisła Kraków,False,2.7,3.3,0.84,1.0,0.97,90.0,high,Śr. 3.3 × FDR 0.84 × min 1.0 × wyjazd 0.97 = 2.7,,,8
+2490,Darko Čurlinov,pogoń szczecin,POM,Wieczysta Kraków,True,2.8,3.5,1.08,0.7,1.05,48.0,high,Śr. 3.5 × FDR 1.08 × min 0.7 × dom 1.05 = 2.8,,,8
+2772,Sergio Lozano,jagiellonia białystok,POM,Wisła Kraków,False,2.8,5.0,0.84,0.7,0.97,57.0,high,Śr. 5.0 × FDR 0.84 × min 0.7 × wyjazd 0.97 = 2.8,,,8
 979,Oskar Repka,raków częstochowa,POM,Motor Lublin,True,2.6,2.3,1.06,1.0,1.05,81.0,high,Śr. 2.3 × FDR 1.06 × min 1.0 × dom 1.05 = 2.6,,,8
 2053,Sebastian Madejski,cracovia,BR,Wisła Płock,False,2.6,2.2,1.2,1.0,0.97,90.0,high,Śr. 2.2 × FDR 1.2 × min 1.0 × wyjazd 0.97 = 2.6,,,8
 2895,Philipp Schulze,górnik zabrze,BR,Lech Poznań,True,2.6,3.1,0.8,1.0,1.05,90.0,high,Śr. 3.1 × FDR 0.8 × min 1.0 × dom 1.05 = 2.6,,,8
 2841,Yvan Ikia Dimi,górnik zabrze,POM,Lech Poznań,True,2.5,3.9,0.86,0.7,1.05,48.0,high,Śr. 3.9 × FDR 0.86 × min 0.7 × dom 1.05 = 2.5,,,8
 2991,Janis Antiste,górnik zabrze,NAP,Lech Poznań,True,2.5,3.8,0.9,0.7,1.05,59.0,medium,Śr. 3.8 × FDR 0.9 × min 0.7 × dom 1.05 = 2.5,,,8
 1169,Mateusz Skrzypczak,lech poznań,OBR,Górnik Zabrze,False,2.4,3.0,0.9,0.9,0.97,79.0,high,Śr. 3.0 × FDR 0.9 × min 0.9 × wyjazd 0.97 = 2.4,,,8
-1795,Sławomir Abramowicz,jagiellonia białystok,BR,Wisła Kraków,False,2.4,2.8,0.9,1.0,0.97,90.0,high,Śr. 2.8 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 2.4,,,8
+1795,Sławomir Abramowicz,jagiellonia białystok,BR,Wisła Kraków,False,2.4,2.7,0.9,1.0,0.97,90.0,high,Śr. 2.7 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 2.4,,,8
 1909,Rafał Adamski,legia warszawa,NAP,Widzew Łódź,True,2.4,3.6,0.9,0.7,1.05,55.0,high,Śr. 3.6 × FDR 0.9 × min 0.7 × dom 1.05 = 2.4,,,8
-2772,Sergio Lozano,jagiellonia białystok,POM,Wisła Kraków,False,2.4,4.3,0.84,0.7,0.97,46.0,high,Śr. 4.3 × FDR 0.84 × min 0.7 × wyjazd 0.97 = 2.4,,,8
+2815,Guilherme Montóia,jagiellonia białystok,OBR,Wisła Kraków,False,2.4,2.7,0.9,1.0,0.97,81.0,high,Śr. 2.7 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 2.4,,,8
+992,Przemysław Wiśniewski,widzew łódź,OBR,Legia Warszawa,False,2.2,3.2,0.8,0.9,0.97,71.0,high,Śr. 3.2 × FDR 0.8 × min 0.9 × wyjazd 0.97 = 2.2,,,8
 1490,Kacper Trelowski,raków częstochowa,BR,Motor Lublin,True,2.2,2.1,1.0,1.0,1.05,90.0,high,Śr. 2.1 × FDR 1.0 × min 1.0 × dom 1.05 = 2.2,,,8
-1540,Norbert Wojtuszek,jagiellonia białystok,OBR,Wisła Kraków,False,2.0,2.3,0.9,1.0,0.97,88.0,high,Śr. 2.3 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 2.0,,,8
 2921,Mihai Popa,motor lublin,BR,Raków Częstochowa,False,2.0,2.0,1.0,1.0,0.97,90.0,high,Śr. 2.0 × FDR 1.0 × min 1.0 × wyjazd 0.97 = 2.0,,,8
+1540,Norbert Wojtuszek,jagiellonia białystok,OBR,Wisła Kraków,False,1.8,2.1,0.9,1.0,0.97,88.0,high,Śr. 2.1 × FDR 0.9 × min 1.0 × wyjazd 0.97 = 1.8,,,8
+2417,Filip Luberecki,motor lublin,OBR,Raków Częstochowa,False,1.6,1.7,1.0,1.0,0.97,90.0,high,Śr. 1.7 × FDR 1.0 × min 1.0 × wyjazd 0.97 = 1.6,,,8
 2637,Marcin Kamiński,wisła płock,OBR,Cracovia,True,1.6,1.3,1.2,1.0,1.05,90.0,high,Śr. 1.3 × FDR 1.2 × min 1.0 × dom 1.05 = 1.6,,,8
 1928,Stratos Svarnas,raków częstochowa,OBR,Motor Lublin,True,1.4,1.9,1.0,0.7,1.05,48.0,medium,Śr. 1.9 × FDR 1.0 × min 0.7 × dom 1.05 = 1.4,,,8
 2306,Tobiasz Mras,wieczysta kraków,POM,Pogoń Szczecin,False,1.4,2.1,1.0,0.7,0.97,54.0,medium,Śr. 2.1 × FDR 1.0 × min 0.7 × wyjazd 0.97 = 1.4,,,8
 2931,Jakub Jendryka,raków częstochowa,OBR,Motor Lublin,True,1.4,1.9,1.0,0.7,1.05,49.0,medium,Śr. 1.9 × FDR 1.0 × min 0.7 × dom 1.05 = 1.4,,,8
-2945,Rodrigo Conceicao,jagiellonia białystok,OBR,Wisła Kraków,False,1.3,1.6,0.9,0.9,0.97,63.0,high,Śr. 1.6 × FDR 0.9 × min 0.9 × wyjazd 0.97 = 1.3,,,8
+2945,Rodrigo Conceicao,jagiellonia białystok,OBR,Wisła Kraków,False,1.4,1.8,0.9,0.9,0.97,65.0,high,Śr. 1.8 × FDR 0.9 × min 0.9 × wyjazd 0.97 = 1.4,,,8
+1719,Michael Ameyaw,korona kielce,POM,Śląsk Wrocław,False,1.3,2.0,1.0,0.7,0.97,53.0,high,Śr. 2.0 × FDR 1.0 × min 0.7 × wyjazd 0.97 = 1.3,,,8
 1831,Antoni Mikułko,wieczysta kraków,BR,Pogoń Szczecin,False,1.2,1.2,1.0,1.0,0.97,90.0,high,Śr. 1.2 × FDR 1.0 × min 1.0 × wyjazd 0.97 = 1.2,,,8
 774,Sebastian Bergier,widzew łódź,NAP,Legia Warszawa,False,1.1,2.1,0.8,0.7,0.97,50.0,high,Śr. 2.1 × FDR 0.8 × min 0.7 × wyjazd 0.97 = 1.1,,,8
 1299,Jean Carlos Silva,raków częstochowa,OBR,Motor Lublin,True,1.1,1.2,1.0,0.9,1.05,74.0,high,Śr. 1.2 × FDR 1.0 × min 0.9 × dom 1.05 = 1.1,,,8
@@ -113,24 +116,23 @@ player_id,name,team,position,next_opponent,is_home,predicted_points,base_avg,fdr
 2366,Konrad Golonka,cracovia,BR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2561,Michał Mikielewicz,korona kielce,BR,Śląsk Wrocław,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2579,Jakub Zawadzki,pogoń szczecin,OBR,Wieczysta Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
-2587,Mateusz Kopczyński,piast gliwice,POM,Radomiak Radom,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2592,Szymon Kilianek,radomiak radom,OBR,Piast Gliwice,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2701,Kacper Plichta,motor lublin,NAP,Raków Częstochowa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2706,Patryk Kukulski,motor lublin,BR,Raków Częstochowa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2741,Alex Peškovič,pogoń szczecin,BR,Wieczysta Kraków,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
+2787,Adrian Damasiewicz,jagiellonia białystok,BR,Wisła Kraków,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2829,Maciej Urbański,zagłębie lubin,OBR,GKS Katowice,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2830,Zachary Zalewski,jagiellonia białystok,POM,Wisła Kraków,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,8
 2832,Jakub Grelich,piast gliwice,BR,Radomiak Radom,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2843,Wiktor Żołneczko,raków częstochowa,BR,Motor Lublin,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,8
 2850,Oskar Markiewicz,radomiak radom,OBR,Piast Gliwice,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2852,Krystian Brzozowski,motor lublin,OBR,Raków Częstochowa,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
-2859,Nikodem Rogowski,wisła płock,OBR,Cracovia,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2863,Jakub Stępak,wisła kraków,BR,Jagiellonia Białystok,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2896,Antoni Kustra,wieczysta kraków,BR,Pogoń Szczecin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2899,Kacper Zagrodzki,wieczysta kraków,OBR,Pogoń Szczecin,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2950,Szymon Wadas,wisła płock,BR,Cracovia,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2958,Franciszek Nowak,zagłębie lubin,BR,GKS Katowice,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
-2968,Adrian Żulewski,śląsk wrocław,OBR,Korona Kielce,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
+2968,Adrian Żulewski,śląsk wrocław,OBR,Korona Kielce,True,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,8
 2972,Jakub Wilczek,cracovia,OBR,Wisła Płock,False,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
 2987,Karol Delikat,lech poznań,POM,Górnik Zabrze,False,,,,,,,insufficient_data,Za mało danych (1/2 kolejek),,,8
 2996,Dominik Klint,śląsk wrocław,BR,Korona Kielce,True,,,,,,,insufficient_data,Za mało danych (0/2 kolejek),,,8
