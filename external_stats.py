@@ -11,6 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from config import (
+    AUTUMN_LAST_ROUND,
     EXTRA_API_TOKEN,
     EXTRA_STATS_API,
     EXTRA_STATS_PARAMS,
@@ -308,3 +309,219 @@ def fetch_extra_player_stats() -> dict:
     if any(v for v in all_stats.values()):
         _save_external_cache("extra_player_stats", all_stats)
     return all_stats
+
+
+def generate_terminarz_from_90minut(start_round=1, end_round=None):
+    """
+    Generuje terminarz.txt na podstawie danych z 90minut.pl.
+    
+    Pobiera stronę ligi z 90minut.pl i parsuje strukturę kolejek:
+    - Nagłówki kolejek: <table class="main" cellpadding="0"> z <u>Kolejka N
+    - Tabela meczów: następna <table class="main" cellpadding="1">
+    - Mecz rozegrany: komórka wyniku zawiera <a href="...mecz.php...">
+    - Mecz przyszły/przełożony: komórka wyniku zawiera "-"
+    - Strzelcy: wiersz <td colspan="4"> po meczu
+    - Mecz przełożony: dodatkowy wiersz z informacją o odwołaniu
+    
+    Zapisuje wynik do /tmp/terminarz_generated.txt
+    
+    Args:
+        start_round: numer pierwszej kolejki do pobrania (domyślnie 1)
+        end_round: numer ostatniej kolejki (domyślnie AUTUMN_LAST_ROUND z config.py)
+    
+    Returns:
+        ścieżka do wygenerowanego pliku lub None w przypadku błędu
+    """
+    if end_round is None:
+        end_round = AUTUMN_LAST_ROUND
+    
+    url = f"http://www.90minut.pl/liga/1/liga{NINETYM_LIGA_ID}.html"
+    
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Accept-Encoding": "gzip, deflate",
+            "Connection": "keep-alive",
+        }
+        
+        print(f"📥 Pobieram terminarz z 90minut.pl (kolejki {start_round}-{end_round})...")
+        resp = _request_with_retry(requests.get, url, headers=headers, timeout=20)
+        if resp is None:
+            print("❌ Nie udało się pobrać strony 90minut.pl")
+            return None
+        
+        resp.raise_for_status()
+        resp.encoding = resp.apparent_encoding or "iso-8859-2"
+        
+        soup = BeautifulSoup(resp.text, "lxml")
+        
+        # Znajdź wszystkie tabele z klasą "main"
+        all_tables = soup.find_all("table", class_="main")
+        
+        # Słownik do przechowywania kolejek: round_num -> {header, matches[]}
+        rounds = {}
+        current_round = None
+        
+        for table in all_tables:
+            cellpadding = table.get("cellpadding", "")
+            
+            # Sprawdź czy to tabela nagłówka kolejki (cellpadding="0")
+            if cellpadding == "0":
+                # Szukaj tekstu "Kolejka N" w <u>
+                u_tag = table.find("u")
+                if u_tag:
+                    text = u_tag.get_text(strip=True)
+                    match = re.match(r"Kolejka\s+(\d+)\s*-\s*(.+)", text)
+                    if match:
+                        round_num = int(match.group(1))
+                        round_date = match.group(2).strip()
+                        if start_round <= round_num <= end_round:
+                            current_round = round_num
+                            rounds[current_round] = {
+                                "header": f"Kolejka {round_num} - {round_date}",
+                                "matches": []
+                            }
+                            print(f"  ✓ Znaleziono nagłówek: {rounds[current_round]['header']}")
+                        else:
+                            current_round = None
+            
+            # Sprawdź czy to tabela meczów (cellpadding="1") i mamy aktywną kolejkę
+            elif cellpadding == "1" and current_round is not None:
+                rows = table.find_all("tr")
+                i = 0
+                while i < len(rows):
+                    row = rows[i]
+                    cells = row.find_all("td")
+                    
+                    # Wiersz meczu ma 4 komórki
+                    if len(cells) == 4:
+                        # Gospodarz
+                        home = cells[0].get_text(strip=True)
+                        # Wynik lub "-"
+                        score_cell = cells[1]
+                        score_link = score_cell.find("a", href=re.compile(r"mecz\.php"))
+                        if score_link:
+                            score = score_link.get_text(strip=True)
+                            is_played = True
+                        else:
+                            score = score_cell.get_text(strip=True)
+                            is_played = False
+                        
+                        # Gość
+                        away = cells[2].get_text(strip=True)
+                        # Data/godzina/frekwencja
+                        date_info = cells[3].get_text(strip=True)
+                        
+                        # Uprość nazwy drużyn (usuń pogrubienie)
+                        home = re.sub(r"\s+", " ", home).strip()
+                        away = re.sub(r"\s+", " ", away).strip()
+                        
+                        match_data = {
+                            "home": home,
+                            "away": away,
+                            "score": score,
+                            "date_info": date_info,
+                            "is_played": is_played,
+                            "scorers": None,
+                            "postponed_info": None,
+                            "extra_lines": []
+                        }
+                        
+                        # Sprawdź następne wiersze (strzelcy, info o przełożeniu, dodatkowe info)
+                        i += 1
+                        while i < len(rows):
+                            next_row = rows[i]
+                            next_cells = next_row.find_all("td")
+                            
+                            # Wiersz strzelców lub info: colspan="4"
+                            if len(next_cells) == 1 and next_cells[0].get("colspan") == "4":
+                                # Używamy separator=' ' żeby wymusić spację między zagnieżdżonymi tagami
+                                # np. <i>Léo Borges</i> 46 -> "Léo Borges 46" zamiast "Léo Borges46"
+                                text = next_cells[0].get_text(separator=' ', strip=True)
+                                # Redukujemy ewentualne wielokrotne spacje do pojedynczej
+                                text = re.sub(r'\s+', ' ', text).strip()
+                                
+                                # Czy to info o przełożeniu?
+                                if "odwołany" in text.lower() or "pierwotnym terminie" in text.lower():
+                                    match_data["postponed_info"] = text
+                                    i += 1
+                                # Czy to strzelcy (nie zawiera "odwołany")?
+                                elif text and not text.startswith("W ") and "kartką" not in text and "na " != text[:3]:
+                                    match_data["scorers"] = text
+                                    i += 1
+                                # Inne dodatkowe linie
+                                elif text:
+                                    match_data["extra_lines"].append(text)
+                                    i += 1
+                                else:
+                                    break
+                            else:
+                                break
+                        
+                        rounds[current_round]["matches"].append(match_data)
+                        continue  # i już zwiększone w pętli while
+                    
+                    i += 1
+        
+        # Generuj wyjście w formacie terminarz.txt
+        output_lines = []
+        
+        for round_num in sorted(rounds.keys()):
+            round_data = rounds[round_num]
+            
+            # Pusta linia przed kolejką (oprócz pierwszej)
+            if output_lines:
+                output_lines.append("")
+            
+            # Nagłówek kolejki
+            # Kolejka 1 bez spacji na początku, kolejki 2+ ze spacją
+            if round_num == 1:
+                output_lines.append(round_data["header"])
+            else:
+                output_lines.append(f" {round_data['header']}")
+            
+            output_lines.append("")  # Pusta linia po nagłówku
+            
+            for match in round_data["matches"]:
+                # Linia meczu: Gospodarz\twynik\tGość\tdata
+                line = f"{match['home']}\t{match['score']}\t{match['away']}\t{match['date_info']}"
+                output_lines.append(line)
+                
+                # Strzelcy (jeśli są)
+                if match["scorers"]:
+                    output_lines.append(match["scorers"])
+                
+                # Dodatkowe linie (np. "na Synerise Arenie Kraków", info o kartkach, rzutach karnych)
+                for extra in match["extra_lines"]:
+                    output_lines.append(extra)
+                
+                # Info o przełożeniu (na końcu)
+                if match["postponed_info"]:
+                    output_lines.append(match["postponed_info"])
+        
+        # Zapisz do pliku
+        output_path = "/tmp/terminarz_generated.txt"
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(output_lines))
+            # Dodaj newline na końcu pliku
+            f.write("\n")
+        
+        print(f"✅ Wygenerowano terminarz: {output_path}")
+        print(f"   Kolejki: {len(rounds)}, mecze: {sum(len(r['matches']) for r in rounds.values())}")
+        
+        return output_path
+        
+    except Exception as e:
+        print(f"❌ Błąd generowania terminarza: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+if __name__ == "__main__":
+    # Testowe wywołanie
+    result = generate_terminarz_from_90minut()
+    if result:
+        print(f"\nZapisano do: {result}")
