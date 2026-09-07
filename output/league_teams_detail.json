@@ -10283,14 +10283,40 @@
       },
       {
         "pid": "2921",
-        "name": "Popa",
-        "pos": "",
-        "pts": 0,
+        "name": "Mihai Popa",
+        "pos": "Bramkarz",
+        "pts": 12,
         "price": 1.7,
         "C": false,
         "VC": false,
         "R": true,
-        "form": []
+        "form": [
+          {
+            "r": 3,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 4,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 5,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 6,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 7,
+            "pts": 0,
+            "p": false
+          }
+        ]
       },
       {
         "pid": "2742",
