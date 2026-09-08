@@ -1363,7 +1363,7 @@ FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 2. [Imię Nazwisko] (Pozycja) - Krótkie uzasadnienie
 
 WYMAGANIA:
-- Odpowiedź maksymalnie 2000 znaków (Discord limit)
+- Odpowiedź 800-1200 znaków, maksymalnie 2000 (Discord limit)
 - Tylko 1 kapitan + 2 transfery
 - Konkretne nazwiska z danych, nie zgaduj
 - Po polsku, krótko i rzeczowo
@@ -1400,9 +1400,10 @@ FORMAT ODPOWIEDZI (dokładnie taki, bez odstępstw):
 2. [Imię Nazwisko] (Pozycja) - Ryzykowny ale może się opłacić
 
 WYMAGANIA:
-- Odpowiedź maksymalnie 2000 znaków (Discord limit)
+- Odpowiedź 800-1200 znaków, maksymalnie 2000 (Discord limit)
 - Tylko 1 kapitan + 2 transfery
 - Możesz polecać zawodników z niskim ownership (różniąc się od tłumu)
+- Używaj wyłącznie zawodników z podanych danych — nie zmyślaj nazwisk
 - Po polsku, w stylu kibica z forum
 - Nie dodawaj wstępu ani zakończenia"""
 
