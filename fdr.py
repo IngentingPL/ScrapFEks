@@ -124,9 +124,12 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
             try:
                 day, month = date_str.split(".")
                 # Zakładamy bieżący rok; dla meczów lip-gru może być rok wcześniejszy
+                # a dla meczów sty-cze sprawdzanych w lip-gru może być rok następny
                 match_date = datetime(current_year, int(month), int(day))
                 if int(month) >= 7 and today.month <= 6:
                     match_date = datetime(current_year - 1, int(month), int(day))
+                elif int(month) <= 6 and today.month >= 7:
+                    match_date = datetime(current_year + 1, int(month), int(day))
                 if match_date >= today:
                     return False  # Jest mecz w przyszłości
             except (ValueError, TypeError):
