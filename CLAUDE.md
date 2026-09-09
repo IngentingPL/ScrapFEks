@@ -244,6 +244,8 @@ Auto-tuning parametrów wymaga **4+ kolejek danych** (`MIN_ROUNDS_FOR_TUNING = 4
 9. **📁 Archiwum** — linki do zarchiwizowanych sezonów (`docs/archive/`); wyszarzona jeśli nie ma jeszcze żadnego zarchiwizowanego sezonu
 
 > Uwaga: "Liga Hokejowa" nie istnieje jako osobna zakładka — jest to wewnętrzna logika przetwarzania danych (combined standings jesień+wiosna).
+>
+> Uwaga: "FDR" nie istnieje jako osobna zakładka — jest to funkcjonalność osadzona w zakładce **Terminarz** (kolory trudności meczów, Fixture Planner) oraz wykorzystywana w zakładkach **Prognoza** i **Porównanie**.
 
 ---
 
