@@ -45,8 +45,8 @@ Parametry (wszystkie opcjonalne):
 |---|---|---|
 | `max_players` | 4000 | Maksymalna liczba ID zawodników do przeskanowania |
 | `teams_to_scrape` | 1000 | Ile drużyn z rankingu scrapować (ownership/kapitanowie) |
-| `league_slug` | `discord-fmforumcmf` | Slug ligi prywatnej (pusty = pomiń) |
-| `league_id` | `304` | ID ligi (z Network tab w przeglądarce) |
+| `league_slug` | `fmforumdiscord-iii` | Slug ligi prywatnej (pusty = pomiń) |
+| `league_id` | `641` | ID ligi (z Network tab w przeglądarce) |
 | `target_round` | *(ostatnia)* | Numer kolejki do analizy |
 | `workers` | 10 | Liczba równoległych workerów do scrapowania drużyn |
 | `max_runtime` | 300 | Maksymalny czas pracy w minutach przed zapisem checkpointu |
@@ -130,7 +130,7 @@ Dzięki temu możesz porównać popularność zawodnika wśród najlepszych grac
 
 ## ⚙️ Jak to działa
 
-1. **Logowanie** — automatyczne logowanie emailem/hasłem z szyfrowaniem AES (kompatybilne z CryptoJS)
+1. **Logowanie** — automatyczne logowanie emailem/hasłem przez OAuth 2.0 + PKCE (domena: id.ekstraklasa.org, endpointy: /oauth/token, /v1/authorization_token, /oauth/authorize, /login/check-green-sso)
 2. **Skanowanie zawodników** — sekwencyjne pobieranie profili (ID 1–4000), statystyki per kolejka, historia cen
 3. **Scrapowanie drużyn** — top 1000 drużyn z rankingu (10 workerów równolegle), parsowanie HTML składów
 4. **Liga prywatna** — pobieranie składów, matching z pełnymi danymi zawodników, wykrywanie transferów
@@ -193,7 +193,7 @@ export FANTASY_PASSWORD="twoje_haslo"
 export MAX_PLAYER_ID=4000
 export TEAMS_TO_SCRAPE=1000
 export LEAGUE_SLUG="twoja-liga"
-export LEAGUE_ID="304"
+export LEAGUE_ID="641"
 export WORKERS=10
 export MAX_RUNTIME_MINUTES=300
 
@@ -232,7 +232,7 @@ Artefakty z GitHub Actions przechowywane przez **7 dni**.
 | Plik | Opis |
 |---|---|
 | `scraper.py` | Główny skrypt — logowanie, scrapowanie, obliczenia, generowanie dashboardu |
-| `auth.py` | Logowanie do fantasy.ekstraklasa.org (AES + SSO) |
+| `auth.py` | Logowanie do fantasy.ekstraklasa.org (OAuth 2.0 + PKCE) |
 | `config.py` | Globalne stałe: URL-e, nagłówki, zmienne środowiskowe |
 | `network.py` | Warstwa HTTP: retry, cache 24h dla zewnętrznych statystyk |
 | `utils.py` | Normalizacja nazw, bezpieczne konwersje typów |
@@ -244,7 +244,7 @@ Artefakty z GitHub Actions przechowywane przez **7 dni**.
 | `fdr.py` | Obliczenia FDR (Fixture Difficulty Rating) |
 | `transfers.py` | Transfery ligowe, statystyki per 90 minut |
 | `schedule.py` | Parsowanie terminarz.txt, czyszczenie starych plików |
-| `karpinski_client.py` | Statystyki xA i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h |
+| `karpinski_client.py` | Statystyki xG, xA, strzały, chances_created, clean_sheet, goals_conceded, goals_prevented i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h |
 | `predictor.py` | Logika prognoz punktowych zawodników |
 | `tuner.py` | Auto-tuning parametrów predykcji na podstawie trafności |
 | `accuracy.py` | Śledzenie trafności prognoz kolejka po kolejce |
@@ -257,6 +257,9 @@ Artefakty z GitHub Actions przechowywane przez **7 dni**.
 | `generate_from_cache.py` | Regeneruje dashboard z istniejącego JSON |
 | `update_schedule.py` | Parser terminarza → generuje cron triggery w `scrape.yml` |
 | `test_single_player.py` | Narzędzie do testowania pobierania danych jednego zawodnika |
+| `test_real_cookie.py` | Testy obsługi prawdziwych ciasteczek |
+| `test_potential_value.py` | Testy obliczeń wartości potencjalnej |
+| `test_empty_guards.py` | Testy zabezpieczeń przed pustymi danymi |
 | `terminarz.txt` | Terminarz meczów — źródło danych dla fixture tickera i auto-uruchomień |
 | `.github/workflows/scrape.yml` | Workflow GitHub Actions — główny scraper |
 | `.github/workflows/update_schedule.yml` | Workflow GitHub Actions — aktualizacja harmonogramu |

@@ -275,6 +275,13 @@ The Verge's depth philosophy is **color-as-elevation**. When something needs to 
 - **Don't** pair Manuka with FK Roman Standard in the same headline cluster — Manuka is the only display shout, serif pulls are reserved for body moments.
 - **Don't** use `#3cffd0` text on a `#131313` background at under 16px — the contrast vibrates at small sizes.
 
+### Wyjątek — gradienty i box-shadow w ScrapFEks
+W projekcie ScrapFEks design system The Verge jest podstawą, ale z dwoma wyjątkami:
+- **Gradienty** są dozwolone dla odznak (np. `.captain-badge`) i tooltipów (np. `.season-tooltip`)
+- **Box-shadow** jest dozwolone dla odznak i tooltipów (np. podświetlenie przy najechaniu)
+
+Reszta UI nadal trzyma się solid colors i braku cieni zgodnie z zasadami Verge.
+
 ## 8. Responsive Behavior
 
 ### Breakpoints

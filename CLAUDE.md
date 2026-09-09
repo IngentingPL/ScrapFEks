@@ -26,7 +26,7 @@ ScrapFEks/
 │   └── debug_team_*.html       # Pliki debugowe drużyn
 ├── scraper.py                  # GŁÓWNY PLIK – scraping + generowanie HTML
 ├── config.py                   # Globalne stałe: URL-e, nagłówki, zmienne środowiskowe
-├── auth.py                     # Logowanie do fantasy.ekstraklasa.org (AES + SSO)
+├── auth.py                     # Logowanie do fantasy.ekstraklasa.org (OAuth 2.0 + PKCE)
 ├── network.py                  # Warstwa HTTP: retry, cache 24h dla zewnętrznych statystyk
 ├── utils.py                    # Normalizacja nazw, bezpieczne konwersje typów
 ├── dashboard.py                # Generowanie HTML dashboardu (~2900 linii)
@@ -37,7 +37,7 @@ ScrapFEks/
 ├── players.py                  # Pobieranie i parsowanie danych zawodników
 ├── squads.py                   # Scrapowanie składów drużyn, statystyki kapitanów/ownership
 ├── external_stats.py           # Zewnętrzne statystyki: 90minut.pl i API ekstraklasa.org
-├── karpinski_client.py         # Statystyki xA i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h
+├── karpinski_client.py         # Statystyki xG, xA, strzały, chances_created, clean_sheet, goals_conceded, goals_prevented i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h
 ├── fdr.py                      # Obliczenia FDR (Fixture Difficulty Rating)
 ├── transfers.py                # Transfery ligowe, statystyki per 90 minut
 ├── schedule.py                 # Parsowanie terminarz.txt, czyszczenie starych plików
@@ -49,7 +49,9 @@ ScrapFEks/
 ├── analytics.py                # Wspólne funkcje analityczne (hidden gem, disappointment, kapitanowie)
 ├── league_tracker.py           # Tracker sezonu ligowego
 ├── update_schedule.py          # Aktualizacja terminarza kolejek
-├── test_single_player.py       # Testowanie pojedynczego zawodnika
+├── test_real_cookie.py          # Testy obsługi prawdziwych ciasteczek
+├── test_potential_value.py      # Testy obliczeń wartości potencjalnej
+├── test_empty_guards.py         # Testy zabezpieczeń przed pustymi danymi
 ├── terminarz.txt               # Terminarz kolejek (daty meczów)
 ├── autumn_points.json          # Punkty z rundy jesiennej
 ├── duets.json                  # Dane par (duety) w lidze CMF
@@ -178,9 +180,13 @@ Jeśli dane wydają się nieaktualne po meczu – to oczekiwane, cache odśwież
 
 ## Trafność prognoz (accuracy.py)
 
-`accuracy_history.json` śledzi trafność prognoz kolejka po kolejce i zasila auto-tuning parametrów (tuner.py). Wymaga **4+ kolejek danych**, zanim auto-tuning zacznie działać.
+`accuracy_history.json` śledzi trafność prognoz kolejka po kolejce i zasila auto-tuning parametrów (tuner.py).
 
 Zawiera guard: jeśli plik prognoz (`fantasy_predictions_*.csv`) dotyczy innej kolejki niż ta którą sprawdzamy, porównanie jest pomijane z jasnym komunikatem w logach – zamiast cichego "0 dopasowań".
+
+## Wymóg 4+ kolejek — auto-tuning (tuner.py)
+
+Auto-tuning parametrów wymaga **4+ kolejek danych** (`MIN_ROUNDS_FOR_TUNING = 4`), zanim tuner.py zacznie działać. Sam accuracy.py nie ma tego wymogu — zapisuje dane od pierwszej kolejki.
 
 ---
 
@@ -193,6 +199,18 @@ Zawiera guard: jeśli plik prognoz (`fantasy_predictions_*.csv`) dotyczy innej k
 | `AI_MAX_RETRIES` | discord_notify.py | 3 | Liczba prób wywołań AI dla ekspertów |
 | `DISCORD_CONTENT_MAX_LEN` | discord_notify.py | 1900 | Limit znaków na część wiadomości (margines pod limitem Discorda 2000) |
 | `ERROR_PREVIEW_LEN` | ai_client.py | 300 | Ile znaków błędu HTTP pokazać w logach |
+| `DEEPSEEK_MODEL` | ai_client.py | "deepseek-chat" | Nazwa modelu DeepSeek |
+| `GEMINI_MODEL` | ai_client.py | "gemini-2.5-flash" | Nazwa modelu Gemini |
+| `DEEPSEEK_TIMEOUT` | ai_client.py | 30 | Timeout (s) dla wywołań DeepSeek |
+| `GEMINI_TIMEOUT` | ai_client.py | 30 | Timeout (s) dla wywołań Gemini |
+| `GEMINI_THINKING_BUDGET` | ai_client.py | 0 | Budżet thinking dla Gemini (0 = wyłączone) |
+| `HIT_THRESHOLD` | accuracy.py | 3 | Próg błędu (pkt) poniżej którego prognoza uznawana za trafną |
+| `DEFAULT_LOOKBACK` | predictor.py | 5 | Liczba ostatnich kolejek branych pod uwagę w prognozie |
+| `MIN_ROUNDS_FOR_PREDICTION` | predictor.py | 2 | Minimalna liczba rozegranych kolejek wymagana do prognozy |
+| `DEEPSEEK_MAX_OUTPUT_TOKENS` | discord_notify.py | 1500 | Maksymalna liczba tokenów w odpowiedzi DeepSeek (eksperci) |
+| `GEMINI_MAX_OUTPUT_TOKENS` | discord_notify.py | 1500 | Maksymalna liczba tokenów w odpowiedzi Gemini (eksperci) |
+| `MAX_NEWSLETTER_CHARS` | newsletter.py | 1500 | Limit znaków newslettera po generacji |
+| `GEMINI_MAX_OUTPUT_TOKENS` | newsletter.py | 2200 | Maksymalna liczba tokenów w odpowiedzi Gemini (newsletter) |
 
 ---
 
@@ -208,23 +226,24 @@ Zawiera guard: jeśli plik prognoz (`fantasy_predictions_*.csv`) dotyczy innej k
 ## Średnia ocen zawodników
 
 - Średnia za **ostatnie 5 kolejek**
-- Uwzględnia **wszystkie** kolejki, włącznie z tymi gdzie zawodnik nie grał (ocena = 0)
+- Uwzględnia **tylko rozegrane** kolejki z ostatnich 5 — nierozegrane (brak wpisu) są pomijane, nie liczone jako 0
 - Ta sama logika musi być używana wszędzie: zakładka Zawodnicy, zakładka Prognoza, Discord
 
 ---
 
 ## Zakładki dashboardu
 
-1. **Liga CMF** – tabela sumaryczna + widok Duety
-2. **Liga Hokejowa** – kombinowane standings z tygodniowym śledzeniem zmian
-3. **Zawodnicy** – statystyki zawodników, klikalne (modal z właścicielami posortowanymi wg tabeli sumarycznej)
-4. **Prognoza** – predykcje na następną kolejkę (predictor.py)
-5. **Terminarz** – wszystkie kolejki sezonu
-6. **Transfery** – historia transferów
-7. **Trafność** – accuracy tracker
-8. **Sezon** – league tracker sezonu
-9. **FDR** – wskaźnik trudności rywala (ATK/DEF, skala 1-5)
-10. **Archiwum** – linki do zarchiwizowanych sezonów (`docs/archive/`); wyszarzona jeśli nie ma jeszcze żadnego zarchiwizowanego sezonu
+1. **⚽ Zawodnicy** — statystyki zawodników, klikalne (modal z właścicielami posortowanymi wg tabeli sumarycznej)
+2. **📋 Liga CMF** — tabela sumaryczna jesień+wiosna + widok Duety
+3. **📅 Terminarz** — wszystkie kolejki sezonu
+4. **🔄 Transfery** — historia transferów
+5. **🔮 Prognoza** — predykcje na następną kolejkę (predictor.py)
+6. **📊 Trafność** — accuracy tracker (śledzenie trafności prognoz)
+7. **📈 Sezon** — league tracker sezonu
+8. **⚖️ Porównanie** — porównanie drużyn/zawodników
+9. **📁 Archiwum** — linki do zarchiwizowanych sezonów (`docs/archive/`); wyszarzona jeśli nie ma jeszcze żadnego zarchiwizowanego sezonu
+
+> Uwaga: "Liga Hokejowa" nie istnieje jako osobna zakładka — jest to wewnętrzna logika przetwarzania danych (combined standings jesień+wiosna).
 
 ---
 
