@@ -46,7 +46,10 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                 if not month:
                     continue
                 teams_part = line[:date_match.start()].strip()
-                parts = re.split(r'	+-	+', teams_part)
+                # Obsługa formatów: "DrużynaA\t-\tDrużynaB" lub "DrużynaA\t2-1\tDrużynaB" (z wynikiem)
+                parts = re.split(r'\t+\d*-\d*\t+', teams_part)
+                if len(parts) != 2:
+                    parts = re.split(r'\t+-\t+', teams_part)
                 if len(parts) != 2:
                     parts = re.split(r'\s+-\s+', teams_part)
                 if len(parts) == 2:
@@ -69,17 +72,48 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                     parts = line.split(" - ", 1)
                 if len(parts) == 2:
                     home = parts[0].strip()
-                    away = parts[1].strip()
+                    away_part = parts[1].strip()
                     # Pomijamy linie z cyframi — to listy strzelców (np. "Luis Palma 57 - Kike Hermoso 52"),
                     # a nie mecze. Nazwy drużyn Ekstraklasy nigdy nie zawierają cyfr.
+                    # Dodatkowo pomijamy linie wyglądające na opisy zdarzeń (np. "żółtą kartką został...")
+                    # WALIDACJA: mecz akceptowany jeśli:
+                    # (a) away to znana drużyna (w TEAM_ABBREVS), LUB
+                    # (b) w away jest poprawna data (format: "DD miesiąca, GG:MM")
+                    # Punkt (b) to zabezpieczenie na przyszłość dla nowych klubów po awansie
+                    date_in_away = re.search(r'^(.+?)(\d{1,2}\s+(?:stycznia|lutego|marca|kwietnia|maja|czerwca|lipca|sierpnia|września|października|listopada|grudnia),\s*\d{1,2}:\d{2})', away_part, re.IGNORECASE)
+                    if date_in_away:
+                        away = date_in_away.group(1).strip()
+                        # Sprawdź czy miesiąc jest poprawny
+                        month_match = re.search(r'(\d{1,2})\s+(\w+),', away_part)
+                        if month_match:
+                            month_name = month_match.group(2).lower()
+                            month = MONTHS_PL.get(month_name)
+                            if month:
+                                date_valid = True
+                                match_date = f"{int(month_match.group(1)):02d}.{month:02d}"
+                            else:
+                                date_valid = False
+                                match_date = current_round_date
+                        else:
+                            date_valid = False
+                            match_date = current_round_date
+                    else:
+                        away = away_part
+                        date_valid = False
+                        match_date = current_round_date
+                    # Główny warunek: (znana drużyna) OR (poprawna data w linii)
+                    # Sprawdź czy home lub away to znane drużyny — zabezpieczenie na przyszłość
+                    is_known_team = (home in TEAM_ABBREVS) or (away in TEAM_ABBREVS)
                     if home and away and len(home) > 2 and not re.match(r'^\d', home) \
-                            and not re.search(r'\d', home) and not re.search(r'\d', away):
+                            and not re.search(r'\d', home) and not re.search(r'\d', away) \
+                            and not re.search(r'żółt|kartk|czerwon|ukar|sędzi', home, re.IGNORECASE) \
+                            and (is_known_team or date_valid):
                         teams_set.add(home)
                         teams_set.add(away)
                         matches_by_round[current_round].append({
                             "home": home,
                             "away": away,
-                            "date": current_round_date,
+                            "date": match_date,
                         })
 
     teams = sorted(teams_set)
