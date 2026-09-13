@@ -10,6 +10,7 @@ Użycie:
 """
 
 import re
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -33,10 +34,16 @@ TZ_UTC = ZoneInfo("UTC")
 TRIGGER_DELAY_HOURS = 2.5
 
 
-def parse_terminarz(filepath: str) -> list[dict]:
-    """Parsuje terminarz.txt i zwraca listę meczów z datą/godziną."""
+def parse_terminarz(filepath: str) -> tuple[list[dict], dict]:
+    """
+    Parsuje terminarz.txt i zwraca:
+    - listę meczów z datą/godziną
+    - słownik statystyk per kolejka (ile meczów, ile z godziną)
+    """
     matches = []
     current_round = None
+    round_start_date = None  # pierwsza data z nagłówka kolejki
+    round_stats = {}  # round -> {"total": X, "with_time": Y, "dates": "DD-DD.MM"}
 
     with open(filepath, "r", encoding="utf-8") as f:
         for line in f:
@@ -44,13 +51,43 @@ def parse_terminarz(filepath: str) -> list[dict]:
             if not line:
                 continue
 
-            # Nagłówek kolejki: "Kolejka 23 - 28 lutego-1 marca"
-            round_match = re.match(r"Kolejka\s+(\d+)", line)
+            # Nagłówek kolejki: "Kolejka 23 - 28 lutego-1 marca" lub "Kolejka 9 - 19-20 września"
+            round_match = re.match(r"Kolejka\s+(\d+)\s*-\s*(.+)", line)
             if round_match:
                 current_round = int(round_match.group(1))
+                date_part = round_match.group(2).strip()
+                # Wyciągnij pierwszą datę (np. "19" z "19-20 września")
+                date_header_match = re.match(r"(\d{1,2})[–\-]", date_part)
+                if date_header_match:
+                    day_start = int(date_header_match.group(1))
+                    # Sprawdź miesiąc w nagłówku
+                    month_match = re.search(r"(\w+)(?:[–\-]\d+)?\s*$", date_part)
+                    if month_match:
+                        month_name = month_match.group(1).lower()
+                        month = MONTHS_PL.get(month_name)
+                        if month:
+                            # Zbuduj datę początku kolejki (rok: bieżący lub następny)
+                            now = datetime.now()
+                            year = now.year
+                            if month < now.month - 6:
+                                year += 1
+                            round_start_date = datetime(year, month, day_start).date()
+                            # Format dat do wyświetlenia (np. "19-20.09")
+                            end_day_match = re.search(r"[–\-](\d{1,2})\s", date_part)
+                            if end_day_match:
+                                end_day = end_day_match.group(1)
+                                date_str = f"{day_start}-{end_day}.{month:02d}"
+                            else:
+                                date_str = f"{day_start}.{month:02d}"
+                            round_stats[current_round] = {
+                                "total": 0,
+                                "with_time": 0,
+                                "start_date": round_start_date,
+                                "dates": date_str,
+                            }
                 continue
 
-            # Linia meczu: "Team A\t-\tTeam B\tDD miesiąc, HH:MM"
+            # Linia meczu z godziną: "Team A\t-\tTeam B\tDD miesiąc, HH:MM"
             date_match = re.search(
                 r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})\s*$", line
             )
@@ -83,7 +120,23 @@ def parse_terminarz(filepath: str) -> list[dict]:
                     }
                 )
 
-    return matches
+                # Zlicz mecze w kolejce
+                if current_round in round_stats:
+                    round_stats[current_round]["total"] += 1
+                    round_stats[current_round]["with_time"] += 1
+            else:
+                # Mecz bez godziny - sprawdź czy to linia meczu (zawiera " - ")
+                # Pomijamy linie z cyframi (strzelcy goli) i opisami kartek
+                if current_round and (" - " in line or "\t-\t" in line or "–" in line):
+                    # Filtruj: mecz to linia bez cyfr w nazwach drużyn i bez opisów zdarzeń
+                    has_digit_in_teams = re.search(r'^[^\d]*\d[^\d]*[–\-]', line)
+                    is_event_line = re.search(r'żółt|kartk|czerwon|ukar|sędzi|minucie', line, re.IGNORECASE)
+                    if not has_digit_in_teams and not is_event_line:
+                        # To mecz bez godziny
+                        if current_round in round_stats:
+                            round_stats[current_round]["total"] += 1
+
+    return matches, round_stats
 
 
 def generate_crons(matches: list[dict]) -> list[tuple]:
@@ -261,10 +314,42 @@ def update_workflow(workflow_path: str, crons: list[tuple]):
         f.write(content)
 
 
+def check_missing_times(round_stats: dict) -> bool:
+    """
+    Sprawdza czy kolejki w ciągu 14 dni mają mecze bez godziny.
+    Zwraca True jeśli znaleziono problemy (do exit 1).
+    """
+    today = datetime.now().date()
+    window_end = today + timedelta(days=14)
+    has_warnings = False
+
+    for round_num, stats in sorted(round_stats.items()):
+        start_date = stats.get("start_date")
+        if not start_date:
+            continue
+        # Sprawdź czy kolejka zaczyna się w oknie 14 dni
+        if today <= start_date <= window_end:
+            without_time = stats["total"] - stats["with_time"]
+            if without_time > 0:
+                print(
+                    f"⚠️  Kolejka {round_num} ({stats['dates']}) — "
+                    f"{without_time} z {stats['total']} meczów bez godziny, pominięte"
+                )
+                has_warnings = True
+
+    return has_warnings
+
+
 def main():
     print("📅 Parsowanie terminarz.txt...")
-    matches = parse_terminarz(TERMINARZ_FILE)
-    print(f"   Znaleziono {len(matches)} meczów")
+    matches, round_stats = parse_terminarz(TERMINARZ_FILE)
+    print(f"   Znaleziono {len(matches)} meczów z godziną")
+
+    # Sprawdź mecze bez godziny w kolejkach w ciągu 14 dni
+    has_missing_times = check_missing_times(round_stats)
+    if has_missing_times:
+        print("\n❌ Zakończono z błędem — uzupełnij godziny w terminarz.txt")
+        sys.exit(1)
 
     if not matches:
         print("⚠️  Brak meczów w terminarzu!")
