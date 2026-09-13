@@ -51,40 +51,61 @@ def parse_terminarz(filepath: str) -> tuple[list[dict], dict]:
             if not line:
                 continue
 
-            # Nagłówek kolejki: "Kolejka 23 - 28 lutego-1 marca" lub "Kolejka 9 - 19-20 września"
+            # Nagłówek kolejki: obsługa dwóch formatów:
+            # (a) "DD-DD miesiąc" np. "19-20 września" - ten sam miesiąc
+            # (b) "DD miesiąc-DD miesiąc" np. "31 października-1 listopada" - przełom miesięcy
             round_match = re.match(r"Kolejka\s+(\d+)\s*-\s*(.+)", line)
             if round_match:
                 current_round = int(round_match.group(1))
                 date_part = round_match.group(2).strip()
-                # Wyciągnij pierwszą datę (np. "19" z "19-20 września")
-                date_header_match = re.match(r"(\d{1,2})[–\-]", date_part)
-                if date_header_match:
-                    day_start = int(date_header_match.group(1))
-                    # Sprawdź miesiąc w nagłówku
-                    month_match = re.search(r"(\w+)(?:[–\-]\d+)?\s*$", date_part)
-                    if month_match:
-                        month_name = month_match.group(1).lower()
-                        month = MONTHS_PL.get(month_name)
-                        if month:
-                            # Zbuduj datę początku kolejki (rok: bieżący lub następny)
-                            now = datetime.now()
-                            year = now.year
-                            if month < now.month - 6:
-                                year += 1
-                            round_start_date = datetime(year, month, day_start).date()
-                            # Format dat do wyświetlenia (np. "19-20.09")
-                            end_day_match = re.search(r"[–\-](\d{1,2})\s", date_part)
-                            if end_day_match:
-                                end_day = end_day_match.group(1)
-                                date_str = f"{day_start}-{end_day}.{month:02d}"
-                            else:
-                                date_str = f"{day_start}.{month:02d}"
-                            round_stats[current_round] = {
-                                "total": 0,
-                                "with_time": 0,
-                                "start_date": round_start_date,
-                                "dates": date_str,
-                            }
+
+                day_start = None
+                month_start = None
+
+                # Format (b): "31 października-1 listopada" - dzień i miesiąc przed myślnikiem
+                # Wzorzec: cyfra + spacja + nazwa miesiąca + myślnik
+                cross_month_match = re.match(r"(\d{1,2})\s+(\w+)\s*[–\-]", date_part)
+                if cross_month_match:
+                    day_start = int(cross_month_match.group(1))
+                    month_name = cross_month_match.group(2).lower()
+                    month_start = MONTHS_PL.get(month_name)
+
+                # Format (a): "19-20 września" - tylko dzień przed myślnikiem
+                # Sprawdź tylko jeśli format (b) nie pasował
+                if day_start is None:
+                    simple_match = re.match(r"(\d{1,2})[–\-]", date_part)
+                    if simple_match:
+                        day_start = int(simple_match.group(1))
+                        # Miesiąc jest na końcu nagłówka
+                        month_match = re.search(r"(\w+)(?:[–\-]\d+)?\s*$", date_part)
+                        if month_match:
+                            month_name = month_match.group(1).lower()
+                            month_start = MONTHS_PL.get(month_name)
+
+                if day_start and month_start:
+                    # Zbuduj datę początku kolejki (rok: bieżący lub następny)
+                    now = datetime.now()
+                    year = now.year
+                    if month_start < now.month - 6:
+                        year += 1
+                    round_start_date = datetime(year, month_start, day_start).date()
+
+                    # Format dat do wyświetlenia - szukamy dnia końcowego
+                    # Dla formatu (a): "19-20 września" -> wyciągnij 20
+                    # Dla formatu (b): "31 października-1 listopada" -> wyciągnij 1
+                    end_day_match = re.search(r"[–\-](\d{1,2})(?:\s|$)", date_part)
+                    if end_day_match:
+                        end_day = int(end_day_match.group(1))
+                        date_str = f"{day_start}-{end_day}.{month_start:02d}"
+                    else:
+                        date_str = f"{day_start}.{month_start:02d}"
+
+                    round_stats[current_round] = {
+                        "total": 0,
+                        "with_time": 0,
+                        "start_date": round_start_date,
+                        "dates": date_str,
+                    }
                 continue
 
             # Linia meczu z godziną: "Team A\t-\tTeam B\tDD miesiąc, HH:MM"
@@ -327,8 +348,8 @@ def check_missing_times(round_stats: dict) -> bool:
         start_date = stats.get("start_date")
         if not start_date:
             continue
-        # Sprawdź czy kolejka zaczyna się w oknie 14 dni
-        if today <= start_date <= window_end:
+        # Sprawdź czy kolejka zaczyna się w oknie 14 dni (łącznie z kolejkami w trakcie)
+        if start_date <= window_end:
             without_time = stats["total"] - stats["with_time"]
             if without_time > 0:
                 print(

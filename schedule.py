@@ -31,11 +31,24 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                 current_round = int(round_match.group(1))
                 if current_round not in matches_by_round:
                     matches_by_round[current_round] = []
-                header_date = re.search(r"(\d{1,2})[–\-]\d*\s+(\w+)", line[len(round_match.group(0)):])
-                if header_date:
-                    month = MONTHS_PL.get(header_date.group(2))
+                # Obsługa dwóch formatów daty w nagłówku:
+                # (a) "DD-DD miesiąc" np. "19-20 września" - ten sam miesiąc
+                # (b) "DD miesiąc-DD miesiąc" np. "31 października-1 listopada" - przełom miesięcy
+                header_part = line[len(round_match.group(0)):]
+                # Format (b): przełom miesięcy - dzień i miesiąc przed myślnikiem
+                cross_month_match = re.search(r"(\d{1,2})\s+(\w+)\s*[–\-]", header_part)
+                if cross_month_match:
+                    day = cross_month_match.group(1)
+                    month = MONTHS_PL.get(cross_month_match.group(2).lower())
                     if month:
-                        current_round_date = f"{int(header_date.group(1)):02d}.{month:02d}"
+                        current_round_date = f"{int(day):02d}.{month:02d}"
+                else:
+                    # Format (a): ten sam miesiąc - tylko dzień przed myślnikiem
+                    header_date = re.search(r"(\d{1,2})[–\-]\d*\s+(\w+)", header_part)
+                    if header_date:
+                        month = MONTHS_PL.get(header_date.group(2).lower())
+                        if month:
+                            current_round_date = f"{int(header_date.group(1)):02d}.{month:02d}"
                 continue
             # Opcjonalnie ignoruj frekwencję w nawiasie na końcu linii, np. "(14 569)"
             date_match = re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})\s*(?:\(\d[\d\s]*\))?\s*$", line)
