@@ -485,26 +485,24 @@ def generate_terminarz_from_90minut(start_round=1, end_round=None, output_path=N
             output_lines.append("")  # Pusta linia po nagłówku
             
             for match in round_data["matches"]:
-                # Linia meczu: Gospodarz\twynik\tGość\tdata
+                # Linia meczu: Gospodarz\t-\tGość\tdata
+                # ZAWSZE używamy dosłownego myślnika "-" jako separatora, nigdy wyniku meczu
+                home = match["home"]
+                away = match["away"]
+
+                # Przygotuj datę: wycięcie frekwencji (tekst od pierwszego "(") i trim
+                date_raw = match["date_info"]
+                date_clean = re.split(r"\s*\(", date_raw)[0].strip()
+
                 # Decyzja o dacie TYLKO na podstawie wzorca "DD miesiąc, GG:MM"
                 # (ten sam regex co w update_schedule.py)
-                date_for_line = match["date_info"]
-                # Sprawdź czy data pasuje do wzorca: cyfra + spacja + słowo + przecinek + spacja + cyfra:cyfra
-                if not re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})$", date_for_line):
-                    date_for_line = ""
+                if not re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})$", date_clean):
+                    date_clean = ""
 
-                line = f"{match['home']}\t{match['score']}\t{match['away']}\t{date_for_line}"
+                line = f"{home}\t-\t{away}\t{date_clean}"
                 output_lines.append(line)
-                
-                # Strzelcy (jeśli są)
-                if match["scorers"]:
-                    output_lines.append(match["scorers"])
-                
-                # Dodatkowe linie (np. "na Synerise Arenie Kraków", info o kartkach, rzutach karnych)
-                for extra in match["extra_lines"]:
-                    output_lines.append(extra)
-                
-                # Info o przełożeniu (na końcu)
+
+                # Info o przełożeniu (opcjonalnie, pod meczem)
                 if match["postponed_info"]:
                     output_lines.append(match["postponed_info"])
         
