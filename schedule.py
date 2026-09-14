@@ -74,6 +74,7 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                         "home": home,
                         "away": away,
                         "date": f"{day:02d}.{month:02d}",
+                        "date_confirmed": True,  # data z faktycznego wzorca "DD miesiąca, GG:MM"
                     })
             elif current_round and ("–" in line or " - " in line or "\t-\t" in line):
                 # Użyj tabulatora jako separatora jeśli dostępny — unikamy cięcia na myślnikach w nazwach (np. Bruk-Bet)
@@ -127,6 +128,7 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                             "home": home,
                             "away": away,
                             "date": match_date,
+                            "date_confirmed": date_valid,  # True = data z wzorca, False = fallback
                         })
 
     teams = sorted(teams_set)

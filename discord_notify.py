@@ -245,10 +245,17 @@ def _get_round_date_range(fixtures_data, round_num):
     {"25": [{"home": "Lech", "away": "Legia", "date": "14.03"}, ...], ...}
 
     Zwraca (None, None) jeśli brak danych dla tej kolejki.
+
+    📖 LEKCJA: Jeśli KTÓRYKOLWIEK mecz ma date_confirmed=False,
+    zwracamy (None, None) — bo prawdziwy zakres dat nie jest jeszcze znany.
+    To zapobiega fałszywemu wysyłaniu powiadomień przed ustaleniem godzin.
     """
     matches = fixtures_data.get("matches", {}).get(str(round_num), [])
     dates = []
     for m in matches:
+        # Sprawdź czy data jest potwierdzona — jeśli nie, zakres nieznany
+        if not m.get("date_confirmed", True):
+            return None, None
         d = _parse_date_str(m.get("date", ""))
         if d:
             dates.append(d)
