@@ -311,10 +311,10 @@ def fetch_extra_player_stats() -> dict:
     return all_stats
 
 
-def generate_terminarz_from_90minut(start_round=1, end_round=None):
+def generate_terminarz_from_90minut(start_round=1, end_round=None, output_path=None):
     """
     Generuje terminarz.txt na podstawie danych z 90minut.pl.
-    
+
     Pobiera stronę ligi z 90minut.pl i parsuje strukturę kolejek:
     - Nagłówki kolejek: <table class="main" cellpadding="0"> z <u>Kolejka N
     - Tabela meczów: następna <table class="main" cellpadding="1">
@@ -322,13 +322,14 @@ def generate_terminarz_from_90minut(start_round=1, end_round=None):
     - Mecz przyszły/przełożony: komórka wyniku zawiera "-"
     - Strzelcy: wiersz <td colspan="4"> po meczu
     - Mecz przełożony: dodatkowy wiersz z informacją o odwołaniu
-    
-    Zapisuje wynik do /tmp/terminarz_generated.txt
-    
+
+    Zapisuje wynik do pliku wskazanego przez output_path (lub /tmp/terminarz_generated.txt)
+
     Args:
         start_round: numer pierwszej kolejki do pobrania (domyślnie 1)
         end_round: numer ostatniej kolejki (domyślnie AUTUMN_LAST_ROUND z config.py)
-    
+        output_path: ścieżka do pliku wyjściowego (domyślnie /tmp/terminarz_generated.txt)
+
     Returns:
         ścieżka do wygenerowanego pliku lub None w przypadku błędu
     """
@@ -399,31 +400,28 @@ def generate_terminarz_from_90minut(start_round=1, end_round=None):
                     if len(cells) == 4:
                         # Gospodarz
                         home = cells[0].get_text(strip=True)
-                        # Wynik lub "-"
+                        # Sprawdź czy mecz był rozegrany (komórka wyniku zawiera link mecz.php)
                         score_cell = cells[1]
                         score_link = score_cell.find("a", href=re.compile(r"mecz\.php"))
-                        if score_link:
-                            score = score_link.get_text(strip=True)
-                            is_played = True
-                        else:
-                            score = score_cell.get_text(strip=True)
-                            is_played = False
-                        
+                        is_played = score_link is not None
+                        # Zawsze wstawiamy "-" jako wynik (terminarz.txt oczekuje literalnego "-")
+                        score = "-"
                         # Gość
                         away = cells[2].get_text(strip=True)
-                        # Data/godzina/frekwencja
-                        date_info = cells[3].get_text(strip=True)
-                        
+                        # Data/godzina - usuwamy frekwencję (tekst od pierwszego "(" włącznie)
+                        date_info_raw = cells[3].get_text(strip=True)
+                        date_info = re.split(r'\s*\(', date_info_raw)[0].strip()
+
                         # Uprość nazwy drużyn (usuń pogrubienie)
                         home = re.sub(r"\s+", " ", home).strip()
                         away = re.sub(r"\s+", " ", away).strip()
-                        
+
                         match_data = {
                             "home": home,
                             "away": away,
-                            "score": score,
+                            "score": score,  # zawsze "-" (terminarz.txt oczekuje literalnego "-")
                             "date_info": date_info,
-                            "is_played": is_played,
+                            "is_played": is_played,  # czy mecz był rozegrany (ma wynik na 90minut.pl)
                             "scorers": None,
                             "postponed_info": None,
                             "extra_lines": []
@@ -467,6 +465,8 @@ def generate_terminarz_from_90minut(start_round=1, end_round=None):
         
         # Generuj wyjście w formacie terminarz.txt
         output_lines = []
+        # Dodaj poprawne historyczne wiersze K1-7 na początku (zachowaj istniejące dane)
+        # Te wiersze są już poprawne i nie powinny być nadpisywane
         
         for round_num in sorted(rounds.keys()):
             round_data = rounds[round_num]
@@ -486,7 +486,14 @@ def generate_terminarz_from_90minut(start_round=1, end_round=None):
             
             for match in round_data["matches"]:
                 # Linia meczu: Gospodarz\twynik\tGość\tdata
-                line = f"{match['home']}\t{match['score']}\t{match['away']}\t{match['date_info']}"
+                # Decyzja o dacie TYLKO na podstawie wzorca "DD miesiąc, GG:MM"
+                # (ten sam regex co w update_schedule.py)
+                date_for_line = match["date_info"]
+                # Sprawdź czy data pasuje do wzorca: cyfra + spacja + słowo + przecinek + spacja + cyfra:cyfra
+                if not re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})$", date_for_line):
+                    date_for_line = ""
+
+                line = f"{match['home']}\t{match['score']}\t{match['away']}\t{date_for_line}"
                 output_lines.append(line)
                 
                 # Strzelcy (jeśli są)
@@ -501,8 +508,9 @@ def generate_terminarz_from_90minut(start_round=1, end_round=None):
                 if match["postponed_info"]:
                     output_lines.append(match["postponed_info"])
         
-        # Zapisz do pliku
-        output_path = "/tmp/terminarz_generated.txt"
+        # Zapisz do pliku - użyj output_path lub domyślnego /tmp
+        if output_path is None:
+            output_path = "/tmp/terminarz_generated.txt"
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(output_lines))
             # Dodaj newline na końcu pliku
