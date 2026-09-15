@@ -337,10 +337,11 @@ def update_workflow(workflow_path: str, crons: list[tuple]):
 
 def check_missing_times(round_stats: dict) -> bool:
     """
-    Sprawdza czy kolejki w ciągu 14 dni mają mecze bez godziny.
+    Sprawdza czy kolejki w ciągu ±14 dni mają mecze bez godziny.
     Zwraca True jeśli znaleziono problemy (do exit 1).
     """
     today = datetime.now().date()
+    window_start = today - timedelta(days=14)
     window_end = today + timedelta(days=14)
     has_warnings = False
 
@@ -348,8 +349,8 @@ def check_missing_times(round_stats: dict) -> bool:
         start_date = stats.get("start_date")
         if not start_date:
             continue
-        # Sprawdź czy kolejka zaczyna się w oknie 14 dni (łącznie z kolejkami w trakcie)
-        if start_date <= window_end:
+        # Sprawdź czy kolejka zaczyna się w oknie ±14 dni (łącznie z kolejkami w trakcie)
+        if window_start <= start_date <= window_end:
             without_time = stats["total"] - stats["with_time"]
             if without_time > 0:
                 print(
