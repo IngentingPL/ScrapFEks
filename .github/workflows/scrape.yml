@@ -135,9 +135,9 @@ on:
     - cron: '0 21 15 9 *'  # K2 15.09 mecz 20:30 CEST → +2.5h 23:00 CEST
     - cron: '0 10 16 9 *'  # K2 DISCORD POST 16.09 12:00 CEST — podsumowanie po kolejce
     - cron: '0 18 17 9 *'  # K9 DISCORD PRE 17.09 20:00 CEST — prognoza przed kolejką
-    - cron: '30 16 18 9 *'  # K9 START 18.09 mecz 18:00 CEST → +30min 18:30 CEST
-    - cron: '0 17 18 9 *'  # K9 DISCORD CAPTAINS 18.09 19:00 CEST — podsumowanie kapitanów
-    - cron: '30 18 18 9 *'  # K9 18.09 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 17 18 9 *'  # K9 START 18.09 mecz 18:30 CEST → +30min 19:00 CEST
+    - cron: '30 17 18 9 *'  # K9 DISCORD CAPTAINS 18.09 19:30 CEST — podsumowanie kapitanów
+    - cron: '0 19 18 9 *'  # K9 18.09 mecz 18:30 CEST → +2.5h 21:00 CEST
     - cron: '0 21 18 9 *'  # K9 18.09 mecz 20:30 CEST → +2.5h 23:00 CEST
     - cron: '15 15 19 9 *'  # K9 19.09 mecz 14:45 CEST → +2.5h 17:15 CEST
     - cron: '0 18 19 9 *'  # K9 19.09 mecz 17:30 CEST → +2.5h 20:00 CEST
@@ -174,6 +174,19 @@ on:
     - cron: '0 18 18 10 *'  # K11 18.10 mecz 17:30 CEST → +2.5h 20:00 CEST
     - cron: '30 19 19 10 *'  # K11 19.10 mecz 19:00 CEST → +2.5h 21:30 CEST
     - cron: '0 10 20 10 *'  # K11 DISCORD POST 20.10 12:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 22 10 *'  # K12 DISCORD PRE 22.10 20:00 CEST — prognoza przed kolejką
+    - cron: '30 16 23 10 *'  # K12 START 23.10 mecz 18:00 CEST → +30min 18:30 CEST
+    - cron: '0 17 23 10 *'  # K12 DISCORD CAPTAINS 23.10 19:00 CEST — podsumowanie kapitanów
+    - cron: '30 18 23 10 *'  # K12 23.10 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 23 10 *'  # K12 23.10 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '45 12 24 10 *'  # K12 24.10 mecz 12:15 CEST → +2.5h 14:45 CEST
+    - cron: '15 15 24 10 *'  # K12 24.10 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 24 10 *'  # K12 24.10 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 24 10 *'  # K12 24.10 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '45 13 25 10 *'  # K12 25.10 mecz 12:15 CET → +2.5h 14:45 CET
+    - cron: '15 16 25 10 *'  # K12 25.10 mecz 14:45 CET → +2.5h 17:15 CET
+    - cron: '0 19 25 10 *'  # K12 25.10 mecz 17:30 CET → +2.5h 20:00 CET
+    - cron: '0 11 26 10 *'  # K12 DISCORD POST 26.10 12:00 CET — podsumowanie po kolejce
   # AUTO-SCHEDULE-END
 
 # Tylko jeden workflow na raz może pisać do repo -
