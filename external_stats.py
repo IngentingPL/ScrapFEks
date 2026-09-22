@@ -1,7 +1,16 @@
 """
-external_stats.py - pobieranie zewnętrznych statystyk:
-tabela z 90minut.pl (GF/GA per drużyna) i rozszerzone statystyki
-zawodników z API ekstraklasy (xG, strzały, podania kluczowe).
+external_stats.py - pobieranie zewnętrznych statystyk i generowanie terminarza:
+
+1. Funkcje statystyczne (90minut.pl + API ekstraklasy):
+   - fetch_ekstraklasa_table() - tabela Ekstraklasy z 90minut.pl (GF/GA per drużyna)
+   - fetch_extra_player_stats() - rozszerzone statystyki zawodników (xG, strzały, podania kluczowe)
+   - generate_terminarz_from_90minut() - generowanie terminarza z 90minut.pl (do statystyk)
+
+2. Funkcje terminarza:
+   - generate_terminarz_from_fantasyeks() - generowanie terminarza z fantasy.ekstraklasa.org
+     (alternatywne źródło, rozwiązuje problem przełożonych meczów i DGW)
+   - generate_terminarz_from_90minut() - generowanie terminarza z 90minut.pl (do statystyk)
+
 Dane cache'owane 24h w output/external_cache.json.
 """
 
@@ -502,12 +511,12 @@ def generate_terminarz_from_90minut(start_round=1, end_round=None):
                     output_lines.append(match["postponed_info"])
         
         # Zapisz do pliku
-        output_path = "/tmp/terminarz_generated.txt"
+        output_path = "terminarz.txt"
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(output_lines))
             # Dodaj newline na końcu pliku
             f.write("\n")
-        
+
         print(f"✅ Wygenerowano terminarz: {output_path}")
         print(f"   Kolejki: {len(rounds)}, mecze: {sum(len(r['matches']) for r in rounds.values())}")
         
@@ -520,8 +529,286 @@ def generate_terminarz_from_90minut(start_round=1, end_round=None):
         return None
 
 
+def generate_terminarz_from_fantasyeks(start_round=1, end_round=None):
+    """
+    Generuje terminarz.txt na podstawie danych z fantasy.ekstraklasa.org.
+
+    To alternatywne źródło, które rozwiązuje problem przełożonych meczów i DGW:
+    - Fantasy Ekstraklasa sama przypisuje mecze do właściwej kolejki fantasy
+    - Numer kolejki bierzemy z atrybutu id diva (np. r10 -> kolejka 10)
+    - Przełożone mecze automatycznie trafiają do właściwej kolejki
+
+    Format wyjściowy identyczny jak w terminarz.txt.
+
+    Args:
+        start_round: numer pierwszej kolejki (domyślnie 1)
+        end_round: numer ostatniej kolejki (domyślnie AUTUMN_LAST_ROUND)
+
+    Returns:
+        ścieżka do wygenerowanego pliku lub None w przypadku błędu
+    """
+    from datetime import datetime
+
+    if end_round is None:
+        end_round = AUTUMN_LAST_ROUND
+
+    url = "https://fantasy.ekstraklasa.org/"
+
+    try:
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7",
+        }
+
+        print(f"📥 Pobieram terminarz z fantasy.ekstraklasa.org (kolejki {start_round}-{end_round})...")
+        resp = _request_with_retry(requests.get, url, headers=headers, timeout=20)
+        if resp is None:
+            print("❌ Nie udało się pobrać strony fantasy.ekstraklasa.org")
+            return None
+
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        # Słownik: round_num -> {header, matches[]}
+        rounds = {}
+
+        # Znajdź wszystkie divy z klasą round-games-r
+        round_divs = soup.find_all("div", class_="round-games-r")
+
+        for div in round_divs:
+            # Numer kolejki z atrybutu id (np. "r10" -> 10)
+            round_id = str(div.get("id", ""))
+            round_match = re.match(r"r(\d+)", round_id)
+            if not round_match:
+                continue
+
+            round_num = int(round_match.group(1))
+            if not (start_round <= round_num <= end_round):
+                continue
+
+            print(f"  ✓ Znaleziono kolejkę {round_num}")
+
+            rounds[round_num] = {"matches": []}
+            current_date = None
+
+            # Przejdź przez wszystkie elementy wewnątrz diva
+            for element in div.descendants:
+                # Pomiń elementy tekstowe i navigable strings
+                if not hasattr(element, 'name'):
+                    continue
+                if element.name != "table":
+                    continue
+
+                # Tabela z nagłówkiem daty (ma <th class="game-time">)
+                game_time_th = element.find("th", class_="game-time")
+                if game_time_th:
+                    current_date = game_time_th.get_text(strip=True)
+                    continue
+
+                # Tabela z meczami (ma klasę table-hover lub table-striped)
+                table_classes = element.get("class", []) or []
+                if "table-hover" in table_classes or "table-striped" in table_classes:
+                    for row in element.find_all("tr"):
+                        # Wiersz meczu ma komórki z drużynami i wynikiem
+                        cells = row.find_all("td")
+                        if len(cells) < 5:
+                            continue
+
+                        # Gospodarz: pierwsza komórka team-short z text-right
+                        home_cell = row.find("td", class_="team-short text-right")
+                        home = None
+                        if home_cell:
+                            home_span = home_cell.find("span", class_="hidden-xs")
+                            if home_span:
+                                home = home_span.get_text(strip=True)
+
+                        # Gość: druga komórka team-short z text-left
+                        away_cell = row.find("td", class_="team-short text-left")
+                        away = None
+                        if away_cell:
+                            away_span = away_cell.find("span", class_="hidden-xs")
+                            if away_span:
+                                away = away_span.get_text(strip=True)
+
+                        if not home or not away:
+                            continue
+
+                        # Wynik/godzina z komórki team-score
+                        score_cell = row.find("td", class_="team-score")
+                        score = "-"
+                        is_played = False
+                        game_id = None
+
+                        if score_cell:
+                            score_link = score_cell.find("a", href=re.compile(r"/stats-game/"))
+                            if score_link:
+                                # ID meczu z href
+                                href = score_link.get("href", "")
+                                game_match = re.search(r"/stats-game/(\d+)", href)
+                                if game_match:
+                                    game_id = int(game_match.group(1))
+
+                                # Sprawdź czy mecz rozegrany (label ma klasę "ofline")
+                                label = score_link.find("label")
+                                if label:
+                                    label_class = " ".join(label.get("class", []) or [])
+                                    # Używamy separator=' ' żeby zastąpić <br> spacją
+                                    text = label.get_text(separator=' ', strip=True)
+                                    # Normalizujemy spacje
+                                    text = re.sub(r'\s+', ' ', text).strip()
+                                    if "ofline" in label_class:
+                                        # Mecz rozegrany - wynik w formacie "X : Y"
+                                        score = text
+                                        is_played = True
+                                    else:
+                                        # Mecz nierozegrany - godzina
+                                        # UWAGA: "01:00" to placeholder = brak potwierdzonej godziny
+                                        # Zapisujemy "-" zamiast "01:00" (tak jak w terminarzu z 90minut.pl)
+                                        if text == "01:00":
+                                            score = "-"
+                                        else:
+                                            score = text if text else "-"
+
+                        # Pobierz dodatkowe info o meczu (np. "na Synerise Arenie Kraków")
+                        extra_info = None
+                        game_info_cell = row.find("td", class_="game-info")
+                        if game_info_cell:
+                            extra_info = game_info_cell.get_text(strip=True)
+
+                        # Zbuduj datę w formacie: "9 października, 18:00"
+                        date_info = ""
+                        if current_date:
+                            # Parsuj datę z formatu "piątek, 09.10.2026"
+                            date_match = re.search(r"(\d{1,2})\.(\d{1,2})\.(\d{4})", current_date)
+                            if date_match:
+                                day = int(date_match.group(1))
+                                month = int(date_match.group(2))
+                                year = int(date_match.group(3))
+
+                                # Mapa miesięcy
+                                months_pl = [
+                                    "", "stycznia", "lutego", "marca", "kwietnia",
+                                    "maja", "czerwca", "lipca", "sierpnia", "września",
+                                    "października", "listopada", "grudnia"
+                                ]
+                                month_name = months_pl[month] if month < len(months_pl) else ""
+
+                                # Godzina - użyj score jeśli wygląda na godzinę (HH:MM)
+                                # UWAGA: "01:00" to placeholder Fantasy Ekstraklasa = brak potwierdzonej godziny
+                                # W takim przypadku zapisujemy TYLKO datę (bez godziny), tak jak robi to 90minut.pl
+                                time_str = ""
+                                if score and re.match(r"^\d{1,2}:\d{2}$", score):
+                                    if score == "01:00":
+                                        # Godzina 01:00 to placeholder - nie zapisujemy jej
+                                        time_str = ""
+                                    else:
+                                        time_str = score
+
+                                date_info = f"{day} {month_name}, {time_str}" if time_str else f"{day} {month_name}"
+
+                        match_data = {
+                            "home": home,
+                            "away": away,
+                            "score": score,
+                            "date_info": date_info,
+                            "is_played": is_played,
+                            "game_id": game_id,
+                            "extra_info": extra_info,
+                        }
+                        rounds[round_num]["matches"].append(match_data)
+
+        # Generuj wyjście w formacie terminarz.txt
+        output_lines = []
+
+        for round_num in sorted(rounds.keys()):
+            round_data = rounds[round_num]
+
+            if not round_data["matches"]:
+                continue
+
+            # Znajdź datę zakresu kolejki z dat meczów
+            dates = []
+            for match in round_data["matches"]:
+                date_match = re.search(r"^(\d+)\s+(\w+)", match["date_info"])
+                if date_match:
+                    dates.append((int(date_match.group(1)), date_match.group(2)))
+
+            if dates:
+                # Grupuj po miesiącu
+                by_month = {}
+                for d, m in dates:
+                    if m not in by_month:
+                        by_month[m] = []
+                    by_month[m].append(d)
+
+                # Zbuduj string daty (np. "9-10 października" lub "9 października-10 listopada")
+                month_names = list(by_month.keys())
+                if len(month_names) == 1:
+                    days = sorted(by_month[month_names[0]])
+                    if len(days) == 1:
+                        date_range = f"{days[0]} {month_names[0]}"
+                    else:
+                        date_range = f"{days[0]}-{days[-1]} {month_names[0]}"
+                else:
+                    # Zakres przez miesiące
+                    first_month = month_names[0]
+                    last_month = month_names[-1]
+                    first_days = sorted(by_month[first_month])
+                    last_days = sorted(by_month[last_month])
+                    date_range = f"{first_days[0]} {first_month}-{last_days[-1]} {last_month}"
+
+                round_header = f"Kolejka {round_num} - {date_range}"
+            else:
+                round_header = f"Kolejka {round_num}"
+
+            # Pusta linia przed kolejką (oprócz pierwszej)
+            if output_lines:
+                output_lines.append("")
+
+            # Nagłówek kolejki: kolejka 1 bez spacji, kolejki 2+ ze spacją
+            if round_num == 1:
+                output_lines.append(round_header)
+            else:
+                output_lines.append(f" {round_header}")
+
+            output_lines.append("")  # Pusta linia po nagłówku
+
+            for match in round_data["matches"]:
+                # Linia meczu: Gospodarz\twynik\tGość\tdata
+                line = f"{match['home']}\t{match['score']}\t{match['away']}\t{match['date_info']}"
+                output_lines.append(line)
+
+                # Dodatkowe info (np. "na Synerise Arenie Kraków")
+                if match.get("extra_info"):
+                    output_lines.append(match["extra_info"])
+
+        # Zapisz do pliku terminarz.txt w głównym katalogu repozytorium
+        output_path = "terminarz.txt"
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(output_lines))
+            f.write("\n")
+
+        print(f"✅ Wygenerowano terminarz: {output_path}")
+        print(f"   Kolejki: {len([r for r in rounds.values() if r['matches']])}, "
+              f"mecze: {sum(len(r['matches']) for r in rounds.values())}")
+
+        return output_path
+
+    except Exception as e:
+        print(f"❌ Błąd generowania terminarza z fantasy.ekstraklasa.org: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 if __name__ == "__main__":
-    # Testowe wywołanie
-    result = generate_terminarz_from_90minut()
+    # Generowanie terminarz.txt z fantasy.ekstraklasa.org
+    print("=== Generowanie terminarz.txt z fantasy.ekstraklasa.org ===")
+    result = generate_terminarz_from_fantasyeks()
     if result:
         print(f"\nZapisano do: {result}")
