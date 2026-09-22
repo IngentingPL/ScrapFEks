@@ -34,6 +34,40 @@ on:
 
   # AUTO-SCHEDULE-START
   schedule:
+    - cron: '0 18 23 7 *'  # K1 DISCORD PRE 23.07 20:00 CEST — prognoza przed kolejką
+    - cron: '30 16 24 7 *'  # K1 START 24.07 mecz 18:00 CEST → +30min 18:30 CEST
+    - cron: '0 17 24 7 *'  # K1 DISCORD CAPTAINS 24.07 19:00 CEST — podsumowanie kapitanów
+    - cron: '30 18 24 7 *'  # K1 24.07 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 24 7 *'  # K1 24.07 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 25 7 *'  # K1 25.07 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 25 7 *'  # K1 25.07 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 25 7 *'  # K1 25.07 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '15 15 26 7 *'  # K1 26.07 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 26 7 *'  # K1 26.07 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 26 7 *'  # K1 26.07 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '30 19 27 7 *'  # K1 27.07 mecz 19:00 CEST → +2.5h 21:30 CEST
+    - cron: '0 10 28 7 *'  # K1 DISCORD POST 28.07 12:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 30 7 *'  # K2 DISCORD PRE 30.07 20:00 CEST — prognoza przed kolejką
+    - cron: '30 16 31 7 *'  # K2 START 31.07 mecz 18:00 CEST → +30min 18:30 CEST
+    - cron: '0 17 31 7 *'  # K2 DISCORD CAPTAINS 31.07 19:00 CEST — podsumowanie kapitanów
+    - cron: '30 18 31 7 *'  # K2 31.07 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 31 7 *'  # K2 31.07 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 1 8 *'  # K2 01.08 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 1 8 *'  # K2 01.08 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '15 15 2 8 *'  # K2 02.08 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 2 8 *'  # K2 02.08 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 2 8 *'  # K2 02.08 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '30 19 3 8 *'  # K2 03.08 mecz 19:00 CEST → +2.5h 21:30 CEST
+    - cron: '0 18 6 8 *'  # K3 DISCORD PRE 06.08 20:00 CEST — prognoza przed kolejką
+    - cron: '0 19 7 8 *'  # K3 START 07.08 mecz 20:30 CEST → +30min 21:00 CEST
+    - cron: '30 19 7 8 *'  # K3 DISCORD CAPTAINS 07.08 21:30 CEST — podsumowanie kapitanów
+    - cron: '0 21 7 8 *'  # K3 07.08 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 8 8 *'  # K3 08.08 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 8 8 *'  # K3 08.08 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 8 8 *'  # K3 08.08 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '15 15 9 8 *'  # K3 09.08 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 9 8 *'  # K3 09.08 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 9 8 *'  # K3 09.08 mecz 20:15 CEST → +2.5h 22:45 CEST
     - cron: '0 18 13 8 *'  # K4 DISCORD PRE 13.08 20:00 CEST — prognoza przed kolejką
     - cron: '0 19 14 8 *'  # K4 START 14.08 mecz 20:30 CEST → +30min 21:00 CEST
     - cron: '30 19 14 8 *'  # K4 DISCORD CAPTAINS 14.08 21:30 CEST — podsumowanie kapitanów
@@ -55,7 +89,6 @@ on:
     - cron: '15 15 23 8 *'  # K5 23.08 mecz 14:45 CEST → +2.5h 17:15 CEST
     - cron: '0 18 23 8 *'  # K5 23.08 mecz 17:30 CEST → +2.5h 20:00 CEST
     - cron: '45 20 23 8 *'  # K5 23.08 mecz 20:15 CEST → +2.5h 22:45 CEST
-    - cron: '0 10 24 8 *'  # K5 DISCORD POST 24.08 12:00 CEST — podsumowanie po kolejce
     - cron: '0 18 27 8 *'  # K6 DISCORD PRE 27.08 20:00 CEST — prognoza przed kolejką
     - cron: '30 16 28 8 *'  # K6 START 28.08 mecz 18:00 CEST → +30min 18:30 CEST
     - cron: '0 17 28 8 *'  # K6 DISCORD CAPTAINS 28.08 19:00 CEST — podsumowanie kapitanów
@@ -70,6 +103,9 @@ on:
     - cron: '45 20 30 8 *'  # K6 30.08 mecz 20:15 CEST → +2.5h 22:45 CEST
     - cron: '0 10 31 8 *'  # K6 DISCORD POST 31.08 12:00 CEST — podsumowanie po kolejce
     - cron: '0 18 3 9 *'  # K7 DISCORD PRE 03.09 20:00 CEST — prognoza przed kolejką
+    - cron: '30 18 3 9 *'  # K5 03.09 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 3 9 *'  # K5 03.09 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '0 10 4 9 *'  # K5 DISCORD POST 04.09 12:00 CEST — podsumowanie po kolejce
     - cron: '0 19 4 9 *'  # K7 START 04.09 mecz 20:30 CEST → +30min 21:00 CEST
     - cron: '30 19 4 9 *'  # K7 DISCORD CAPTAINS 04.09 21:30 CEST — podsumowanie kapitanów
     - cron: '0 21 4 9 *'  # K7 04.09 mecz 20:30 CEST → +2.5h 23:00 CEST
@@ -82,6 +118,75 @@ on:
     - cron: '30 18 7 9 *'  # K7 07.09 mecz 18:00 CEST → +2.5h 20:30 CEST
     - cron: '0 21 7 9 *'  # K7 07.09 mecz 20:30 CEST → +2.5h 23:00 CEST
     - cron: '0 10 8 9 *'  # K7 DISCORD POST 08.09 12:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 10 9 *'  # K8 DISCORD PRE 10.09 20:00 CEST — prognoza przed kolejką
+    - cron: '30 16 11 9 *'  # K8 START 11.09 mecz 18:00 CEST → +30min 18:30 CEST
+    - cron: '0 17 11 9 *'  # K8 DISCORD CAPTAINS 11.09 19:00 CEST — podsumowanie kapitanów
+    - cron: '30 18 11 9 *'  # K8 11.09 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 11 9 *'  # K8 11.09 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 12 9 *'  # K8 12.09 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 12 9 *'  # K8 12.09 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 12 9 *'  # K8 12.09 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '45 12 13 9 *'  # K8 13.09 mecz 12:15 CEST → +2.5h 14:45 CEST
+    - cron: '15 15 13 9 *'  # K8 13.09 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 13 9 *'  # K8 13.09 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '30 19 14 9 *'  # K8 14.09 mecz 19:00 CEST → +2.5h 21:30 CEST
+    - cron: '0 10 15 9 *'  # K8 DISCORD POST 15.09 12:00 CEST — podsumowanie po kolejce
+    - cron: '30 18 15 9 *'  # K3 15.09 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 15 9 *'  # K2 15.09 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '0 10 16 9 *'  # K2 DISCORD POST 16.09 12:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 17 9 *'  # K9 DISCORD PRE 17.09 20:00 CEST — prognoza przed kolejką
+    - cron: '0 17 18 9 *'  # K9 START 18.09 mecz 18:30 CEST → +30min 19:00 CEST
+    - cron: '30 17 18 9 *'  # K9 DISCORD CAPTAINS 18.09 19:30 CEST — podsumowanie kapitanów
+    - cron: '0 19 18 9 *'  # K9 18.09 mecz 18:30 CEST → +2.5h 21:00 CEST
+    - cron: '0 21 18 9 *'  # K9 18.09 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 19 9 *'  # K9 19.09 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 19 9 *'  # K9 19.09 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 19 9 *'  # K9 19.09 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '45 12 20 9 *'  # K9 20.09 mecz 12:15 CEST → +2.5h 14:45 CEST
+    - cron: '15 15 20 9 *'  # K9 20.09 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 20 9 *'  # K9 20.09 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 20 9 *'  # K9 20.09 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '0 10 21 9 *'  # K9 DISCORD POST 21.09 12:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 8 10 *'  # K10 DISCORD PRE 08.10 20:00 CEST — prognoza przed kolejką
+    - cron: '30 16 9 10 *'  # K10 START 09.10 mecz 18:00 CEST → +30min 18:30 CEST
+    - cron: '0 17 9 10 *'  # K10 DISCORD CAPTAINS 09.10 19:00 CEST — podsumowanie kapitanów
+    - cron: '30 18 9 10 *'  # K10 09.10 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 9 10 *'  # K10 09.10 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 10 10 *'  # K10 10.10 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 10 10 *'  # K10 10.10 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 10 10 *'  # K10 10.10 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '15 15 11 10 *'  # K10 11.10 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 11 10 *'  # K10 11.10 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 11 10 *'  # K10 11.10 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '30 18 12 10 *'  # K10 12.10 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 12 10 *'  # K3 12.10 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '0 10 13 10 *'  # K3 DISCORD POST 13.10 12:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 15 10 *'  # K11 DISCORD PRE 15.10 20:00 CEST — prognoza przed kolejką
+    - cron: '30 16 16 10 *'  # K11 START 16.10 mecz 18:00 CEST → +30min 18:30 CEST
+    - cron: '0 17 16 10 *'  # K11 DISCORD CAPTAINS 16.10 19:00 CEST — podsumowanie kapitanów
+    - cron: '30 18 16 10 *'  # K11 16.10 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 16 10 *'  # K11 16.10 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '15 15 17 10 *'  # K11 17.10 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 17 10 *'  # K11 17.10 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 17 10 *'  # K11 17.10 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '45 12 18 10 *'  # K11 18.10 mecz 12:15 CEST → +2.5h 14:45 CEST
+    - cron: '15 15 18 10 *'  # K11 18.10 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 18 10 *'  # K11 18.10 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '30 19 19 10 *'  # K11 19.10 mecz 19:00 CEST → +2.5h 21:30 CEST
+    - cron: '0 10 20 10 *'  # K11 DISCORD POST 20.10 12:00 CEST — podsumowanie po kolejce
+    - cron: '0 18 22 10 *'  # K12 DISCORD PRE 22.10 20:00 CEST — prognoza przed kolejką
+    - cron: '30 16 23 10 *'  # K12 START 23.10 mecz 18:00 CEST → +30min 18:30 CEST
+    - cron: '0 17 23 10 *'  # K12 DISCORD CAPTAINS 23.10 19:00 CEST — podsumowanie kapitanów
+    - cron: '30 18 23 10 *'  # K12 23.10 mecz 18:00 CEST → +2.5h 20:30 CEST
+    - cron: '0 21 23 10 *'  # K12 23.10 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '45 12 24 10 *'  # K12 24.10 mecz 12:15 CEST → +2.5h 14:45 CEST
+    - cron: '15 15 24 10 *'  # K12 24.10 mecz 14:45 CEST → +2.5h 17:15 CEST
+    - cron: '0 18 24 10 *'  # K12 24.10 mecz 17:30 CEST → +2.5h 20:00 CEST
+    - cron: '45 20 24 10 *'  # K12 24.10 mecz 20:15 CEST → +2.5h 22:45 CEST
+    - cron: '45 13 25 10 *'  # K12 25.10 mecz 12:15 CET → +2.5h 14:45 CET
+    - cron: '15 16 25 10 *'  # K12 25.10 mecz 14:45 CET → +2.5h 17:15 CET
+    - cron: '0 19 25 10 *'  # K12 25.10 mecz 17:30 CET → +2.5h 20:00 CET
+    - cron: '0 11 26 10 *'  # K12 DISCORD POST 26.10 12:00 CET — podsumowanie po kolejce
   # AUTO-SCHEDULE-END
 
 # Tylko jeden workflow na raz może pisać do repo -

@@ -1,0 +1,58 @@
+name: Update Terminarz
+
+on:
+  schedule:
+    # Raz dziennie o 6:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+# Tylko jeden workflow na raz może pisać do repo
+concurrency:
+  group: repo-write
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.WORKFLOW_PAT }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate terminarz from 90minut.pl
+        run: |
+          python -c "
+          from external_stats import generate_terminarz_from_90minut
+          result = generate_terminarz_from_90minut(output_path='terminarz.txt')
+          if result:
+              print(f'Zapisano terminarz do: {result}')
+          else:
+              print('Nie udało się wygenerować terminarza')
+              exit(1)
+          "
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add terminarz.txt
+          if git diff --staged --quiet; then
+            echo "Brak zmian w terminarzu"
+          else
+            git commit -m "🔄 Auto-update terminarz.txt z 90minut.pl"
+            git push https://x-access-token:${{ secrets.WORKFLOW_PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}
+          fi
