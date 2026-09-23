@@ -187,6 +187,18 @@ on:
     - cron: '15 16 25 10 *'  # K12 25.10 mecz 14:45 CET → +2.5h 17:15 CET
     - cron: '0 19 25 10 *'  # K12 25.10 mecz 17:30 CET → +2.5h 20:00 CET
     - cron: '0 11 26 10 *'  # K12 DISCORD POST 26.10 12:00 CET — podsumowanie po kolejce
+    - cron: '0 19 29 10 *'  # K13 DISCORD PRE 29.10 20:00 CET — prognoza przed kolejką
+    - cron: '30 17 30 10 *'  # K13 START 30.10 mecz 18:00 CET → +30min 18:30 CET
+    - cron: '0 18 30 10 *'  # K13 DISCORD CAPTAINS 30.10 19:00 CET — podsumowanie kapitanów
+    - cron: '30 19 30 10 *'  # K13 30.10 mecz 18:00 CET → +2.5h 20:30 CET
+    - cron: '0 22 30 10 *'  # K13 30.10 mecz 20:30 CET → +2.5h 23:00 CET
+    - cron: '45 13 31 10 *'  # K13 31.10 mecz 12:15 CET → +2.5h 14:45 CET
+    - cron: '15 16 31 10 *'  # K13 31.10 mecz 14:45 CET → +2.5h 17:15 CET
+    - cron: '0 19 31 10 *'  # K13 31.10 mecz 17:30 CET → +2.5h 20:00 CET
+    - cron: '45 21 31 10 *'  # K13 31.10 mecz 20:15 CET → +2.5h 22:45 CET
+    - cron: '30 19 2 11 *'  # K13 02.11 mecz 18:00 CET → +2.5h 20:30 CET
+    - cron: '0 22 2 11 *'  # K13 02.11 mecz 20:30 CET → +2.5h 23:00 CET
+    - cron: '0 11 3 11 *'  # K13 DISCORD POST 03.11 12:00 CET — podsumowanie po kolejce
   # AUTO-SCHEDULE-END
 
 # Tylko jeden workflow na raz może pisać do repo -
