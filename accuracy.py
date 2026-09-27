@@ -280,6 +280,69 @@ def find_latest_predictions_csv(output_dir="output"):
     return os.path.join(output_dir, files[-1])
 
 
+def find_predictions_csv_for_round(round_number, output_dir="output", exclude_path=None):
+    """
+    Znajduje najnowszy plik prognoz dla KONKRETNEJ kolejki.
+
+    Różni się od find_latest_predictions_csv() tym, że sprawdza kolumnę
+    round_number w każdym pliku i wybiera tylko ten, który dotyczy ocenianej
+    kolejki. W dniu meczowym scraper działa kilka razy — prognozy z kolejki N
+    są nadpisywane przez prognozy na N+1, więc "najnowszy plik" to za mało.
+
+    Parametry:
+        round_number: numer kolejki, dla której szukamy prognoz
+        output_dir: katalog z plikami CSV (domyślnie "output")
+        exclude_path: ścieżka pliku do pominięcia (np. CSV bieżącego uruchomienia)
+
+    Zwraca:
+        ścieżka do pasującego pliku lub None, gdy go nie ma.
+    """
+    try:
+        files = [
+            f for f in os.listdir(output_dir)
+            if f.startswith("fantasy_predictions_") and f.endswith(".csv")
+        ]
+    except FileNotFoundError:
+        return None
+
+    if not files:
+        return None
+
+    # Normalizujemy exclude_path, żeby porównania działały niezależnie od formatu ścieżki
+    exclude_abs = os.path.abspath(exclude_path) if exclude_path else None
+
+    # Najnowsze pliki najpierw — tak wybierzemy najświeższą prognozę dla kolejki
+    files.sort(reverse=True)
+
+    for filename in files:
+        full_path = os.path.join(output_dir, filename)
+        if exclude_abs and os.path.abspath(full_path) == exclude_abs:
+            continue
+
+        # Czytamy tylko pierwszy wiersz — wystarczy, by sprawdzić round_number
+        try:
+            with open(full_path, "r", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                first_row = next(reader, None)
+        except (OSError, StopIteration):
+            continue
+
+        if not first_row:
+            continue
+
+        raw_round = first_row.get("round_number")
+        try:
+            csv_round = int(raw_round)
+        except (TypeError, ValueError):
+            continue  # stary plik bez round_number — pomijamy, nie blokujemy
+
+        if csv_round == round_number:
+            return full_path
+
+    print(f"  ⚠️ Brak pliku prognoz dla kolejki {round_number} — trafność pominięta")
+    return None
+
+
 def evaluate_predictions(predictions_csv_path, current_players_data, round_number):
     """
     Główna funkcja — porównuje prognozy z rzeczywistością i zapisuje wyniki.

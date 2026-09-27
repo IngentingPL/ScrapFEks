@@ -25,7 +25,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from predictor import predict_all_players
-from accuracy import evaluate_predictions, find_latest_predictions_csv, load_accuracy_history
+from accuracy import evaluate_predictions, load_accuracy_history, find_predictions_csv_for_round
 from tuner import run_tuning
 from utils import normalize_team_name, _normalize_team, _normalize_name
 from players import fetch_all_players
@@ -615,11 +615,14 @@ def main():
     # 8.8b Sprawdź trafność prognoz z poprzedniego uruchomienia
     accuracy_data = None
     if current_round:
-        # Znajdź najnowszy plik prognoz PRZED tym uruchomieniem
-        prev_pred_csv = find_latest_predictions_csv(OUTPUT_DIR)
-        # Upewnij się, że to nie jest plik z tego uruchomienia
+        # Szukamy pliku prognoz DLA TEJ KONKRETNEJ kolejki (round_number == current_round).
+        # "Najnowszy plik" to za mało — w trakcie kolejki scraper nadpisuje prognozy
+        # na N+1, więc find_latest_predictions_csv() brał zły plik (i trafność nigdy nie szła).
         current_pred_csv = os.path.join(OUTPUT_DIR, f"fantasy_predictions_{timestamp}.csv")
-        if prev_pred_csv and os.path.abspath(prev_pred_csv) != os.path.abspath(current_pred_csv):
+        prev_pred_csv = find_predictions_csv_for_round(
+            current_round, OUTPUT_DIR, exclude_path=current_pred_csv
+        )
+        if prev_pred_csv:
             accuracy_data = evaluate_predictions(prev_pred_csv, players, current_round)
 
     # Wczytaj historię trafności dla dashboardu

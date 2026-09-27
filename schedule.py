@@ -157,7 +157,10 @@ def cleanup_old_output_files():
     # Wzorzec → ile najnowszych plików zachować
     keep_rules = {
         "output/fantasy_full_*.json": 1,
-        "output/fantasy_predictions_*.csv": 2,
+        # Trzymamy 10, nie 2 — trafność (accuracy.py) porównuje prognozy z kolejki N
+        # po jej zakończeniu, a przy kilku uruchomieniach dziennie starszy CSV
+        # był usuwany, zanim zdążyliśmy ocenić kolejkę.
+        "output/fantasy_predictions_*.csv": 10,
         "output/fantasy_players_*.csv": 1,
         "output/fantasy_rounds_*.csv": 1,
         "output/fantasy_captains_*.csv": 1,
