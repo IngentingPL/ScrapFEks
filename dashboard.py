@@ -6,6 +6,10 @@ operacji I/O - czysty transform danych → HTML.
 """
 import json
 
+# Etykieta bieżącego sezonu — pokazywana w mastheadzie i na landing page.
+# Zmienia się raz w roku (sezon piłkarski przecina lata kalendarzowe).
+SEASON_LABEL = "Sezon 2026/27"
+
 def generate_dashboard_html(
     summary_data: list[dict],
     tiers: dict,
@@ -98,16 +102,72 @@ def generate_dashboard_html(
                   if league_leader else "—"
     leader_pts = league_leader.get("total_pts", 0) if league_leader else 0
 
+    # --- Dane pomocnicze dla landing page i KPI (Koncepcja C) ---
+    # Wszystko to czyste, read-only wyprowadzenia z danych już przekazanych do szablonu —
+    # nie modyfikuje żadnej logiki scrapera/pipeline'u.
+
+    # Przewaga lidera (lider - druga drużyna w tabeli sumarycznej jesień+wiosna)
+    leader_margin = 0
+    if len(league_teams_detail) >= 2:
+        leader_margin = (league_teams_detail[0].get("total_pts", 0) or 0) - \
+                        (league_teams_detail[1].get("total_pts", 0) or 0)
+
+    # Top owned — uzupełnij o drużynę i pozycję (lookup w summary_data po player_id)
+    top_owned_team = ""
+    top_owned_pos = ""
+    if top_owned and top_owned.get("player_id") is not None:
+        top_owned_pid = str(top_owned.get("player_id"))
+        _tp = next((p for p in summary_data if str(p.get("player_id")) == top_owned_pid), None)
+        if _tp:
+            top_owned_team = _tp.get("team", "")
+            top_owned_pos = _tp.get("position", "")
+
+    # Skrót pozycji dla KPI (polskie pełne nazwy / kody numeryczne → krótki kod)
+    _POS_SHORT = {"Bramkarz": "GK", "Obrońca": "DEF", "Pomocnik": "MID", "Napastnik": "FWD",
+                  "1": "GK", "2": "DEF", "3": "MID", "4": "FWD",
+                  "BR": "GK", "OBR": "DEF", "POM": "MID", "NAP": "FWD"}
+    top_owned_pos_short = _POS_SHORT.get(top_owned_pos, "") if top_owned_pos else ""
+
+    # Bieżąca kolejka (najwyższy numer rozegranej kolejki z formy zawodników)
+    current_round_label = ""
+    if summary_data:
+        _played_rounds = [f.get("r", 0) for p in summary_data for f in (p.get("form") or []) if f.get("p")]
+        if _played_rounds:
+            current_round_label = str(max(_played_rounds))
+
+    # Gracz kolejki — najwyższy wynik w ostatniej rozegranej kolejce (best-effort)
+    round_star = None
+    if summary_data and current_round_label:
+        _last_r = int(current_round_label)
+        _best = None
+        for p in summary_data:
+            for f in (p.get("form") or []):
+                if f.get("p") and f.get("r") == _last_r:
+                    _pts = f.get("pts", 0) or 0
+                    if _best is None or _pts > _best["pts"]:
+                        _best = {"name": p.get("name", ""), "pts": _pts}
+        round_star = _best
+
+    # Średnia punktów ligi / kolejkę (z ostatniej rundy league_history)
+    league_avg_round = None
+    if (league_history or {}).get("rounds"):
+        _lr = league_history["rounds"][-1]
+        _sts = _lr.get("standings") or []
+        _vals = [s.get("round_points") for s in _sts if s.get("round_points") is not None]
+        if _vals:
+            league_avg_round = round(sum(_vals) / len(_vals), 1)
+
     # Default scope
     default_scope = "top10" if "top10" in scopes_data else ("top100" if "top100" in scopes_data else "league")
 
-    # Build scope toggle HTML
+    # Build scope toggle HTML (Koncepcja C: segment .seg + przyciski .seg-btn)
     scope_toggle_html = ""
     if len(scope_buttons) > 1:
         btns = ""
         for key, label in scope_buttons:
-            btns += f"<button class='scope-btn' data-scope='{key}'>{label}</button>"
-        scope_toggle_html = f"<div class='scope-toggle'>{btns}</div>"
+            active_cls = " active" if key == default_scope else ""
+            btns += f"<button class='seg-btn scope-btn{active_cls}' data-scope='{key}'>{label}</button>"
+        scope_toggle_html = f"<div class='seg' role='group' aria-label='Zakres'><span class='seg-label'>Zakres</span>{btns}</div>"
 
     html = f'''<!DOCTYPE html>
 <html lang="pl">
@@ -115,665 +175,704 @@ def generate_dashboard_html(
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fantasy Ekstraklasa Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   MOTYW CIEMNY (domyślny) — oparty na design.md
+   KONCEPCJA C — zunifikowany system tokenów (The Verge x ScrapFEks)
+   Źródło wyglądu: redesign-mockups/concept-c-dark.html + concept-c-light.html
+   Motyw jasny = podmiana wartości w bloku html.theme-fantasy, reszta bez zmian.
    ============================================================ */
-* {{ margin: 0; padding: 0; box-sizing: border-box; }}
-html {{ background: #131313; }}
-body {{
-  min-height: 100vh;
-  background: #131313;
-  color: #ffffff;
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  padding: 24px 16px;
+/*==TOKENS:START==*/
+:root{{
+  --canvas:#131313;
+  --surface:#2d2d2d;
+  --surface-inset:#191919;
+  --surface-sunken:#0e0e0e;
+  --surface-hover:#333333;
+  --border:#3d3d3d;
+  --border-strong:#575757;
+  --border-accent:#3cffd0;
+  --text:#ffffff;
+  --text-muted:#a0a0a0;
+  --text-dim:#9c9c9c;
+  --text-inverse:#131313;
+  --accent:#3cffd0;
+  --accent-deep:#309875;
+  --link-hover:#3860be;
+  --focus:#1eaedb;
+  --violet:#5200ff;
+  --violet-soft:#8b5cf6;
+  --gold:#fbbf24;
+  --medal-silver:#d4d4d4;
+  --bronze:#f08a2c;
+  --pink:#f472b6;
+  --pos-gk:#f59e0b;
+  --pos-def:#3b82f6;
+  --pos-mid:#10b981;
+  --pos-fwd:#ef4444;
+  --fdr-1:#2fbf71;
+  --fdr-2:#8fcf3c;
+  --fdr-3:#e8b923;
+  --fdr-4:#f08a2c;
+  --fdr-5:#e5484d;
+  --fdr-ink:#131313;
+  --up:#17cca0;
+  --down:#ff9e9e;
+  --flat:#ababab;
+  --conf-high:#17cca0;
+  --conf-med:#e8b923;
+  --conf-low:#ff9e9e;
+  --tint-accent:rgba(60,255,208,.14);
+  --tint-up:rgba(23,204,160,.14);
+  --tint-down:rgba(255,158,158,.16);
+  --tint-gold:rgba(251,191,36,.14);
+  --tint-violet:rgba(139,92,246,.16);
+  --tint-soft:rgba(255,255,255,.05);
+  --tint-row:rgba(255,255,255,.035);
+  --overlay:rgba(0,0,0,.6);
+  --series-1:#3cffd0;
+  --series-2:#fbbf24;
+  --series-3:#f472b6;
+  --series-4:#8b5cf6;
+  --series-5:#38c8ff;
+  --series-6:#fb923c;
+  --series-7:#4ade80;
+  --series-8:#f87171;
+  --series-9:#e879f9;
+  --series-10:#60a5fa;
+  --series-11:#facc15;
+  --series-12:#2dd4bf;
 }}
-.container {{ max-width: 1400px; margin: 0 auto; padding: 0 16px; }}
-@media (max-width: 768px) {{ .container {{ max-width: 100%; padding: 0 12px; }} }}
-@media (min-width: 2000px) {{ .container {{ max-width: 1600px; }} }}
-
-/* Header + Theme Toggle */
-.header {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }}
-.header-left {{ display: flex; align-items: center; gap: 14px; }}
-.logo {{ width: 48px; height: 48px; border-radius: 10px; object-fit: contain; }}
-.header h1 {{ font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }}
-.header .sub {{ font-size: 12px; color: #949494; margin: 0; }}
-
-/* Theme Toggle Button */
-.theme-toggle {{
-  background: #2d2d2d;
-  border: 1px solid #3cffd0;
-  border-radius: 24px;
-  color: #3cffd0;
-  padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s;
+html.theme-fantasy{{
+  --canvas:#f5f5f5;
+  --surface:#ffffff;
+  --surface-inset:#f0f0f0;
+  --surface-sunken:#ededed;
+  --surface-hover:#eeeeee;
+  --border:#e0e0e0;
+  --border-strong:#808080;
+  --border-accent:#0a6e4e;
+  --text:#131313;
+  --text-muted:#5a5a5a;
+  --text-dim:#666666;
+  --text-inverse:#ffffff;
+  --accent:#0a6e4e;
+  --accent-deep:#075f45;
+  --link-hover:#3860be;
+  --focus:#0284c7;
+  --violet:#5200ff;
+  --violet-soft:#7c3aed;
+  --gold:#8a5a06;
+  --medal-silver:#666666;
+  --bronze:#c2410c;
+  --pink:#db2777;
+  --pos-gk:#b45309;
+  --pos-def:#1d4ed8;
+  --pos-mid:#047857;
+  --pos-fwd:#c1121f;
+  --fdr-1:#2fbf71;
+  --fdr-2:#8fcf3c;
+  --fdr-3:#e8b923;
+  --fdr-4:#f08a2c;
+  --fdr-5:#e5484d;
+  --fdr-ink:#131313;
+  --up:#0a7342;
+  --down:#b91c1c;
+  --flat:#666666;
+  --conf-high:#0a7342;
+  --conf-med:#8a5a06;
+  --conf-low:#b91c1c;
+  --tint-accent:rgba(10,110,78,.10);
+  --tint-up:rgba(10,115,66,.10);
+  --tint-down:rgba(185,28,28,.10);
+  --tint-gold:rgba(138,90,6,.12);
+  --tint-violet:rgba(124,58,237,.12);
+  --tint-soft:rgba(19,19,19,.05);
+  --tint-row:rgba(19,19,19,.04);
+  --overlay:rgba(0,0,0,.5);
+  --series-1:#0a6e4e;
+  --series-2:#b45309;
+  --series-3:#c026d3;
+  --series-4:#6d28d9;
+  --series-5:#0369a1;
+  --series-6:#ea580c;
+  --series-7:#15803d;
+  --series-8:#b91c1c;
+  --series-9:#a21caf;
+  --series-10:#2563eb;
+  --series-11:#a16207;
+  --series-12:#0f766e;
 }}
-.theme-toggle:hover {{ background: #3cffd0; color: #131313; }}
+/*==TOKENS:END==*/
 
-/* Stat Cards */
-.stats-row {{ display: flex; gap: 12px; margin-top: 16px; overflow-x: auto; padding-bottom: 4px; flex-wrap: wrap; }}
-.stat-card {{
-  background: #2d2d2d;
-  border: 1px solid #3cffd0;
-  border-radius: 20px;
-  padding: 16px 20px;
-  flex: 1 1 calc(25% - 12px); min-width: 140px; max-width: 250px;
+*{{margin:0;padding:0;box-sizing:border-box}}
+html{{background:var(--canvas);scroll-behavior:smooth}}
+body{{
+  min-height:100vh;background:var(--canvas);color:var(--text);
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:40px;
 }}
-.stat-card .val {{ font-size: 24px; font-weight: 800; }}
-.stat-card .label {{ font-size: 11px; color: #949494; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }}
-.stat-card .sub {{ font-size: 11px; color: #949494; margin-top: 4px; }}
-.accent-cyan {{ border-left: 3px solid #3cffd0; }}
-.accent-cyan .val {{ color: #3cffd0; }}
-.accent-gold {{ border-left: 3px solid #fbbf24; }}
-.accent-gold .val {{ color: #fbbf24; }}
-.accent-green {{ border-left: 3px solid #10b981; }}
-.accent-green .val {{ color: #10b981; }}
-.accent-purple {{ border-left: 3px solid #5200ff; }}
-.accent-purple .val {{ color: #5200ff; }}
+.mono{{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}}
+.shell{{max-width:1400px;margin:0 auto;padding:0 20px}}
+@media (max-width:768px){{.shell{{padding:0 12px}}}}
+@media (min-width:2000px){{.shell{{max-width:1600px}}}}
+button,input,select{{font-family:inherit;color:inherit}}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}}
+a{{color:var(--text);text-decoration:none;transition:color .15s}}
+a:hover{{color:var(--link-hover)}}
 
-/* Tabs */
-.tabs {{ display: flex; gap: 4px; border-bottom: 1px solid #2d2d2d; flex-wrap: wrap; }}
-.tab {{
-  background: transparent; border: none; border-bottom: 2px solid transparent;
-  color: #949494; padding: 10px 18px; font-size: 13px; font-weight: 600;
-  cursor: pointer; border-radius: 8px 8px 0 0; transition: all 0.2s;
-  font-family: inherit;
+/* ===== MASTHEAD ===== */
+.masthead{{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0 14px;flex-wrap:wrap}}
+.brand{{display:flex;align-items:center;gap:14px;cursor:pointer;background:none;border:0;text-align:left}}
+.logo{{width:52px;height:52px;border-radius:12px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto}}
+.logo img{{width:100%;height:100%;object-fit:contain}}
+.brand strong{{display:block;font-size:22px;font-weight:800;letter-spacing:-.6px;line-height:1.1}}
+.brand .sub{{display:block;font-size:10px;letter-spacing:1.4px;color:var(--text-muted);margin-top:3px;text-transform:uppercase}}
+.mast-right{{display:flex;align-items:center;gap:10px;flex-wrap:wrap}}
+.pill-tag{{display:inline-block;background:var(--accent);color:var(--text-inverse);border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}}
+.ghost-link{{border:1px solid var(--border-accent);color:var(--accent);border-radius:40px;padding:9px 18px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;transition:background .15s,color .15s;min-height:44px;display:inline-flex;align-items:center;background:transparent;cursor:pointer}}
+.ghost-link:hover{{background:var(--accent);color:var(--text-inverse)}}
+
+/* ===== 4 KARTY NAGŁÓDKA (KPI) ===== */
+.kpi-row{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}}
+.kpi{{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:16px 18px;min-width:0}}
+.kpi-label{{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-muted);font-family:'JetBrains Mono',monospace}}
+.kpi-mark{{width:9px;height:9px;flex:0 0 auto;background:var(--accent)}}
+.kpi-mark.gold{{background:var(--gold)}}
+.kpi-mark.violet{{background:var(--violet-soft)}}
+.kpi-val{{font-size:30px;font-weight:800;letter-spacing:-1.2px;margin-top:8px;line-height:1}}
+.kpi-sub{{font-size:12px;color:var(--text-muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.kpi-lead{{background:var(--accent);border-color:var(--accent);color:var(--text-inverse)}}
+.kpi-lead .kpi-label,.kpi-lead .kpi-sub{{color:var(--text-inverse)}}
+.kpi-lead .kpi-mark{{background:var(--text-inverse)}}
+@media (max-width:900px){{.kpi-row{{grid-template-columns:repeat(2,1fr)}}}}
+@media (max-width:400px){{.kpi-row{{grid-template-columns:1fr}}}}
+
+/* ===== PASEK ZAKŁADEK ===== */
+.tabbar{{position:sticky;top:0;z-index:60;background:var(--canvas);border-bottom:1px solid var(--border);margin-top:22px}}
+.tabs{{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}}
+.tabs::-webkit-scrollbar{{display:none}}
+.tab{{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;min-height:52px;padding:0 16px;background:none;border:0;border-bottom:3px solid transparent;color:var(--text-muted);font-size:12px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}}
+.tab .tab-idx{{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;color:var(--text-dim);letter-spacing:.5px}}
+.tab:hover{{color:var(--text);background:var(--tint-row)}}
+.tab.active{{color:var(--text);border-bottom-color:var(--accent);background:var(--surface-inset)}}
+.tab.active .tab-idx{{color:var(--text-muted)}}
+.tab-link{{text-decoration:none}}
+
+/* ===== SEGMENTY / FILTRY ===== */
+.toolbar{{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:20px 0 18px}}
+.seg{{display:flex;gap:6px;flex-wrap:wrap;align-items:center}}
+.seg-label{{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-right:2px}}
+.seg-btn{{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:20px;padding:0 16px;min-height:44px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s;letter-spacing:.3px}}
+.seg-btn:hover{{color:var(--text);border-color:var(--border-strong);background:var(--surface)}}
+.seg-btn.active{{background:var(--accent);border-color:var(--accent);color:var(--text-inverse)}}
+.pos-btn.active{{background:var(--accent);border-color:var(--accent);color:var(--text-inverse)}}
+.pos-btn[data-pos="BR"].active{{background:var(--pos-gk);border-color:var(--pos-gk)}}
+.pos-btn[data-pos="OBR"].active{{background:var(--pos-def);border-color:var(--pos-def)}}
+.pos-btn[data-pos="POM"].active{{background:var(--pos-mid);border-color:var(--pos-mid)}}
+.pos-btn[data-pos="NAP"].active{{background:var(--pos-fwd);border-color:var(--pos-fwd)}}
+.seg-push{{margin-left:auto}}
+.field{{display:flex;align-items:center;gap:8px}}
+.field label{{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);font-family:'JetBrains Mono',monospace}}
+.input,select.input{{background:var(--surface-sunken);border:1px solid var(--border-strong);color:var(--text);border-radius:4px;padding:11px 12px;font-size:13px;min-height:44px;transition:border-color .15s}}
+.input::placeholder{{color:var(--text-dim)}}
+.input:focus{{border-color:var(--accent);outline:none}}
+select.input{{cursor:pointer;padding-right:26px}}
+.search-wrap{{position:relative;flex:1;min-width:200px;max-width:340px}}
+.search-wrap .input{{width:100%}}
+
+/* ===== WIDOKI / SEKCJE ===== */
+.view{{display:none;padding-bottom:8px}}
+.view.active{{display:block;animation:fade .28s ease}}
+@keyframes fade{{from{{opacity:0;transform:translateY(6px)}}to{{opacity:1;transform:none}}}}
+.sec{{display:flex;align-items:center;gap:12px;margin:34px 0 16px}}
+.sec h2,.sec h3{{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;white-space:nowrap}}
+.sec .rule{{flex:1;height:1px;background:var(--border)}}
+.sec .sec-note{{font-size:11px;color:var(--text-muted);letter-spacing:.6px;white-space:normal;text-align:right}}
+.page-title{{font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-1.4px;line-height:1.05;margin:30px 0 6px}}
+.page-sub{{font-size:13px;color:var(--text-muted);margin-bottom:6px}}
+.page-sub .mono{{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent)}}
+.panel{{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px}}
+.lede{{font-size:15px;color:var(--text-muted);max-width:74ch;line-height:1.65}}
+.lede b{{color:var(--text);font-weight:700}}
+.hint{{font-size:12px;color:var(--text-dim);margin-top:4px}}
+.hint.warn{{color:var(--conf-low)}}
+.row-count{{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px}}
+
+/* ===== TABELA — jedna gęstość ===== */
+.tscroll{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
+.dt{{width:100%;border-collapse:collapse;font-size:13px;table-layout:auto}}
+.dt thead th{{background:var(--surface-inset);color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;padding:12px 12px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border)}}
+.dt thead th.sortable{{cursor:pointer;user-select:none;transition:color .15s}}
+.dt thead th.sortable:hover{{color:var(--text)}}
+.dt thead th.sorted{{color:var(--accent)}}
+.dt thead th.sorted .sarr{{font-size:9px}}
+.dt thead th.text-right{{text-align:right}}
+.dt thead th.text-center{{text-align:center}}
+.dt thead th.text-left{{text-align:left}}
+.dt td{{padding:11px 12px;border-top:1px solid var(--border);white-space:nowrap;vertical-align:middle}}
+.dt .clip{{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+.dt td[colspan]{{white-space:normal;overflow:visible;text-overflow:clip}}
+.dt tbody tr:first-child td{{border-top:0}}
+.dt tbody tr:hover td{{background:var(--tint-row)}}
+.dt .num{{text-align:right;font-variant-numeric:tabular-nums}}
+.dt .center{{text-align:center}}
+.dt .strong{{font-weight:700}}
+.dt .muted{{color:var(--text-muted)}}
+.rank{{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);font-weight:700}}
+.medal{{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:800;background:var(--surface-inset);border:1px solid var(--border)}}
+.medal.m1{{background:var(--gold);color:var(--text-inverse);border-color:var(--gold)}}
+.medal.m2{{background:var(--medal-silver);color:var(--text-inverse);border-color:var(--medal-silver)}}
+.medal.m3{{background:var(--bronze);color:var(--text-inverse);border-color:var(--bronze)}}
+
+/* badge pozycji */
+.badge-pos{{display:inline-block;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:.8px;color:var(--text-inverse);text-transform:uppercase;min-width:42px;text-align:center}}
+.pos-GK{{background:var(--pos-gk)}}
+.pos-DEF{{background:var(--pos-def)}}
+.pos-MID{{background:var(--pos-mid)}}
+.pos-FWD{{background:var(--pos-fwd)}}
+
+.delta{{display:inline-block;min-width:46px;text-align:center;padding:2px 7px;border-radius:4px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}}
+.d-up{{background:var(--tint-up);color:var(--up)}}
+.d-down{{background:var(--tint-down);color:var(--down)}}
+.d-flat{{background:var(--tint-soft);color:var(--flat)}}
+.chg{{font-size:13px;font-weight:700}}
+.chg-up{{color:var(--up)}}
+.chg-down{{color:var(--down)}}
+.chg-flat{{color:var(--flat)}}
+
+.bar{{display:inline-flex;align-items:center;gap:8px}}
+.bar-track{{width:74px;height:6px;border-radius:3px;background:var(--surface-inset);overflow:hidden;border:1px solid var(--border)}}
+.bar-fill{{display:block;height:100%;background:var(--accent)}}
+.bar-fill.neg{{background:var(--down)}}
+.bar-val{{font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums;min-width:52px}}
+
+.mini{{display:inline-flex;align-items:flex-end;gap:3px;height:26px}}
+.mini i{{display:block;width:9px;min-height:2px;background:var(--accent);border-radius:2px 2px 0 0;opacity:.9}}
+.mini i.zero{{background:var(--border-strong);height:3px!important;opacity:.7}}
+
+/* FDR 1-5 */
+.fdr{{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 6px;border-radius:4px;font-size:11px;font-weight:800;color:var(--fdr-ink);font-variant-numeric:tabular-nums}}
+.fdr-1{{background:var(--fdr-1)}}
+.fdr-2{{background:var(--fdr-2)}}
+.fdr-3{{background:var(--fdr-3)}}
+.fdr-4{{background:var(--fdr-4)}}
+.fdr-5{{background:var(--fdr-5)}}
+.legend{{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-bottom:16px}}
+.legend .li{{display:inline-flex;align-items:center;gap:7px}}
+.legend .fdr{{min-width:22px;height:20px}}
+
+.opp{{display:inline-flex;flex-direction:column;align-items:center;gap:3px;min-width:78px;max-width:100%}}
+.opp .o-code{{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.6px;display:flex;align-items:center;gap:5px;min-width:0;max-width:100%}}
+.opp .o-nm{{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+.opp .hw{{flex-shrink:0}}
+.hw{{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;letter-spacing:.6px;background:var(--tint-soft);color:var(--text-muted);border:1px solid var(--border)}}
+.hw.d{{background:var(--tint-accent);color:var(--accent);border-color:transparent}}
+
+.conf{{display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}}
+.conf-high{{background:var(--tint-up);color:var(--conf-high)}}
+.conf-medium{{background:var(--tint-gold);color:var(--conf-med)}}
+.conf-low{{background:var(--tint-down);color:var(--conf-low)}}
+.pot{{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}}
+.pot-hi{{background:var(--tint-up);color:var(--up)}}
+.pot-mid{{background:var(--tint-gold);color:var(--conf-med)}}
+.pot-lo{{background:var(--tint-down);color:var(--down)}}
+.pred-val{{display:inline-block;min-width:52px;text-align:center;background:var(--surface-inset);border:1px solid var(--border-strong);border-radius:6px;padding:5px 9px;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}}
+.occ{{font-weight:800;font-variant-numeric:tabular-nums}}
+.occ-hi{{color:var(--accent)}}
+.occ-mid{{color:var(--gold)}}
+.occ-lo{{color:var(--text-muted)}}
+.used{{display:inline-block;background:var(--tint-soft);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;letter-spacing:.4px}}
+
+/* ===== LANDING ===== */
+.hero{{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:stretch;margin-top:26px}}
+.hero-kicker{{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:var(--accent);margin-bottom:16px}}
+.hero h1{{font-size:clamp(34px,5.2vw,64px);font-weight:800;letter-spacing:-2.4px;line-height:.98}}
+.hero h1 em{{font-style:normal;color:var(--accent)}}
+.hero .lede{{margin-top:18px}}
+.hero-cta{{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap}}
+.btn-primary,.btn-ghost{{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 26px;border-radius:24px;font-size:13px;font-weight:700;letter-spacing:.6px;cursor:pointer;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}}
+.btn-primary{{background:var(--accent);color:var(--text-inverse)}}
+.btn-primary:hover{{background:var(--text);color:var(--text-inverse)}}
+.btn-ghost{{background:transparent;border-color:var(--border-accent);color:var(--accent)}}
+.btn-ghost:hover{{background:var(--accent);color:var(--text-inverse)}}
+.fact-strip{{display:flex;gap:0;flex-wrap:wrap;border:1px solid var(--border);border-radius:20px;background:var(--surface-inset);margin-top:24px;overflow:hidden}}
+.fact{{flex:1 1 180px;padding:14px 18px;border-right:1px solid var(--border);min-width:0}}
+.fact:last-child{{border-right:0}}
+.fact .fk{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-dim)}}
+.fact .fv{{font-size:15px;font-weight:700;margin-top:5px}}
+.entry-grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}}
+.entry{{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;text-align:left;min-height:172px;transition:border-color .15s,background .15s;color:var(--text)}}
+.entry:hover{{border-color:var(--border-strong);background:var(--surface-hover);color:var(--text)}}
+.entry .e-num{{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;color:var(--text-dim);text-transform:uppercase}}
+.entry .e-val{{font-size:34px;font-weight:800;letter-spacing:-1.6px;line-height:1}}
+.entry .e-name{{font-size:14px;font-weight:700}}
+.entry .e-desc{{font-size:12px;color:var(--text-muted);line-height:1.5;margin-top:auto}}
+.entry .e-go{{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-top:8px}}
+.entry-feature{{background:var(--accent);border-color:var(--accent);color:var(--text-inverse)}}
+.entry-feature .e-num,.entry-feature .e-desc,.entry-feature .e-go{{color:var(--text-inverse)}}
+.entry-feature:hover{{background:var(--text);border-color:var(--text);color:var(--text-inverse)}}
+.entry-feature:hover .e-num,.entry-feature:hover .e-desc,.entry-feature:hover .e-go{{color:var(--text-inverse)}}
+@media (max-width:1000px){{.hero{{grid-template-columns:1fr}}.entry-grid{{grid-template-columns:repeat(2,1fr)}}}}
+@media (max-width:520px){{.entry-grid{{grid-template-columns:1fr}}}}
+
+/* ===== TERMINARZ ===== */
+.planner-intro{{font-size:14px;color:var(--text-muted);line-height:1.65;max-width:82ch;margin-bottom:18px}}
+.planner-intro b{{color:var(--text)}}
+.fp-controls{{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px}}
+.insights{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}}
+.insight{{background:var(--surface-inset);border:1px solid var(--border);border-radius:20px;padding:16px 18px}}
+.insight h4{{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);font-weight:700;margin-bottom:12px}}
+.insight ol{{list-style:none;display:flex;flex-direction:column;gap:8px}}
+.insight li{{display:flex;align-items:center;gap:8px;font-size:13px}}
+.insight .ii{{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);width:14px}}
+.insight .iv{{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}}
+.rot-pair{{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:700}}
+.rot-pct{{margin-left:auto;background:var(--accent);color:var(--text-inverse);border-radius:12px;padding:2px 9px;font-size:11px;font-weight:800}}
+.rot-note{{font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5;font-weight:400}}
+@media (max-width:1100px){{.insights{{grid-template-columns:repeat(2,1fr)}}}}
+@media (max-width:560px){{.insights{{grid-template-columns:1fr}}}}
+
+/* ===== TRANSFERY ===== */
+.transfer-grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px}}
+@media (max-width:900px){{.transfer-grid{{grid-template-columns:1fr}}}}
+.list-head{{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;flex-wrap:wrap}}
+.list-head h3{{font-size:14px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase}}
+.list-head .lh-note{{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-dim)}}
+.list-head.buy h3{{color:var(--up)}}
+.list-head.sell h3{{color:var(--down)}}
+.gw-badge{{display:inline-flex;align-items:center;background:var(--surface-inset);border:1px solid var(--border-strong);border-radius:20px;padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text);min-height:44px}}
+
+/* ===== PROGNOZA ===== */
+.method{{background:var(--surface-inset);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:16px;padding:16px 20px;margin:18px 0;font-size:13px;line-height:1.75;color:var(--text-muted)}}
+.method b{{color:var(--text);font-weight:700}}
+.method .m-row{{display:block}}
+.method code{{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--accent)}}
+
+/* ===== SEZON ===== */
+.chart-card{{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px}}
+.chart-card svg{{display:block;width:100%;height:auto}}
+.chart-legend{{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px}}
+.chart-legend .cli{{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted)}}
+.chart-legend .csw{{width:16px;height:4px;border-radius:2px}}
+.dot{{width:8px;height:8px;border-radius:2px;display:inline-block}}
+.axis{{stroke:var(--border);stroke-width:1}}
+.gridline{{stroke:var(--border);stroke-width:1;stroke-dasharray:2 5}}
+.axis-txt{{fill:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:11px}}
+.grid-txt{{fill:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:10px}}
+
+/* ===== SEZON — warstwa wykresu (linie "Pozycje" + słupki "Punkty łącznie") ===== */
+/* Najechanie na linię/słupek albo na pozycję w legendzie — reszta przygasza */
+.season-chart .steam{{transition:opacity .18s ease}}
+.season-chart.has-focus .steam{{opacity:.14}}
+.season-chart.has-focus .steam.is-focus{{opacity:1}}
+/* Linie: kolor drużyny przez zmienną --lc (var() nie działa w atrybucie stroke) */
+.season-chart .sline{{fill:none;stroke:var(--lc,var(--text-dim));stroke-opacity:.92;stroke-width:var(--lw,2px);stroke-linejoin:round;stroke-linecap:round;transition:stroke-width .18s,stroke-opacity .18s}}
+.season-chart.has-focus .steam.is-focus .sline{{stroke-width:calc(var(--lw,2px) + 1.8px);stroke-opacity:1}}
+.season-chart .shit{{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke}}
+.season-chart .sdot{{fill:var(--lc,var(--text-dim));stroke:var(--surface);stroke-width:1.5}}
+/* Słupki klasyfikacji */
+.season-chart .sband{{fill:transparent;pointer-events:all}}
+.season-chart .steam.is-focus .sband{{fill:var(--tint-soft)}}
+.season-chart .steam.is-own .sband{{fill:var(--tint-accent)}}
+.season-chart .strack{{fill:var(--surface-inset)}}
+.season-chart .sbar{{fill:var(--lc,var(--text-dim))}}
+.season-chart .srow-name{{font-size:12.5px;font-weight:600;fill:var(--text)}}
+.season-chart .steam.is-own .srow-name{{font-weight:800}}
+.season-chart .sval{{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;fill:var(--text-muted)}}
+.season-chart .steam.is-own .sval{{fill:var(--text)}}
+.season-chart .srank{{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;fill:var(--text-dim)}}
+.season-chart .srank.top1{{fill:var(--gold)}}
+.season-chart .sgrid{{stroke:var(--border-strong);stroke-width:1;stroke-opacity:.45;stroke-dasharray:2 5}}
+.season-chart .sband-lbl{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;fill:var(--text-dim)}}
+/* Legenda sezonu — klik = ukrycie, najechanie = podświetlenie na wykresie */
+.chart-legend .cli.is-focus{{color:var(--text)}}
+.chart-legend .cli.is-own{{color:var(--text);font-weight:700}}
+
+/* ===== PORÓWNANIE ===== */
+.chips{{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 6px;min-height:44px}}
+.chip{{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 8px 5px 6px;font-size:13px;animation:chipin .18s ease}}
+@keyframes chipin{{from{{opacity:0;transform:scale(.92)}}to{{opacity:1;transform:none}}}}
+.chip .chip-meta{{color:var(--text-muted);font-size:11px}}
+.chip-x{{background:none;border:0;color:var(--text-muted);font-size:15px;line-height:1;cursor:pointer;width:36px;height:36px;border-radius:50%;transition:color .15s,background .15s}}
+.chip-x:hover{{color:var(--down);background:var(--tint-down)}}
+.chip-btn{{background:none;border:0;padding:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;color:inherit;font:inherit}}
+.clear-btn{{background:var(--surface-sunken);border:1px solid var(--border-strong);color:var(--text-muted);border-radius:20px;min-height:44px;padding:0 18px;font-size:12px;font-weight:700;cursor:pointer;transition:color .15s,border-color .15s}}
+.clear-btn:hover{{color:var(--text);border-color:var(--accent)}}
+.ac{{position:absolute;top:100%;left:0;right:0;z-index:80;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;margin-top:6px;overflow:hidden;display:none}}
+.ac.open{{display:block}}
+.ac button{{display:flex;width:100%;gap:10px;align-items:center;background:none;border:0;border-top:1px solid var(--border);padding:12px 14px;font-size:13px;cursor:pointer;text-align:left;min-height:48px;color:var(--text)}}
+.ac button:first-child{{border-top:0}}
+.ac button:hover{{background:var(--surface-hover)}}
+.ac .ac-team{{color:var(--text-muted);font-size:11px;margin-left:auto}}
+.cmp-cards{{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:20px}}
+.cmp-card{{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px 20px;position:relative;overflow:hidden}}
+.cmp-card .cc-bar{{position:absolute;top:0;left:0;right:0;height:4px}}
+.cmp-card .cc-pos{{margin-bottom:10px}}
+.cmp-card .cc-name{{font-size:17px;font-weight:800;letter-spacing:-.4px}}
+.cmp-card .cc-team{{font-size:12px;color:var(--text-muted);margin-top:3px}}
+.ccmp-stat{{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-top:1px solid var(--border);align-items:center}}
+.ccmp-stat .cs-k{{color:var(--text-muted)}}
+.ccmp-stat .cs-v{{font-weight:700;display:inline-flex;align-items:center;gap:6px}}
+.cmp-table td.best{{background:var(--tint-accent);color:var(--accent);font-weight:800}}
+.cmp-table td.metric{{text-align:left;color:var(--text-muted);font-size:12px;font-weight:700;letter-spacing:.4px;white-space:nowrap}}
+.cmp-empty{{text-align:center;padding:56px 20px;color:var(--text-muted);font-size:15px;background:var(--surface-inset);border:1px dashed var(--border-strong);border-radius:20px}}
+.cmp-empty strong{{display:block;color:var(--text);font-size:18px;margin-bottom:8px}}
+
+/* ===== ARCHIWUM ===== */
+.arc-badge{{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--gold);color:var(--gold);border-radius:20px;padding:8px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase}}
+.season-item{{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px 22px;cursor:pointer;transition:border-color .15s,background .15s;width:100%;text-align:left;color:var(--text);min-height:76px}}
+.season-item:hover{{border-color:var(--accent);background:var(--surface-hover)}}
+.season-item .si-t{{display:block;font-size:17px;font-weight:800;letter-spacing:-.3px}}
+.season-item .si-m{{display:block;font-size:12px;color:var(--text-muted);margin-top:4px}}
+.season-item .si-go{{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.4px;color:var(--accent);text-transform:uppercase}}
+.back-link{{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-muted)}}
+.back-link:hover{{color:var(--link-hover)}}
+.subtabs{{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 6px}}
+.empty-note{{padding:34px;text-align:center;color:var(--text-muted);font-size:14px}}
+.footer{{text-align:center;margin-top:44px;padding-top:20px;border-top:1px solid var(--border);color:var(--text-dim);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}}
+.detail-row > td{{background:var(--surface-inset)!important;padding:0!important;border-top:0!important}}
+.detail-in{{padding:16px 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}}
+.detail-tag{{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 13px;font-size:12px}}
+.detail-tag .dt-pts{{color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums}}
+.detail-tag .dt-nm{{font-weight:600}}
+.expand-btn{{background:none;border:0;color:var(--text-muted);cursor:pointer;font-size:11px;width:28px;height:36px;transition:transform .15s,color .15s;padding:0}}
+.expand-btn:hover{{color:var(--accent)}}
+.expand-btn.open{{transform:rotate(90deg);color:var(--accent)}}
+.team-cell{{display:inline-flex;align-items:center;gap:8px;max-width:100%;min-width:0}}
+.team-name{{font-weight:700;display:inline-block;max-width:100%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* ===== UTILITIES — wspólne dla renderów zakładek (mapowane na tokeny) ===== */
+.text-right{{text-align:right}}
+.text-center{{text-align:center}}
+.text-left{{text-align:left}}
+.fw-700{{font-weight:700}}
+.fw-600{{font-weight:600}}
+.c-muted{{color:var(--text-muted)}}
+.c-dim{{color:var(--text-dim)}}
+.empty-msg{{padding:40px;text-align:center;color:var(--text-muted);font-size:14px}}
+.highlight{{background:var(--tint-accent)}}
+.price-up{{color:var(--up);font-size:11px;font-weight:700}}
+.price-down{{color:var(--down);font-size:11px;font-weight:700}}
+.season-chart{{position:relative;width:100%;overflow-x:auto}}
+.season-tooltip{{position:absolute;pointer-events:none;background:var(--surface-sunken);border:1px solid var(--border-strong);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text);white-space:nowrap;z-index:10;opacity:0;transition:opacity .15s}}
+.season-tooltip.visible{{opacity:1}}
+.season-legend-item{{cursor:pointer}}
+.season-legend-item.hidden{{opacity:0.3;text-decoration:line-through}}
+/* Dotyk: domyślna wysokość pozycji legendy (~18px) jest poniżej minimum WCAG 2.5.8 —
+   na telefonach podbijamy do 28px, żeby dało się trafić palcem.
+   Nazwy drużyn w słupkach: w wąskiej kolumnie (150px) zmniejszamy krój, żeby się mieściły */
+@media (max-width:768px){{
+  .season-legend-item{{min-height:28px;padding:5px 0}}
+  .season-chart .srow-name{{font-size:11px}}
 }}
-.tab.active {{ background: #2d2d2d; border-bottom-color: #3cffd0; color: #ffffff; }}
-.tab:hover {{ color: #3860be; }}
 
-/* Filters */
-.filters-row {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }}
-.pos-filters {{ display: flex; gap: 4px; align-items: center; }}
-.pos-btn {{
-  background: transparent; border: 1px solid #2d2d2d; color: #949494;
-  padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
-  border-radius: 6px; font-family: inherit; transition: all 0.15s;
+/* ===== MODAL statystyk drużyny (FDR) ===== */
+.ft-modal-bg{{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--overlay);z-index:1000;display:flex;align-items:center;justify-content:center}}
+.ft-modal{{background:var(--surface);border:1px solid var(--border-strong);border-radius:20px;padding:24px 32px;min-width:340px;max-width:90vw;position:relative;color:var(--text)}}
+.ft-modal h3{{margin:0 0 16px;font-size:18px}}
+.ft-modal-close{{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer}}
+.ft-modal-close:hover{{color:var(--text)}}
+
+/* ===== FIXTURE PLANNER — stany ===== */
+.fp-section{{margin-top:32px;border-top:1px solid var(--border);padding-top:24px}}
+.fp-team-cell{{cursor:pointer}}
+.fp-team-cell .team-name{{transition:color .15s}}
+.fp-team-cell:hover .team-name{{color:var(--link-hover)}}
+.fp-team-cell.fp-selected .team-name{{color:var(--accent)}}
+.dt thead th.fp-sorted{{color:var(--accent)}}
+.roster-trigger{{cursor:pointer}}
+.roster-trigger .team-name{{transition:color .15s}}
+.roster-trigger:hover .team-name{{color:var(--link-hover)}}
+.name-cell{{display:inline-flex;align-items:center;gap:6px;min-width:0}}
+.name-caret{{font-size:10px;color:var(--text-dim);line-height:1;flex:0 0 auto}}
+
+/* ===== ODZNAKI ROSTER (C / RES / XI) w panelu szczegółów ===== */
+.rc-badge{{font-size:9px;font-weight:800;border-radius:3px;padding:1px 5px;letter-spacing:.4px}}
+.rc-cap{{background:var(--gold);color:var(--text-inverse)}}
+.rc-res{{background:var(--surface-sunken);color:var(--text-muted);border:1px solid var(--border-strong)}}
+.rc-xi{{background:var(--accent);color:var(--text-inverse)}}
+
+@media (max-width:768px){{
+  .tab{{padding:0 13px;font-size:11px}}
+  .dt{{font-size:12px}}
+  .dt td{{padding:10px}}
+  .page-title{{letter-spacing:-1px}}
+  .sec{{flex-wrap:wrap}}
+  .sec .sec-note{{text-align:left}}
+  .fact{{border-right:0;border-bottom:1px solid var(--border)}}
 }}
-.pos-btn.active {{ border-color: transparent; color: #131313; }}
-.pos-btn.active[data-pos="ALL"] {{ background: #3cffd0; }}
-.pos-btn.active[data-pos="BR"] {{ background: #f59e0b; }}
-.pos-btn.active[data-pos="OBR"] {{ background: #3b82f6; }}
-.pos-btn.active[data-pos="POM"] {{ background: #10b981; }}
-.pos-btn.active[data-pos="NAP"] {{ background: #ef4444; }}
-.scope-toggle {{ display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid #2d2d2d; }}
-.scope-btn {{
-  background: transparent; border: none; color: #949494;
-  padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
-  font-family: inherit; transition: all 0.15s;
-}}
-.scope-btn.active {{ background: #3cffd0; color: #131313; }}
 
-/* Section Title */
-.section-title {{ display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }}
-.section-title h2 {{ font-size: 16px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #ffffff; }}
-.section-title .line {{ flex: 1; height: 1px; background: linear-gradient(90deg, #2d2d2d, transparent); }}
-
-/* Data Table */
-.data-table {{ background: #2d2d2d; border-radius: 12px; overflow: hidden; width: 100%; overflow-x: auto; }}
-table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
-thead tr {{ background: #131313; }}
-th {{ padding: 10px 14px; color: #949494; font-weight: 600; font-size: 11px; text-transform: uppercase; white-space: nowrap; }}
-th.sortable {{ cursor: pointer; user-select: none; }}
-th.sortable:hover {{ color: #ffffff; }}
-th.sortable[title] {{ cursor: help; border-bottom: 1px dashed #2d2d2d; }}
-td {{ padding: 10px 14px; border-top: 1px solid #131313; white-space: nowrap; }}
-tr.highlight {{ background: rgba(251,191,36,0.06); }}
-
-/* Badge pozycji */
-.pos-badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #131313; }}
-.pos-BR, .pos-1 {{ background: #f59e0b; }}
-.pos-OBR, .pos-2 {{ background: #3b82f6; }}
-.pos-POM, .pos-3 {{ background: #10b981; }}
-.pos-NAP, .pos-4 {{ background: #ef4444; }}
-
-/* Kapitan */
-.captain-badge {{ display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #131313; font-size: 11px; font-weight: 800; }}
-
-/* Bar */
-.bar-wrap {{ display: flex; align-items: center; gap: 8px; }}
-.bar-bg {{ width: 80px; height: 6px; background: #131313; border-radius: 3px; overflow: hidden; }}
-.bar-fill {{ height: 100%; border-radius: 3px; transition: width 0.6s ease; }}
-.bar-val {{ font-size: 13px; color: #949494; min-width: 38px; text-align: right; }}
-
-/* Tab Content */
-.tab-content {{ display: none; }}
-.tab-content.active {{ display: block; }}
-.footer {{ text-align: center; margin-top: 32px; color: #949494; font-size: 12px; }}
-.text-right {{ text-align: right; }}
-.text-center {{ text-align: center; }}
-.text-left {{ text-align: left; }}
-.fw-700 {{ font-weight: 700; }}
-.fw-600 {{ font-weight: 600; }}
-.c-muted {{ color: #949494; }}
-.c-dim {{ color: #949494; }}
-.empty-msg {{ padding: 40px; text-align: center; color: #949494; }}
-.clickable {{ cursor: pointer; }}
-.clickable:hover {{ color: #3860be; }}
-
-/* ============================================================
-   MOTYW JASNY (theme-fantasy) — aktywowany klasą html.theme-fantasy
-   ============================================================ */
-html.theme-fantasy {{ background: #f5f5f5; }}
-html.theme-fantasy body {{ background: #f5f5f5; color: #131313; }}
-
-html.theme-fantasy .header-left h1 {{ color: #131313; }}
-html.theme-fantasy .header .sub {{ color: #5a5a5a; }}
-html.theme-fantasy .theme-toggle {{ background: #ffffff; border-color: #309875; color: #309875; }}
-html.theme-fantasy .theme-toggle:hover {{ background: #309875; color: #ffffff; }}
-
-html.theme-fantasy .stat-card {{ background: #ffffff; border-color: #e0e0e0; }}
-html.theme-fantasy .stat-card .val {{ color: #131313; }}
-html.theme-fantasy .stat-card .label {{ color: #5a5a5a; }}
-html.theme-fantasy .stat-card .sub {{ color: #5a5a5a; }}
-
-html.theme-fantasy .tab {{ color: #5a5a5a; }}
-html.theme-fantasy .tab.active {{ background: #ffffff; border-bottom-color: #309875; color: #131313; }}
-html.theme-fantasy .tab:hover {{ color: #3860be; }}
-
-html.theme-fantasy .pos-btn {{ border-color: #e0e0e0; color: #5a5a5a; }}
-html.theme-fantasy .pos-btn.active {{ color: #ffffff; }}
-html.theme-fantasy .scope-btn {{ color: #5a5a5a; }}
-html.theme-fantasy .scope-btn.active {{ background: #309875; }}
-
-html.theme-fantasy .section-title h2 {{ color: #131313; }}
-html.theme-fantasy .section-title .line {{ background: linear-gradient(90deg, #e0e0e0, transparent); }}
-
-html.theme-fantasy .data-table {{ background: #ffffff; border: 1px solid #e0e0e0; }}
-html.theme-fantasy thead tr {{ background: #f5f5f5; }}
-html.theme-fantasy th {{ color: #5a5a5a; }}
-html.theme-fantasy th.sortable:hover {{ color: #131313; }}
-html.theme-fantasy td {{ border-top-color: #e0e0e0; }}
-html.theme-fantasy tr.highlight {{ background: rgba(48,152,117,0.06); }}
-
-html.theme-fantasy .pos-badge {{ color: #131313; }}
-html.theme-fantasy .captain-badge {{ color: #131313; }}
-html.theme-fantasy .bar-bg {{ background: #e0e0e0; }}
-html.theme-fantasy .bar-val {{ color: #5a5a5a; }}
-
-html.theme-fantasy .footer {{ color: #5a5a5a; }}
-html.theme-fantasy .c-muted {{ color: #5a5a5a; }}
-html.theme-fantasy .c-dim {{ color: #5a5a5a; }}
-html.theme-fantasy .empty-msg {{ color: #5a5a5a; }}
-html.theme-fantasy .clickable:hover {{ color: #3860be; }}
-
-/* Więcej komponentów dla obu motywów */
-.roster-chip {{
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #2d2d2d;
-  border: 1px solid #3cffd0;
-  border-radius: 6px;
-  padding: 3px 10px;
-  font-size: 12px;
-  color: #ffffff;
-}}
-html.theme-fantasy .roster-chip {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
-
-.roster-chip .rc-badge {{ font-size: 9px; font-weight: 800; border-radius: 3px; padding: 1px 4px; }}
-.rc-cap {{ background: #fbbf24; color: #131313; }}
-.rc-res {{ background: #475569; color: #ffffff; }}
-.rc-xi {{ background: #3cffd0; color: #131313; }}
-
-.form-panel {{ background: #131313; border: 1px solid #2d2d2d; border-radius: 8px; padding: 12px 16px; display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }}
-html.theme-fantasy .form-panel {{ background: #f5f5f5; border-color: #e0e0e0; }}
-
-.form-chart {{ display: inline-flex; align-items: flex-end; gap: 3px; height: 48px; vertical-align: middle; }}
-.form-chart.mini {{ height: 24px; gap: 2px; }}
-.form-chart.mini .form-bar {{ width: 8px; }}
-.form-chart.mini .form-val {{ font-size: 8px; top: -12px; color: #949494; font-weight: 500; }}
-.form-chart.mini .form-rnd {{ display: none; }}
-.form-bar {{ width: 14px; border-radius: 3px 3px 0 0; min-height: 2px; position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-start; }}
-.form-bar .form-val {{ position: absolute; top: -16px; font-size: 10px; color: #ffffff; font-weight: 600; white-space: nowrap; }}
-.form-bar .form-rnd {{ position: absolute; bottom: -16px; font-size: 9px; color: #949494; white-space: nowrap; }}
-.form-bar.not-played {{ opacity: 0.35; border: 1px dashed #475569; background: transparent !important; }}
-.form-avg {{ display: flex; flex-direction: column; align-items: center; margin-left: 8px; }}
-.form-avg .fa-val {{ font-size: 20px; font-weight: 800; color: #3cffd0; }}
-.form-avg .fa-lbl {{ font-size: 10px; color: #949494; text-transform: uppercase; letter-spacing: 0.5px; }}
-html.theme-fantasy .form-avg .fa-val {{ color: #309875; }}
-html.theme-fantasy .form-avg .fa-lbl {{ color: #5a5a5a; }}
-
-.detail-row td {{ padding: 0 !important; border-top: none !important; }}
-.detail-panel {{ background: #131313; border: 1px solid #2d2d2d; border-radius: 8px; padding: 12px 16px; margin: 4px 0 8px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }}
-html.theme-fantasy .detail-panel {{ background: #f5f5f5; border-color: #e0e0e0; }}
-
-.detail-section {{ display: flex; flex-direction: column; gap: 4px; }}
-.detail-section .ds-label {{ font-size: 10px; color: #949494; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }}
-html.theme-fantasy .detail-section .ds-label {{ color: #5a5a5a; }}
-
-.team-list {{ display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }}
-.team-list-item {{ background: #2d2d2d; border: 1px solid #3cffd0; border-radius: 8px; }}
-.team-list-item.active {{ border-color: #3cffd0; }}
-html.theme-fantasy .team-list-item {{ background: #ffffff; border-color: #e0e0e0; }}
-html.theme-fantasy .team-list-item.active {{ border-color: #309875; }}
-
-.team-list-header {{ display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; transition: background 0.15s; }}
-.team-list-header:hover {{ background: #3cffd0; }}
-html.theme-fantasy .team-list-header:hover {{ background: #309875; }}
-.team-list-rank {{ font-size: 13px; font-weight: 800; color: #3cffd0; min-width: 32px; }}
-.team-list-name {{ font-size: 14px; font-weight: 700; color: #ffffff; flex: 1; text-transform: capitalize; }}
-.team-list-pts {{ font-size: 12px; color: #949494; font-weight: 600; }}
-.team-list-count {{ font-size: 11px; color: #949494; }}
-html.theme-fantasy .team-list-rank {{ color: #309875; }}
-html.theme-fantasy .team-list-name {{ color: #131313; }}
-html.theme-fantasy .team-list-pts {{ color: #5a5a5a; }}
-html.theme-fantasy .team-list-count {{ color: #5a5a5a; }}
-html.theme-fantasy .team-stat {{ color: #5a5a5a; }}
-html.theme-fantasy .team-stat b {{ color: #131313; }}
-html.theme-fantasy .team-list-arrow {{ color: #949494; }}
-html.theme-fantasy .diff-pos {{ background: rgba(16,185,129,0.1); }}
-html.theme-fantasy .diff-neg {{ background: rgba(239,68,68,0.1); }}
-html.theme-fantasy .diff-zero {{ background: rgba(100,116,139,0.1); }}
-
-/* Fixture Ticker - Light Theme */
-html.theme-fantasy .ft-table th {{ color: #5a5a5a; border-bottom-color: #e0e0e0; }}
-html.theme-fantasy .ft-table td {{ border-bottom-color: #e0e0e0; }}
-html.theme-fantasy .ft-table td.ft-team {{ color: #131313; }}
-html.theme-fantasy .ft-table td.ft-team:hover {{ color: #309875; }}
-html.theme-fantasy .ft-cell {{ background: #f5f5f5; color: #131313; }}
-html.theme-fantasy .ft-cell .ft-ha {{ opacity: 0.7; }}
-html.theme-fantasy .ft-cell-team {{ color: #131313; }}
-html.theme-fantasy .ft-cell-team .ft-ha {{ opacity: 0.7; }}
-html.theme-fantasy .ft-val {{ background: #e0e0e0; color: #131313; }}
-html.theme-fantasy .ft-legend {{ color: #5a5a5a; }}
-html.theme-fantasy .ft-legend-swatch {{ border: 1px solid #e0e0e0; }}
-
-/* Rating Modal - Light Theme */
-html.theme-fantasy .ft-modal-bg {{ background: rgba(0,0,0,0.4); }}
-html.theme-fantasy .ft-modal {{ background: #ffffff; border-color: #e0e0e0; }}
-html.theme-fantasy .ft-modal h3 {{ color: #131313; }}
-html.theme-fantasy .ft-modal-close {{ color: #5a5a5a; }}
-html.theme-fantasy .ft-modal-close:hover {{ color: #131313; }}
-
-/* FDR Tiles - Light Theme */
-html.theme-fantasy .fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0e0e0; }}
-html.theme-fantasy .fdr-table td {{ border-bottom-color: #e0e0e0; }}
-html.theme-fantasy .fdr-legend {{ color: #5a5a5a; }}
-html.theme-fantasy .fdr-cell-team {{ color: #131313; }}
-html.theme-fantasy .fdr-cell-team .fdr-ha {{ opacity: 0.7; }}
-html.theme-fantasy .fdr-mini {{ background: #e0e0e0; color: #131313; }}
-
-/* Fixture Planner - Light Theme */
-html.theme-fantasy .fp-section {{ border-top-color: #e0e0e0; }}
-html.theme-fantasy .fp-controls label {{ color: #5a5a5a; }}
-html.theme-fantasy .fp-controls select {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
-html.theme-fantasy .fp-mode-btns {{ border-color: #e0e0e0; }}
-html.theme-fantasy .fp-mode-btn {{ color: #5a5a5a; }}
-html.theme-fantasy .fp-mode-btn.active {{ background: #309875; color: #ffffff; }}
-html.theme-fantasy .fp-table th {{ color: #5a5a5a; border-bottom-color: #e0e0e0; }}
-html.theme-fantasy .fp-table th:hover {{ color: #131313; }}
-html.theme-fantasy .fp-table th.fp-sorted {{ color: #309875; }}
-html.theme-fantasy .fp-table td {{ border-bottom-color: #e0e0e0; }}
-html.theme-fantasy .fp-table td.fp-team-cell {{ color: #131313; }}
-html.theme-fantasy .fp-table td.fp-team-cell:hover {{ color: #309875; }}
-html.theme-fantasy .fp-table td.fp-team-cell.fp-selected {{ background: rgba(48,152,117,0.1); color: #309875; }}
-html.theme-fantasy .fp-tile {{ background: #f5f5f5; }}
-html.theme-fantasy .fp-rotation {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
-html.theme-fantasy .fp-rotation .fp-rot-label {{ color: #5a5a5a; }}
-html.theme-fantasy .fp-summary {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
-
-/* Transfers Tab - Light Theme */
-html.theme-fantasy .transfers-header h3 {{ color: #131313; }}
-html.theme-fantasy .tr-gw-badge {{ background: #f5f5f5; border-color: #e0e0e0; color: #5a5a5a; }}
-
-/* Predictions Tab - Light Theme */
-html.theme-fantasy .pred-val {{ background: #f5f5f5; color: #131313; }}
-html.theme-fantasy .pred-fdr-tile {{ background: #e0e0e0; color: #131313; }}
-html.theme-fantasy .pred-fdr-used {{ background: rgba(0,0,0,0.05); }}
-html.theme-fantasy .pred-legend {{ background: #f5f5f5; color: #5a5a5a; }}
-html.theme-fantasy .pred-legend b {{ color: #131313; }}
-html.theme-fantasy .pred-pctl-high {{ background: rgba(16,185,129,0.15); color: #10b981; }}
-html.theme-fantasy .pred-pctl-low {{ background: rgba(239,68,68,0.15); color: #ef4444; }}
-
-/* Season Tracker - Light Theme */
-html.theme-fantasy .season-wrap {{ background: #ffffff; border-color: #e0e0e0; }}
-html.theme-fantasy .season-btn {{ background: transparent; border: 1px solid #e0e0e0; color: #5a5a5a; }}
-html.theme-fantasy .season-btn.active {{ background: #309875; color: #ffffff; }}
-html.theme-fantasy .season-tooltip {{ background: #ffffff; border-color: #e0e0e0; color: #131313; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }}
-html.theme-fantasy .season-legend-item {{ color: #5a5a5a; }}
-html.theme-fantasy .trend-up {{ color: #10b981; }}
-html.theme-fantasy .trend-down {{ color: #ef4444; }}
-html.theme-fantasy .trend-flat {{ color: #949494; }}
-
-/* Compare Tab - Light Theme */
-html.theme-fantasy .cmp-search-input {{ background: #ffffff; border-color: #e0e0e0; color: #131313; }}
-html.theme-fantasy .cmp-search-input:focus {{ border-color: #309875; }}
-html.theme-fantasy .cmp-search-input::placeholder {{ color: #949494; }}
-html.theme-fantasy .cmp-autocomplete {{ background: #ffffff; border-color: #e0e0e0; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }}
-html.theme-fantasy .cmp-ac-item {{ color: #131313; }}
-html.theme-fantasy .cmp-ac-item:hover {{ background: #f5f5f5; }}
-html.theme-fantasy .cmp-clear-btn {{ background: #e0e0e0; color: #5a5a5a; }}
-html.theme-fantasy .cmp-chip {{ background: #f5f5f5; border-color: #e0e0e0; color: #131313; }}
-html.theme-fantasy .cmp-table {{ background: #ffffff; }}
-html.theme-fantasy .cmp-table th {{ background: #f5f5f5; color: #5a5a5a; border-bottom-color: #e0e0e0; }}
-html.theme-fantasy .cmp-table td {{ color: #131313; border-top-color: #e0e0e0; }}
-html.theme-fantasy .cmp-rot-wrap {{ background: #ffffff; border-color: #e0e0e0; }}
-html.theme-fantasy .cmp-fdr-table {{ color: #131313; }}
-html.theme-fantasy .cmp-fdr-table th {{ color: #5a5a5a; border-bottom-color: #e0e0e0; }}
-
-.team-list-arrow {{ font-size: 10px; color: #64748b; margin-left: 4px; }}
-.diff-badge {{
-  display: inline-block; font-size: 12px; font-weight: 700; border-radius: 4px;
-  padding: 2px 8px; min-width: 48px; text-align: center;
-}}
-.diff-pos {{ background: rgba(16,185,129,0.15); color: #10b981; }}
-.diff-neg {{ background: rgba(239,68,68,0.15); color: #ef4444; }}
-.diff-zero {{ background: rgba(100,116,139,0.15); color: #94a3b8; }}
-.team-header {{
-  display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;
-}}
-.team-stat {{ font-size: 13px; color: #94a3b8; }}
-.team-stat b {{ color: #e2e8f0; }}
-/* Fixture Ticker */
-.ft-table {{ border-collapse: collapse; width: 100%; font-size: 13px; }}
-.ft-table th {{ padding: 6px 4px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }}
-.ft-table th.ft-round {{ min-width: 80px; }}
-.ft-table td {{ padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }}
-.ft-table td.ft-team {{ text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; cursor: pointer; }}
-.ft-table td.ft-team:hover {{ color: #22d3ee; }}
-.ft-cell {{ border-radius: 4px; padding: 4px 6px; font-weight: 600; font-size: 12px; display: inline-block; min-width: 52px; text-align: center; }}
-.ft-cell .ft-ha {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
-.ft-cell-dual {{ display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 68px; }}
-.ft-cell-team {{ font-size: 11px; font-weight: 600; color: #e2e8f0; white-space: nowrap; }}
-.ft-cell-team .ft-ha {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
-.ft-cell-vals {{ display: flex; gap: 2px; }}
-.ft-val {{ border-radius: 3px; padding: 2px 5px; font-weight: 700; font-size: 10px; min-width: 28px; text-align: center; }}
-.ft-legend {{ display: flex; gap: 12px; align-items: center; margin-bottom: 12px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; }}
-.ft-legend-item {{ display: flex; align-items: center; gap: 4px; }}
-.ft-legend-swatch {{ width: 16px; height: 16px; border-radius: 3px; }}
-/* Rating modal */
-.ft-modal-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; align-items: center; justify-content: center; }}
-.ft-modal {{ background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px 32px; min-width: 340px; max-width: 90vw; position: relative; }}
-.ft-modal h3 {{ margin: 0 0 16px; font-size: 18px; }}
-.ft-modal-close {{ position: absolute; top: 12px; right: 16px; background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }}
-.ft-modal-close:hover {{ color: #e2e8f0; }}
-/* FDR tiles */
-.fdr-table {{ border-collapse: collapse; width: 100%; font-size: 13px; }}
-.fdr-table th {{ padding: 8px 6px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; }}
-.fdr-table td {{ padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }}
-.fdr-table td.fdr-team {{ text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; }}
-.fdr-sum {{ font-weight: 800; font-size: 15px; }}
-.fdr-legend {{ display: flex; gap: 8px; align-items: center; margin-bottom: 14px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; }}
-.fdr-legend-item {{ display: flex; align-items: center; gap: 5px; }}
-.fdr-legend-swatch {{ width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }}
-.fdr-cell {{ display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 80px; }}
-.fdr-cell-team {{ font-size: 12px; font-weight: 600; color: #e2e8f0; white-space: nowrap; }}
-.fdr-cell-team .fdr-ha {{ font-size: 10px; font-weight: 400; opacity: 0.7; }}
-.fdr-cell-vals {{ display: flex; gap: 3px; }}
-.fdr-mini {{ border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: 700; min-width: 36px; text-align: center; display: inline-flex; align-items: center; gap: 2px; }}
-.fdr-mini .fdr-lbl {{ font-size: 8px; font-weight: 600; opacity: 0.8; letter-spacing: 0.3px; }}
-/* Fixture Planner */
-.fp-section {{ margin-top: 32px; border-top: 2px solid #334155; padding-top: 24px; }}
-.fp-controls {{ display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }}
-.fp-controls label {{ font-size: 12px; color: #94a3b8; font-weight: 600; }}
-.fp-controls select {{ background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-family: inherit; cursor: pointer; }}
-.fp-mode-btns {{ display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }}
-.fp-mode-btn {{ background: transparent; border: none; color: #64748b; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }}
-.fp-mode-btn.active {{ background: #22d3ee; color: #0f172a; }}
-.fp-table {{ border-collapse: collapse; width: 100%; font-size: 13px; }}
-.fp-table th {{ padding: 8px 6px; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #334155; cursor: pointer; user-select: none; }}
-.fp-table th:hover {{ color: #e2e8f0; }}
-.fp-table th.fp-sorted {{ color: #22d3ee; }}
-.fp-table td {{ padding: 5px 4px; text-align: center; border-bottom: 1px solid #1e293b; }}
-.fp-table td.fp-team-cell {{ text-align: left; font-weight: 700; white-space: nowrap; padding-left: 8px; cursor: pointer; }}
-.fp-table td.fp-team-cell:hover {{ color: #22d3ee; }}
-.fp-table td.fp-team-cell.fp-selected {{ background: rgba(34,211,238,0.12); color: #22d3ee; }}
-.fp-tile {{ border-radius: 4px; padding: 4px 6px; font-weight: 600; font-size: 11px; display: inline-block; min-width: 56px; text-align: center; }}
-.fp-tile .fp-ha {{ font-size: 9px; font-weight: 400; opacity: 0.7; }}
-.fp-avg-cell {{ font-weight: 800; font-size: 14px; }}
-.fp-rotation {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #e2e8f0; line-height: 1.6; }}
-.fp-rotation .fp-rot-label {{ font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }}
-.fp-summary {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px 18px; margin-top: 16px; font-size: 13px; line-height: 2; color: #e2e8f0; }}
-.fp-summary-line {{ display: flex; align-items: center; gap: 6px; }}
-/* Transfers tab */
-.transfers-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
-@media (max-width: 768px) {{ .transfers-grid {{ grid-template-columns: 1fr; }} }}
-.transfers-header {{ display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }}
-.transfers-header h3 {{ font-size: 14px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }}
-.tr-filters-row {{ display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }}
-.tr-gw-badge {{ background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 4px 12px; font-size: 12px; color: #94a3b8; font-weight: 600; }}
-.price-up {{ color: #10b981; font-size: 11px; font-weight: 700; }}
-.price-down {{ color: #ef4444; font-size: 11px; font-weight: 700; }}
-.price-neutral {{ color: #64748b; font-size: 11px; }}
-/* Predictions tab */
-.pred-val {{
-  font-size: 18px; font-weight: 800; padding: 4px 10px; border-radius: 6px;
-  display: inline-block; min-width: 48px; text-align: center;
-}}
-.pred-fdr-tile {{
-  display: inline-block; padding: 2px 8px; border-radius: 4px;
-  font-size: 12px; font-weight: 700; min-width: 32px; text-align: center;
-}}
-.pred-fdr-used {{
-  font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
-  display: inline-block; background: rgba(255,255,255,0.05);
-}}
-.pred-confidence {{
-  display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px;
-  border-radius: 10px; letter-spacing: 0.3px;
-}}
-.pred-conf-high {{ background: rgba(16,185,129,0.2); color: #10b981; }}
-.pred-conf-medium {{ background: rgba(251,191,36,0.2); color: #fbbf24; }}
-.pred-conf-low {{ background: rgba(239,68,68,0.2); color: #ef4444; }}
-.pred-conf-insufficient {{ background: rgba(100,116,139,0.2); color: #94a3b8; }}
-.pred-conf-unavailable {{ background: rgba(239,68,68,0.15); color: #ef4444; }}
-/* percentyl xA/xG — kolorowanie komórek w tabeli Prognoza */
-.pred-pctl-high {{ background: #2d6a4f; color: #ffffff; }}
-.pred-pctl-low {{ background: #6b2737; color: #ffffff; }}
-.pred-legend {{
-  background: #1e293b; border-radius: 8px; padding: 12px 16px;
-  margin-bottom: 16px; font-size: 12px; color: #94a3b8; line-height: 1.8;
-}}
-.pred-legend b {{ color: #e2e8f0; }}
-.pred-filters {{ display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }}
-/* --- Season tracker --- */
-.season-wrap {{ background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }}
-.season-controls {{ display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }}
-.season-btn {{
-  background: transparent; border: 1px solid #334155; color: #64748b;
-  padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
-  border-radius: 6px; font-family: inherit; transition: all 0.15s;
-}}
-.season-btn.active {{ background: #22d3ee; color: #0f172a; border-color: transparent; }}
-.season-chart {{ position: relative; width: 100%; overflow-x: auto; }}
-.season-chart svg {{ display: block; }}
-.season-tooltip {{
-  position: absolute; pointer-events: none; background: #0f172a; border: 1px solid #334155;
-  border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #e2e8f0;
-  white-space: nowrap; z-index: 10; opacity: 0; transition: opacity 0.15s;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}}
-.season-tooltip.visible {{ opacity: 1; }}
-.season-legend {{ display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }}
-.season-legend-item {{
-  display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
-  color: #94a3b8; cursor: pointer; user-select: none; transition: opacity 0.2s;
-}}
-.season-legend-item.hidden {{ opacity: 0.3; text-decoration: line-through; }}
-.season-legend-item .swatch {{ width: 14px; height: 3px; border-radius: 2px; }}
-.season-table {{ margin-top: 20px; }}
-.trend-up {{ color: #10b981; }}
-.trend-down {{ color: #ef4444; }}
-.trend-flat {{ color: #64748b; }}
-/* ============================================================
-   📖 PORÓWNYWARKA ZAWODNIKÓW — style
-   Sekcje: wybór, karty, tabela statystyk, wykres formy, FDR
-   ============================================================ */
-.cmp-search-wrap {{
-  display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;
-}}
-.cmp-search-box {{
-  position: relative; flex: 1; min-width: 200px;
-}}
-.cmp-search-input {{
-  width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155;
-  background: #0f172a; color: #e2e8f0; font-size: 14px; font-family: inherit;
-  outline: none; transition: border-color 0.2s;
-}}
-.cmp-search-input:focus {{ border-color: #22d3ee; }}
-.cmp-search-input::placeholder {{ color: #64748b; }}
-/* 📖 Autouzupełnianie — lista podpowiedzi pod polem wyszukiwania */
-.cmp-autocomplete {{
-  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
-  background: #1e293b; border: 1px solid #334155; border-radius: 8px;
-  max-height: 220px; overflow-y: auto; display: none; margin-top: 4px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}}
-.cmp-autocomplete.visible {{ display: block; }}
-.cmp-ac-item {{
-  padding: 8px 14px; cursor: pointer; font-size: 13px; display: flex;
-  align-items: center; gap: 8px; transition: background 0.1s;
-}}
-.cmp-ac-item:hover {{ background: #334155; }}
-.cmp-ac-item .cmp-ac-team {{ color: #64748b; font-size: 11px; }}
-.cmp-clear-btn {{
-  background: #334155; border: none; color: #94a3b8; padding: 8px 16px;
-  border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
-  font-family: inherit; transition: all 0.15s;
-}}
-.cmp-clear-btn:hover {{ background: #475569; color: #e2e8f0; }}
-.cmp-selected-chips {{
-  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
-}}
-.cmp-chip {{
-  display: inline-flex; align-items: center; gap: 6px; background: #1e293b;
-  border: 1px solid #334155; border-radius: 20px; padding: 4px 12px 4px 8px;
-  font-size: 13px; color: #e2e8f0; animation: cmpChipIn 0.2s ease;
-}}
-@keyframes cmpChipIn {{
-  from {{ opacity: 0; transform: scale(0.9); }}
-  to {{ opacity: 1; transform: scale(1); }}
-}}
-.cmp-chip-remove {{
-  background: none; border: none; color: #64748b; cursor: pointer;
-  font-size: 16px; line-height: 1; padding: 0 2px; transition: color 0.15s;
-}}
-.cmp-chip-remove:hover {{ color: #ef4444; }}
-/* 📖 Karty zawodników — obok siebie, responsywne */
-.cmp-cards {{
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px; margin-bottom: 24px;
-}}
-.cmp-card {{
-  background: #1e293b; border-radius: 12px; padding: 20px;
-  border-top: 3px solid #22d3ee; animation: cmpChipIn 0.3s ease;
-}}
-.cmp-card:nth-child(2) {{ border-top-color: #fbbf24; }}
-.cmp-card:nth-child(3) {{ border-top-color: #a78bfa; }}
-.cmp-card-name {{ font-size: 16px; font-weight: 800; margin-bottom: 4px; }}
-.cmp-card-meta {{ font-size: 12px; color: #94a3b8; margin-bottom: 12px; }}
-.cmp-card-stats {{ display: flex; flex-direction: column; gap: 6px; }}
-.cmp-card-stat {{
-  display: flex; justify-content: space-between; font-size: 13px;
-  padding: 4px 0; border-bottom: 1px solid #0f172a;
-}}
-.cmp-card-stat .cmp-stat-label {{ color: #64748b; }}
-.cmp-card-stat .cmp-stat-val {{ font-weight: 700; color: #e2e8f0; }}
-/* 📖 Tabela porównania — podświetlenie najlepszej wartości */
-.cmp-table {{ background: #1e293b; border-radius: 12px; overflow: hidden; margin-bottom: 24px; overflow-x: auto; }}
-.cmp-table table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
-.cmp-table th {{ padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b; font-weight: 600; background: #0f172a; }}
-.cmp-table td {{ padding: 10px 14px; border-top: 1px solid #0f172a; text-align: center; }}
-.cmp-table td:first-child {{ text-align: left; color: #94a3b8; font-weight: 600; font-size: 12px; }}
-.cmp-table td.cmp-best {{ background: rgba(16,185,129,0.12); color: #10b981; font-weight: 800; }}
-/* 📖 Wykres formy — SVG, jedna linia per zawodnik */
-.cmp-chart-wrap {{
-  background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 24px;
-}}
-.cmp-chart-title {{ font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #e2e8f0; }}
-.cmp-chart-legend {{
-  display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; flex-wrap: wrap;
-}}
-.cmp-chart-legend-item {{ display: flex; align-items: center; gap: 6px; color: #94a3b8; }}
-.cmp-chart-legend-swatch {{ width: 16px; height: 3px; border-radius: 2px; }}
-.cmp-chart svg {{ display: block; width: 100%; }}
-/* 📖 Siatka FDR — kolorowe kafelki jak w zakładce Terminarz */
-.cmp-fdr-wrap {{
-  background: #1e293b; border-radius: 12px; padding: 20px; overflow-x: auto;
-}}
-.cmp-fdr-title {{ font-size: 14px; font-weight: 700; margin-bottom: 12px; color: #e2e8f0; }}
-.cmp-fdr-table {{ border-collapse: collapse; width: 100%; font-size: 13px; }}
-.cmp-fdr-table th {{ padding: 8px 10px; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; border-bottom: 2px solid #334155; }}
-.cmp-fdr-table td {{ padding: 6px 10px; text-align: center; border-bottom: 1px solid #0f172a; }}
-.cmp-fdr-cell {{
-  display: inline-flex; align-items: center; gap: 4px; border-radius: 4px;
-  padding: 3px 8px; font-weight: 700; font-size: 12px;
-}}
-.cmp-fdr-cell .cmp-fdr-ha {{ font-size: 9px; font-weight: 400; opacity: 0.7; }}
-.cmp-empty {{
-  text-align: center; padding: 60px 20px; color: #64748b; font-size: 15px;
-}}
-.cmp-empty-icon {{ font-size: 48px; margin-bottom: 12px; }}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <div class="header-left">
-      <img src="logo.PNG" alt="ScrapFEks" class="logo">
-      <div>
-        <h1>Fantasy Ekstraklasa</h1>
-        <p class="sub">Dashboard · {timestamp}</p>
-      </div>
+<div class="shell">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <button class="brand" data-go="landing" aria-label="Strona główna">
+      <span class="logo"><img src="logo.PNG" alt="ScrapFEks"></span>
+      <span class="brand-txt">
+        <strong>Fantasy Ekstraklasa</strong>
+        <span class="sub mono">ScrapFEks · dashboard · {timestamp}</span>
+      </span>
+    </button>
+    <div class="mast-right">
+      <span class="pill-tag">{SEASON_LABEL}</span>
+      <button class="ghost-link theme-toggle" onclick="toggleTheme()" aria-label="Przełącz motyw">☀️ Light</button>
+      {"<a class='ghost-link' href='archive/index.html'>Archiwum</a>" if has_archive else ""}
     </div>
-    <button class="theme-toggle" onclick="toggleTheme()">☀️ Light</button>
-  </div>
-  <div class="stats-row">
-    <div class="stat-card accent-cyan">
-      <div class="val">{leader_pts}</div>
-      <div class="label">Lider ligi</div>
-      <div class="sub">{leader_name}</div>
+  </header>
+
+  <!-- ============ 4 KARTY KPI (zawsze widoczne) ============ -->
+  <div class="kpi-row">
+    <div class="kpi kpi-lead">
+      <div class="kpi-label"><span class="kpi-mark"></span>Lider ligi</div>
+      <div class="kpi-val">{leader_pts}</div>
+      <div class="kpi-sub">{leader_name}{' · przewaga +' + str(leader_margin) + ' pkt' if leader_margin > 0 else ''}</div>
     </div>
-    <div class="stat-card accent-green">
-      <div class="val">{top_owned.get('squad_pct', '—')}</div>
-      <div class="label">Top owned</div>
-      <div class="sub">{top_owned.get('name', '—')}</div>
+    <div class="kpi">
+      <div class="kpi-label"><span class="kpi-mark"></span>Top owned</div>
+      <div class="kpi-val">{top_owned.get('squad_pct', '—')}</div>
+      <div class="kpi-sub">{top_owned.get('name', '—')}{' · ' + top_owned_pos_short if top_owned_pos_short else ''}{' · ' + top_owned_team if top_owned_team else ''}</div>
     </div>
-    <div class="stat-card accent-purple">
-      <div class="val">{best_ppp.get('points_per_price', 0):.1f}</div>
-      <div class="label">Najlepszy PPP</div>
-      <div class="sub">{best_ppp.get('name', '—')} · {best_ppp.get('price', 0):.1f}M</div>
+    <div class="kpi">
+      <div class="kpi-label"><span class="kpi-mark gold"></span>Najlepszy PPP</div>
+      <div class="kpi-val">{best_ppp.get('points_per_price', 0):.1f}</div>
+      <div class="kpi-sub">{best_ppp.get('name', '—')} · {best_ppp.get('price', 0):.1f}M</div>
     </div>
-    {"<div class='stat-card accent-cyan'><div class='val'>" + str(league_teams_count) + "</div><div class='label'>Liga</div><div class='sub'>" + league_label + "</div></div>" if has_league else ""}
+    {"<div class='kpi'><div class='kpi-label'><span class='kpi-mark violet'></span>Liga</div><div class='kpi-val'>" + str(league_teams_count) + "</div><div class='kpi-sub'>" + league_label + " · drużyn</div></div>" if has_league else ""}
   </div>
 
-  <div style="margin-top: 24px;">
+  <!-- ============ PASEK ZAKŁADEK ============ -->
+  <nav class="tabbar" aria-label="Nawigacja dashboardu">
     <div class="tabs">
-      <button class="tab active" data-tab="players">⚽ Zawodnicy</button>
-      {"<button class='tab' data-tab='teams'>📋 Liga CMF</button>" if has_league else ""}
-      {"<button class='tab' data-tab='fixtures'>📅 Terminarz</button>" if has_fixtures else ""}
-      {"<button class='tab' data-tab='transfers'>🔄 Transfery</button>" if has_transfers else ""}
-      {"<button class='tab' data-tab='predictions'>🔮 Prognoza</button>" if has_predictions else ""}
-      {"<button class='tab' data-tab='accuracy'>📊 Trafność</button>" if has_accuracy else ""}
-      {"<button class='tab' data-tab='season'>📈 Sezon</button>" if has_season else ""}
-      <button class="tab" data-tab="compare">⚖️ Porównanie</button>
-      {"<a href='archive/index.html' class='tab' style='text-decoration:none'>📁 Archiwum</a>" if has_archive else "<span class='tab' style='opacity:0.4;pointer-events:none;cursor:default'>📁 Archiwum</span>"}
+      <button class="tab" data-go="players"><span class="tab-idx">01</span>Zawodnicy</button>
+      {"<button class='tab' data-go='teams'><span class='tab-idx'>02</span>Liga CMF</button>" if has_league else ""}
+      {"<button class='tab' data-go='fixtures'><span class='tab-idx'>03</span>Terminarz</button>" if has_fixtures else ""}
+      {"<button class='tab' data-go='transfers'><span class='tab-idx'>04</span>Transfery</button>" if has_transfers else ""}
+      {"<button class='tab' data-go='predictions'><span class='tab-idx'>05</span>Prognoza</button>" if has_predictions else ""}
+      {"<button class='tab' data-go='accuracy'><span class='tab-idx'>06</span>Trafność</button>" if has_accuracy else ""}
+      {"<button class='tab' data-go='season'><span class='tab-idx'>07</span>Sezon</button>" if has_season else ""}
+      <button class="tab" data-go="compare"><span class="tab-idx">08</span>Porównanie</button>
+      {"<a class='tab tab-link' href='archive/index.html'><span class='tab-idx'>09</span>Archiwum</a>" if has_archive else "<span class='tab' style='opacity:0.4;pointer-events:none;cursor:default'><span class='tab-idx'>09</span>Archiwum</span>"}
     </div>
-    <div class="filters-row" style="margin-top: 12px;">
-      {scope_toggle_html}
-      <div class="pos-filters" style="margin-left:auto;">
-        <button class="pos-btn active" data-pos="ALL">ALL</button>
-        <button class="pos-btn" data-pos="BR">GK</button>
-        <button class="pos-btn" data-pos="OBR">DEF</button>
-        <button class="pos-btn" data-pos="POM">MID</button>
-        <button class="pos-btn" data-pos="NAP">FWD</button>
+  </nav>
+
+  <main>
+
+  <!-- ============ LANDING ============ -->
+  <section id="v-landing" class="view active" aria-label="Start">
+    <div class="hero">
+      <div>
+        <div class="hero-kicker">{SEASON_LABEL}{' · kolejka ' + current_round_label if current_round_label else ''} · dane {timestamp}</div>
+        <h1>Cztery liczby.<br>Dziewięć zakładek.<br><em>Jedna liga.</em></h1>
+        <p class="lede">Dashboard prowadzi prywatną ligę <b>{league_label}</b>. Na start widzisz cztery liczby, które urządzają całą kolejkę —
+          dalej schodzisz w szczegóły: właściciele, trudność meczów, prognozy i porównania.</p>
+        <div class="hero-cta">
+          <button class="btn-primary" data-go="players">Wejdź w zawodników →</button>
+          <button class="btn-ghost" data-go="fixtures">Zobacz trudność meczów</button>
+        </div>
+        <div class="fact-strip">
+          {"<div class='fact'><div class='fk'>Ostatnia kolejka</div><div class='fv'>K" + current_round_label + "</div></div>" if current_round_label else ""}
+          {"<div class='fact'><div class='fk'>Gracz kolejki</div><div class='fv'>" + (round_star['name'] if round_star else '') + " · " + (str(round_star['pts']) if round_star else '') + " pkt</div></div>" if round_star else ""}
+          {"<div class='fact'><div class='fk'>Średnia ligi / kol.</div><div class='fv'>" + str(league_avg_round) + " pkt</div></div>" if league_avg_round is not None else ""}
+        </div>
+      </div>
+      <div class="entry-grid" style="grid-template-columns:1fr 1fr;align-content:start">
+        <button class="entry entry-feature" data-go="teams">
+          <span class="e-num">01 · Lider ligi</span>
+          <span class="e-val">{leader_pts}</span>
+          <span class="e-name">{leader_name}</span>
+          <span class="e-desc">Pełna tabela CMF: jesień + wiosna, medale, rozwijane składy i ruchy pozycji.</span>
+          <span class="e-go">Otwórz ligę →</span>
+        </button>
+        <button class="entry" data-go="players">
+          <span class="e-num">02 · Top owned</span>
+          <span class="e-val">{top_owned.get('squad_pct', '—')}</span>
+          <span class="e-name">{top_owned.get('name', '—')}</span>
+          <span class="e-desc">Kto trzyma go w składzie, w jedenastce i kto oddał mu opaskę kapitana.</span>
+          <span class="e-go">Właściciele →</span>
+        </button>
+        <button class="entry" data-go="players">
+          <span class="e-num">03 · Najlepszy PPP</span>
+          <span class="e-val">{best_ppp.get('points_per_price', 0):.1f}</span>
+          <span class="e-name">{best_ppp.get('name', '—')} · {best_ppp.get('price', 0):.1f}M</span>
+          <span class="e-desc">Sortuj po Pkt/Cena i szukaj okazji, zanim zrobi to reszta ligi.</span>
+          <span class="e-go">Szukaj okazji →</span>
+        </button>
+        {"<button class='entry' data-go='teams'><span class='e-num'>04 · Liga</span><span class='e-val'>" + str(league_teams_count) + "</span><span class='e-name'>" + league_label + "</span><span class='e-desc'>Trzydzieści drużyn, jedna tabela i widok duetów obok.</span><span class='e-go'>Zobacz wszystkich →</span></button>" if has_league else ""}
       </div>
     </div>
-    <div id="tab-players" class="tab-content active"></div>
-    <div id="tab-teams" class="tab-content"></div>
-    <div id="tab-fixtures" class="tab-content"></div>
-    <div id="tab-transfers" class="tab-content"></div>
-    <div id="tab-predictions" class="tab-content"></div>
-    <div id="tab-accuracy" class="tab-content"></div>
-    <div id="tab-season" class="tab-content"></div>
-    <div id="tab-compare" class="tab-content"></div>
-  </div>
+
+    <div class="sec"><h2>Wejdź w szczegóły</h2><span class="rule"></span>
+      <span class="sec-note">Dziewięć powodów, żeby zostać na dłużej</span></div>
+    <div class="entry-grid">
+      <button class="entry" data-go="players">
+        <span class="e-num">01 · Zawodnicy</span>
+        <span class="e-name" style="font-size:18px">15 kolumn, wszystkie sortowalne</span>
+        <span class="e-desc">Zakresy Top 10 / Top 100 / Wszystkie / liga, filtry pozycji, wyszukiwarka i forma z ostatnich kolejek.</span>
+        <span class="e-go">Otwórz →</span>
+      </button>
+      {"<button class='entry' data-go='teams'><span class='e-num'>02 · Liga CMF</span><span class='e-name' style='font-size:18px'>Drużyny i duety</span><span class='e-desc'>Jesień, wiosna, suma, zmiana, medale na podium i rozwijany skład drużyny.</span><span class='e-go'>Otwórz →</span></button>" if has_league else ""}
+      {"<button class='entry' data-go='fixtures'><span class='e-num'>03 · Terminarz</span><span class='e-name' style='font-size:18px'>Trudność meczów + Fixture Planner</span><span class='e-desc'>Skala 1–5 dla ataku i obrony, sortowanie po łatwości i para rotacyjna na wybrany zakres kolejek.</span><span class='e-go'>Otwórz →</span></button>" if has_fixtures else ""}
+      {"<button class='entry' data-go='transfers'><span class='e-num'>04 · Transfery</span><span class='e-name' style='font-size:18px'>Kupna i sprzedaże</span><span class='e-desc'>Dwie listy top 15 z liczbą drużyn, udziałem procentowym i paskiem postępu.</span><span class='e-go'>Otwórz →</span></button>" if has_transfers else ""}
+      {"<button class='entry' data-go='predictions'><span class='e-num'>05 · Prognoza</span><span class='e-name' style='font-size:18px'>17 kolumn na następną kolejkę</span><span class='e-desc'>Potencjał z percentyli, użyty FDR, xA/90, xG/90 i pewność prognozy.</span><span class='e-go'>Otwórz →</span></button>" if has_predictions else ""}
+      {"<button class='entry' data-go='accuracy'><span class='e-num'>06 · Trafność</span><span class='e-name' style='font-size:18px'>MAE, hit rate i auto-tuning</span><span class='e-desc'>Karty metryk, wykres trendu MAE, szczegóły kolejki i status auto-tunera.</span><span class='e-go'>Otwórz →</span></button>" if has_accuracy else ""}
+      {"<button class='entry' data-go='season'><span class='e-num'>07 · Sezon</span><span class='e-name' style='font-size:18px'>Historia ligi: pozycje i punkty</span><span class='e-desc'>Pozycje albo punkty łącznie, zakresy Top 5 / Dolne 5 i tabela z trendem.</span><span class='e-go'>Otwórz →</span></button>" if has_season else ""}
+      <button class="entry" data-go="compare">
+        <span class="e-num">08 · Porównanie</span>
+        <span class="e-name" style="font-size:18px">Do trzech zawodników obok siebie</span>
+        <span class="e-desc">Karty, tabela z wygranym w każdym wierszu, forma i FDR najbliższych meczów.</span>
+        <span class="e-go">Otwórz →</span>
+      </button>
+      {"<a class='entry' href='archive/index.html' style='text-decoration:none'><span class='e-num'>09 · Archiwum</span><span class='e-name' style='font-size:18px'>Zamknięte sezony</span><span class='e-desc'>Poprzednie sezony w trybie tylko do odczytu.</span><span class='e-go'>Otwórz →</span></a>" if has_archive else ""}
+    </div>
+  </section>
+
+  <!-- ============ WIDOKI ZAKŁADEK ============ -->
+  <section id="v-players" class="view" aria-label="Zawodnicy">
+    <div class="sec" style="margin-top:26px"><h2>Zawodnicy</h2><span class="rule"></span>
+      <span class="sec-note">Kliknij nagłówek, żeby posortować</span></div>
+    <div class="toolbar">
+      {scope_toggle_html}
+      <div class="seg seg-push" id="players-pos" role="group" aria-label="Pozycja">
+        <span class="seg-label">Poz</span>
+        <button class="seg-btn pos-btn active" data-pos="ALL">ALL</button>
+        <button class="seg-btn pos-btn" data-pos="BR">GK</button>
+        <button class="seg-btn pos-btn" data-pos="OBR">DEF</button>
+        <button class="seg-btn pos-btn" data-pos="POM">MID</button>
+        <button class="seg-btn pos-btn" data-pos="NAP">FWD</button>
+      </div>
+      <div class="search-wrap">
+        <input class="input" id="players-q" type="search" placeholder="Szukaj zawodnika lub drużyny (min. 2 znaki)…" aria-label="Szukaj zawodnika">
+      </div>
+    </div>
+    <div id="tab-players"></div>
+  </section>
+  <section id="v-teams" class="view" aria-label="Liga CMF">
+    <div class="sec" style="margin-top:26px"><h2>Liga CMF</h2><span class="rule"></span>
+      <span class="sec-note">Tabela sumaryczna: jesień + wiosna</span></div>
+    <div class="toolbar">
+      <div class="seg" id="league-view" role="group" aria-label="Widok">
+        <span class="seg-label">Widok</span>
+        <button class="seg-btn active" data-lview="teams">Drużyny</button>
+        <button class="seg-btn" data-lview="duets">Duety</button>
+      </div>
+      <span class="hint">Kliknij strzałkę przy drużynie, żeby rozwinąć skład.</span>
+    </div>
+    <div id="tab-teams"></div>
+  </section>
+  <section id="v-fixtures" class="view" aria-label="Terminarz"><div id="tab-fixtures"></div></section>
+  <section id="v-transfers" class="view" aria-label="Transfery"><div id="tab-transfers"></div></section>
+  <section id="v-predictions" class="view" aria-label="Prognoza"><div id="tab-predictions"></div></section>
+  <section id="v-accuracy" class="view" aria-label="Trafność"><div id="tab-accuracy"></div></section>
+  <section id="v-season" class="view" aria-label="Sezon"><div id="tab-season"></div></section>
+  <section id="v-compare" class="view" aria-label="Porównanie"><div id="tab-compare"></div></section>
+  </main>
+
   <div class="footer">Fantasy Ekstraklasa Dashboard · {timestamp}</div>
 </div>
 
@@ -809,7 +908,8 @@ function normalizeTeamNameJS(s) {{
           .trim();
 }}
 
-let tab = 'players', pos = 'ALL', scope = '{{default_scope}}';
+let tab = 'players', pos = 'ALL', scope = '{default_scope}';
+let playersQ = '';
 let selectedTeam = '';
 let selectedDuet = '';
 let currentTeamsView = 'teams';
@@ -829,11 +929,12 @@ function num(v) {{
 }}
 function bar(val, max, color) {{
   const w = Math.min(val / max * 100, 100);
-  return '<div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:'+w+'%;background:'+color+'"></div></div><span class="bar-val">'+val.toFixed(1)+'%</span></div>';
+  return '<span class="bar"><span class="bar-track"><span class="bar-fill" style="width:'+w+'%;background:'+color+'"></span></span><span class="bar-val">'+val.toFixed(1)+'%</span></span>';
 }}
 function posBadge(p) {{
   const k = POS_ID[p] || p;
-  return '<span class="pos-badge pos-'+k+'">'+(POS_MAP[k]||POS_MAP[p]||p)+'</span>';
+  const short = POS_MAP[k] || POS_MAP[p] || p;
+  return '<span class="badge-pos pos-'+short+'">'+short+'</span>';
 }}
 function arrow(tab, col) {{
   const s = sorts[tab];
@@ -867,10 +968,10 @@ function sortData(data, tab) {{
   }});
 }}
 
-// Detail panel — kliknięcie na zawodnika pokazuje formę + drużyny z ligi
+// Detail panel — kliknięcie na zawodnika pokazuje drużyny z ligi
 function nameCell(name, pid, style, prefix) {{
   const attr = pid ? ' data-pid="'+pid+'"' : '';
-  return '<td class="clickable roster-trigger"'+attr+' style="cursor:pointer;'+(style||'')+'">'+( prefix||'')+name+' <span style="font-size:10px;color:#64748b">▸</span></td>';
+  return '<td class="roster-trigger"'+attr+' style="cursor:pointer;'+(style||'')+'"><span class="name-cell">'+( prefix||'')+'<span class="team-name">'+name+'</span><span class="name-caret">▸</span></span></td>';
 }}
 function attachDetailClicks() {{
   document.querySelectorAll('.roster-trigger').forEach(td => {{
@@ -891,21 +992,18 @@ function attachDetailClicks() {{
 
 function formChart(form, mini) {{
   if (!form || !form.length) return '<span class="c-dim" style="font-size:11px">—</span>';
-  const SCALE = 15;
-  const MAX_H = mini ? 20 : 40;
-  let h = '<div class="form-chart'+(mini ? ' mini' : '')+'">';
+  const vals = form.map(f => f.pts || 0);
+  const max = Math.max.apply(null, vals.concat([1]));
+  const title = 'Ostatnie ' + form.length + ' kolejek: ' + form.map(f => 'K' + f.r + ': ' + (f.p !== false ? (f.pts || 0) : '—')).join(' · ');
+  let h = '<span class="mini" title="' + title + '">';
   form.forEach(f => {{
     const pts = f.pts || 0;
     const played = f.p !== false;
-    const ht = Math.max(Math.abs(pts) / SCALE * MAX_H, 2);
-    const c = !played ? '#334155' : pts >= 8 ? '#22d3ee' : pts >= 4 ? '#10b981' : pts >= 0 ? '#64748b' : '#ef4444';
-    const np = !played ? ' not-played' : '';
-    h += '<div class="form-bar'+np+'" style="height:'+ht+'px;background:'+c+'">';
-    h += '<span class="form-val">'+(played ? pts : '—')+'</span>';
-    h += '<span class="form-rnd">K'+f.r+'</span>';
-    h += '</div>';
+    const ht = Math.max(3, Math.round(Math.max(pts, 0) / max * 24));
+    const cls = (!played || pts <= 0) ? 'zero' : '';
+    h += '<i class="' + cls + '" style="height:' + ht + 'px"></i>';
   }});
-  h += '</div>';
+  h += '</span>';
   return h;
 }}
 
@@ -927,7 +1025,7 @@ function formAvgNum(form) {{
 function detailRow(pid, colspan) {{
   const r = ROSTERS[pid];
   if (!r || !r.length) {{
-    return '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-panel"><span class="c-dim" style="font-size:12px">Brak danych o drużynach ligowych</span></div></td></tr>';
+    return '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-in"><span class="c-dim" style="font-size:12px">Brak danych o drużynach ligowych</span></div></td></tr>';
   }}
   const sorted = [...r].sort((a,b) => (a.pos||999) - (b.pos||999));
   let chips = '';
@@ -937,20 +1035,22 @@ function detailRow(pid, colspan) {{
     else if (t.R) badge = '<span class="rc-badge rc-res">RES</span>';
     else badge = '<span class="rc-badge rc-xi">XI</span>';
     const slug = t.team.replace(/-/g,' ');
-    const posLabel = t.pos ? '<span style="color:#64748b;font-size:10px;margin-right:2px">#'+t.pos+'</span>' : '';
-    chips += '<span class="roster-chip">'+posLabel+slug+' '+badge+'</span>';
+    const posLabel = t.pos ? '<span class="rank" style="margin-right:2px">#'+t.pos+'</span>' : '';
+    chips += '<span class="detail-tag">'+posLabel+'<span class="dt-nm">'+slug+'</span> '+badge+'</span>';
   }});
-  let h = '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-panel">';
-  h += '<div class="detail-section">';
-  h += '<span class="ds-label">Drużyny w lidze ('+r.length+')</span>';
-  h += '<div style="display:flex;flex-wrap:wrap;gap:4px">'+chips+'</div>';
-  h += '</div></div></td></tr>';
+  let h = '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-in">';
+  h += '<span class="seg-label" style="margin-right:6px">Drużyny w lidze ('+r.length+')</span>'+chips;
+  h += '</div></td></tr>';
   return h;
 }}
 
 function renderPlayers() {{
   let data = [...PLAYERS];
   if (pos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === pos);
+  if (playersQ && playersQ.length >= 2) {{
+    const q = playersQ.toLowerCase();
+    data = data.filter(p => (p.name || '').toLowerCase().indexOf(q) >= 0 || (p.team || '').toLowerCase().indexOf(q) >= 0);
+  }}
   if (!data.length) return '<div class="empty-msg">Brak danych</div>';
 
   // Buduj lookup ownership z aktualnego scope — dopasowanie po player_id
@@ -962,8 +1062,8 @@ function renderPlayers() {{
   const hasLeague = LEAGUE_TEAMS.length > 0 && Object.keys(LEAGUE_POS_AVGS).length > 0;
   const scopeLabel = scopeData.label || scope;
 
-  let h = '<div class="section-title"><span style="font-size:22px">⚽</span><h2>Zawodnicy'+(hasOwn ? ' — ownership: '+scopeLabel : '')+'</h2><div class="line"></div></div>';
-  h += '<div class="data-table"><table><thead><tr>';
+  let h = '<div class="row-count">' + data.length + ' zawodników · zakres: ' + scopeLabel + ' · pozycja: ' + pos + '</div>';
+  h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr>';
   h += '<th class="text-left">#</th>';
   h += '<th class="text-left sortable" data-tab="players" data-col="name">Zawodnik'+arrow('players','name')+'</th>';
   h += '<th class="text-left sortable" data-tab="players" data-col="team">Drużyna'+arrow('players','team')+'</th>';
@@ -1003,8 +1103,8 @@ function renderPlayers() {{
 
   data.forEach((p, i) => {{
     const pts = p.total_points || 0, price = p.price || 0, ppp = p.points_per_price || 0;
-    const ptsC = pts >= 35 ? '#22d3ee' : pts >= 25 ? '#e2e8f0' : '#94a3b8';
-    const pppC = ppp >= 15 ? '#10b981' : ppp >= 10 ? '#e2e8f0' : '#94a3b8';
+    const ptsC = pts >= 35 ? 'var(--accent)' : pts >= 25 ? 'var(--text)' : 'var(--text-muted)';
+    const pppC = ppp >= 15 ? 'var(--up)' : ppp >= 10 ? 'var(--text)' : 'var(--text-muted)';
     const pk = POS_ID[p.position] || p.position || '';
     h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td>';
     h += nameCell(p.name, p.player_id, 'font-weight:600');
@@ -1019,18 +1119,18 @@ function renderPlayers() {{
     h += '<td class="text-right fw-600" style="color:'+pppC+'">'+ppp.toFixed(1)+'</td>';
     h += '<td class="text-center">'+formChart(p.form, true)+'</td>';
     const favg = p._form_avg;
-    const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
+    const favgC = favg >= 6 ? 'var(--accent)' : favg >= 3 ? 'var(--up)' : 'var(--text-muted)';
     h += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     h += '<td class="text-right c-dim" style="font-size:13px">'+p.popularity_pct+'</td>';
     if (hasOwn) {{
       const sq = p._own_squad, st = p._own_starting, cp = p._own_captain;
-      h += '<td>'+(sq > 0 ? bar(sq, 100, '#10b981') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
-      h += '<td>'+(st > 0 ? bar(st, 100, '#3b82f6') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
-      h += '<td>'+(cp > 0 ? bar(cp, 40, '#fbbf24') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
+      h += '<td>'+(sq > 0 ? bar(sq, 100, 'var(--up)') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
+      h += '<td>'+(st > 0 ? bar(st, 100, 'var(--accent)') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
+      h += '<td>'+(cp > 0 ? bar(cp, 40, 'var(--gold)') : '<span class="c-dim" style="font-size:12px">—</span>')+'</td>';
     }}
     h += '</tr>';
   }});
-  h += '</tbody></table></div>';
+  h += '</tbody></table></div></div>';
   return h;
 }}
 
@@ -1070,20 +1170,14 @@ const LEAGUE_POS_AVGS = {{}};
 }})();
 
 function diffBadge(pts, avg) {{
-  if (!avg) return '<span class="diff-badge diff-zero">—</span>';
+  if (!avg) return '<span class="delta d-flat">—</span>';
   const d = pts - avg;
-  const cls = d > 0 ? 'diff-pos' : d < 0 ? 'diff-neg' : 'diff-zero';
-  return '<span class="diff-badge '+cls+'">'+(d>0?'+':'')+d.toFixed(0)+'</span>';
+  const cls = d > 0 ? 'd-up' : d < 0 ? 'd-down' : 'd-flat';
+  return '<span class="delta '+cls+'">'+(d>0?'+':'')+d.toFixed(0)+'</span>';
 }}
 
 function renderDuets() {{
   if (!DUETS_DATA.length) return '<div class="empty-msg">Brak danych o duetach</div>';
-
-  // Zmienne motywu dla kolorów (dark/light)
-  const isLight = document.documentElement.classList.contains('theme-fantasy');
-  const bgPanel = isLight ? '#f5f5f5' : '#0f172a';
-  const cMuted = isLight ? '#5a5a5a' : '#94a3b8';
-  const cLabel = isLight ? '#949494' : '#64748b';
 
   const dls = sorts.duets_list;
   function dlArrow(col) {{
@@ -1103,77 +1197,55 @@ function renderDuets() {{
     return 0;
   }});
 
-  let h = '<div class="data-table"><table><thead><tr>';
-  h += '<th class="text-center" style="width:50px">#</th>';
+  let h = '<div class="row-count">' + sortedDuets.length + ' duetów · jesień + wiosna</div>';
+  h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr>';
+  h += '<th class="text-center">#</th>';
   h += '<th class="text-left sortable" data-tab="duets_list" data-col="duet_name">Duet'+dlArrow('duet_name')+'</th>';
   h += '<th class="text-left">Gracze</th>';
   h += '<th class="text-right sortable" data-tab="duets_list" data-col="autumn_pts">Jesień'+dlArrow('autumn_pts')+'</th>';
   h += '<th class="text-right sortable" data-tab="duets_list" data-col="spring_pts">Wiosna'+dlArrow('spring_pts')+'</th>';
-  h += '<th class="text-right sortable" data-tab="duets_list" data-col="total_pts" style="font-size:13px;font-weight:800">SUMA'+dlArrow('total_pts')+'</th>';
+  h += '<th class="text-right sortable" data-tab="duets_list" data-col="total_pts">SUMA'+dlArrow('total_pts')+'</th>';
   h += '<th class="text-center sortable" data-tab="duets_list" data-col="rank_change">Zmiana'+dlArrow('rank_change')+'</th>';
   h += '</tr></thead><tbody>';
 
   sortedDuets.forEach((d, i) => {{
     const pos = i + 1;
-    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
     const isOpen = d.duet_name === selectedDuet;
 
     h += '<tr style="cursor:pointer" data-duetname="'+encodeURIComponent(d.duet_name)+'">';
-    h += '<td class="text-center" style="font-size:'+(pos<=3?'18px':'14px')+'">'+medal+'</td>';
-    h += '<td style="font-weight:600">'+d.duet_name+' <span style="font-size:10px;color:#475569">'+(isOpen?'▼':'▶')+'</span></td>';
-    h += '<td style="font-size:12px;color:#94a3b8">'+d.players+'</td>';
-    h += '<td class="text-right" style="color:#94a3b8">'+(d.autumn_pts||0)+'</td>';
-    h += '<td class="text-right" style="color:#94a3b8">'+(d.spring_pts||0)+'</td>';
-    h += '<td class="text-right" style="font-weight:800;font-size:15px">'+(d.total_pts||0)+'</td>';
+    h += '<td class="text-center">'+(pos <= 3 ? '<span class="medal m'+pos+'">'+pos+'</span>' : '<span class="rank">'+pos+'</span>')+'</td>';
+    h += '<td><span class="team-cell"><button class="expand-btn'+(isOpen?' open':'')+'" aria-label="Rozwiń duet">▶</button><span class="team-name">'+d.duet_name+'</span></span></td>';
+    h += '<td class="c-muted" style="font-size:12px">'+d.players+'</td>';
+    h += '<td class="text-right c-muted">'+(d.autumn_pts||0)+'</td>';
+    h += '<td class="text-right c-muted">'+(d.spring_pts||0)+'</td>';
+    h += '<td class="text-right fw-700" style="font-size:15px">'+(d.total_pts||0)+'</td>';
 
     const rc = d.rank_change || 0;
     let changeHtml = '';
-    if (rc > 0) changeHtml = '<span style="color:#10b981">▲'+rc+'</span>';
-    else if (rc < 0) changeHtml = '<span style="color:#ef4444">▼'+Math.abs(rc)+'</span>';
-    else changeHtml = '<span style="color:#64748b">–</span>';
+    if (rc > 0) changeHtml = '<span class="chg chg-up">▲'+rc+'</span>';
+    else if (rc < 0) changeHtml = '<span class="chg chg-down">▼'+Math.abs(rc)+'</span>';
+    else changeHtml = '<span class="chg chg-flat">—</span>';
     h += '<td class="text-center">'+changeHtml+'</td>';
     h += '</tr>';
 
     if (isOpen) {{
-      h += '<tr><td colspan="7" style="padding:8px 16px;background:#0f172a">';
-      h += '<div style="font-size:13px;line-height:1.8">';
+      h += '<tr class="detail-row"><td colspan="7"><div class="detail-in">';
       const t1sum = (d.team1_autumn||0) + (d.team1_spring||0);
       const t2sum = (d.team2_autumn||0) + (d.team2_spring||0);
-      h += '<div style="display:flex;justify-content:space-between;max-width:500px">';
-      h += '<span style="font-weight:600">'+d.team1_name+'</span>';
-      h += '<span style="color:#94a3b8">'+d.team1_autumn+' + '+d.team1_spring+' = <b>'+t1sum+'</b></span>';
-      h += '</div>';
-      h += '<div style="display:flex;justify-content:space-between;max-width:500px">';
-      h += '<span style="font-weight:600">'+d.team2_name+'</span>';
-      h += '<span style="color:#94a3b8">'+d.team2_autumn+' + '+d.team2_spring+' = <b>'+t2sum+'</b></span>';
-      h += '</div>';
-      h += '</div>';
-      h += '</td></tr>';
+      h += '<span class="detail-tag"><span class="dt-nm">'+d.team1_name+'</span><span class="dt-pts">'+d.team1_autumn+' + '+d.team1_spring+' = '+t1sum+'</span></span>';
+      h += '<span class="detail-tag"><span class="dt-nm">'+d.team2_name+'</span><span class="dt-pts">'+d.team2_autumn+' + '+d.team2_spring+' = '+t2sum+'</span></span>';
+      h += '</div></td></tr>';
     }}
   }});
 
-  h += '</tbody></table></div>';
+  h += '</tbody></table></div></div>';
   return h;
 }}
 
 function renderTeams() {{
   if (!LEAGUE_TEAMS.length) return '<div class="empty-msg">Brak danych o drużynach ligi</div>';
 
-  // Zmienne motywu dla kolorów (dark/light)
-  const isLight = document.documentElement.classList.contains('theme-fantasy');
-  const bgBtn = isLight ? '#ffffff' : '#1e293b';
-  const bgPanel = isLight ? '#f5f5f5' : '#0f172a';
-  const cMuted = isLight ? '#5a5a5a' : '#94a3b8';
-
-  let h = '<div class="section-title"><span style="font-size:22px">📋</span><h2>Liga CMF</h2><div class="line"></div></div>';
-
-  // View toggle
-  h += '<div class="view-toggle" style="display:flex;gap:8px;margin-bottom:16px">';
-  h += '<button class="view-btn'+(currentTeamsView==='teams'?' active':'')+'" data-view="teams" style="padding:6px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:'+(currentTeamsView==='teams'?'#3b82f6':bgBtn)+';color:'+(currentTeamsView==='teams'?'#fff':cMuted)+'">👥 Drużyny</button>';
-  h += '<button class="view-btn'+(currentTeamsView==='duets'?' active':'')+'" data-view="duets" style="padding:6px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:'+(currentTeamsView==='duets'?'#3b82f6':bgBtn)+';color:'+(currentTeamsView==='duets'?'#fff':cMuted)+'">👫 Duety</button>';
-  h += '</div>';
-
-  if (currentTeamsView === 'duets') return h + renderDuets();
+  if (currentTeamsView === 'duets') return renderDuets();
 
   // Helpers for squad table
   const POS_ORDER = {{BR:1,OBR:2,POM:3,NAP:4}};
@@ -1209,20 +1281,20 @@ function renderTeams() {{
     const pts = p.pts || 0;
     const price = p.price || 0;
     let nameStyle = 'font-weight:600';
-    if (p.C) nameStyle += ';color:#fbbf24';
+    if (p.C) nameStyle += ';color:var(--gold)';
     let r = '<tr><td class="c-muted fw-600">'+(idx+1)+'</td>';
-    r += nameCell(p.name, p.pid, nameStyle, p.C ? '<span class="captain-badge" style="margin-right:4px">C</span> ' : '');
+    r += nameCell(p.name, p.pid, nameStyle, p.C ? '<span class="rc-badge rc-cap" style="margin-right:4px">C</span> ' : '');
     r += '<td class="text-center">'+posBadge(pk)+'</td>';
     r += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
     r += '<td class="text-right fw-700">'+pts+'</td>';
     r += '<td class="text-center">'+diffBadge(pts, POS_AVGS[pk])+'</td>';
     r += '<td class="text-center">'+diffBadge(pts, LEAGUE_POS_AVGS[pk])+'</td>';
     const favg = p._form_avg;
-    const favgC = favg >= 6 ? '#22d3ee' : favg >= 3 ? '#10b981' : '#94a3b8';
+    const favgC = favg >= 6 ? 'var(--accent)' : favg >= 3 ? 'var(--up)' : 'var(--text-muted)';
     r += '<td class="text-center">'+formChart(p.form, true)+'</td>';
     r += '<td class="text-right fw-600" style="color:'+favgC+'">'+(favg > 0 ? favg.toFixed(1) : '—')+'</td>';
     const imp = p._imp != null ? p._imp : 100;
-    const impColor = imp >= 70 ? '#10b981' : imp >= 30 ? '#eab308' : '#ef4444';
+    const impColor = imp >= 70 ? 'var(--up)' : imp >= 30 ? 'var(--gold)' : 'var(--down)';
     r += '<td class="text-center fw-600" style="color:'+impColor+'">'+imp+'%</td>';
     r += '</tr>';
     return r;
@@ -1250,20 +1322,20 @@ function renderTeams() {{
   }}
 
   // Hockey-style table with expandable squads
-  h += '<div class="data-table"><table><thead><tr>';
-  h += '<th class="text-center sortable" data-tab="teams_list" data-col="hockey_pos" style="width:50px">#'+tlArrow('hockey_pos')+'</th>';
+  let h = '<div class="row-count">' + sortedTeams.length + ' drużyn · jesień + wiosna</div>';
+  h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr>';
+  h += '<th class="text-center sortable" data-tab="teams_list" data-col="hockey_pos">#'+tlArrow('hockey_pos')+'</th>';
   h += '<th class="text-left sortable" data-tab="teams_list" data-col="name">Drużyna'+tlArrow('name')+'</th>';
   h += '<th class="text-right sortable" data-tab="teams_list" data-col="autumn_pts">Jesień'+tlArrow('autumn_pts')+'</th>';
-  h += '<th class="text-right sortable" data-tab="teams_list" data-col="best_gw_autumn" style="font-size:11px;color:#64748b">🔥 J'+tlArrow('best_gw_autumn')+'</th>';
+  h += '<th class="text-right sortable c-dim" data-tab="teams_list" data-col="best_gw_autumn">🔥 J'+tlArrow('best_gw_autumn')+'</th>';
   h += '<th class="text-right sortable" data-tab="teams_list" data-col="spring_pts">Wiosna'+tlArrow('spring_pts')+'</th>';
-  h += '<th class="text-right sortable" data-tab="teams_list" data-col="best_gw_spring" style="font-size:11px;color:#64748b">🔥 W'+tlArrow('best_gw_spring')+'</th>';
-  h += '<th class="text-right sortable" data-tab="teams_list" data-col="total_pts" style="font-size:13px;font-weight:800">SUMA'+tlArrow('total_pts')+'</th>';
+  h += '<th class="text-right sortable c-dim" data-tab="teams_list" data-col="best_gw_spring">🔥 W'+tlArrow('best_gw_spring')+'</th>';
+  h += '<th class="text-right sortable" data-tab="teams_list" data-col="total_pts">SUMA'+tlArrow('total_pts')+'</th>';
   h += '<th class="text-center sortable" data-tab="teams_list" data-col="rank_change">Zmiana'+tlArrow('rank_change')+'</th>';
   h += '</tr></thead><tbody>';
 
   sortedTeams.forEach((t, i) => {{
     const pos = t.hockey_pos || (i + 1);
-    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
     const tName = t.display_name || t.slug.replace(/-/g,' ');
     const isMyTeam = tName.toLowerCase() === 'tokusatsu soccer';
     const dimRow = t.autumn_only;
@@ -1276,19 +1348,19 @@ function renderTeams() {{
     if (hasPlayers) rowStyle += (rowStyle ? ';' : '') + 'cursor:pointer';
 
     h += '<tr'+(rowCls ? ' class="'+rowCls+'"' : '')+(rowStyle ? ' style="'+rowStyle+'"' : '')+' data-teamslug="'+t.slug+'">';
-    h += '<td class="text-center" style="font-size:'+(pos<=3?'18px':'14px')+'">' + medal + '</td>';
-    h += '<td style="font-weight:600">' + tName + (dimRow ? ' <span style="font-size:10px;color:#64748b">(nie gra)</span>' : '') + (hasPlayers ? ' <span style="font-size:10px;color:#475569">'+(isOpen?'▼':'▶')+'</span>' : '') + '</td>';
-    h += '<td class="text-right" style="color:#94a3b8">' + (t.autumn_pts||0) + '</td>';
-    h += '<td class="text-right" style="color:#64748b;font-size:12px">' + (t.best_gw_autumn > 0 ? t.best_gw_autumn : '—') + '</td>';
-    h += '<td class="text-right" style="color:#94a3b8">' + (t.spring_pts||0) + '</td>';
-    h += '<td class="text-right" style="color:#64748b;font-size:12px">' + (t.best_gw_spring > 0 ? t.best_gw_spring : '—') + '</td>';
-    h += '<td class="text-right" style="font-weight:800;font-size:15px">' + (t.total_pts||0) + '</td>';
+    h += '<td class="text-center">' + (pos <= 3 ? '<span class="medal m'+pos+'">'+pos+'</span>' : '<span class="rank">'+pos+'</span>') + '</td>';
+    h += '<td><span class="team-cell">' + (hasPlayers ? '<button class="expand-btn'+(isOpen?' open':'')+'" aria-label="Rozwiń skład">▶</button>' : '') + '<span class="team-name">' + tName + '</span>' + (dimRow ? ' <span class="c-dim" style="font-size:10px">(nie gra)</span>' : '') + '</span></td>';
+    h += '<td class="text-right c-muted">' + (t.autumn_pts||0) + '</td>';
+    h += '<td class="text-right c-dim" style="font-size:12px">' + (t.best_gw_autumn > 0 ? t.best_gw_autumn : '—') + '</td>';
+    h += '<td class="text-right c-muted">' + (t.spring_pts||0) + '</td>';
+    h += '<td class="text-right c-dim" style="font-size:12px">' + (t.best_gw_spring > 0 ? t.best_gw_spring : '—') + '</td>';
+    h += '<td class="text-right fw-700" style="font-size:15px">' + (t.total_pts||0) + '</td>';
 
     const rc = t.rank_change || 0;
     let changeHtml = '';
-    if (rc > 0) changeHtml = '<span style="color:#10b981">▲' + rc + '</span>';
-    else if (rc < 0) changeHtml = '<span style="color:#ef4444">▼' + Math.abs(rc) + '</span>';
-    else changeHtml = '<span style="color:#64748b">–</span>';
+    if (rc > 0) changeHtml = '<span class="chg chg-up">▲' + rc + '</span>';
+    else if (rc < 0) changeHtml = '<span class="chg chg-down">▼' + Math.abs(rc) + '</span>';
+    else changeHtml = '<span class="chg chg-flat">—</span>';
     h += '<td class="text-center">' + changeHtml + '</td>';
     h += '</tr>';
 
@@ -1305,9 +1377,7 @@ function renderTeams() {{
         p._imp = totalTeams > 1 ? Math.round(((totalTeams - 1 - ownersExcl) / (totalTeams - 1)) * 100) : 100;
       }});
 
-      h += '<tr><td colspan="8" style="padding:0;background:#0f172a">';
-      h += '<div class="data-table" style="padding:4px 12px 12px">';
-      h += '<table><thead><tr>';
+      h += '<tr class="detail-row"><td colspan="8"><div style="padding:16px 18px"><div class="tscroll"><table class="dt"><thead><tr>';
       h += '<th class="text-left">#</th>';
       h += '<th class="text-left sortable" data-tab="teams" data-col="name">Zawodnik'+arrow('teams','name')+'</th>';
       h += '<th class="text-center sortable" data-tab="teams" data-col="_pos_order">Poz'+arrow('teams','_pos_order')+'</th>';
@@ -1315,7 +1385,7 @@ function renderTeams() {{
       h += '<th class="text-right sortable" data-tab="teams" data-col="pts">Punkty'+arrow('teams','pts')+'</th>';
       h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_global" title="Punkty zawodnika minus średnia punktów wszystkich grających na tej pozycji">±Avg'+arrow('teams','_diff_global')+'</th>';
       h += '<th class="text-center sortable" data-tab="teams" data-col="_diff_league" title="Punkty zawodnika minus średnia punktów graczy na tej pozycji w drużynach z Twojej ligi">±Liga'+arrow('teams','_diff_league')+'</th>';
-      h += '<th class="text-center" style="min-width:80px">Forma</th>';
+      h += '<th class="text-center">Forma</th>';
       h += '<th class="text-right sortable" data-tab="teams" data-col="_form_avg" title="Średnia punktów z rozegranych meczów (ostatnie 5 kolejek przed obecną)">Średnia'+arrow('teams','_form_avg')+'</th>';
       h += '<th class="text-center sortable" data-tab="teams" data-col="_imp" title="Differential ownership — im wyższy %, tym mniej managerów w lidze posiada tego zawodnika">Imp'+arrow('teams','_imp')+'</th>';
       h += '</tr></thead><tbody>';
@@ -1325,7 +1395,7 @@ function renderTeams() {{
 
       starters.forEach((p, idx) => {{ h += renderSquadRow(p, idx); }});
       if (reserves.length) {{
-        h += '<tr><td colspan="'+NCOLS+'" style="padding:6px 0;border-top:1px dashed #334155"><span class="c-dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Ławka rezerwowych</span></td></tr>';
+        h += '<tr><td colspan="'+NCOLS+'" style="padding:6px 0;border-top:1px dashed var(--border-strong)"><span class="c-dim" style="font-size:11px;text-transform:uppercase;letter-spacing:1px">Ławka rezerwowych</span></td></tr>';
         reserves.forEach((p, idx) => {{ h += renderSquadRow(p, starters.length + idx); }});
       }}
 
@@ -1333,32 +1403,32 @@ function renderTeams() {{
       const totalPts = starters.reduce((s,p) => s + (p.pts||0), 0);
       const totalDiffG = t.players.reduce((s,p) => s + (p._diff_global||0), 0);
       const totalDiffL = t.players.reduce((s,p) => s + (p._diff_league||0), 0);
-      h += '<tr style="border-top:2px solid #334155"><td colspan="4" class="fw-700" style="text-align:right;padding-top:10px">Razem:</td>';
+      h += '<tr style="border-top:2px solid var(--border-strong)"><td colspan="4" class="fw-700" style="text-align:right;padding-top:10px">Razem:</td>';
       h += '<td class="text-right fw-700" style="padding-top:10px">'+totalPts+'</td>';
-      const gCls = totalDiffG > 0 ? 'diff-pos' : totalDiffG < 0 ? 'diff-neg' : 'diff-zero';
-      const lCls = totalDiffL > 0 ? 'diff-pos' : totalDiffL < 0 ? 'diff-neg' : 'diff-zero';
-      h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
-      h += '<td class="text-center" style="padding-top:10px"><span class="diff-badge '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
+      const gCls = totalDiffG > 0 ? 'd-up' : totalDiffG < 0 ? 'd-down' : 'd-flat';
+      const lCls = totalDiffL > 0 ? 'd-up' : totalDiffL < 0 ? 'd-down' : 'd-flat';
+      h += '<td class="text-center" style="padding-top:10px"><span class="delta '+gCls+'">'+(totalDiffG>0?'+':'')+totalDiffG.toFixed(0)+'</span></td>';
+      h += '<td class="text-center" style="padding-top:10px"><span class="delta '+lCls+'">'+(totalDiffL>0?'+':'')+totalDiffL.toFixed(0)+'</span></td>';
       const avgImp = t.players.length > 0 ? Math.round(t.players.reduce((s,p) => s + (p._imp||0), 0) / t.players.length) : 0;
-      const avgImpColor = avgImp >= 70 ? '#10b981' : avgImp >= 30 ? '#eab308' : '#ef4444';
+      const avgImpColor = avgImp >= 70 ? 'var(--up)' : avgImp >= 30 ? 'var(--gold)' : 'var(--down)';
       h += '<td colspan="2"></td><td class="text-center fw-700" style="padding-top:10px;color:'+avgImpColor+'">Ø '+avgImp+'%</td></tr>';
 
-      h += '</tbody></table></div>';
-      h += '</td></tr>';
+      h += '</tbody></table></div></div></td></tr>';
     }}
   }});
 
-  h += '</tbody></table></div>';
+  h += '</tbody></table></div></div>';
   return h;
 }}
 
 // ============ FDR (Fixture Difficulty Rating) ============
+// Skala trudności 1-5 używa tokenów Concept C (zielony → czerwony, tusz zawsze ciemny).
 const FDR_COLORS = {{
-  1: {{bg:'#375523', fg:'#ffffff'}},
-  2: {{bg:'#01FC7A', fg:'#000000'}},
-  3: {{bg:'#E7E7E7', fg:'#000000'}},
-  4: {{bg:'#FF1751', fg:'#ffffff'}},
-  5: {{bg:'#80072D', fg:'#ffffff'}},
+  1: {{bg:'var(--fdr-1)', fg:'var(--fdr-ink)'}},
+  2: {{bg:'var(--fdr-2)', fg:'var(--fdr-ink)'}},
+  3: {{bg:'var(--fdr-3)', fg:'var(--fdr-ink)'}},
+  4: {{bg:'var(--fdr-4)', fg:'var(--fdr-ink)'}},
+  5: {{bg:'var(--fdr-5)', fg:'var(--fdr-ink)'}},
 }};
 const FDR_LABELS = {{1:'Bardzo łatwy', 2:'Łatwy', 3:'Średni', 4:'Trudny', 5:'Bardzo trudny'}};
 let fdrSort = 'alpha'; // 'alpha' | 'def' | 'atk'
@@ -1377,20 +1447,20 @@ function fdrShowModal(team) {{
   let strengthHtml = '';
   if (str) {{
     strengthHtml = '<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-      +'<div style="text-align:center;background:#0f172a;border-radius:8px;padding:8px"><div style="font-size:10px;color:#64748b;text-transform:uppercase">Atak (D)</div><div style="font-size:20px;font-weight:800;color:#22d3ee">'+str.attack_h+'</div></div>'
-      +'<div style="text-align:center;background:#0f172a;border-radius:8px;padding:8px"><div style="font-size:10px;color:#64748b;text-transform:uppercase">Atak (W)</div><div style="font-size:20px;font-weight:800;color:#22d3ee">'+str.attack_a+'</div></div>'
-      +'<div style="text-align:center;background:#0f172a;border-radius:8px;padding:8px"><div style="font-size:10px;color:#64748b;text-transform:uppercase">Obrona (D)</div><div style="font-size:20px;font-weight:800;color:#f87171">'+str.defense_h+'</div></div>'
-      +'<div style="text-align:center;background:#0f172a;border-radius:8px;padding:8px"><div style="font-size:10px;color:#64748b;text-transform:uppercase">Obrona (W)</div><div style="font-size:20px;font-weight:800;color:#f87171">'+str.defense_a+'</div></div>'
+      +'<div style="text-align:center;background:var(--surface-inset);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase">Atak (D)</div><div style="font-size:20px;font-weight:800;color:var(--accent)">'+str.attack_h+'</div></div>'
+      +'<div style="text-align:center;background:var(--surface-inset);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase">Atak (W)</div><div style="font-size:20px;font-weight:800;color:var(--accent)">'+str.attack_a+'</div></div>'
+      +'<div style="text-align:center;background:var(--surface-inset);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase">Obrona (D)</div><div style="font-size:20px;font-weight:800;color:var(--down)">'+str.defense_h+'</div></div>'
+      +'<div style="text-align:center;background:var(--surface-inset);border-radius:8px;padding:8px"><div style="font-size:10px;color:var(--text-dim);text-transform:uppercase">Obrona (W)</div><div style="font-size:20px;font-weight:800;color:var(--down)">'+str.defense_a+'</div></div>'
       +'</div>';
   }}
   wrap.innerHTML = '<div class="ft-modal"><button class="ft-modal-close" id="ftClose">✕</button>'
     +'<h3>'+abbr+' — '+team+'</h3>'
     +'<div style="display:flex;gap:24px;margin:16px 0">'
-    +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Strzelone (GF)</div><div style="font-size:28px;font-weight:800;color:#22d3ee">'+gf+'</div></div>'
-    +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:#94a3b8;margin-bottom:4px">Stracone (GA)</div><div style="font-size:28px;font-weight:800;color:#f87171">'+ga+'</div></div>'
+    +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Strzelone (GF)</div><div style="font-size:28px;font-weight:800;color:var(--accent)">'+gf+'</div></div>'
+    +'<div style="flex:1;text-align:center"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Stracone (GA)</div><div style="font-size:28px;font-weight:800;color:var(--down)">'+ga+'</div></div>'
     +'</div>'
     +strengthHtml
-    +'<div style="font-size:11px;color:#64748b;text-align:center;margin-top:12px">Siła >1.0 = powyżej średniej ligowej &nbsp;|&nbsp; Dane z 90minut.pl</div>'
+    +'<div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:12px">Siła >1.0 = powyżej średniej ligowej &nbsp;|&nbsp; Dane z 90minut.pl</div>'
     +'</div>';
   document.body.appendChild(wrap);
   document.getElementById("ftClose").onclick = function() {{ wrap.remove(); }};
@@ -1412,74 +1482,66 @@ function renderFixtures() {{
     teams.sort((a,b) => a.name.localeCompare(b.name, 'pl'));
   }}
 
-  let h = '<div class="section-title"><span style="font-size:22px">📅</span><h2>Terminarz — trudność meczów</h2><div class="line"></div></div>';
+  let h = '<div class="sec" style="margin-top:26px"><h2>Trudność meczów</h2><span class="rule"></span>'
+    + '<span class="sec-note">ATK = siła ataku rywala (dla DEF/GK) · DEF = siła obrony rywala (dla FWD/MID)</span></div>';
 
   // Legenda
-  h += '<div class="fdr-legend">';
+  h += '<div class="legend">';
   [1,2,3,4,5].forEach(r => {{
-    const c = FDR_COLORS[r];
-    h += '<span class="fdr-legend-item"><span class="fdr-legend-swatch" style="background:'+c.bg+';color:'+c.fg+'">'+r+'</span><span style="color:#94a3b8">'+FDR_LABELS[r]+'</span></span>';
+    h += '<span class="li"><span class="fdr fdr-'+r+'">'+r+'</span>'+FDR_LABELS[r]+'</span>';
   }});
-  h += '</div>';
-
-  h += '<div style="margin-bottom:10px;font-size:11px;color:#64748b;line-height:1.6">';
-  h += '<span style="color:#22d3ee;font-weight:600">ATK</span> = siła ataku rywala (ważne dla obrońców/GK — zielony = słaby atak rywala) &nbsp;|&nbsp; ';
-  h += '<span style="color:#f87171;font-weight:600">DEF</span> = siła obrony rywala (ważne dla napastników/pomocników — zielony = słaba obrona rywala)';
+  h += '<span class="li" style="margin-left:auto">Ta sama skala działa w Prognozie i Porównaniu.</span>';
   h += '</div>';
 
   // Sort toggle
-  h += '<div style="margin-bottom:12px;font-size:12px">';
-  h += '<span class="c-dim">Sortuj: </span>';
-  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="alpha" style="font-size:11px;padding:3px 10px">A-Z</button> ';
-  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="def" style="font-size:11px;padding:3px 10px">Najłatwiejszy dla ataku ↑</button> ';
-  h += '<button class="scope-btn fdr-sort-btn" data-fdrsort="atk" style="font-size:11px;padding:3px 10px">Najłatwiejszy dla obrony ↑</button>';
-  h += '</div>';
+  h += '<div class="toolbar"><div class="seg" id="fix-sort" role="group" aria-label="Sortowanie">';
+  h += '<span class="seg-label">Sortuj</span>';
+  h += '<button class="seg-btn fdr-sort-btn" data-fdrsort="alpha">A–Z</button>';
+  h += '<button class="seg-btn fdr-sort-btn" data-fdrsort="def">Najłatwiejszy dla ataku</button>';
+  h += '<button class="seg-btn fdr-sort-btn" data-fdrsort="atk">Najłatwiejszy dla obrony</button>';
+  h += '</div></div>';
 
   // Tabela
-  h += '<div class="data-table" style="overflow-x:auto"><table class="fdr-table"><thead><tr>';
-  h += '<th style="text-align:left;min-width:100px">Drużyna</th>';
-  h += '<th style="min-width:56px">Σ ATK</th>';
-  h += '<th style="min-width:56px">Σ DEF</th>';
-  gws.forEach(gw => {{ h += '<th style="min-width:100px">K'+gw+'</th>'; }});
+  h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr>';
+  h += '<th class="text-left">Drużyna</th>';
+  h += '<th class="text-right">Σ ATK</th>';
+  h += '<th class="text-right">Σ DEF</th>';
+  gws.forEach(gw => {{ h += '<th class="text-center">K'+gw+'</th>'; }});
   h += '</tr></thead><tbody>';
 
   teams.forEach((team, ti) => {{
     h += '<tr>';
-    h += '<td class="fdr-team fdr-team-click" data-fdrteam="'+ti+'" style="text-align:left;font-weight:700;white-space:nowrap;padding-left:8px;cursor:pointer">';
-    h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(ti+1)+'</span> '+team.short+'</td>';
+    h += '<td class="fdr-team-click" data-fdrteam="'+ti+'" style="cursor:pointer"><span class="team-name">'+team.short+'</span></td>';
 
     // Σ ATK
     const avgAtk = gws.length ? (team.total_atk / gws.length) : 3;
-    const atkColor = avgAtk <= 2 ? '#10b981' : avgAtk <= 3 ? '#94a3b8' : '#ef4444';
-    h += '<td><span class="fdr-sum" style="color:'+atkColor+'">'+team.total_atk+'</span></td>';
+    const atkColor = avgAtk <= 2 ? 'var(--up)' : avgAtk <= 3 ? 'var(--text-muted)' : 'var(--down)';
+    h += '<td class="text-right fw-700" style="color:'+atkColor+'">'+team.total_atk+'</td>';
 
     // Σ DEF
     const avgDef = gws.length ? (team.total_def / gws.length) : 3;
-    const defColor = avgDef <= 2 ? '#10b981' : avgDef <= 3 ? '#94a3b8' : '#ef4444';
-    h += '<td><span class="fdr-sum" style="color:'+defColor+'">'+team.total_def+'</span></td>';
+    const defColor = avgDef <= 2 ? 'var(--up)' : avgDef <= 3 ? 'var(--text-muted)' : 'var(--down)';
+    h += '<td class="text-right fw-700" style="color:'+defColor+'">'+team.total_def+'</td>';
 
     // Dual ATK/DEF tiles per gameweek
     team.fixtures.forEach(f => {{
       if (!f.opponent) {{
-        h += '<td>—</td>';
+        h += '<td class="text-center">—</td>';
         return;
       }}
-      const cA = FDR_COLORS[f.atk] || FDR_COLORS[3];
-      const cD = FDR_COLORS[f.def] || FDR_COLORS[3];
       const ha = f.home ? 'D' : 'W';
-      h += '<td title="'+f.opponent+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
-      h += '<div class="fdr-cell">';
-      h += '<div class="fdr-cell-team">'+f.opponent_short+' <span class="fdr-ha">('+ha+')</span></div>';
-      h += '<div class="fdr-cell-vals">';
-      h += '<span class="fdr-mini" style="background:'+cA.bg+';color:'+cA.fg+'"><span class="fdr-lbl">ATK</span>'+f.atk+'</span>';
-      h += '<span class="fdr-mini" style="background:'+cD.bg+';color:'+cD.fg+'"><span class="fdr-lbl">DEF</span>'+f.def+'</span>';
-      h += '</div></div></td>';
+      h += '<td class="text-center" title="'+f.opponent+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
+      h += '<span class="opp"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span>';
+      h += '<span style="display:flex;gap:3px">';
+      h += '<span class="fdr fdr-'+f.atk+'" title="ATK">A'+f.atk+'</span>';
+      h += '<span class="fdr fdr-'+f.def+'" title="DEF">D'+f.def+'</span>';
+      h += '</span></span></td>';
     }});
 
     h += '</tr>';
   }});
 
-  h += '</tbody></table></div>';
+  h += '</tbody></table></div></div>';
   window._fdrTeams = teams;
 
   // 📋 Fixture Planner — sekcja dodana POD istniejącą siatką FDR
@@ -1528,27 +1590,25 @@ function renderFixturePlanner() {{
   if (!selectedGws.length) return '';
 
   let h = '<div class="fp-section">';
-  h += '<div class="section-title"><span style="font-size:22px">📋</span><h2>Fixture Planner</h2><div class="line"></div></div>';
-  h += '<div style="margin-bottom:12px;font-size:12px;color:#64748b;line-height:1.6">';
-  h += 'Planuj transfery na kilka kolejek do przodu. Wybierz zakres i perspektywę pozycyjną, aby znaleźć drużyny z najłatwiejszym terminarzem.';
-  h += '</div>';
+  h += '<div class="sec"><h2>Fixture Planner</h2><span class="rule"></span>'
+    + '<span class="sec-note">18 drużyn Ekstraklasy · zakres kolejek</span></div>';
+  h += '<p class="planner-intro">Wybierz zakres kolejek i tryb trudności. <b>ATK</b> ma znaczenie dla bramkarzy i obrońców (liczy się siła ataku rywala), <b>DEF</b> dla pomocników i napastników (siła obrony rywala), <b>MIX</b> uśrednia oba. Kafelki 1–5 używają tej samej zielono-czerwonej skali, co reszta dashboardu.</p>';
 
   // Kontrolki: zakres kolejek + tryb pozycyjny
   h += '<div class="fp-controls">';
-  h += '<label>Od kolejki:</label>';
-  h += '<select class="fp-gw-from">';
+  h += '<div class="field"><label for="fp-from">Od</label><select class="input fp-gw-from" id="fp-from">';
   gws.forEach(g => {{ h += '<option value="'+g+'"'+(g===fpGwFrom?' selected':'')+'>K'+g+'</option>'; }});
-  h += '</select>';
-  h += '<label>Do kolejki:</label>';
-  h += '<select class="fp-gw-to">';
+  h += '</select></div>';
+  h += '<div class="field"><label for="fp-to">Do</label><select class="input fp-gw-to" id="fp-to">';
   gws.forEach(g => {{ h += '<option value="'+g+'"'+(g===fpGwTo?' selected':'')+'>K'+g+'</option>'; }});
-  h += '</select>';
+  h += '</select></div>';
 
   // 📖 Tryb pozycyjny: ATK (dla napastników/pomocników), DEF (dla obrońców/bramkarzy), MIX (średnia)
-  h += '<div class="fp-mode-btns">';
-  h += '<button class="fp-mode-btn'+(fpMode==='atk'?' active':'')+'" data-fpmode="atk">ATK</button>';
-  h += '<button class="fp-mode-btn'+(fpMode==='def'?' active':'')+'" data-fpmode="def">DEF</button>';
-  h += '<button class="fp-mode-btn'+(fpMode==='mix'?' active':'')+'" data-fpmode="mix">MIX</button>';
+  h += '<div class="seg" id="fp-mode" role="group" aria-label="Tryb">';
+  h += '<span class="seg-label">Tryb</span>';
+  h += '<button class="seg-btn fp-mode-btn'+(fpMode==='atk'?' active':'')+'" data-fpmode="atk">ATK</button>';
+  h += '<button class="seg-btn fp-mode-btn'+(fpMode==='def'?' active':'')+'" data-fpmode="def">DEF</button>';
+  h += '<button class="seg-btn fp-mode-btn'+(fpMode==='mix'?' active':'')+'" data-fpmode="mix">MIX</button>';
   h += '</div>';
   h += '</div>';
 
@@ -1600,84 +1660,53 @@ function renderFixturePlanner() {{
   function thArrow(col) {{ return fpSortCol === col ? (fpSortDir === 'asc' ? ' ↑' : ' ↓') : ''; }}
 
   // Tabela planera
-  h += '<div class="data-table" style="overflow-x:auto"><table class="fp-table"><thead><tr>';
-  h += '<th class="fp-sort'+thClass('team')+'" data-fpcol="team" style="text-align:left;min-width:80px">Drużyna'+thArrow('team')+'</th>';
+  h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr>';
+  h += '<th class="text-left sortable fp-sort'+thClass('team')+'" data-fpcol="team">Drużyna'+thArrow('team')+'</th>';
   selectedGws.forEach(gw => {{
-    h += '<th class="fp-sort'+thClass('gw'+gw)+'" data-fpcol="gw'+gw+'" style="min-width:68px">K'+gw+thArrow('gw'+gw)+'</th>';
+    h += '<th class="text-center sortable fp-sort'+thClass('gw'+gw)+'" data-fpcol="gw'+gw+'">K'+gw+thArrow('gw'+gw)+'</th>';
   }});
-  h += '<th class="fp-sort'+thClass('sum')+'" data-fpcol="sum" style="min-width:52px">Σ FDR'+thArrow('sum')+'</th>';
-  h += '<th class="fp-sort'+thClass('avg')+'" data-fpcol="avg" style="min-width:52px">Śr.'+thArrow('avg')+'</th>';
-  h += '<th class="fp-sort'+thClass('easy')+'" data-fpcol="easy" style="min-width:52px">Łatwych'+thArrow('easy')+'</th>';
-  h += '<th class="fp-sort'+thClass('hard')+'" data-fpcol="hard" style="min-width:52px">Trudnych'+thArrow('hard')+'</th>';
+  h += '<th class="text-right sortable fp-sort'+thClass('sum')+'" data-fpcol="sum">Σ FDR'+thArrow('sum')+'</th>';
+  h += '<th class="text-right sortable fp-sort'+thClass('avg')+'" data-fpcol="avg">Śr.'+thArrow('avg')+'</th>';
+  h += '<th class="text-right sortable fp-sort'+thClass('easy')+'" data-fpcol="easy">Łatwych'+thArrow('easy')+'</th>';
+  h += '<th class="text-right sortable fp-sort'+thClass('hard')+'" data-fpcol="hard">Trudnych'+thArrow('hard')+'</th>';
   h += '</tr></thead><tbody>';
 
   planData.forEach((team, ti) => {{
     const isSelected = fpSelected.includes(team.name);
     h += '<tr>';
-    h += '<td class="fp-team-cell'+(isSelected ? ' fp-selected' : '')+'" data-fpteam="'+team.name+'">';
-    h += '<span style="font-size:11px;color:#64748b;margin-right:3px">'+(ti+1)+'</span> '+team.short+'</td>';
+    h += '<td class="fp-team-cell'+(isSelected ? ' fp-selected' : '')+'" data-fpteam="'+team.name+'" style="cursor:pointer"><span class="team-name">'+team.short+'</span></td>';
 
     // Kafelki FDR per kolejka
     team.fixtures.forEach((f, fi) => {{
       if (!f || !f.opponent) {{
-        h += '<td>—</td>';
+        h += '<td class="text-center">—</td>';
         return;
       }}
       const fdr = team.fdrValues[fi];
-      const c = FDR_COLORS[fdr] || FDR_COLORS[3];
       const ha = f.home ? 'D' : 'W';
-      h += '<td title="'+f.opponent+' ('+(f.home?'dom':'wyjazd')+') '+f.date+'">';
-      h += '<span class="fp-tile" style="background:'+c.bg+';color:'+c.fg+'">'+f.opponent_short+' <span class="fp-ha">('+ha+')</span></span>';
+      h += '<td class="text-center" title="'+f.opponent+' ('+(f.home?'dom':'wyjazd')+') '+f.date+'">';
+      h += '<span class="opp"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span><span class="fdr fdr-'+fdr+'">'+fdr+'</span></span>';
       h += '</td>';
     }});
 
     // Suma FDR
-    h += '<td><span class="fdr-sum" style="color:'+(team.avg<=2.5?'#10b981':team.avg<=3.5?'#94a3b8':'#ef4444')+'">'+team.sum+'</span></td>';
+    const sumColor = team.avg <= 2.5 ? 'var(--up)' : team.avg <= 3.5 ? 'var(--text-muted)' : 'var(--down)';
+    h += '<td class="text-right fw-700" style="color:'+sumColor+'">'+team.sum+'</td>';
 
     // Średnia FDR (kolorowana)
-    const avgColor = team.avg < 2.5 ? '#10b981' : team.avg > 3.5 ? '#ef4444' : '#94a3b8';
-    h += '<td><span class="fp-avg-cell" style="color:'+avgColor+'">'+team.avg.toFixed(1)+'</span></td>';
+    const avgColor = team.avg < 2.5 ? 'var(--up)' : team.avg > 3.5 ? 'var(--down)' : 'var(--text-muted)';
+    h += '<td class="text-right fw-700" style="color:'+avgColor+'">'+team.avg.toFixed(1)+'</td>';
 
     // Łatwych / Trudnych
-    h += '<td style="color:#10b981;font-weight:700">'+team.easy+'</td>';
-    h += '<td style="color:#ef4444;font-weight:700">'+team.hard+'</td>';
+    h += '<td class="text-right fw-700" style="color:var(--up)">'+team.easy+'</td>';
+    h += '<td class="text-right fw-700" style="color:var(--down)">'+team.hard+'</td>';
 
     h += '</tr>';
   }});
 
-  h += '</tbody></table></div>';
+  h += '</tbody></table></div></div>';
 
-  // 📖 LEKCJA: "Rotation pair" — dwie drużyny z uzupełniającymi się terminarzami.
-  // Jeśli Lech ma trudny mecz w K28 ale Pogoń łatwy, i odwrotnie w K29 —
-  // to świetna para do rotacji obrońców/bramkarzy. Zawsze masz kogoś z łatwym meczem.
-  if (fpSelected.length === 2) {{
-    const t1 = planData.find(t => t.name === fpSelected[0]);
-    const t2 = planData.find(t => t.name === fpSelected[1]);
-    if (t1 && t2) {{
-      let bothEasy = 0;   // obie łatwy — marnowanie slota
-      let coverage = 0;   // przynajmniej jedna łatwy
-      const totalGws = selectedGws.length;
-      for (let i = 0; i < totalGws; i++) {{
-        const e1 = t1.fdrValues[i] <= 2;
-        const e2 = t2.fdrValues[i] <= 2;
-        if (e1 && e2) bothEasy++;
-        if (e1 || e2) coverage++;
-      }}
-      h += '<div class="fp-rotation">';
-      h += '<div class="fp-rot-label">🔄 Rotation Pair: '+t1.short+' + '+t2.short+'</div>';
-      h += '<div>Pokrycie: <b style="color:#22d3ee">'+coverage+'/'+totalGws+'</b> kolejek (przynajmniej jedna drużyna z łatwym meczem)</div>';
-      h += '<div>Marnowanie: <b style="color:#fbbf24">'+bothEasy+'/'+totalGws+'</b> kolejek (obie mają łatwy mecz jednocześnie)</div>';
-      const score = totalGws > 0 ? Math.round(coverage / totalGws * 100) : 0;
-      const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#fbbf24' : '#ef4444';
-      h += '<div style="margin-top:6px">Wynik rotacji: <b style="color:'+scoreColor+'">'+score+'%</b></div>';
-      h += '</div>';
-    }}
-  }} else if (fpSelected.length === 1) {{
-    h += '<div class="fp-rotation"><div class="fp-rot-label">🔄 Rotation Pair</div>';
-    h += '<div style="color:#64748b">Kliknij drugą drużynę, aby zobaczyć wynik rotacji</div></div>';
-  }}
-
-  // 📖 Szybki widok "Najlepsze drużyny na X kolejek" — podsumowanie
+  // 📖 Szybki widok "Najlepsze drużyny na X kolejek" — podsumowanie (insights)
   // Sortujemy osobno wg ATK (DEF rywali), DEF (ATK rywali), i ogólnie najtrudniejsze
   const atkRanked = fdrTeams.map(team => {{
     const vals = selectedGws.map(gw => {{
@@ -1711,21 +1740,35 @@ function renderFixturePlanner() {{
     }}
   }}
 
-  h += '<div class="fp-summary">';
-  h += '<div class="fp-summary-line"><span>🟢</span> <b>Najłatwiejszy (ATK):</b> ';
-  h += atkRanked.slice(0,3).map(t => t.short+' (śr. '+t.avg.toFixed(1)+')').join(' — ');
-  h += '</div>';
-  h += '<div class="fp-summary-line"><span>🟢</span> <b>Najłatwiejszy (DEF):</b> ';
-  h += defRanked.slice(0,3).map(t => t.short+' (śr. '+t.avg.toFixed(1)+')').join(' — ');
-  h += '</div>';
-  h += '<div class="fp-summary-line"><span>🔴</span> <b>Najtrudniejszy:</b> ';
-  h += hardRanked.slice(0,3).map(t => t.short+' (śr. '+t.avg.toFixed(1)+')').join(' — ');
-  h += '</div>';
+  const insightList = (list) => list.slice(0,3).map((t, i) =>
+    '<li><span class="ii">0'+(i+1)+'</span>'+t.short+'<span class="iv">'+t.avg.toFixed(1)+'</span></li>'
+  ).join('');
+
+  h += '<div class="insights">';
+  h += '<div class="insight"><h4>Najłatwiejszy (ATK)</h4><ol>'+insightList(atkRanked)+'</ol></div>';
+  h += '<div class="insight"><h4>Najłatwiejszy (DEF)</h4><ol>'+insightList(defRanked)+'</ol></div>';
+  h += '<div class="insight"><h4>Najtrudniejszy</h4><ol>'+insightList(hardRanked)+'</ol></div>';
+  h += '<div class="insight"><h4>Najlepsza para rotacyjna</h4>';
   if (bestPair.t1) {{
-    h += '<div class="fp-summary-line"><span>🔄</span> <b>Najlepsza para rotacyjna:</b> ';
-    h += bestPair.t1+' + '+bestPair.t2+' (pokrycie '+bestPair.coverage+'/'+selectedGws.length+')';
-    h += '</div>';
+    const bestPct = selectedGws.length > 0 ? Math.round(bestPair.coverage / selectedGws.length * 100) : 0;
+    h += '<div class="rot-pair">'+bestPair.t1+' <span class="c-dim">+</span> '+bestPair.t2+'<span class="rot-pct">'+bestPct+'%</span></div>';
   }}
+  if (fpSelected.length === 2) {{
+    const s1 = planData.find(t => t.name === fpSelected[0]);
+    const s2 = planData.find(t => t.name === fpSelected[1]);
+    if (s1 && s2) {{
+      let cov = 0;
+      for (let i = 0; i < selectedGws.length; i++) {{
+        if (s1.fdrValues[i] <= 2 || s2.fdrValues[i] <= 2) cov++;
+      }}
+      h += '<div class="rot-note">Wybrana para '+s1.short+' + '+s2.short+': pokrycie '+cov+'/'+selectedGws.length+' kolejek.</div>';
+    }}
+  }} else if (fpSelected.length === 1) {{
+    h += '<div class="rot-note">Kliknij drugą drużynę, aby zobaczyć wynik rotacji.</div>';
+  }} else {{
+    h += '<div class="rot-note">Kliknij dwie drużyny w tabeli, aby sprawdzić rotację.</div>';
+  }}
+  h += '</div>';
   h += '</div>';
 
   h += '</div>';  // end fp-section
@@ -1755,9 +1798,8 @@ function renderTransfersTable(list, totalTeams, title, color) {{
 
   if (!filtered.length) return '<div class="empty-msg" style="padding:24px">Brak zawodników dla wybranej pozycji</div>';
 
-  let h = '<div class="transfers-header"><span style="font-size:18px">'+title.split(' ')[0]+'</span>';
-  h += '<h3 style="color:'+color+'">'+title.split(' ').slice(1).join(' ')+'</h3></div>';
-  h += '<div class="data-table"><table><thead><tr>';
+  let h = '<div class="list-head '+(title.indexOf('kupna')>=0?'buy':'sell')+'"><h3>'+title+'</h3><span class="lh-note">Top 15</span></div>';
+  h += '<div class="tscroll"><table class="dt"><thead><tr>';
   h += '<th class="text-left">#</th>';
   h += '<th class="text-left">Zawodnik</th>';
   h += '<th class="text-center">Poz</th>';
@@ -1777,8 +1819,8 @@ function renderTransfersTable(list, totalTeams, title, color) {{
     h += '<td class="text-center">' + posBadge(pk) + '</td>';
     h += '<td class="c-muted" style="font-size:12px;max-width:120px;white-space:normal">' + (p.team || '—') + '</td>';
     h += '<td class="text-right c-muted">' + (p.price ? p.price.toFixed(1) + 'M' : '—') + '</td>';
-    h += '<td><div class="bar-wrap"><div class="bar-bg" style="width:80px"><div class="bar-fill" style="width:' + barW + '%;background:' + color + '"></div></div>';
-    h += '<span class="bar-val">' + p.count + ' (' + pct.toFixed(1) + '%)</span></div></td>';
+    h += '<td><span class="bar"><span class="bar-track" style="width:80px"><span class="bar-fill" style="width:' + barW + '%;background:' + color + '"></span></span>';
+    h += '<span class="bar-val">' + p.count + ' (' + pct.toFixed(1) + '%)</span></span></td>';
     h += '</tr>';
   }});
   h += '</tbody></table></div>';
@@ -1797,24 +1839,26 @@ function renderTransfers() {{
   const tin = td.transfers_in || [];
   const tout = td.transfers_out || [];
 
-  let h = '<div class="section-title"><span style="font-size:22px">🔄</span><h2>Transfery — K' + prevGw + ' → K' + gw + '</h2><div class="line"></div></div>';
+  let h = '<div class="sec" style="margin-top:26px"><h2>Transfery</h2><span class="rule"></span>'
+    + '<span class="sec-note">Kto wchodzi, kto wychodzi · K' + prevGw + ' → K' + gw + '</span></div>';
 
-  // Filters row
-  h += '<div class="tr-filters-row">';
-  h += '<div class="pos-filters">';
+  // Toolbar
+  h += '<div class="toolbar">';
+  h += '<div class="seg" id="tr-pos" role="group" aria-label="Pozycja">';
+  h += '<span class="seg-label">Poz</span>';
   ['ALL','BR','OBR','POM','NAP'].forEach(p => {{
     const labels = {{ALL:'ALL',BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD'}};
     const active = trPos === p ? ' active' : '';
-    h += '<button class="pos-btn tr-pos-btn' + active + '" data-trpos="' + p + '" data-pos="' + p + '">' + labels[p] + '</button>';
+    h += '<button class="seg-btn pos-btn tr-pos-btn' + active + '" data-trpos="' + p + '" data-pos="' + p + '">' + labels[p] + '</button>';
   }});
   h += '</div>';
-  h += '<span class="tr-gw-badge" style="margin-left:auto">K' + prevGw + ' → K' + gw + ' · ' + leagueCount + ' drużyn</span>';
+  h += '<span class="gw-badge" style="margin-left:auto">K' + prevGw + ' → K' + gw + ' · ' + leagueCount + ' drużyn</span>';
   h += '</div>';
 
   // Two tables side by side
-  h += '<div class="transfers-grid">';
-  h += '<div>' + renderTransfersTable(tin, leagueCount, '🟢 Najpopularniejsze kupna', '#10b981') + '</div>';
-  h += '<div>' + renderTransfersTable(tout, leagueCount, '🔴 Najpopularniejsze sprzedaże', '#ef4444') + '</div>';
+  h += '<div class="transfer-grid">';
+  h += '<div class="panel">' + renderTransfersTable(tin, leagueCount, 'Najpopularniejsze kupna', 'var(--up)') + '</div>';
+  h += '<div class="panel">' + renderTransfersTable(tout, leagueCount, 'Najpopularniejsze sprzedaże', 'var(--down)') + '</div>';
   h += '</div>';
 
   return h;
@@ -1860,25 +1904,24 @@ function renderPredictions() {{
 
   // Prediction value gradient: high = green, medium = yellow, low = gray
   function predGradient(val) {{
-    if (val >= 8) return 'background:rgba(16,185,129,0.25);color:#10b981';
-    if (val >= 6) return 'background:rgba(34,211,238,0.2);color:#22d3ee';
-    if (val >= 4) return 'background:rgba(251,191,36,0.2);color:#fbbf24';
-    if (val >= 2) return 'background:rgba(148,163,184,0.15);color:#94a3b8';
-    return 'background:rgba(100,116,139,0.1);color:#64748b';
+    if (val >= 8) return 'background:var(--tint-up);color:var(--up)';
+    if (val >= 6) return 'background:var(--tint-accent);color:var(--accent)';
+    if (val >= 4) return 'background:var(--tint-gold);color:var(--conf-med)';
+    if (val >= 2) return 'background:var(--tint-soft);color:var(--text-muted)';
+    return 'background:var(--tint-soft);color:var(--text-dim)';
   }}
 
   // Percentyle 0-100 — analogiczny gradient do predGradient
   function potentialGradient(val) {{
-    if (val >= 80) return 'background:rgba(16,185,129,0.25);color:#10b981';
-    if (val >= 60) return 'background:rgba(34,211,238,0.2);color:#22d3ee';
-    if (val >= 40) return 'background:rgba(251,191,36,0.2);color:#fbbf24';
-    if (val >= 20) return 'background:rgba(148,163,184,0.15);color:#94a3b8';
-    return 'background:rgba(100,116,139,0.1);color:#64748b';
+    if (val >= 80) return 'background:var(--tint-up);color:var(--up)';
+    if (val >= 60) return 'background:var(--tint-accent);color:var(--accent)';
+    if (val >= 40) return 'background:var(--tint-gold);color:var(--conf-med)';
+    if (val >= 20) return 'background:var(--tint-soft);color:var(--text-muted)';
+    return 'background:var(--tint-soft);color:var(--text-dim)';
   }}
 
   function fdrTile(val) {{
-    const c = FDR_COLORS[val] || FDR_COLORS[3];
-    return '<span class="pred-fdr-tile" style="background:'+c.bg+';color:'+c.fg+'">'+val+'</span>';
+    return '<span class="fdr fdr-'+val+'">'+val+'</span>';
   }}
 
   function fdrUsedLabel(position, fdr_mod) {{
@@ -1886,8 +1929,8 @@ function renderPredictions() {{
     let label = 'MIX';
     if (pk === 'NAP') label = 'DEF';
     else if (pk === 'OBR' || pk === 'BR') label = 'ATK';
-    const color = fdr_mod > 1.0 ? '#10b981' : fdr_mod < 1.0 ? '#ef4444' : '#94a3b8';
-    return '<span class="pred-fdr-used" style="color:'+color+'">'+label+' ×'+fdr_mod.toFixed(2)+'</span>';
+    const color = fdr_mod > 1.0 ? 'var(--up)' : fdr_mod < 1.0 ? 'var(--down)' : 'var(--text-muted)';
+    return '<span class="used" style="color:'+color+'">'+label+' ×'+fdr_mod.toFixed(2)+'</span>';
   }}
 
   // Kolumna adaptacyjna "Aktywność" — wzorowana na fdrUsedLabel
@@ -1910,39 +1953,42 @@ function renderPredictions() {{
 
   function confidenceBadge(conf) {{
     const map = {{
-      high: {{emoji:'🟢', label:'high', cls:'pred-conf-high'}},
-      medium: {{emoji:'🟡', label:'medium', cls:'pred-conf-medium'}},
-      low: {{emoji:'🔴', label:'low', cls:'pred-conf-low'}},
-      insufficient_data: {{emoji:'⚪', label:'insuf.', cls:'pred-conf-insufficient'}},
-      unavailable: {{emoji:'⛔', label:'niedostępny', cls:'pred-conf-unavailable'}},
+      high: {{label:'Wysoka', cls:'conf-high'}},
+      medium: {{label:'Średnia', cls:'conf-medium'}},
+      low: {{label:'Niska', cls:'conf-low'}},
+      insufficient_data: {{label:'insuf.', cls:'conf-medium'}},
+      unavailable: {{label:'niedostępny', cls:'conf-low'}},
     }};
     const m = map[conf] || map.low;
-    return '<span class="pred-confidence '+m.cls+'">'+m.emoji+' '+m.label+'</span>';
+    return '<span class="conf '+m.cls+'">'+m.label+'</span>';
   }}
 
-   let h = '<div class="section-title"><span style="font-size:22px">🔮</span><h2>Prognoza punktów — następna kolejka</h2><a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener" style="font-size:11px;color:#64748b;text-decoration:none;white-space:nowrap">Powered by Ekstraklasa Scouting</a><div class="line"></div></div>';
+   let h = '<div class="page-title">Prognoza Punktów — Następna Kolejka</div>';
+   h += '<div class="page-sub"><span class="mono">Powered by <a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener">Ekstraklasa Scouting</a></span></div>';
 
-  // Legend
-   h += '<div class="pred-legend">';
-   h += '<b>NAP</b> / <b>POM</b> → FDR DEF rywala (słabsza obrona = wyższa prognoza) &nbsp;|&nbsp; ';
-   h += '<b>BR</b> / <b>OBR</b> → FDR ATK rywala (słabszy atak = wyższa prognoza) &nbsp;|&nbsp; ';
-   h += '<b>Potencjał</b> → średnia percentyli pozycyjnych (0-100, wyżej = lepiej) &nbsp;|&nbsp; BR: obrony+CS &nbsp;|&nbsp; OBR: CS+stracone+xG+xA+szanse &nbsp;|&nbsp; POM/NAP: strzały+szanse';
+  // Metoda
+   h += '<div class="method">';
+   h += '<span class="m-row"><b>Jak czytać FDR:</b> NAP/POM dostaje <code>FDR DEF</code> rywala, BR/OBR dostaje <code>FDR ATK</code> rywala.</span>';
+   h += '<span class="m-row"><b>Potencjał</b> = średnia percentyli pozycyjnych zawodnika (0–100).</span>';
+   h += '<span class="m-row"><b>Wzory punktacji:</b> <code>BR = obrony + CS</code> · <code>OBR = CS + stracone + xG + xA + szanse</code> · <code>POM/NAP = strzały + szanse</code></span>';
+   h += '<span class="m-row">Skala trudności 1–5 (zielony → czerwony) jest identyczna jak w Terminarzu i Porównaniu.</span>';
    h += '</div>';
 
   // Position filters
-  h += '<div class="pred-filters">';
-  h += '<div class="pos-filters">';
+  h += '<div class="toolbar">';
+  h += '<div class="seg" id="pred-pos" role="group" aria-label="Pozycja">';
+  h += '<span class="seg-label">Poz</span>';
   ['ALL','BR','OBR','POM','NAP'].forEach(p => {{
     const labels = {{ALL:'ALL',BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD'}};
     const active = predPos === p ? ' active' : '';
-    h += '<button class="pos-btn pred-pos-btn'+active+'" data-predpos="'+p+'" data-pos="'+p+'">'+labels[p]+'</button>';
+    h += '<button class="seg-btn pos-btn pred-pos-btn'+active+'" data-predpos="'+p+'" data-pos="'+p+'">'+labels[p]+'</button>';
   }});
   h += '</div>';
-  h += '<span style="margin-left:auto;font-size:12px;color:#64748b">'+data.length+' zawodników</span>';
+  h += '<span class="row-count" style="margin-left:auto;margin-bottom:0">'+data.length+' zawodników</span>';
   h += '</div>';
 
   // Table
-  h += '<div class="data-table"><table><thead><tr>';
+  h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr>';
   h += '<th class="text-left">#</th>';
   h += '<th class="text-left sortable" data-tab="predictions" data-col="name">Zawodnik'+predArrow('name')+'</th>';
   h += '<th class="text-center sortable" data-tab="predictions" data-col="position">Poz'+predArrow('position')+'</th>';
@@ -1979,28 +2025,27 @@ function renderPredictions() {{
     const rowStyle = isUnavailable ? ' style="opacity:0.55"' : '';
     h += '<tr'+rowStyle+'>';
     h += '<td class="c-muted fw-600">'+(i+1)+'</td>';
-    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+(p.karpinski_slug ? '<a href="https://arturkarpinski.com/ekstraklasa-scouting/#sel='+p.karpinski_slug+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted #64748b" title="Profil na ekstraklasa-scouting">'+p.name+'</a>' : p.name)+(isUnavailable ? ' <span style="font-size:11px;color:#ef4444">⛔ '+unavailableReason+'</span>' : '')+'</td>';
+    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+(p.karpinski_slug ? '<a href="https://arturkarpinski.com/ekstraklasa-scouting/#sel='+p.karpinski_slug+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-dim)" title="Profil na ekstraklasa-scouting">'+p.name+'</a>' : p.name)+(isUnavailable ? ' <span style="font-size:11px;color:var(--down)">⛔ '+unavailableReason+'</span>' : '')+'</td>';
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
 
     // Rywal z FDR kolorem (używamy wyższego FDR)
     const oppName = p.opponent_short || p.next_opponent || '';
     const oppFdr = Math.max(oppFdrAtk, oppFdrDef);
-    const oppC = FDR_COLORS[oppFdr] || FDR_COLORS[3];
-    h += '<td class="text-center"><span class="pred-fdr-tile" style="background:'+oppC.bg+';color:'+oppC.fg+';font-size:11px;padding:3px 8px">'+oppName+'</span></td>';
+    h += '<td class="text-center"><span class="opp"><span class="o-code"><span class="o-nm">'+oppName+'</span></span><span class="fdr fdr-'+oppFdr+'">'+oppFdr+'</span></span></td>';
 
     // Dom/Wyjazd
-    h += '<td class="text-center">'+(p.is_home ? '🏠' : '✈️')+'</td>';
+    h += '<td class="text-center"><span class="hw'+(p.is_home?' d':'')+'">'+(p.is_home?'D':'W')+'</span></td>';
 
     // Prognoza — pogrubiona, gradient; dla niedostępnych: "—"
     if (isUnavailable) {{
-      h += '<td class="text-right"><span class="pred-val" style="color:#64748b;font-style:italic">—</span></td>';
+      h += '<td class="text-right"><span class="pred-val" style="color:var(--text-dim);font-style:italic">—</span></td>';
     }} else {{
       h += '<td class="text-right"><span class="pred-val" style="'+predGradient(pred)+'">'+pred.toFixed(1)+'</span></td>';
     }}
 
     // Średnia ważona
-    const avgC = baseAvg >= 6 ? '#22d3ee' : baseAvg >= 3 ? '#10b981' : '#94a3b8';
+    const avgC = baseAvg >= 6 ? 'var(--accent)' : baseAvg >= 3 ? 'var(--up)' : 'var(--text-muted)';
     h += '<td class="text-right fw-600" style="color:'+avgC+'">'+baseAvg.toFixed(1)+'</td>';
 
     // Ocena Karpińskiego (1-10)
@@ -2048,11 +2093,11 @@ function renderPredictions() {{
     h += '</tr>';
   }});
 
-  h += '</tbody></table></div>';
+  h += '</tbody></table></div></div>';
 
   // Atrybucja źródła statystyk xA/xG
-  h += '<div style="font-size:11px;color:#64748b;text-align:center;margin-top:12px">'
-     + 'Statystyki xA/xG: Sofascore, via <a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener" style="color:#64748b;text-decoration:underline">ekstraklasa-scouting</a>'
+  h += '<div style="font-size:11px;color:var(--text-dim);text-align:center;margin-top:12px">'
+     + 'Statystyki xA/xG: Sofascore, via <a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener" style="color:var(--text-dim);text-decoration:underline">ekstraklasa-scouting</a>'
      + '</div>';
 
   return h;
@@ -2071,11 +2116,11 @@ function renderAccuracy() {{
   let bestPosVal = Infinity;
   posNames.forEach(p => {{ if (maeByPos[p] < bestPosVal) {{ bestPosVal = maeByPos[p]; bestPos = p; }} }});
 
-  h += '<div class="stats-row">';
-  h += '<div class="stat-card accent-cyan"><div class="val">' + latest.mae + ' pkt</div><div class="label">MAE ogólne</div><div class="sub">Średni błąd prognozy</div></div>';
-  h += '<div class="stat-card accent-green"><div class="val">' + Math.round(latest.hit_rate * 100) + '%</div><div class="label">Hit rate</div><div class="sub">Błąd &lt; 3 pkt</div></div>';
-  h += '<div class="stat-card accent-gold"><div class="val">' + bestPos + ' — ' + bestPosVal + '</div><div class="label">Najlepsza pozycja</div><div class="sub">Najniższy MAE</div></div>';
-  h += '<div class="stat-card accent-purple"><div class="val">' + latest.top10_mae + ' pkt</div><div class="label">Top 10 MAE</div><div class="sub">Trafność liderów</div></div>';
+  h += '<div class="kpi-row">';
+  h += '<div class="kpi"><div class="kpi-label"><span class="kpi-mark"></span>MAE ogólne</div><div class="kpi-val">' + latest.mae + ' pkt</div><div class="kpi-sub">Średni błąd prognozy</div></div>';
+  h += '<div class="kpi"><div class="kpi-label"><span class="kpi-mark gold"></span>Hit rate</div><div class="kpi-val">' + Math.round(latest.hit_rate * 100) + '%</div><div class="kpi-sub">Błąd &lt; 3 pkt</div></div>';
+  h += '<div class="kpi"><div class="kpi-label"><span class="kpi-mark violet"></span>Najlepsza pozycja</div><div class="kpi-val">' + bestPos + ' — ' + bestPosVal + '</div><div class="kpi-sub">Najniższy MAE</div></div>';
+  h += '<div class="kpi"><div class="kpi-label"><span class="kpi-mark"></span>Top 10 MAE</div><div class="kpi-val">' + latest.top10_mae + ' pkt</div><div class="kpi-sub">Trafność liderów</div></div>';
   h += '</div>';
 
   // === MAE TREND CHART (SVG) ===
@@ -2103,17 +2148,17 @@ function renderAccuracy() {{
     for (let i = 0; i <= 4; i++) {{
       const yy = PADT + (chartH / 4) * i;
       const val = (maxV * (4 - i) / 4).toFixed(1);
-      svg += '<line x1="' + PAD + '" y1="' + yy + '" x2="' + (W - PADR) + '" y2="' + yy + '" stroke="#334155" stroke-width="1"/>';
-      svg += '<text x="' + (PAD - 8) + '" y="' + (yy + 4) + '" text-anchor="end" fill="#64748b" font-size="11">' + val + '</text>';
+      svg += '<line x1="' + PAD + '" y1="' + yy + '" x2="' + (W - PADR) + '" y2="' + yy + '" style="stroke:var(--border)" stroke-width="1"/>';
+      svg += '<text x="' + (PAD - 8) + '" y="' + (yy + 4) + '" text-anchor="end" style="fill:var(--text-dim)" font-size="11">' + val + '</text>';
     }}
 
     // X axis labels
     rounds.forEach(r => {{
-      svg += '<text x="' + x(r) + '" y="' + (H - 8) + '" text-anchor="middle" fill="#64748b" font-size="11">K' + r + '</text>';
+      svg += '<text x="' + x(r) + '" y="' + (H - 8) + '" text-anchor="middle" style="fill:var(--text-dim)" font-size="11">K' + r + '</text>';
     }});
 
     // Position lines
-    const posColors = {{BR:'#f59e0b', OBR:'#3b82f6', POM:'#10b981', NAP:'#ef4444'}};
+    const posColors = {{BR:'var(--pos-gk)', OBR:'var(--pos-def)', POM:'var(--pos-mid)', NAP:'var(--pos-fwd)'}};
     ['BR','OBR','POM','NAP'].forEach(pos => {{
       const pts = [];
       ACCURACY_HISTORY.forEach(a => {{
@@ -2121,40 +2166,40 @@ function renderAccuracy() {{
       }});
       if (pts.length > 1) {{
         const d = pts.map((p, i) => (i === 0 ? 'M' : 'L') + x(p.r) + ',' + y(p.v)).join(' ');
-        svg += '<path d="' + d + '" fill="none" stroke="' + posColors[pos] + '" stroke-width="1.5" opacity="0.6"/>';
+        svg += '<path d="' + d + '" fill="none" style="stroke:' + posColors[pos] + '" stroke-width="1.5" opacity="0.6"/>';
       }} else if (pts.length === 1) {{
-        svg += '<circle cx="' + x(pts[0].r) + '" cy="' + y(pts[0].v) + '" r="4" fill="' + posColors[pos] + '" opacity="0.6"/>';
+        svg += '<circle cx="' + x(pts[0].r) + '" cy="' + y(pts[0].v) + '" r="4" style="fill:' + posColors[pos] + '" opacity="0.6"/>';
       }}
     }});
 
     // Overall MAE line (thick, white)
     if (ACCURACY_HISTORY.length > 1) {{
       const d = ACCURACY_HISTORY.map((a, i) => (i === 0 ? 'M' : 'L') + x(a.round) + ',' + y(a.mae)).join(' ');
-      svg += '<path d="' + d + '" fill="none" stroke="#e2e8f0" stroke-width="2.5"/>';
+      svg += '<path d="' + d + '" fill="none" style="stroke:var(--text)" stroke-width="2.5"/>';
     }}
     // Dots for overall MAE
     ACCURACY_HISTORY.forEach(a => {{
-      svg += '<circle cx="' + x(a.round) + '" cy="' + y(a.mae) + '" r="4" fill="#e2e8f0"/>';
+      svg += '<circle cx="' + x(a.round) + '" cy="' + y(a.mae) + '" r="4" style="fill:var(--text)"/>';
     }});
 
     svg += '</svg>';
 
     // Legend
-    let legend = '<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">';
-    legend += '<span style="color:#e2e8f0;font-weight:700;font-size:12px;">━━ MAE ogólne</span>';
+    let legend = '<div class="chart-legend" style="justify-content:center">';
+    legend += '<span class="cli"><span class="csw" style="background:var(--text)"></span>MAE ogólne</span>';
     Object.entries(posColors).forEach(([p, c]) => {{
-      legend += '<span style="color:' + c + ';font-size:12px;">━ ' + p + '</span>';
+      legend += '<span class="cli"><span class="csw" style="background:' + c + '"></span>' + p + '</span>';
     }});
     legend += '</div>';
 
-    h += '<div class="section-title" style="margin-top:24px;"><h2>Trend MAE</h2><div class="line"></div></div>';
-    h += '<div class="data-table" style="padding:16px;">' + svg + legend + '</div>';
+    h += '<div class="sec" style="margin-top:24px"><h2>Trend MAE</h2><span class="rule"></span></div>';
+    h += '<div class="chart-card">' + svg + legend + '</div>';
   }}
 
   // === DETAIL TABLE (latest round) ===
   const details = latest.details || [];
   if (details.length) {{
-    h += '<div class="section-title" style="margin-top:24px;"><h2>Szczegóły — Kolejka ' + latest.round + '</h2><div class="line"></div></div>';
+    h += '<div class="sec" style="margin-top:24px"><h2>Szczegóły — Kolejka ' + latest.round + '</h2><span class="rule"></span></div>';
 
     if (!sorts.accuracy) sorts.accuracy = {{col:'abs_error', dir:'asc'}};
     const s = sorts.accuracy;
@@ -2173,7 +2218,7 @@ function renderAccuracy() {{
       return s.dir === 'desc' ? ' ▼' : ' ▲';
     }}
 
-    h += '<div class="data-table"><table><thead><tr>';
+    h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr>';
     h += '<th class="text-left sortable" data-tab="accuracy" data-col="name">Zawodnik' + accArrow('name') + '</th>';
     h += '<th class="text-center sortable" data-tab="accuracy" data-col="position">Poz' + accArrow('position') + '</th>';
     h += '<th class="text-left sortable" data-tab="accuracy" data-col="team">Drużyna' + accArrow('team') + '</th>';
@@ -2184,14 +2229,13 @@ function renderAccuracy() {{
 
     sorted.forEach(d => {{
       const absErr = Math.abs(d.error);
-      let errColor = '#ef4444';
-      if (absErr < 2) errColor = '#10b981';
-      else if (absErr < 4) errColor = '#94a3b8';
+      let errColor = 'var(--down)';
+      if (absErr < 2) errColor = 'var(--up)';
+      else if (absErr < 4) errColor = 'var(--text-muted)';
 
-      const posClass = 'pos-' + (d.position || '');
       h += '<tr>';
       h += '<td class="text-left">' + (d.name || '') + '</td>';
-      h += '<td class="text-center"><span class="pos-badge ' + posClass + '">' + (d.position || '') + '</span></td>';
+      h += '<td class="text-center">' + posBadge(d.position || '') + '</td>';
       h += '<td class="text-left c-muted">' + (d.team || '') + '</td>';
       h += '<td class="text-right">' + (d.predicted != null ? d.predicted.toFixed(1) : '—') + '</td>';
       h += '<td class="text-right">' + (d.actual != null ? d.actual : '—') + '</td>';
@@ -2199,21 +2243,21 @@ function renderAccuracy() {{
       h += '</tr>';
     }});
 
-    h += '</tbody></table></div>';
+    h += '</tbody></table></div></div>';
   }}
 
   // === AUTO-TUNING SECTION ===
   // Sekcja pokazuje status i wyniki auto-tunera parametrów predictora
-  h += '<div class="section-title" style="margin-top:32px;"><h2>🔧 Auto-tuning</h2><div class="line"></div></div>';
-  h += '<div class="data-table" style="padding:20px;">';
+  h += '<div class="sec" style="margin-top:32px"><h2>Auto-tuning</h2><span class="rule"></span></div>';
+  h += '<div class="panel" style="padding:20px;">';
 
   if (!TUNED_PARAMS) {{
     // Tuning jeszcze nie miał wystarczająco danych — zbieramy historię
     const totalRounds = ACCURACY_HISTORY ? ACCURACY_HISTORY.length : 0;
     h += '<div style="text-align:center;padding:16px 0;">';
     h += '<div style="font-size:32px;margin-bottom:8px;">⏳</div>';
-    h += '<div style="color:#94a3b8;font-size:14px;">Zbiera dane (' + totalRounds + '/4 kolejek)</div>';
-    h += '<div style="color:#64748b;font-size:12px;margin-top:4px;">Auto-tuning uruchomi się automatycznie po zebraniu min. 4 kolejek historii trafności</div>';
+    h += '<div style="color:var(--text-muted);font-size:14px;">Zbiera dane (' + totalRounds + '/4 kolejek)</div>';
+    h += '<div style="color:var(--text-dim);font-size:12px;margin-top:4px;">Auto-tuning uruchomi się automatycznie po zebraniu min. 4 kolejek historii trafności</div>';
     h += '</div>';
   }} else {{
     // Tuning został wykonany — pokazuj wyniki
@@ -2228,17 +2272,16 @@ function renderAccuracy() {{
 
     // Status: aktywny
     h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">';
-    h += '<span style="background:#10b981;color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;">✅ Aktywny</span>';
-    h += '<span style="color:#94a3b8;font-size:13px;">' + tp.rounds_used + ' kolejek · ostatni tuning: ' + (tp.last_tuned || '—') + '</span>';
+    h += '<span style="background:var(--up);color:var(--text-inverse);padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;">✅ Aktywny</span>';
+    h += '<span style="color:var(--text-muted);font-size:13px;">' + tp.rounds_used + ' kolejek · ostatni tuning: ' + (tp.last_tuned || '—') + '</span>';
     h += '</div>';
 
     // Tabela porównawcza parametrów
-    h += '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;">';
-    h += '<thead><tr>';
-    h += '<th style="text-align:left;padding:8px 12px;border-bottom:1px solid #334155;color:#64748b;font-size:12px;font-weight:600;">PARAMETR</th>';
-    h += '<th style="text-align:right;padding:8px 12px;border-bottom:1px solid #334155;color:#64748b;font-size:12px;font-weight:600;">DOMYŚLNA</th>';
-    h += '<th style="text-align:right;padding:8px 12px;border-bottom:1px solid #334155;color:#64748b;font-size:12px;font-weight:600;">WYTUNOWANA</th>';
-    h += '<th style="text-align:right;padding:8px 12px;border-bottom:1px solid #334155;color:#64748b;font-size:12px;font-weight:600;">ZMIANA</th>';
+    h += '<table class="dt"><thead><tr>';
+    h += '<th class="text-left">PARAMETR</th>';
+    h += '<th class="text-right">DOMYŚLNA</th>';
+    h += '<th class="text-right">WYTUNOWANA</th>';
+    h += '<th class="text-right">ZMIANA</th>';
     h += '</tr></thead><tbody>';
 
     function tuneRow(label, key, fmt) {{
@@ -2247,12 +2290,12 @@ function renderAccuracy() {{
       if (tunedVal === undefined || tunedVal === null) return '';
       const diff = tunedVal - defVal;
       const diffStr = diff > 0.001 ? '+' + fmt(diff) : diff < -0.001 ? fmt(diff) : '—';
-      const diffColor = Math.abs(diff) > 0.001 ? '#f59e0b' : '#64748b';
+      const diffColor = Math.abs(diff) > 0.001 ? 'var(--gold)' : 'var(--text-dim)';
       return '<tr>'
-        + '<td style="padding:8px 12px;color:#e2e8f0;font-size:13px;">' + label + '</td>'
-        + '<td style="text-align:right;padding:8px 12px;color:#64748b;font-size:13px;">' + fmt(defVal) + '</td>'
-        + '<td style="text-align:right;padding:8px 12px;color:#e2e8f0;font-weight:700;font-size:13px;">' + fmt(tunedVal) + '</td>'
-        + '<td style="text-align:right;padding:8px 12px;color:' + diffColor + ';font-size:13px;">' + diffStr + '</td>'
+        + '<td class="text-left">' + label + '</td>'
+        + '<td class="text-right c-dim">' + fmt(defVal) + '</td>'
+        + '<td class="text-right fw-700">' + fmt(tunedVal) + '</td>'
+        + '<td class="text-right" style="color:' + diffColor + '">' + diffStr + '</td>'
         + '</tr>';
     }}
 
@@ -2267,15 +2310,15 @@ function renderAccuracy() {{
     if (tp.mae_before != null && tp.mae_after != null) {{
       const improved = tp.mae_after < tp.mae_before;
       const arrow = improved ? '↓' : '↑';
-      const color = improved ? '#10b981' : '#ef4444';
+      const color = improved ? 'var(--up)' : 'var(--down)';
       const sign = improved ? '' : '+';
       h += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">';
-      h += '<div style="background:#1e293b;border-radius:8px;padding:12px 20px;">';
-      h += '<div style="color:#64748b;font-size:11px;font-weight:600;margin-bottom:4px;">POPRAWA MAE</div>';
+      h += '<div style="background:var(--surface-inset);border-radius:8px;padding:12px 20px;">';
+      h += '<div style="color:var(--text-dim);font-size:11px;font-weight:600;margin-bottom:4px;">POPRAWA MAE</div>';
       h += '<div style="font-size:18px;font-weight:700;">';
-      h += '<span style="color:#94a3b8;">' + tp.mae_before.toFixed(1) + '</span>';
-      h += ' <span style="color:#64748b;font-size:14px;">→</span> ';
-      h += '<span style="color:#e2e8f0;">' + tp.mae_after.toFixed(1) + '</span>';
+      h += '<span style="color:var(--text-muted);">' + tp.mae_before.toFixed(1) + '</span>';
+      h += ' <span style="color:var(--text-dim);font-size:14px;">→</span> ';
+      h += '<span style="color:var(--text);">' + tp.mae_after.toFixed(1) + '</span>';
       const pct = tp.improvement_pct != null ? tp.improvement_pct : 0;
       h += ' <span style="color:' + color + ';font-size:14px;">(' + arrow + Math.abs(pct).toFixed(1) + '%)</span>';
       h += '</div>';
@@ -2284,23 +2327,204 @@ function renderAccuracy() {{
     }}
   }}
 
-  h += '</div>';  // end data-table
+  h += '</div>';  // end panel (auto-tuning)
 
   return h;
 }}
 
 // ========== SEASON TRACKER ==========
 // Stan widoku sezonu — przechowywany poza renderSeason(), bo render() czyści DOM
-let seasonView = 'positions';  // 'positions' lub 'points'
+let seasonView = 'positions';  // 'positions' (bump) lub 'points' (słupki klasyfikacji)
 let seasonFilter = 'all';     // 'all', 'top5', 'bottom5'
-let seasonHidden = {{}};       // {{teamName: true}} — ukryte linie
+let seasonHidden = {{}};       // {{teamName: true}} — ukryte drużyny
 
-// Paleta kolorów czytelna na ciemnym tle
+// Paleta kolorów — serie tokenów Concept C (Sezon + Porównanie)
 const SEASON_COLORS = [
-  '#22d3ee','#f59e0b','#10b981','#a78bfa','#f472b6','#fb923c',
-  '#38bdf8','#facc15','#4ade80','#c084fc','#fb7185','#fdba74',
-  '#67e8f9','#fde047','#86efac','#d8b4fe','#fda4af','#fed7aa',
+  'var(--series-1)','var(--series-2)','var(--series-3)','var(--series-4)',
+  'var(--series-5)','var(--series-6)','var(--series-7)','var(--series-8)',
+  'var(--series-9)','var(--series-10)','var(--series-11)','var(--series-12)',
 ];
+
+// Ładny krok osi (1 / 2 / 5 × 10^n) — do siatki i podpisów
+function seasonNiceStep(raw) {{
+  if (!(raw > 0)) return 1;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / pow;
+  const m = n <= 1 ? 1 : (n <= 2 ? 2 : (n <= 5 ? 5 : 10));
+  return m * pow;
+}}
+
+// Bezpieczny tekst w atrybutach HTML/SVG (cudzysłowy w nazwie drużyny)
+function seasonAttr(t) {{
+  return String(t).replace(/"/g, '&quot;');
+}}
+
+// Dostępna szerokość wykresu. Na desktopie cel jak dotychczas (1100 / 1042 px),
+// na wąskich ekranach rysujemy tak, żeby wykres zmieścił się w karcie bez
+// przewijania w poziomie — na 360px inaczej widać 2 z 9 kolejek, a słupki
+// ucinają się w połowie i wszystkie wyglądają jednakowo.
+// fit = wykres mieści się w karcie (nie potrzebujemy min-width → brak scrolla)
+function seasonWidth(maxW, minW) {{
+  const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1440;
+  const avail = Math.max(260, vw - 76);   // margines strony + padding karty
+  const w = Math.round(Math.max(minW || 260, Math.min(maxW, avail)));
+  return {{ w: w, fit: w <= avail }};
+}}
+
+// Podświetlenie drużyny: najechanie na linię/słupek albo na pozycję w legendzie.
+// Reszta wykresu przygasza — czytelne też przy 30 drużynach.
+function seasonSetFocus(team) {{
+  const chart = document.getElementById('seasonChart');
+  if (!chart) return;
+  chart.classList.toggle('has-focus', !!team);
+  chart.querySelectorAll('[data-team]').forEach(g => g.classList.toggle('is-focus', g.getAttribute('data-team') === team));
+  document.querySelectorAll('.season-legend-item').forEach(li => li.classList.toggle('is-focus', li.dataset.steam === team));
+}}
+
+// ===== Widok "Pozycje" — bump chart, pozycja 1 na górze =====
+function seasonLinesSVG(o) {{
+  const marginL = 46, marginR = 26, marginT = 26, marginB = 34;
+  const numRounds = o.rounds.length;
+  // Szerokość kolejki: cel ~1100px na desktopie, na wąskim ekranie tyle,
+  // ile zmieści się w karcie (min. 26px na kolejkę)
+  const sw = seasonWidth(1100, 260);
+  const targetW = sw.w;
+  const ptFloor = targetW < 584 ? 26 : 64;
+  const ptW = Math.max(ptFloor, Math.min(150, (targetW - marginL - marginR) / Math.max(numRounds - 1, 1)));
+  const chartW = Math.round(marginL + marginR + ptW * Math.max(numRounds - 1, 1));
+  const minStyle = sw.fit ? '' : ' style="min-width:' + chartW + 'px"';
+  const chartH = 344;
+  const plotW = chartW - marginL - marginR;
+  const plotH = chartH - marginT - marginB;
+  const maxPos = Math.max(o.allCount, 1);
+  const xScale = (idx) => marginL + (numRounds > 1 ? idx / (numRounds - 1) * plotW : plotW / 2);
+  const yScale = (val) => marginT + (val - 1) / Math.max(maxPos - 1, 1) * plotH;
+
+  let svg = '<svg width="' + chartW + '" height="' + chartH + '" viewBox="0 0 ' + chartW + ' ' + chartH + '"' + minStyle + ' xmlns="http://www.w3.org/2000/svg">';
+
+  // Strefa TOP 5 — o co gra się w sezonie
+  const bTop = yScale(1) - 7;
+  const bBot = yScale(Math.min(5, maxPos)) + 7;
+  svg += '<rect x="' + marginL + '" y="' + bTop + '" width="' + plotW + '" height="' + (bBot - bTop) + '" style="fill:var(--tint-soft)"/>';
+  svg += '<text class="sband-lbl" x="' + (marginL + plotW - 8) + '" y="' + ((bTop + bBot) / 2 + 3.5) + '" text-anchor="end">TOP 5</text>';
+
+  // Siatka pozioma — pozycje co ładny krok (wcześniej tylko 1..10)
+  const step = seasonNiceStep(maxPos / 6);
+  const ticks = [1];
+  for (let v = step; v <= maxPos; v += step) {{
+    if (v - ticks[ticks.length - 1] >= step * 0.6) ticks.push(v);
+  }}
+  ticks.forEach(v => {{
+    const y = yScale(v);
+    svg += '<line class="sgrid" x1="' + marginL + '" y1="' + y + '" x2="' + (chartW - marginR) + '" y2="' + y + '"/>';
+    svg += '<text class="axis-txt" x="' + (marginL - 12) + '" y="' + (y + 4) + '" text-anchor="end">' + v + '</text>';
+  }});
+  svg += '<line class="axis" x1="' + marginL + '" y1="' + (marginT - 10) + '" x2="' + marginL + '" y2="' + (chartH - marginB + 6) + '"/>';
+
+  // Podpisy osi X — numery kolejek
+  o.rounds.forEach((r, i) => {{
+    svg += '<text class="axis-txt" x="' + xScale(i) + '" y="' + (chartH - 10) + '" text-anchor="middle">' + r.round + '</text>';
+  }});
+
+  // Punkty danych per drużyna
+  const lines = {{}};
+  o.visibleTeams.forEach(team => {{
+    lines[team] = [];
+    o.rounds.forEach((r, ri) => {{
+      const s = (r.standings || []).find(x => x.team === team);
+      if (s) lines[team].push({{ x: xScale(ri), y: yScale(s.position), round: r.round, position: s.position, total_points: s.total_points }});
+    }});
+  }});
+
+  // Kolejność rysowania: własna drużyna na samym końcu — jej podkład "wycina" krzyżowania
+  const order = o.visibleTeams.slice().sort((a, b) => (o.own(a) ? 1 : 0) - (o.own(b) ? 1 : 0));
+
+  // 1) Podkład (tło w kolorze karty) rysowany WSZYSTKI przed liniami
+  order.forEach(team => {{
+    if (o.hidden[team] || !o.own(team) || !lines[team].length) return;
+    const p = lines[team].map(q => q.x + ',' + q.y).join(' ');
+    svg += '<polyline points="' + p + '" fill="none" style="stroke:var(--surface);stroke-linejoin:round;stroke-linecap:round" stroke-width="' + (o.lw(team) + 4) + '"/>';
+  }});
+
+  // 2) Linie + punkty
+  order.forEach(team => {{
+    if (o.hidden[team]) return;
+    const pts = lines[team];
+    if (!pts.length) return;
+    const own = o.own(team);
+    const lc = o.lc(team);
+    const p = pts.map(q => q.x + ',' + q.y).join(' ');
+    svg += '<g class="steam' + (own ? ' is-own' : '') + '" data-team="' + seasonAttr(team) + '" data-tip="' + seasonAttr(o.summary(team)) + '">';
+    svg += '<polyline class="shit" points="' + p + '"/>';
+    svg += '<polyline class="sline" points="' + p + '" style="--lc:' + lc + ';--lw:' + o.lw(team) + 'px"/>';
+    pts.forEach(q => {{
+      svg += '<circle class="sdot" cx="' + q.x + '" cy="' + q.y + '" r="' + (own ? 4.5 : 3) + '" style="--lc:' + lc + '" data-tip="Kolejka ' + q.round + ': ' + seasonAttr(team) + ' — poz. ' + q.position + ' (' + q.total_points + ' pkt)"/>';
+    }});
+    svg += '</g>';
+  }});
+
+  svg += '</svg>';
+  return svg;
+}}
+
+// ===== Widok "Punkty łącznie" — słupki klasyfikacji końcowej =====
+// 30 linii naraz jest nieczytelne, dlatego tu czytamy długość słupka + etykietę,
+// a nie kolor. Pas tła pokazuje dystans do lidera.
+function seasonBarsSVG(o) {{
+  const marginT = 16, marginB = 36;
+  // Wąski ekran: krótsza kolumna z nazwami, słupki rysowane w całości —
+  // przy przewijaniu ucinają się w połowie i wszystkie wyglądają na takie same
+  const sw = seasonWidth(1042, 260);
+  const targetW = sw.w;
+  const compact = targetW < 760;
+  const marginL = compact ? 150 : 214;
+  const marginR = compact ? 44 : 86;
+  const rowH = 20;
+  const rows = o.visibleTeams.filter(t => !o.hidden[t]);
+  rows.sort((a, b) => (o.pos(a) || 99) - (o.pos(b) || 99));
+  const chartW = Math.max(targetW, marginL + marginR + (compact ? 60 : 220));
+  const plotW = chartW - marginL - marginR;
+  const chartH = marginT + marginB + rowH * Math.max(rows.length, 1);
+  const minStyle = sw.fit ? '' : ' style="min-width:' + chartW + 'px"';
+
+  let maxPts = 0;
+  rows.forEach(t => {{ const p = o.pts(t); if (p > maxPts) maxPts = p; }});
+  const xStep = seasonNiceStep((maxPts || 1) / 6);
+  const axisMax = Math.max(xStep, Math.ceil((maxPts || 1) / xStep) * xStep);
+  // Na wąskim ekranie podpisy osi co ~3 zamiast co 6 działek — inaczej się nachodzą
+  const tickStep = compact ? Math.max(xStep, seasonNiceStep(axisMax / 3)) : xStep;
+  const xOf = (v) => marginL + (v / axisMax) * plotW;
+
+  let svg = '<svg width="' + chartW + '" height="' + chartH + '" viewBox="0 0 ' + chartW + ' ' + chartH + '"' + minStyle + ' xmlns="http://www.w3.org/2000/svg">';
+
+  // Pionowa siatka + podpisy osi X (punkty)
+  for (let v = 0; v <= axisMax + 0.5; v += tickStep) {{
+    const x = xOf(v);
+    svg += '<line class="sgrid" x1="' + x + '" y1="' + marginT + '" x2="' + x + '" y2="' + (chartH - marginB + 6) + '"/>';
+    svg += '<text class="axis-txt" x="' + x + '" y="' + (chartH - 12) + '" text-anchor="middle">' + v + '</text>';
+  }}
+  svg += '<line class="axis" x1="' + marginL + '" y1="' + marginT + '" x2="' + marginL + '" y2="' + (chartH - marginB + 6) + '"/>';
+
+  rows.forEach((team, i) => {{
+    const y = marginT + i * rowH;
+    const cy = y + rowH / 2;
+    const own = o.own(team);
+    const val = o.pts(team);
+    const pr = o.pos(team);
+    const bw = Math.max(2, xOf(val) - marginL);
+    svg += '<g class="steam' + (own ? ' is-own' : '') + '" data-team="' + seasonAttr(team) + '" data-tip="' + seasonAttr(o.summary(team)) + '">';
+    svg += '<rect class="sband" x="0" y="' + y + '" width="' + chartW + '" height="' + rowH + '"/>';
+    svg += '<text class="srank' + (pr === 1 ? ' top1' : '') + '" x="8" y="' + (cy + 3.5) + '">' + (pr || '–') + '</text>';
+    svg += '<text class="srow-name" x="' + (marginL - 16) + '" y="' + (cy + 4) + '" text-anchor="end">' + team + '</text>';
+    svg += '<rect class="strack" x="' + marginL + '" y="' + (y + 4) + '" width="' + plotW + '" height="' + (rowH - 8) + '" rx="4"/>';
+    svg += '<rect class="sbar" x="' + marginL + '" y="' + (y + 4) + '" width="' + bw + '" height="' + (rowH - 8) + '" rx="4" style="--lc:' + o.lc(team) + '"/>';
+    svg += '<text class="sval" x="' + (marginL + bw + 9) + '" y="' + (cy + 3.5) + '">' + val + '</text>';
+    svg += '</g>';
+  }});
+
+  svg += '</svg>';
+  return svg;
+}}
 
 function renderSeason() {{
   const rounds = (LEAGUE_HISTORY.rounds || []);
@@ -2308,170 +2532,94 @@ function renderSeason() {{
     return '<div class="empty-msg">Zbieranie danych — wykres pojawi się po 2+ kolejkach</div>';
   }}
 
-  // Zbierz wszystkie drużyny (unikalne nazwy)
+  // Wszystkie drużyny + ranking wg ostatniej kolejki (stabilne przypisanie kolorów)
   const teamSet = new Set();
   rounds.forEach(r => (r.standings || []).forEach(s => teamSet.add(s.team)));
   const allTeams = [...teamSet];
-
-  // Przypisz kolory
-  const teamColor = {{}};
-  allTeams.forEach((t, i) => teamColor[t] = SEASON_COLORS[i % SEASON_COLORS.length]);
-
-  // Ostatnia kolejka — aktualne pozycje do filtrowania
   const lastRound = rounds[rounds.length - 1];
   const lastStandings = {{}};
   (lastRound.standings || []).forEach(s => lastStandings[s.team] = s);
 
-  // Filtruj drużyny wg przełącznika
-  let visibleTeams = allTeams;
+  const ranked = allTeams.filter(t => lastStandings[t])
+    .sort((a, b) => lastStandings[a].position - lastStandings[b].position);
+  allTeams.forEach(t => {{ if (!lastStandings[t]) ranked.push(t); }});
+
+  const teamColor = {{}};
+  ranked.forEach((t, i) => teamColor[t] = SEASON_COLORS[i % SEASON_COLORS.length]);
+
+  // Filtr zakresu — kolejność legenda/tabela jak w klasyfikacji (od lidera)
+  let visibleTeams = ranked.slice();
   if (seasonFilter === 'top5') {{
-    visibleTeams = allTeams.filter(t => lastStandings[t] && lastStandings[t].position <= 5);
+    visibleTeams = ranked.filter(t => lastStandings[t] && lastStandings[t].position <= 5);
   }} else if (seasonFilter === 'bottom5') {{
-    const sorted = allTeams.filter(t => lastStandings[t]).sort((a, b) => lastStandings[b].position - lastStandings[a].position);
-    visibleTeams = sorted.slice(0, 5);
+    visibleTeams = ranked.filter(t => lastStandings[t]).slice(-5).reverse();
   }}
 
-  // Wymiary wykresu SVG
-  const marginL = 44, marginR = 20, marginT = 20, marginB = 36;
   const numRounds = rounds.length;
-  // Szerokość punktu danych: min 60px, dopasuj do ekranu
-  const ptW = Math.max(60, Math.min(100, (900 - marginL - marginR) / Math.max(numRounds - 1, 1)));
-  const chartW = marginL + marginR + ptW * Math.max(numRounds - 1, 1);
-  const chartH = 320;
-  const plotW = chartW - marginL - marginR;
-  const plotH = chartH - marginT - marginB;
+  const isOwn = (t) => t.toLowerCase().includes('tokusatsu');
 
-  // Zakres osi Y
-  let yMin, yMax;
-  if (seasonView === 'positions') {{
-    // Pozycje: 1..maxPos (odwrócone — 1 na górze)
-    const maxPos = allTeams.length || 1;
-    yMin = 1;
-    yMax = maxPos;
-  }} else {{
-    // Punkty łącznie: 0..max
-    let maxPts = 0;
-    rounds.forEach(r => (r.standings || []).forEach(s => {{ if (s.total_points > maxPts) maxPts = s.total_points; }}));
-    yMin = 0;
-    yMax = maxPts || 100;
-  }}
-
-  // Funkcje mapowania
-  const xScale = (idx) => marginL + (numRounds > 1 ? idx / (numRounds - 1) * plotW : plotW / 2);
-  const yScale = (val) => {{
-    if (seasonView === 'positions') {{
-      // Odwrócona oś — pozycja 1 na górze
-      return marginT + (val - yMin) / (yMax - yMin) * plotH;
-    }} else {{
-      // Punkty rosnąco w górę
-      return marginT + plotH - (val - yMin) / (yMax - yMin || 1) * plotH;
-    }}
+  const opts = {{
+    rounds: rounds,
+    allCount: ranked.length,
+    visibleTeams: visibleTeams,
+    hidden: seasonHidden,
+    own: isOwn,
+    // Własna drużyna zawsze w akcencie (mint), reszta z palety wg pozycji
+    lc: (t) => isOwn(t) ? 'var(--accent)' : (teamColor[t] || 'var(--text-dim)'),
+    lw: (t) => isOwn(t) ? 3.4 : 2,
+    pos: (t) => lastStandings[t] ? lastStandings[t].position : 0,
+    pts: (t) => lastStandings[t] ? lastStandings[t].total_points : 0,
+    summary: (t) => {{
+      const s = lastStandings[t];
+      if (!s) return t;
+      return t + ' — ' + s.total_points + ' pkt · poz. ' + s.position
+        + ' · śr. ' + (s.total_points / numRounds).toFixed(1) + '/kol.';
+    }},
   }};
 
-  // Buduj SVG
-  let svg = '<svg width="' + chartW + '" height="' + chartH + '" xmlns="http://www.w3.org/2000/svg">';
-
-  // Siatka i etykiety osi Y
-  const yTicks = seasonView === 'positions'
-    ? Array.from({{length: Math.min(yMax, 10)}}, (_, i) => i + 1)
-    : (() => {{
-        const step = Math.ceil(yMax / 6 / 10) * 10 || 10;
-        const ticks = [];
-        for (let v = 0; v <= yMax; v += step) ticks.push(v);
-        return ticks;
-      }})();
-
-  yTicks.forEach(v => {{
-    const y = yScale(v);
-    svg += '<line x1="' + marginL + '" y1="' + y + '" x2="' + (chartW - marginR) + '" y2="' + y + '" stroke="#1e293b" stroke-width="1"/>';
-    svg += '<text x="' + (marginL - 8) + '" y="' + (y + 4) + '" text-anchor="end" fill="#64748b" font-size="11" font-family="DM Sans,sans-serif">' + v + '</text>';
-  }});
-
-  // Etykiety osi X — numery kolejek
-  rounds.forEach((r, i) => {{
-    const x = xScale(i);
-    svg += '<text x="' + x + '" y="' + (chartH - 8) + '" text-anchor="middle" fill="#64748b" font-size="11" font-family="DM Sans,sans-serif">' + r.round + '</text>';
-  }});
-
-  // Linie drużyn
-  // Budujemy dane per drużyna: [{{x, y, round, team, position, total_points}}]
-  const teamLines = {{}};
-  visibleTeams.forEach(team => {{
-    teamLines[team] = [];
-    rounds.forEach((r, ri) => {{
-      const s = (r.standings || []).find(s => s.team === team);
-      if (s) {{
-        const val = seasonView === 'positions' ? s.position : s.total_points;
-        teamLines[team].push({{
-          x: xScale(ri), y: yScale(val),
-          round: r.round, team: team,
-          position: s.position, total_points: s.total_points, round_points: s.round_points || 0,
-        }});
-      }}
-    }});
-  }});
-
-  // Rysuj linie i punkty
-  visibleTeams.forEach(team => {{
-    if (seasonHidden[team]) return;
-    const pts = teamLines[team];
-    if (pts.length < 1) return;
-    const color = teamColor[team];
-    // Grubsza linia dla własnej drużyny (slug zawierający 'tokusatsu' lub pozycja 1)
-    const isOwn = team.toLowerCase().includes('tokusatsu');
-    const sw = isOwn ? 3 : 1.5;
-    const opacity = isOwn ? 1 : 0.85;
-
-    // Polyline
-    const points = pts.map(p => p.x + ',' + p.y).join(' ');
-    svg += '<polyline points="' + points + '" fill="none" stroke="' + color + '" stroke-width="' + sw + '" stroke-opacity="' + opacity + '" stroke-linejoin="round" stroke-linecap="round"/>';
-
-    // Punkty danych (klikalne kółka)
-    pts.forEach((p, pi) => {{
-      svg += '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (isOwn ? 5 : 3.5) + '" fill="' + color + '" stroke="#0f172a" stroke-width="1.5"'
-        + ' data-season-pt="1"'
-        + ' data-tip="Kolejka ' + p.round + ': ' + p.team + ' — poz. ' + p.position + ' (' + p.total_points + ' pkt)"'
-        + ' style="cursor:pointer" />';
-    }});
-  }});
-
-  svg += '</svg>';
+  const svg = seasonView === 'points' ? seasonBarsSVG(opts) : seasonLinesSVG(opts);
 
   // === Buduj HTML ===
-  let h = '<div class="section-title"><span style="font-size:22px">📈</span><h2>Sezon — historia ligi</h2><div class="line"></div></div>';
+  const note = seasonView === 'points'
+    ? 'Punkty łącznie — stan po ' + numRounds + ' kolejkach'
+    : 'Pozycja po każdej kolejce';
+  let h = '<div class="sec" style="margin-top:26px"><h2>Sezon — historia ligi</h2><span class="rule"></span>'
+    + '<span class="sec-note">' + note + '</span></div>';
 
   // Kontrolki
-  h += '<div class="season-controls">';
-  h += '<button class="season-btn' + (seasonView === 'positions' ? ' active' : '') + '" data-sview="positions">Pozycje</button>';
-  h += '<button class="season-btn' + (seasonView === 'points' ? ' active' : '') + '" data-sview="points">Punkty łącznie</button>';
-  h += '<span style="width:16px"></span>';
-  h += '<button class="season-btn' + (seasonFilter === 'all' ? ' active' : '') + '" data-sfilter="all">Wszystkie</button>';
-  h += '<button class="season-btn' + (seasonFilter === 'top5' ? ' active' : '') + '" data-sfilter="top5">Top 5</button>';
-  h += '<button class="season-btn' + (seasonFilter === 'bottom5' ? ' active' : '') + '" data-sfilter="bottom5">Dolne 5</button>';
+  h += '<div class="toolbar">';
+  h += '<div class="seg" id="season-mode" role="group" aria-label="Tryb wykresu"><span class="seg-label">Wykres</span>';
+  h += '<button class="seg-btn season-btn' + (seasonView === 'positions' ? ' active' : '') + '" data-sview="positions">Pozycje</button>';
+  h += '<button class="seg-btn season-btn' + (seasonView === 'points' ? ' active' : '') + '" data-sview="points">Punkty łącznie</button>';
+  h += '</div>';
+  h += '<div class="seg" id="season-range" role="group" aria-label="Zakres"><span class="seg-label">Zakres</span>';
+  h += '<button class="seg-btn season-btn' + (seasonFilter === 'all' ? ' active' : '') + '" data-sfilter="all">Wszystkie</button>';
+  h += '<button class="seg-btn season-btn' + (seasonFilter === 'top5' ? ' active' : '') + '" data-sfilter="top5">Top 5</button>';
+  h += '<button class="seg-btn season-btn' + (seasonFilter === 'bottom5' ? ' active' : '') + '" data-sfilter="bottom5">Dolne 5</button>';
+  h += '</div>';
   h += '</div>';
 
   // Wykres
-  h += '<div class="season-wrap">';
-  h += '<div class="season-chart" id="seasonChart">';
+  h += '<div class="chart-card"><div class="season-chart" id="seasonChart">';
   h += svg;
   h += '<div class="season-tooltip" id="seasonTooltip"></div>';
   h += '</div>';
 
-  // Legenda
-  h += '<div class="season-legend">';
+  // Legenda — klik ukrywa/pokazuje, najechanie podświetla linię/słupek
+  h += '<div class="chart-legend" id="season-legend">';
   visibleTeams.forEach(team => {{
-    const color = teamColor[team];
-    const cls = seasonHidden[team] ? ' hidden' : '';
-    h += '<span class="season-legend-item' + cls + '" data-steam="' + team.replace(/"/g, '&quot;') + '">';
-    h += '<span class="swatch" style="background:' + color + '"></span>' + team;
+    const cls = (seasonHidden[team] ? ' hidden' : '') + (isOwn(team) ? ' is-own' : '');
+    h += '<span class="cli season-legend-item' + cls + '" data-steam="' + seasonAttr(team) + '">';
+    h += '<span class="csw" style="background:' + opts.lc(team) + '"></span>' + team;
     h += '</span>';
   }});
   h += '</div>';
-  h += '</div>';  // season-wrap
+  h += '</div>';  // chart-card
 
   // === Tabela szczegółów ===
   if (lastRound && lastRound.standings && lastRound.standings.length > 0) {{
-    h += '<div class="season-table"><div class="data-table"><table>';
+    h += '<div class="sec" style="margin-top:24px"><h2>Tabela sezonu</h2><span class="rule"></span></div>';
+    h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt">';
     h += '<thead><tr>';
     h += '<th class="text-left">Drużyna</th><th class="text-center">Poz.</th><th class="text-right">Punkty</th>';
     h += '<th class="text-right">Średnia/kol.</th><th class="text-right">Najlepsza kol.</th><th class="text-right">Najgorsza kol.</th>';
@@ -2519,18 +2667,18 @@ function renderSeason() {{
 
     teamStats.forEach(ts => {{
       const trendHtml = ts.trend > 0
-        ? '<span class="trend-up">▲' + ts.trend + '</span>'
+        ? '<span class="chg chg-up">▲' + ts.trend + '</span>'
         : ts.trend < 0
-          ? '<span class="trend-down">▼' + Math.abs(ts.trend) + '</span>'
-          : '<span class="trend-flat">●</span>';
-      const color = teamColor[ts.team] || '#e2e8f0';
+          ? '<span class="chg chg-down">▼' + Math.abs(ts.trend) + '</span>'
+          : '<span class="chg chg-flat">—</span>';
+      const color = teamColor[ts.team] || 'var(--text)';
       h += '<tr>';
       h += '<td class="text-left" style="color:' + color + ';font-weight:600">' + ts.team + '</td>';
       h += '<td class="text-center fw-700">' + ts.position + '</td>';
       h += '<td class="text-right fw-600">' + ts.totalPts + '</td>';
       h += '<td class="text-right">' + ts.avg.toFixed(1) + '</td>';
-      h += '<td class="text-right" style="color:#10b981">' + ts.bestRound + '</td>';
-      h += '<td class="text-right" style="color:#ef4444">' + ts.worstRound + '</td>';
+      h += '<td class="text-right" style="color:var(--up)">' + ts.bestRound + '</td>';
+      h += '<td class="text-right" style="color:var(--down)">' + ts.worstRound + '</td>';
       h += '<td class="text-center">' + trendHtml + '</td>';
       h += '</tr>';
     }});
@@ -2542,6 +2690,16 @@ function renderSeason() {{
 }}
 
 function attachSeasonHandlers() {{
+  // Po obróceniu telefonu / zmianie szerokości okna przeliczamy wykres
+  // (szerokość zależy od viewportu). Listener dokładamy tylko raz.
+  if (!window.__seasonResizeBound) {{
+    window.__seasonResizeBound = true;
+    let seasonResizeTimer;
+    window.addEventListener('resize', () => {{
+      clearTimeout(seasonResizeTimer);
+      seasonResizeTimer = setTimeout(() => {{ if (tab === 'season') render(); }}, 200);
+    }});
+  }}
   // Przełączniki widoku i filtra
   document.querySelectorAll('[data-sview]').forEach(btn => {{
     btn.onclick = () => {{ seasonView = btn.dataset.sview; render(); }};
@@ -2549,34 +2707,48 @@ function attachSeasonHandlers() {{
   document.querySelectorAll('[data-sfilter]').forEach(btn => {{
     btn.onclick = () => {{ seasonFilter = btn.dataset.sfilter; render(); }};
   }});
-  // Legenda — klik ukrywa/pokazuje linię
+  // Legenda — klik ukrywa/pokazuje, najechanie podświetla
   document.querySelectorAll('.season-legend-item').forEach(item => {{
     item.onclick = () => {{
       const team = item.dataset.steam;
       seasonHidden[team] = !seasonHidden[team];
       render();
     }};
+    item.onmouseenter = () => seasonSetFocus(item.dataset.steam);
+    item.onmouseleave = () => seasonSetFocus(null);
   }});
-  // Tooltip na punktach wykresu
+
   const chart = document.getElementById('seasonChart');
   const tip = document.getElementById('seasonTooltip');
   if (chart && tip) {{
+    // Podświetlenie linii / wiersza po najechaniu
     chart.addEventListener('mouseover', (e) => {{
-      const el = e.target.closest('[data-season-pt]');
-      if (el) {{
-        tip.textContent = el.dataset.tip;
-        tip.classList.add('visible');
-        const rect = chart.getBoundingClientRect();
-        const cx = parseFloat(el.getAttribute('cx'));
-        const cy = parseFloat(el.getAttribute('cy'));
-        tip.style.left = (cx + 12) + 'px';
-        tip.style.top = (cy - 10) + 'px';
-      }}
+      const g = e.target.closest('[data-team]');
+      seasonSetFocus(g ? g.getAttribute('data-team') : null);
     }});
-    chart.addEventListener('mouseout', (e) => {{
-      if (e.target.closest('[data-season-pt]')) {{
-        tip.classList.remove('visible');
-      }}
+    chart.addEventListener('mouseleave', () => {{
+      seasonSetFocus(null);
+      tip.classList.remove('visible');
+    }});
+
+    // Tooltip — kotwiczony do kursora (grupa/kolumna ma szeroką bounding box,
+    // więc pozycja liczona z niej trafiała w krzak); zawsze trzymamy go w karcie
+    chart.addEventListener('mouseover', (e) => {{
+      const el = e.target.closest('[data-tip]');
+      if (!el) {{ tip.classList.remove('visible'); return; }}
+      tip.textContent = el.getAttribute('data-tip');
+      tip.classList.add('visible');
+      const cr = chart.getBoundingClientRect();
+      const sl = chart.scrollLeft, st = chart.scrollTop;
+      const w = tip.offsetWidth, h = tip.offsetHeight;
+      const maxL = sl + chart.clientWidth - w - 8;
+      const maxT = st + chart.clientHeight - h - 8;
+      let left = e.clientX - cr.left + sl + 14;
+      let top = e.clientY - cr.top + st - h - 12;
+      // Gdy po prawej zabraknie miejsca — flip na drugą stronę kursora
+      if (left + w > sl + chart.clientWidth - 8) left = e.clientX - cr.left + sl - w - 14;
+      tip.style.left = Math.min(Math.max(left, sl + 6), Math.max(sl + 6, maxL)) + 'px';
+      tip.style.top = Math.min(Math.max(top, st + 4), Math.max(st + 4, maxT)) + 'px';
     }});
   }}
 }}
@@ -2588,7 +2760,7 @@ function attachSeasonHandlers() {{
 // ============================================================
 
 // 📖 Kolory przypisane do pozycji w kartach — stałe, czytelne
-const CMP_COLORS = ['#22d3ee', '#fbbf24', '#a78bfa'];
+const CMP_COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)'];
 
 function cmpAddPlayer(id) {{
   if (cmpSelected.length >= 3) return;
@@ -2613,37 +2785,38 @@ function renderComparison() {{
     return {{...p, ...pred, _src: p}};
   }});
 
-  let h = '<div class="section-title"><span style="font-size:22px">⚖️</span><h2>Porównanie zawodników</h2><div class="line"></div></div>';
+  let h = '<div class="sec" style="margin-top:26px"><h2>Porównanie zawodników</h2><span class="rule"></span>'
+    + '<span class="sec-note">Wybierz od 2 do 3 zawodników — kolory kart, wykresu i tabeli FDR są spójne</span></div>';
 
   // --- Pole wyszukiwania ---
-  h += '<div class="cmp-search-wrap">';
-  h += '<div class="cmp-search-box">';
-  h += '<input class="cmp-search-input" id="cmpSearchInput" type="text" placeholder="Wpisz imię zawodnika… (min 2, max 3)" autocomplete="off">';
-  h += '<div class="cmp-autocomplete" id="cmpAutocomplete"></div>';
+  h += '<div class="toolbar">';
+  h += '<div class="search-wrap" style="max-width:420px">';
+  h += '<input class="input" id="cmpSearchInput" type="text" placeholder="Wpisz imię zawodnika… (min 2, max 3)" autocomplete="off">';
+  h += '<div class="ac" id="cmpAutocomplete" role="listbox" aria-label="Podpowiedzi"></div>';
   h += '</div>';
-  h += '<button class="cmp-clear-btn" onclick="cmpClear()">Wyczyść</button>';
+  h += '<button class="clear-btn" onclick="cmpClear()">Wyczyść</button>';
+  h += '<span class="hint">Minimum 2, maksimum 3 zawodników.</span>';
   h += '</div>';
 
   // --- Chipy wybranych zawodników ---
   if (cmpSelected.length) {{
-    h += '<div class="cmp-selected-chips">';
+    h += '<div class="chips">';
     cmpSelected.forEach((id, i) => {{
       const p = allPlayers.find(x => x.player_id === id);
       if (!p) return;
       const pk = POS_ID[p.position] || p.position || '';
-      h += '<div class="cmp-chip" style="border-color:'+CMP_COLORS[i]+'">';
-      h += posBadge(p.position) + ' <strong>' + p.name + '</strong> <span style="color:#64748b;font-size:11px">(' + p.team + ')</span>';
-      h += '<button class="cmp-chip-remove" onclick="cmpRemovePlayer('+id+')">×</button>';
-      h += '</div>';
+      h += '<span class="chip" style="border-color:'+CMP_COLORS[i]+'">';
+      h += posBadge(p.position) + '<span>' + p.name + '</span><span class="chip-meta">' + p.team + '</span>';
+      h += '<button class="chip-x" onclick="cmpRemovePlayer('+id+')" aria-label="Usuń ' + p.name + '">✕</button>';
+      h += '</span>';
     }});
     h += '</div>';
   }}
 
   // Jeśli mniej niż 2 zawodników — pokaż instrukcję
   if (cmpSelected.length < 2) {{
-    h += '<div class="cmp-empty"><div class="cmp-empty-icon">⚖️</div>';
-    h += 'Wybierz <strong>2 lub 3</strong> zawodników aby zobaczyć porównanie.<br>';
-    h += '<span style="font-size:13px;color:#475569">Zacznij wpisywać nazwisko w polu powyżej.</span></div>';
+    h += '<div class="cmp-empty"><strong>Potrzebne są co najmniej 2 zawodnicy</strong>';
+    h += 'Wybierz <b>2 lub 3</b> zawodników aby zobaczyć porównanie. Zacznij wpisywać nazwisko w polu powyżej.</div>';
     return h;
   }}
 
@@ -2675,17 +2848,16 @@ function renderComparison() {{
     const isHome = nextFix ? nextFix.home : p.is_home;
     const haLabel = isHome ? '(D)' : '(W)';
 
-    h += '<div class="cmp-card" style="border-top-color:'+CMP_COLORS[i]+'">';
-    h += '<div class="cmp-card-name">' + p.name + '</div>';
-    h += '<div class="cmp-card-meta">' + posBadge(p.position) + ' · ' + p.team + '</div>';
-    h += '<div class="cmp-card-stats">';
-    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Cena</span><span class="cmp-stat-val">' + (p.price || 0).toFixed(1) + 'M</span></div>';
-    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Łączne pkt</span><span class="cmp-stat-val">' + (p.total_points || 0) + '</span></div>';
-    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Średnia (forma)</span><span class="cmp-stat-val">' + formAvg + '</span></div>';
-    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Prognoza</span><span class="cmp-stat-val" style="color:#22d3ee">' + predPts + '</span></div>';
-    h += '<div class="cmp-card-stat"><span class="cmp-stat-label">Następny rywal</span><span class="cmp-stat-val">';
-    h += '<span class="cmp-fdr-cell" style="background:'+fdrC.bg+';color:'+fdrC.fg+'">' + nextOpp + ' <span class="cmp-fdr-ha">' + haLabel + '</span></span>';
-    h += '</span></div>';
+    h += '<div class="cmp-card"><span class="cc-bar" style="background:'+CMP_COLORS[i]+'"></span>';
+    h += '<div class="cc-pos">' + posBadge(p.position) + '</div>';
+    h += '<div class="cc-name">' + p.name + '</div>';
+    h += '<div class="cc-team">' + p.team + '</div>';
+    h += '<div style="margin-top:14px">';
+    h += '<div class="ccmp-stat"><span class="cs-k">Cena</span><span class="cs-v">' + (p.price || 0).toFixed(1) + 'M</span></div>';
+    h += '<div class="ccmp-stat"><span class="cs-k">Łączne pkt</span><span class="cs-v">' + (p.total_points || 0) + '</span></div>';
+    h += '<div class="ccmp-stat"><span class="cs-k">Średnia (forma)</span><span class="cs-v">' + formAvg + '</span></div>';
+    h += '<div class="ccmp-stat"><span class="cs-k">Prognoza</span><span class="cs-v" style="color:var(--accent)">' + predPts + '</span></div>';
+    h += '<div class="ccmp-stat"><span class="cs-k">Następny rywal</span><span class="cs-v">' + nextOpp + ' <span class="hw'+(isHome?' d':'')+'">'+(isHome?'D':'W')+'</span> <span class="fdr fdr-'+mainFdr+'">'+mainFdr+'</span></span></div>';
     h += '</div></div>';
   }});
   h += '</div>';
@@ -2704,9 +2876,8 @@ function renderComparison() {{
     ['Pewność prognozy', p => ({{high:3,medium:2,low:1}})[p.confidence] || 0, 'higher'],
   ];
 
-  h += '<div class="cmp-table"><table>';
-  h += '<thead><tr><th style="text-align:left">Statystyka</th>';
-  selected.forEach((p,i) => {{ h += '<th style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + '</th>'; }});
+  h += '<div class="panel" style="padding:0;overflow:hidden;margin-bottom:20px"><div class="tscroll"><table class="dt cmp-table"><thead><tr><th class="text-left">Statystyka</th>';
+  selected.forEach((p,i) => {{ h += '<th class="text-center" style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + '</th>'; }});
   h += '</tr></thead><tbody>';
 
   rows.forEach(([label, getter, mode]) => {{
@@ -2720,7 +2891,7 @@ function renderComparison() {{
       }});
       // Jeśli remis — podświetl wszystkie z najlepszą wartością
     }}
-    h += '<tr><td>' + label + '</td>';
+    h += '<tr><td class="metric">' + label + '</td>';
     vals.forEach((v, i) => {{
       let display = v;
       // Formatowanie
@@ -2729,19 +2900,19 @@ function renderComparison() {{
       else if (label === 'Popularność') display = v.toFixed(0) + '%';
       else if (label === 'Pewność prognozy') display = ['—','Low','Medium','High'][v] || '—';
       const isBest = bestIdx !== -1 && v === vals[bestIdx] && mode !== 'neutral';
-      h += '<td' + (isBest ? ' class="cmp-best"' : '') + '>' + display + '</td>';
+      h += '<td class="text-center' + (isBest ? ' best' : '') + '">' + display + '</td>';
     }});
     h += '</tr>';
   }});
-  h += '</tbody></table></div>';
+  h += '</tbody></table></div></div>';
 
   // === SEKCJA C: Wykres formy (SVG) ===
   // 📖 Zbieramy punkty z formy, rysujemy linie SVG bez zewnętrznych bibliotek
-  h += '<div class="cmp-chart-wrap">';
-  h += '<div class="cmp-chart-title">📈 Forma — ostatnie kolejki</div>';
-  h += '<div class="cmp-chart-legend">';
+  h += '<div class="sec"><h2>Forma — ostatnie kolejki</h2><span class="rule"></span></div>';
+  h += '<div class="chart-card">';
+  h += '<div class="chart-legend" style="margin:0 0 14px">';
   selected.forEach((p,i) => {{
-    h += '<div class="cmp-chart-legend-item"><span class="cmp-chart-legend-swatch" style="background:'+CMP_COLORS[i]+'"></span>' + p.name.split(' ').pop() + '</div>';
+    h += '<span class="cli"><span class="csw" style="background:'+CMP_COLORS[i]+'"></span>' + p.name.split(' ').pop() + '</span>';
   }});
   h += '</div>';
 
@@ -2767,13 +2938,13 @@ function renderComparison() {{
     for (let g = 0; g <= 4; g++) {{
       const yVal = Math.round(maxPts / 4 * g);
       const y = yScale(yVal);
-      h += '<line x1="'+padL+'" y1="'+y+'" x2="'+(svgW-padR)+'" y2="'+y+'" stroke="#334155" stroke-width="0.5"/>';
-      h += '<text x="'+(padL-6)+'" y="'+(y+4)+'" fill="#64748b" font-size="10" text-anchor="end">'+yVal+'</text>';
+      h += '<line x1="'+padL+'" y1="'+y+'" x2="'+(svgW-padR)+'" y2="'+y+'" style="stroke:var(--border)" stroke-width="0.5"/>';
+      h += '<text x="'+(padL-6)+'" y="'+(y+4)+'" style="fill:var(--text-dim)" font-size="10" text-anchor="end">'+yVal+'</text>';
     }}
 
     // Etykiety X (numery kolejek)
     rounds.forEach((r, idx) => {{
-      h += '<text x="'+xScale(idx)+'" y="'+(svgH-6)+'" fill="#64748b" font-size="10" text-anchor="middle">'+r+'</text>';
+      h += '<text x="'+xScale(idx)+'" y="'+(svgH-6)+'" style="fill:var(--text-dim)" font-size="10" text-anchor="middle">'+r+'</text>';
     }});
 
     // Linie per gracz
@@ -2787,17 +2958,17 @@ function renderComparison() {{
       if (points.length < 2) return;
       // 📖 Polyline — łączna linia z punktami
       const lineStr = points.map(pt => pt.x+','+pt.y).join(' ');
-      h += '<polyline points="'+lineStr+'" fill="none" stroke="'+CMP_COLORS[pi]+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
+      h += '<polyline points="'+lineStr+'" fill="none" style="stroke:'+CMP_COLORS[pi]+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>';
       // Kropki
       points.forEach(pt => {{
-        h += '<circle cx="'+pt.x+'" cy="'+pt.y+'" r="4" fill="'+CMP_COLORS[pi]+'" stroke="#1e293b" stroke-width="2"/>';
-        h += '<text x="'+pt.x+'" y="'+(pt.y-8)+'" fill="'+CMP_COLORS[pi]+'" font-size="9" font-weight="700" text-anchor="middle">'+pt.pts+'</text>';
+        h += '<circle cx="'+pt.x+'" cy="'+pt.y+'" r="4" style="fill:'+CMP_COLORS[pi]+';stroke:var(--surface-inset)" stroke-width="2"/>';
+        h += '<text x="'+pt.x+'" y="'+(pt.y-8)+'" style="fill:'+CMP_COLORS[pi]+'" font-size="9" font-weight="700" text-anchor="middle">'+pt.pts+'</text>';
       }});
     }});
 
     h += '</svg></div>';
   }} else {{
-    h += '<div style="color:#64748b;text-align:center;padding:20px">Za mało danych o formie.</div>';
+    h += '<div style="color:var(--text-dim);text-align:center;padding:20px">Za mało danych o formie.</div>';
   }}
   h += '</div>';
 
@@ -2805,14 +2976,14 @@ function renderComparison() {{
   const fdrTeams = FDR_DATA.teams || [];
   const fdrGws = FDR_DATA.gameweeks || [];
   if (fdrGws.length) {{
-    h += '<div class="cmp-fdr-wrap">';
-    h += '<div class="cmp-fdr-title">📅 Trudność najbliższych meczów (FDR)</div>';
-    h += '<div class="cmp-fdr-table"><table><thead><tr><th style="text-align:left">Kolejka</th>';
-    selected.forEach((p,i) => {{ h += '<th style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + ' (' + ((fdrTeams.find(t=>normalizeTeamNameJS(t.name)===normalizeTeamNameJS(p.team))||{{}}).short || '—') + ')</th>'; }});
+    h += '<div class="sec"><h2>Trudność najbliższych meczów (FDR)</h2><span class="rule"></span>'
+      + '<span class="sec-note">1 = bardzo łatwy · 5 = bardzo trudny</span></div>';
+    h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr><th class="text-left">Kolejka</th>';
+    selected.forEach((p,i) => {{ h += '<th class="text-center" style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + '</th>'; }});
     h += '</tr></thead><tbody>';
 
     fdrGws.forEach(gw => {{
-      h += '<tr><td style="text-align:left;font-weight:700;color:#94a3b8">' + gw + '</td>';
+      h += '<tr><td class="text-left fw-700 c-muted">' + gw + '</td>';
       selected.forEach((p, pi) => {{
         const teamFdr = fdrTeams.find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(p.team));
         const fix = teamFdr ? (teamFdr.fixtures || []).find(f => f.gw === gw) : null;
@@ -2820,11 +2991,10 @@ function renderComparison() {{
           const pk = POS_ID[p.position] || p.position || '';
           const isAtk = (pk === 'NAP' || pk === 'POM');
           const mainFdr = isAtk ? fix.def : fix.atk;
-          const c = FDR_COLORS[mainFdr] || FDR_COLORS[3];
-          const ha = fix.home ? '(D)' : '(W)';
-          h += '<td><span class="cmp-fdr-cell" style="background:'+c.bg+';color:'+c.fg+'">' + fix.opponent_short + ' <span class="cmp-fdr-ha">' + ha + '</span></span></td>';
+          const ha = fix.home ? 'D' : 'W';
+          h += '<td class="text-center"><span class="opp"><span class="o-code"><span class="o-nm">' + fix.opponent_short + '</span><span class="hw'+(fix.home?' d':'')+'">' + ha + '</span></span><span class="fdr fdr-'+mainFdr+'">'+mainFdr+'</span></span></td>';
         }} else {{
-          h += '<td style="color:#475569">—</td>';
+          h += '<td class="text-center c-dim">—</td>';
         }}
       }});
       h += '</tr>';
@@ -2850,12 +3020,10 @@ function render() {{
   if (seEl) seEl.innerHTML = tab === 'season' ? renderSeason() : '';
   const cmpEl = document.getElementById('tab-compare');
   if (cmpEl) cmpEl.innerHTML = tab === 'compare' ? renderComparison() : '';
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-'+tab));
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.view').forEach(el => el.classList.toggle('active', el.id === 'v-'+tab));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.go === tab));
   document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('active', b.dataset.pos === pos));
   document.querySelectorAll('.scope-btn:not(.fdr-sort-btn)').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
-  const fr = document.querySelector('.filters-row');
-  if (fr) fr.style.display = (tab === 'players') ? 'flex' : 'none';
   // Transfers position filter handlers
   document.querySelectorAll('.tr-pos-btn').forEach(b => {{
     b.classList.toggle('active', b.dataset.trpos === trPos);
@@ -2893,13 +3061,6 @@ function render() {{
     el.onclick = () => {{
       const name = decodeURIComponent(el.dataset.duetname);
       selectedDuet = selectedDuet === name ? '' : name;
-      render();
-    }};
-  }});
-  // View toggle (Drużyny / Duety)
-  document.querySelectorAll('.view-btn').forEach(btn => {{
-    btn.onclick = () => {{
-      currentTeamsView = btn.dataset.view;
       render();
     }};
   }});
@@ -2951,44 +3112,68 @@ function render() {{
     cmpInput.value = '';
     cmpInput.oninput = () => {{
       const q = cmpInput.value.trim().toLowerCase();
-      if (q.length < 2) {{ cmpAc.classList.remove('visible'); cmpAc.innerHTML = ''; return; }}
+      if (q.length < 2) {{ cmpAc.classList.remove('open'); cmpAc.innerHTML = ''; return; }}
       // 📖 Szukamy w PLAYERS — filtrujemy po nazwisku, drużynie
       const matches = PLAYERS.filter(p =>
         !cmpSelected.includes(p.player_id) &&
         (p.name.toLowerCase().includes(q) || p.team.toLowerCase().includes(q))
       ).slice(0, 8);
-      if (!matches.length) {{ cmpAc.classList.remove('visible'); cmpAc.innerHTML = ''; return; }}
+      if (!matches.length) {{ cmpAc.classList.remove('open'); cmpAc.innerHTML = ''; return; }}
       let acH = '';
       matches.forEach(p => {{
-        acH += '<div class="cmp-ac-item" data-cmpid="'+p.player_id+'">';
-        acH += posBadge(p.position) + ' <strong>' + p.name + '</strong>';
-        acH += '<span class="cmp-ac-team">' + p.team + ' · ' + (p.price||0).toFixed(1) + 'M · ' + (p.total_points||0) + 'pkt</span>';
-        acH += '</div>';
+        acH += '<button type="button" data-cmpid="'+p.player_id+'">';
+        acH += posBadge(p.position) + '<span>' + p.name + '</span>';
+        acH += '<span class="ac-team">' + p.team + ' · ' + (p.price||0).toFixed(1) + 'M · ' + (p.total_points||0) + 'pkt</span>';
+        acH += '</button>';
       }});
       cmpAc.innerHTML = acH;
-      cmpAc.classList.add('visible');
+      cmpAc.classList.add('open');
       // Klik na element listy
-      cmpAc.querySelectorAll('.cmp-ac-item').forEach(el => {{
+      cmpAc.querySelectorAll('button[data-cmpid]').forEach(el => {{
         el.onclick = () => {{
           cmpAddPlayer(parseInt(el.dataset.cmpid));
-          cmpAc.classList.remove('visible');
+          cmpAc.classList.remove('open');
           cmpAc.innerHTML = '';
         }};
       }});
     }};
     // Zamknij autocomplete po kliknięciu poza
     document.addEventListener('click', (e) => {{
-      if (!e.target.closest('.cmp-search-box')) {{
-        cmpAc.classList.remove('visible');
+      if (!e.target.closest('.search-wrap')) {{
+        cmpAc.classList.remove('open');
       }}
     }});
   }}
 }}
 
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {{ tab = t.dataset.tab; render(); }}));
+function show(view) {{
+  if (view === 'landing') {{
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'v-landing'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    return;
+  }}
+  tab = view;
+  render();
+}}
+document.addEventListener('click', function(e) {{
+  const el = e.target.closest ? e.target.closest('[data-go]') : null;
+  if (!el) return;
+  show(el.dataset.go);
+}});
 document.querySelectorAll('.pos-btn').forEach(b => b.addEventListener('click', () => {{ pos = b.dataset.pos; render(); }}));
 document.querySelectorAll('.scope-btn').forEach(b => b.addEventListener('click', () => {{ scope = b.dataset.scope; render(); }}));
-render();
+const pq = document.getElementById('players-q');
+if (pq) pq.addEventListener('input', () => {{ playersQ = pq.value.trim(); render(); }});
+document.querySelectorAll('#league-view .seg-btn').forEach(b => {{
+  b.addEventListener('click', () => {{
+    currentTeamsView = b.dataset.lview;
+    document.querySelectorAll('#league-view .seg-btn').forEach(x => x.classList.toggle('active', x === b));
+    render();
+  }});
+}});
+// Start: landing jest widokiem domyślnym (render zakładek uruchamia się po kliknięciu)
+document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'v-landing'));
+document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
 </script>
 </body>
 </html>'''

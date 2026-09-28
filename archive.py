@@ -63,11 +63,7 @@ def generate_archive_index(archive_dir: str = "docs/archive"):
     pattern = os.path.join(archive_dir, "sezon-*.html")
     archive_files = glob_module.glob(pattern)
 
-    if not archive_files:
-        print(f"  ℹ️  Brak archiwów w katalogu: {archive_dir}")
-        return False
-
-    # Parsuj nazwy sezonów z plików
+    # Parsuj nazwy sezonów z plików (logika bez zmian)
     archives = []
     for filepath in archive_files:
         filename = os.path.basename(filepath)
@@ -83,83 +79,213 @@ def generate_archive_index(archive_dir: str = "docs/archive"):
     # Sortuj po nazwie (od najnowszego)
     archives.sort(key=lambda x: x["name"], reverse=True)
 
-    if not archives:
+    # Pusty stan: katalog istnieje, ale nie ma jeszcze żadnego sezonu.
+    # Index i tak generujemy (z komunikatem na stronie), tylko logujemy info.
+    if not archive_files:
+        print(f"  ℹ️  Brak archiwów w katalogu: {archive_dir}")
+    elif not archives:
         print(f"  ℹ️  Nie znaleziono archiwów sezonów")
-        return False
 
-    # CSS dla strony index archiwum (ten sam co dashboard)
+    # CSS strony index archiwum — Koncepcja C (ten sam system tokenów co dashboard)
+    # Źródło wyglądu: design.md + redesign-mockups/concept-c-*.html
     index_css = """
+    /*==TOKENS:START==*/
+    :root{
+      --canvas:#131313;
+      --surface:#2d2d2d;
+      --surface-inset:#191919;
+      --surface-sunken:#0e0e0e;
+      --surface-hover:#333333;
+      --border:#3d3d3d;
+      --border-strong:#575757;
+      --border-accent:#3cffd0;
+      --text:#ffffff;
+      --text-muted:#a0a0a0;
+      --text-dim:#9c9c9c;
+      --text-inverse:#131313;
+      --accent:#3cffd0;
+      --accent-deep:#309875;
+      --link-hover:#3860be;
+      --focus:#1eaedb;
+      --violet:#5200ff;
+      --violet-soft:#8b5cf6;
+      --gold:#fbbf24;
+      --medal-silver:#d4d4d4;
+      --bronze:#f08a2c;
+      --pink:#f472b6;
+      --pos-gk:#f59e0b;
+      --pos-def:#3b82f6;
+      --pos-mid:#10b981;
+      --pos-fwd:#ef4444;
+      --fdr-1:#2fbf71;
+      --fdr-2:#8fcf3c;
+      --fdr-3:#e8b923;
+      --fdr-4:#f08a2c;
+      --fdr-5:#e5484d;
+      --fdr-ink:#131313;
+      --up:#17cca0;
+      --down:#ff9e9e;
+      --flat:#ababab;
+      --conf-high:#17cca0;
+      --conf-med:#e8b923;
+      --conf-low:#ff9e9e;
+      --tint-accent:rgba(60,255,208,.14);
+      --tint-up:rgba(23,204,160,.14);
+      --tint-down:rgba(255,158,158,.16);
+      --tint-gold:rgba(251,191,36,.14);
+      --tint-violet:rgba(139,92,246,.16);
+      --tint-soft:rgba(255,255,255,.05);
+      --tint-row:rgba(255,255,255,.035);
+      --overlay:rgba(0,0,0,.6);
+      --series-1:#3cffd0;
+      --series-2:#fbbf24;
+      --series-3:#f472b6;
+      --series-4:#8b5cf6;
+      --series-5:#38c8ff;
+      --series-6:#fb923c;
+      --series-7:#4ade80;
+      --series-8:#f87171;
+      --series-9:#e879f9;
+      --series-10:#60a5fa;
+      --series-11:#facc15;
+      --series-12:#2dd4bf;
+    }
+    html.theme-fantasy{
+      --canvas:#f5f5f5;
+      --surface:#ffffff;
+      --surface-inset:#f0f0f0;
+      --surface-sunken:#ededed;
+      --surface-hover:#eeeeee;
+      --border:#e0e0e0;
+      --border-strong:#808080;
+      --border-accent:#0a6e4e;
+      --text:#131313;
+      --text-muted:#5a5a5a;
+      --text-dim:#666666;
+      --text-inverse:#ffffff;
+      --accent:#0a6e4e;
+      --accent-deep:#075f45;
+      --link-hover:#3860be;
+      --focus:#0284c7;
+      --violet:#5200ff;
+      --violet-soft:#7c3aed;
+      --gold:#8a5a06;
+      --medal-silver:#666666;
+      --bronze:#c2410c;
+      --pink:#db2777;
+      --pos-gk:#b45309;
+      --pos-def:#1d4ed8;
+      --pos-mid:#047857;
+      --pos-fwd:#c1121f;
+      --fdr-1:#2fbf71;
+      --fdr-2:#8fcf3c;
+      --fdr-3:#e8b923;
+      --fdr-4:#f08a2c;
+      --fdr-5:#e5484d;
+      --fdr-ink:#131313;
+      --up:#0a7342;
+      --down:#b91c1c;
+      --flat:#666666;
+      --conf-high:#0a7342;
+      --conf-med:#8a5a06;
+      --conf-low:#b91c1c;
+      --tint-accent:rgba(10,110,78,.10);
+      --tint-up:rgba(10,115,66,.10);
+      --tint-down:rgba(185,28,28,.10);
+      --tint-gold:rgba(138,90,6,.12);
+      --tint-violet:rgba(124,58,237,.12);
+      --tint-soft:rgba(19,19,19,.05);
+      --tint-row:rgba(19,19,19,.04);
+      --overlay:rgba(0,0,0,.5);
+      --series-1:#0a6e4e;
+      --series-2:#b45309;
+      --series-3:#c026d3;
+      --series-4:#6d28d9;
+      --series-5:#0369a1;
+      --series-6:#ea580c;
+      --series-7:#15803d;
+      --series-8:#b91c1c;
+      --series-9:#a21caf;
+      --series-10:#2563eb;
+      --series-11:#a16207;
+      --series-12:#0f766e;
+    }
+    /*==TOKENS:END==*/
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { background: #131313; }
+    html { background: var(--canvas); scroll-behavior: smooth; }
     body {
       min-height: 100vh;
-      background: #131313;
-      color: #ffffff;
-      font-family: 'DM Sans', -apple-system, sans-serif;
-      padding: 24px 16px;
-    }
-    .container { max-width: 800px; margin: 0 auto; padding: 0 16px; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-    .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-    .header .sub { font-size: 12px; color: #949494; margin: 0; }
-    .back-link {
-      color: #3cffd0;
-      text-decoration: none;
+      background: var(--canvas);
+      color: var(--text);
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 20px;
-      display: inline-block;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 40px;
     }
-    .back-link:hover { color: #3860be; }
-    .archive-list { display: flex; flex-direction: column; gap: 12px; }
-    .archive-item {
-      background: #2d2d2d;
-      border: 1px solid #3cffd0;
-      border-radius: 12px;
-      padding: 16px 20px;
-      transition: all 0.2s;
-    }
-    .archive-item:hover {
-      background: #3cffd0;
-    }
-    .archive-item:hover .archive-name {
-      color: #131313;
-    }
-    .archive-item:hover .archive-arrow {
-      color: #131313;
-    }
-    .archive-item a {
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .archive-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: #ffffff;
-    }
-    .archive-arrow {
-      font-size: 18px;
-      color: #3cffd0;
-    }
-    .empty-msg { padding: 40px; text-align: center; color: #949494; }
-    .footer { text-align: center; margin-top: 32px; color: #949494; font-size: 12px; }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+    /* Główny kontener: wąski i wyśrodkowany — treść nie rozciąga się na ultrawide */
+    .shell { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+    @media (max-width: 768px) { .shell { padding: 0 12px; } }
+    @media (min-width: 2000px) { .shell { max-width: 1120px; } }
+    a { color: var(--text); text-decoration: none; transition: color .15s; }
+    a:hover { color: var(--link-hover); }
+    button { font-family: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
 
-    /* Light theme */
-    html.theme-fantasy { background: #f5f5f5; }
-    html.theme-fantasy body { background: #f5f5f5; color: #131313; }
-    html.theme-fantasy .header h1 { color: #131313; }
-    html.theme-fantasy .header .sub { color: #5a5a5a; }
-    html.theme-fantasy .back-link { color: #309875; }
-    html.theme-fantasy .back-link:hover { color: #3860be; }
-    html.theme-fantasy .archive-item { background: #ffffff; border-color: #e0e0e0; }
-    html.theme-fantasy .archive-item:hover { background: #309875; }
-    html.theme-fantasy .archive-item:hover .archive-name { color: #ffffff; }
-    html.theme-fantasy .archive-item:hover .archive-arrow { color: #ffffff; }
-    html.theme-fantasy .archive-name { color: #131313; }
-    html.theme-fantasy .archive-arrow { color: #309875; }
-    html.theme-fantasy .footer { color: #5a5a5a; }
+    /* ===== MASTHEAD ===== */
+    .masthead { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0 14px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo { width: 52px; height: 52px; flex: 0 0 auto; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand strong { display: block; font-size: 22px; font-weight: 800; letter-spacing: -.6px; line-height: 1.1; }
+    .brand .sub { display: block; font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    .mast-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ghost-link { border: 1px solid var(--border-accent); color: var(--accent); background: transparent; border-radius: 40px; padding: 9px 18px; min-height: 44px; display: inline-flex; align-items: center; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; transition: background .15s, color .15s; }
+    .ghost-link:hover { background: var(--accent); color: var(--text-inverse); }
+
+    /* ===== NAGŁÓWEK STRONY + SEKCJA ===== */
+    .page-title { font-size: clamp(26px, 4vw, 40px); font-weight: 800; letter-spacing: -1.4px; line-height: 1.05; margin: 30px 0 6px; }
+    .sec { display: flex; align-items: center; gap: 12px; margin: 34px 0 16px; flex-wrap: wrap; }
+    .sec h2 { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; letter-spacing: -.4px; }
+    .sec .rule { flex: 1 1 60px; height: 1px; background: var(--border); }
+    .tab-idx { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; font-weight: 500; letter-spacing: .5px; color: var(--text-dim); }
+    .arc-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--gold); color: var(--gold); border-radius: 20px; padding: 8px 16px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+
+    /* ===== LINK POWROTU ===== */
+    .back-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-muted); }
+    .back-link:hover { color: var(--link-hover); }
+
+    /* ===== LISTA SEZONÓW ===== */
+    .arc-list { display: flex; flex-direction: column; gap: 12px; }
+    .season-item { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 76px; padding: 20px 22px; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; color: var(--text); transition: border-color .15s, background .15s; }
+    .season-item:hover { border-color: var(--accent); background: var(--surface-hover); color: var(--text); }
+    .season-item .si-num { flex: 0 0 auto; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 500; letter-spacing: 1.4px; color: var(--text-dim); }
+    .season-item .si-body { min-width: 0; }
+    .season-item .si-t { display: block; font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+    .season-item .si-m { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .season-item .si-go { flex: 0 0 auto; margin-left: auto; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--accent); }
+    .season-item:hover .si-go { color: var(--link-hover); }
+
+    /* ===== PUSTY STAN ===== */
+    .empty-msg { padding: 34px; text-align: center; color: var(--text-muted); font-size: 14px; line-height: 1.6; background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 20px; }
+    .empty-msg .mono { font-size: 12px; color: var(--text); }
+
+    /* ===== STOPKA ===== */
+    .footer { text-align: center; margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+    /* ===== RESPONSYWNOŚĆ (360 / 768 / 1440 / 3440) ===== */
+    @media (max-width: 640px) {
+      .page-title { letter-spacing: -1px; }
+      .brand strong { font-size: 18px; }
+      .arc-badge { padding: 6px 12px; font-size: 10px; letter-spacing: 1.4px; }
+      .season-item { flex-wrap: wrap; gap: 8px 12px; padding: 16px; }
+      .season-item .si-num { order: 1; }
+      .season-item .si-go { order: 2; }
+      .season-item .si-body { order: 3; flex: 1 1 100%; }
+      .sec .rule { flex: 1 1 40px; }
+    }
     """
 
     # Theme toggle JS
@@ -190,16 +316,25 @@ def generate_archive_index(archive_dir: str = "docs/archive"):
     })();
     """
 
-    # Generuj HTML
+    # Generuj HTML listy sezonów (numeracja 01, 02... jak w zakładkach dashboardu)
     archives_html = ""
-    for arch in archives:
+    for idx, arch in enumerate(archives, start=1):
         archives_html += f'''
-        <div class="archive-item">
-          <a href="{arch['filename']}">
-            <span class="archive-name">📁 Sezon {arch['name']}</span>
-            <span class="archive-arrow">→</span>
-          </a>
-        </div>'''
+    <a class="season-item" href="{arch['filename']}">
+      <span class="si-num">{idx:02d}</span>
+      <span class="si-body">
+        <span class="si-t">Sezon {arch['name']}</span>
+        <span class="si-m">Zawodnicy · Liga CMF · Sezon — tylko do odczytu</span>
+      </span>
+      <span class="si-go">Otwórz →</span>
+    </a>'''
+
+    # Pusty stan - katalog istnieje, ale nie ma jeszcze żadnego sezonu
+    if not archives_html:
+        archives_html = '''
+    <div class="empty-msg">
+      Kolejne sezony pojawią się tutaj po uruchomieniu archiwizacji (workflow <span class="mono">Archive Season</span>).
+    </div>'''
 
     timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -209,21 +344,41 @@ def generate_archive_index(archive_dir: str = "docs/archive"):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ScrapFEks – Archiwum</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>{index_css}</style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <div>
-      <h1>📁 Archiwum Sezonów</h1>
-      <p class="sub">ScrapFEks · {timestamp}</p>
+<div class="shell">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <a class="brand" href="../index.html" aria-label="Powrót do bieżącego sezonu">
+      <span class="logo"><img src="../logo.PNG" alt="ScrapFEks"></span>
+      <span class="brand-txt">
+        <strong>Fantasy Ekstraklasa</strong>
+        <span class="sub">ScrapFEks · {timestamp}</span>
+      </span>
+    </a>
+    <div class="mast-right">
+      <button class="ghost-link theme-toggle" onclick="toggleTheme()" aria-label="Przełącz motyw">☀️ Light</button>
     </div>
-    <button class="theme-toggle" onclick="toggleTheme()">☀️ Light</button>
+  </header>
+
+  <!-- ============ NAGŁÓWEK + SEKCJA ============ -->
+  <h1 class="page-title">Archiwum Sezonów</h1>
+
+  <div class="sec">
+    <h2><span class="tab-idx">08</span>Sezony</h2>
+    <span class="rule"></span>
+    <span class="arc-badge">Archiwum · tylko do odczytu</span>
   </div>
+
   <a href="../index.html" class="back-link">← Powrót do bieżącego sezonu</a>
 
-  <div class="archive-list">
+  <!-- ============ LISTA SEZONÓW ============ -->
+  <div class="arc-list">
     {archives_html}
   </div>
 
@@ -233,7 +388,7 @@ def generate_archive_index(archive_dir: str = "docs/archive"):
 </body>
 </html>"""
 
-    # Zapisz plik
+    # Zapisz plik (także przy pustym stanie - strona ma pokazać komunikat)
     index_path = os.path.join(archive_dir, "index.html")
     with open(index_path, "w", encoding="utf-8") as f:
         f.write(html)
