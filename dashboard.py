@@ -721,6 +721,7 @@ select.input{{cursor:pointer;padding-right:26px}}
     </button>
     <div class="mast-right">
       <span class="pill-tag">{SEASON_LABEL}</span>
+      <button class="ghost-link" data-go="landing" aria-label="Wróć na stronę główną">Strona główna</button>
       <button class="ghost-link theme-toggle" onclick="toggleTheme()" aria-label="Przełącz motyw">☀️ Light</button>
       {"<a class='ghost-link' href='archive/index.html'>Archiwum</a>" if has_archive else ""}
     </div>
