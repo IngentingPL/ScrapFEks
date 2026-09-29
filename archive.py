@@ -1568,19 +1568,33 @@ def load_league_teams_detail() -> list[dict]:
         return []
 
 
-def load_duets_data() -> list[dict]:
-    """Wczytuje dane duetów z duets.json."""
+def load_duets_data(league_teams_detail=None, league_history=None) -> list[dict]:
+    """Buduje dane duetów — ta sama logika co w scraper.py (moduł duets.py)."""
     if not os.path.exists("duets.json"):
         print(f"  ℹ️  Brak pliku duets.json - pomijam dane duetów")
         return []
-    
+
+    # Bieżąca kolejka = ostatnia kolejka w historii ligi
+    current_round = 0
+    if league_history:
+        rounds = league_history.get("rounds", []) or []
+        if rounds:
+            current_round = rounds[-1].get("round", 0) or 0
+
     try:
-        with open("duets.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-            print(f"  📂 Wczytano {len(data)} duetów z duets.json")
-            return data
+        from duets import build_duets_data
+        rows, warnings = build_duets_data(
+            league_teams_detail=league_teams_detail or [],
+            league_history=league_history or {},
+            current_round=current_round,
+            config_path="duets.json",
+        )
+        for w in warnings:
+            print(f"  ⚠️  {w}")
+        print(f"  📂 Przygotowano {len(rows)} duetów (kolejka {current_round})")
+        return rows
     except Exception as e:
-        print(f"  ⚠️  Błąd wczytywania duets.json: {e}")
+        print(f"  ⚠️  Błąd budowania danych duetów: {e}")
         return []
 
 
@@ -1661,7 +1675,7 @@ def main():
     players = load_players_data()
     league_history = load_league_history()
     league_teams_detail = load_league_teams_detail()
-    duets_data = load_duets_data()  # Wczytaj dane duetów
+    duets_data = load_duets_data(league_teams_detail, league_history)  # Zbuduj dane duetów
 
     if not players:
         print("❌ Błąd: brak danych zawodników do archiwizacji!")

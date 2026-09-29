@@ -811,78 +811,8 @@ def main():
             print(f"   ⚠️  Błąd ładowania danych jesiennych: {e}")
 
     # Duety — oblicz punkty z danych drużyn
+    # Widok Duety liczony jest niżej (po wczytaniu league_history) w duets.py
     duets_data = []
-    duets_file = os.path.join(script_dir, "duets.json")
-    duets_prev_file = os.path.join(script_dir, "duets_prev_ranking.json")
-    if os.path.exists(duets_file) and league_teams_detail:
-        try:
-            with open(duets_file, "r", encoding="utf-8") as f:
-                duets_config = json.load(f)
-
-            # Buduj lookup: normalize(display_name) → dane drużyny
-            team_lookup = {}
-            for t in league_teams_detail:
-                key = normalize_team_name(t.get("display_name", t["slug"].replace("-", " ")))
-                team_lookup[key] = t
-
-            for d in duets_config:
-                k1 = normalize_team_name(d["team1"])
-                k2 = normalize_team_name(d["team2"])
-                t1 = team_lookup.get(k1, {})
-                t2 = team_lookup.get(k2, {})
-                autumn_pts = (t1.get("autumn_pts", 0) or 0) + (t2.get("autumn_pts", 0) or 0)
-                spring_pts = (t1.get("spring_pts", 0) or 0) + (t2.get("spring_pts", 0) or 0)
-                total_pts = autumn_pts + spring_pts
-                duets_data.append({
-                    "duet_name": d["duet_name"],
-                    "players": d["players"],
-                    "team1_name": t1.get("display_name", d["team1"]),
-                    "team1_autumn": t1.get("autumn_pts", 0) or 0,
-                    "team1_spring": t1.get("spring_pts", 0) or 0,
-                    "team2_name": t2.get("display_name", d["team2"]),
-                    "team2_autumn": t2.get("autumn_pts", 0) or 0,
-                    "team2_spring": t2.get("spring_pts", 0) or 0,
-                    "autumn_pts": autumn_pts,
-                    "spring_pts": spring_pts,
-                    "total_pts": total_pts,
-                    "rank_change": 0,
-                })
-
-            duets_data.sort(key=lambda x: x["total_pts"], reverse=True)
-
-            # Wczytaj ranking duetów per-kolejka (format: {"round_N": {duet: pos}})
-            duets_rankings_by_round = {}
-            if os.path.exists(duets_prev_file):
-                try:
-                    with open(duets_prev_file, "r", encoding="utf-8") as f:
-                        loaded_duets = json.load(f)
-                    # Migracja ze starego formatu {duet: pos} do nowego {round_N: {duet: pos}}
-                    if loaded_duets and not any(k.startswith("round_") for k in loaded_duets):
-                        pass  # stary format — ignorujemy
-                    else:
-                        duets_rankings_by_round = loaded_duets
-                except Exception as e:  # jawne logowanie błędu parsowania duets_prev_ranking.json
-                    print(f"⚠️ błąd parsowania duets_prev_ranking.json: {e}")
-
-            duets_prev_round_key = f"round_{current_round - 1}" if current_round and current_round > 1 else None
-            duets_prev_ranking = duets_rankings_by_round.get(duets_prev_round_key, {}) if duets_prev_round_key else {}
-
-            current_duets_ranking = {}
-            for i, d in enumerate(duets_data):
-                pos = i + 1
-                key = normalize_team_name(d["duet_name"])
-                current_duets_ranking[key] = pos
-                prev_pos = duets_prev_ranking.get(key)
-                d["rank_change"] = (prev_pos - pos) if prev_pos is not None else 0
-
-            if current_round:
-                duets_rankings_by_round[f"round_{current_round}"] = current_duets_ranking
-            with open(duets_prev_file, "w", encoding="utf-8") as f:
-                json.dump(duets_rankings_by_round, f, ensure_ascii=False, indent=2)
-
-            print(f"   ✅ Przygotowano {len(duets_data)} duetów")
-        except Exception as e:
-            print(f"   ⚠️  Błąd ładowania duetów: {e}")
 
     # Wczytaj wytunowane parametry dla dashboardu (mogły zostać właśnie zaktualizowane)
     tuned_params_file = os.path.join(OUTPUT_DIR, "tuned_params.json")
@@ -903,6 +833,23 @@ def main():
                 league_history = json.load(f)
         except (json.JSONDecodeError, IOError):
             pass
+
+    # Widok Duety — parowanie z duets.json (ręczna konfiguracja),
+    # punkty z league_teams_detail (stan bieżący) i league_history (stan poprzedniej kolejki)
+    try:
+        from duets import build_duets_data
+        duets_data, duets_warnings = build_duets_data(
+            league_teams_detail=league_teams_detail,
+            league_history=league_history,
+            current_round=current_round,
+            config_path=os.path.join(script_dir, "duets.json"),
+        )
+        for w in duets_warnings:
+            print(f"   ⚠️  {w}")
+        print(f"   ✅ Przygotowano {len(duets_data)} duetów")
+    except Exception as e:
+        print(f"   ⚠️  Błąd budowania widoku Duety: {e}")
+        duets_data = []
 
     # 📖 load_newsletter_history usunięte — newsletter_history.json write-only, zakładka Newsletter wyłączona
 

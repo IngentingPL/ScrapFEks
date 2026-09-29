@@ -861,7 +861,7 @@ select.input{{cursor:pointer;padding-right:26px}}
         <button class="seg-btn active" data-lview="teams">Drużyny</button>
         <button class="seg-btn" data-lview="duets">Duety</button>
       </div>
-      <span class="hint">Kliknij strzałkę przy drużynie, żeby rozwinąć skład.</span>
+      <span class="hint">Kliknij strzałkę przy wierszu, żeby rozwinąć szczegóły.</span>
     </div>
     <div id="tab-teams"></div>
   </section>
@@ -919,7 +919,7 @@ let sorts = {{
   players: {{col:'total_points', dir:'desc'}},
   teams: {{col:'_pos_order', dir:'asc'}},
   teams_list: {{col:'total_pts', dir:'desc'}},
-  duets_list: {{col:'total_pts', dir:'desc'}},
+  duets_list: {{col:'points', dir:'desc'}},
 }};
 
 function num(v) {{
@@ -1177,7 +1177,7 @@ function diffBadge(pts, avg) {{
 }}
 
 function renderDuets() {{
-  if (!DUETS_DATA.length) return '<div class="empty-msg">Brak danych o duetach</div>';
+  if (!DUETS_DATA.length) return '<div class="empty-msg">Brak duetów — dodaj pary drużyn w pliku konfiguracyjnym duets.json</div>';
 
   const dls = sorts.duets_list;
   function dlArrow(col) {{
@@ -1186,7 +1186,9 @@ function renderDuets() {{
 
   const sortedDuets = [...DUETS_DATA].sort((a, b) => {{
     let av = a[dls.col], bv = b[dls.col];
-    if (typeof av === 'string') {{
+    if (typeof av === 'string' || typeof bv === 'string') {{
+      av = av == null ? '' : String(av);
+      bv = bv == null ? '' : String(bv);
       if (av < bv) return dls.dir === 'desc' ? 1 : -1;
       if (av > bv) return dls.dir === 'desc' ? -1 : 1;
       return 0;
@@ -1197,28 +1199,45 @@ function renderDuets() {{
     return 0;
   }});
 
-  let h = '<div class="row-count">' + sortedDuets.length + ' duetów · jesień + wiosna</div>';
+  // Numer ostatniej rozegranej kolejki — czytany z realnej historii ligi
+  const _rounds = (LEAGUE_HISTORY && LEAGUE_HISTORY.rounds ? LEAGUE_HISTORY.rounds : []).map(r => r.round || 0);
+  const lastRound = _rounds.length ? Math.max.apply(null, _rounds) : 0;
+
+  let h = '<div class="row-count">' + sortedDuets.length + ' duetów' + (lastRound ? ' · kolejka ' + lastRound : '') + '</div>';
   h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr>';
-  h += '<th class="text-center">#</th>';
-  h += '<th class="text-left sortable" data-tab="duets_list" data-col="duet_name">Duet'+dlArrow('duet_name')+'</th>';
-  h += '<th class="text-left">Gracze</th>';
-  h += '<th class="text-right sortable" data-tab="duets_list" data-col="autumn_pts">Jesień'+dlArrow('autumn_pts')+'</th>';
-  h += '<th class="text-right sortable" data-tab="duets_list" data-col="spring_pts">Wiosna'+dlArrow('spring_pts')+'</th>';
-  h += '<th class="text-right sortable" data-tab="duets_list" data-col="total_pts">SUMA'+dlArrow('total_pts')+'</th>';
+  h += '<th class="text-center sortable" data-tab="duets_list" data-col="rank">#'+dlArrow('rank')+'</th>';
+  h += '<th class="text-left sortable" data-tab="duets_list" data-col="managers">Duet'+dlArrow('managers')+'</th>';
+  h += '<th class="text-left sortable c-dim" data-tab="duets_list" data-col="group_name">Grupa'+dlArrow('group_name')+'</th>';
+  h += '<th class="text-right sortable" data-tab="duets_list" data-col="points">Punkty'+dlArrow('points')+'</th>';
+  h += '<th class="text-right sortable c-dim" data-tab="duets_list" data-col="prev_points">Poprzednia'+dlArrow('prev_points')+'</th>';
+  h += '<th class="text-right sortable" data-tab="duets_list" data-col="gain">Zysk'+dlArrow('gain')+'</th>';
   h += '<th class="text-center sortable" data-tab="duets_list" data-col="rank_change">Zmiana'+dlArrow('rank_change')+'</th>';
   h += '</tr></thead><tbody>';
 
   sortedDuets.forEach((d, i) => {{
-    const pos = i + 1;
-    const isOpen = d.duet_name === selectedDuet;
+    // Prawdziwe miejsce z danych (null gdy brak) — nie mylić z pozycją wiersza
+    const pos = (d.rank === null || d.rank === undefined) ? (i + 1) : d.rank;
+    const isOpen = d.managers === selectedDuet;
+    const hasData = d.points !== null && d.points !== undefined;
+    const hasPrev = d.prev_points !== null && d.prev_points !== undefined;
 
-    h += '<tr style="cursor:pointer" data-duetname="'+encodeURIComponent(d.duet_name)+'">';
+    h += '<tr style="cursor:pointer" data-duet="'+encodeURIComponent(d.managers)+'">';
     h += '<td class="text-center">'+(pos <= 3 ? '<span class="medal m'+pos+'">'+pos+'</span>' : '<span class="rank">'+pos+'</span>')+'</td>';
-    h += '<td><span class="team-cell"><button class="expand-btn'+(isOpen?' open':'')+'" aria-label="Rozwiń duet">▶</button><span class="team-name">'+d.duet_name+'</span></span></td>';
-    h += '<td class="c-muted" style="font-size:12px">'+d.players+'</td>';
-    h += '<td class="text-right c-muted">'+(d.autumn_pts||0)+'</td>';
-    h += '<td class="text-right c-muted">'+(d.spring_pts||0)+'</td>';
-    h += '<td class="text-right fw-700" style="font-size:15px">'+(d.total_pts||0)+'</td>';
+    h += '<td><span class="team-cell"><button class="expand-btn'+(isOpen?' open':'')+'" aria-label="Rozwiń duet">▶</button><span class="team-name">'+d.managers+'</span></span></td>';
+    h += '<td class="text-left c-muted" style="font-size:12px">'+(d.group_name ? d.group_name : '<span class="c-muted">—</span>')+'</td>';
+
+    // Pusty stan: brak danych = kreska, nigdy 0
+    h += '<td class="text-right fw-700" style="font-size:15px">'+(hasData ? d.points : '—')+'</td>';
+    h += '<td class="text-right c-muted">'+(hasPrev ? d.prev_points : '—')+'</td>';
+
+    // Zysk za ostatnią kolejkę — pill w kolorach --up / --down / neutralny
+    let gainHtml = '<span class="delta d-flat">—</span>';
+    if (d.gain !== null && d.gain !== undefined) {{
+      if (d.gain > 0) gainHtml = '<span class="delta d-up">+'+d.gain+'</span>';
+      else if (d.gain < 0) gainHtml = '<span class="delta d-down">'+d.gain+'</span>';
+      else gainHtml = '<span class="delta d-flat">0</span>';
+    }}
+    h += '<td class="text-right">'+gainHtml+'</td>';
 
     const rc = d.rank_change || 0;
     let changeHtml = '';
@@ -1230,10 +1249,10 @@ function renderDuets() {{
 
     if (isOpen) {{
       h += '<tr class="detail-row"><td colspan="7"><div class="detail-in">';
-      const t1sum = (d.team1_autumn||0) + (d.team1_spring||0);
-      const t2sum = (d.team2_autumn||0) + (d.team2_spring||0);
-      h += '<span class="detail-tag"><span class="dt-nm">'+d.team1_name+'</span><span class="dt-pts">'+d.team1_autumn+' + '+d.team1_spring+' = '+t1sum+'</span></span>';
-      h += '<span class="detail-tag"><span class="dt-nm">'+d.team2_name+'</span><span class="dt-pts">'+d.team2_autumn+' + '+d.team2_spring+' = '+t2sum+'</span></span>';
+      h += '<span class="detail-tag"><span class="dt-nm">'+d.team1_name+'</span></span>';
+      h += '<span class="detail-tag"><span class="dt-nm">'+d.team2_name+'</span></span>';
+      h += '<span class="detail-tag"><span class="dt-nm">Suma duetu</span><span class="dt-pts">'+(hasData ? d.points + ' pkt' : '—')+'</span></span>';
+      h += '<span class="detail-tag"><span class="dt-nm">Poprzednia kolejka</span><span class="dt-pts">'+(hasPrev ? d.prev_points + ' pkt' : '—')+'</span></span>';
       h += '</div></td></tr>';
     }}
   }});
@@ -3056,10 +3075,10 @@ function render() {{
       render();
     }};
   }});
-  // Duet row click handlers (expand/collapse)
-  document.querySelectorAll('tr[data-duetname]').forEach(el => {{
+  // Duet row click handlers (expand/collapse) — tożsamość wiersza = managers
+  document.querySelectorAll('tr[data-duet]').forEach(el => {{
     el.onclick = () => {{
-      const name = decodeURIComponent(el.dataset.duetname);
+      const name = decodeURIComponent(el.dataset.duet);
       selectedDuet = selectedDuet === name ? '' : name;
       render();
     }};
