@@ -769,7 +769,7 @@ select.input{{cursor:pointer;padding-right:26px}}
     <div class="hero">
       <div>
         <div class="hero-kicker">{SEASON_LABEL}{' · kolejka ' + current_round_label if current_round_label else ''} · dane {timestamp}</div>
-        <h1>Dashboard ligi Discord Forum CMF.<br><em>Tabele, analizy, prognozy.</em></h1>
+        <h1><em>Dashboard ligi Discord Forum CMF.</em><br>Tabele, analizy, prognozy.</h1>
         <div class="hero-cta">
           <button class="btn-primary" data-go="players">Wejdź w zawodników →</button>
           <button class="btn-ghost" data-go="fixtures">Zobacz trudność meczów</button>
