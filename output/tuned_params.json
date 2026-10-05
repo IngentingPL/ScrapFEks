@@ -1,5 +1,5 @@
 {
-  "last_tuned": "2026-10-01",
+  "last_tuned": "2026-10-05",
   "rounds_used": 7,
   "decay": 1.0,
   "fdr_strength": 1.5,
@@ -11,7 +11,7 @@
   "opponent_form_bonus": 0.05,
   "lookback_threshold_high": 10,
   "lookback_max": 7,
-  "mae_before": 2.8,
-  "mae_after": 2.6,
+  "mae_before": 2.7,
+  "mae_after": 2.5,
   "improvement_pct": 7.1
 }
