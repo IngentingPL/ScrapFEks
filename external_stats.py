@@ -715,7 +715,12 @@ def generate_terminarz_from_fantasyeks(start_round=1, end_round=None):
                                     else:
                                         time_str = score
 
-                                date_info = f"{day} {month_name}, {time_str}" if time_str else f"{day} {month_name}"
+                                # Dla zgodności z schedule.py: zawsze format "DD miesiąca, HH:MM" lub "DD miesiąca,"
+                                # Nawet bez godziny dodajemy przecinek (po nim nic nie ma = brak godziny)
+                                if time_str:
+                                    date_info = f"{day} {month_name}, {time_str}"
+                                else:
+                                    date_info = f"{day} {month_name},"
 
                         match_data = {
                             "home": home,

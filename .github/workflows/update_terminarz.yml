@@ -33,11 +33,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Generate terminarz from 90minut.pl
+      - name: Generate terminarz from fantasy.ekstraklasa.org
         run: |
           python -c "
-          from external_stats import generate_terminarz_from_90minut
-          result = generate_terminarz_from_90minut(output_path='terminarz.txt')
+          from external_stats import generate_terminarz_from_fantasyeks
+          result = generate_terminarz_from_fantasyeks()
           if result:
               print(f'Zapisano terminarz do: {result}')
           else:
@@ -53,6 +53,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "Brak zmian w terminarzu"
           else
-            git commit -m "🔄 Auto-update terminarz.txt z 90minut.pl"
+            git commit -m "🔄 Auto-update terminarz.txt z fantasy.ekstraklasa.org"
             git push https://x-access-token:${{ secrets.WORKFLOW_PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}
           fi

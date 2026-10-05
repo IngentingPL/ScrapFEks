@@ -270,56 +270,148 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
     return crons
 
 
-def update_workflow(workflow_path: str, crons: list[tuple]):
-    """Aktualizuje sekcję schedule w scrape.yml między markerami."""
-    with open(workflow_path, "r", encoding="utf-8") as f:
-        content = f.read()
+def extract_existing_crons(workflow_path: str) -> dict[int, list[str]]:
+    """
+    Wyciąga istniejące linie cron z scrape.yml per kolejka.
+    Zwraca słownik: {round_number: [linie_cron]}.
+    Linia cron to pełna linia z komentarzem "# K{n} ...".
+    """
+    existing = {}
+    try:
+        with open(workflow_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Znajdź blok między markerami
+        if MARKER_START not in content or MARKER_END not in content:
+            return existing
+
+        start_idx = content.find(MARKER_START)
+        end_idx = content.find(MARKER_END)
+        block = content[start_idx:end_idx]
+
+        # Szukaj linii cron z komentarzem "# K{num} ..."
+        for line in block.split("\n"):
+            # Szukaj komentarza z numerem kolejki
+            match = re.search(r"#\s*K(\d+)\s", line)
+            if match:
+                round_num = int(match.group(1))
+                if round_num not in existing:
+                    existing[round_num] = []
+                existing[round_num].append(line.rstrip())
+    except Exception:
+        pass
+
+    return existing
+
+
+def build_schedule_block(
+    crons: list[tuple],
+    existing_crons: dict[int, list[str]],
+    round_stats: dict,
+) -> list[str]:
+    """
+    Buduje NOWĄ listę linii schedule w pamięci:
+    - Dla kolejek z godzinami → nowe crony (zastąp stare)
+    - Dla kolejek BEZ godzin w przyszłości → zachowaj istniejące
+    - Kolejki rozegrane → pomijane
+    """
+    today = datetime.now().date()
+
+    # Zbiór kolejek z wygenerowanymi cronami (mają godziny)
+    rounds_with_crons = set(rnd for _, _, _, _, rnd in crons)
+
+    # Zbiór wszystkich kolejek z terminarza (tylko te w przyszłości)
+    future_rounds = set()
+    for round_num, stats in round_stats.items():
+        start_date = stats.get("start_date")
+        if start_date and start_date >= today:
+            future_rounds.add(round_num)
 
     # Buduj blok schedule
     lines = [MARKER_START]
-    if crons:
+    if crons or (existing_crons and future_rounds):
         lines.append("  schedule:")
+
+        # Posortuj wszystkie kolejki (zarówno nowe crony, jak i zachowane)
+        all_rounds = rounds_with_crons.copy()
+        for rnd in existing_crons:
+            if rnd in future_rounds and rnd not in rounds_with_crons:
+                all_rounds.add(rnd)
+
+        # Grupuj crony per kolejka dla sortowania chronologicznego
+        round_crons = {}
         for label, match_local, trigger_utc, cron, rnd in crons:
-            tz_name = match_local.strftime("%Z")
-            if label == "start":
-                trigger_local = match_local + timedelta(minutes=30)
-                comment = (
-                    f"K{rnd} START {match_local.strftime('%d.%m')} "
-                    f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
-                    f"+30min {trigger_local.strftime('%H:%M')} {tz_name}"
-                )
-            elif label == "discord_pre":
-                comment = (
-                    f"K{rnd} DISCORD PRE {match_local.strftime('%d.%m')} "
-                    f"20:00 {tz_name} — prognoza przed kolejką"
-                )
-            elif label == "discord_post":
-                comment = (
-                    f"K{rnd} DISCORD POST {match_local.strftime('%d.%m')} "
-                    f"12:00 {tz_name} — podsumowanie po kolejce"
-                )
-            elif label == "discord_captains":
-                comment = (
-                    f"K{rnd} DISCORD CAPTAINS {match_local.strftime('%d.%m')} "
-                    f"{match_local.strftime('%H:%M')} {tz_name} — podsumowanie kapitanów"
-                )
-            else:
-                trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
-                comment = (
-                    f"K{rnd} {match_local.strftime('%d.%m')} "
-                    f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
-                    f"+2.5h {trigger_local.strftime('%H:%M')} {tz_name}"
-                )
-            lines.append(f"    - cron: '{cron}'  # {comment}")
+            if rnd not in round_crons:
+                round_crons[rnd] = []
+            round_crons[rnd].append((label, match_local, trigger_utc, cron, rnd))
+
+        # Sortuj kolejki wg daty początku (z round_stats)
+        sorted_rounds = sorted(
+            all_rounds,
+            key=lambda r: round_stats.get(r, {}).get("start_date", datetime.max.date())
+        )
+
+        # Generuj linie dla każdej kolejki
+        for rnd in sorted_rounds:
+            if rnd in rounds_with_crons:
+                # Kolejka z godzinami — generuj nowe crony
+                for label, match_local, trigger_utc, cron, _ in round_crons.get(rnd, []):
+                    tz_name = match_local.strftime("%Z")
+                    if label == "start":
+                        trigger_local = match_local + timedelta(minutes=30)
+                        comment = (
+                            f"K{rnd} START {match_local.strftime('%d.%m')} "
+                            f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
+                            f"+30min {trigger_local.strftime('%H:%M')} {tz_name}"
+                        )
+                    elif label == "discord_pre":
+                        comment = (
+                            f"K{rnd} DISCORD PRE {match_local.strftime('%d.%m')} "
+                            f"20:00 {tz_name} — prognoza przed kolejką"
+                        )
+                    elif label == "discord_post":
+                        comment = (
+                            f"K{rnd} DISCORD POST {match_local.strftime('%d.%m')} "
+                            f"12:00 {tz_name} — podsumowanie po kolejce"
+                        )
+                    elif label == "discord_captains":
+                        comment = (
+                            f"K{rnd} DISCORD CAPTAINS {match_local.strftime('%d.%m')} "
+                            f"{match_local.strftime('%H:%M')} {tz_name} — podsumowanie kapitanów"
+                        )
+                    else:
+                        trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
+                        comment = (
+                            f"K{rnd} {match_local.strftime('%d.%m')} "
+                            f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
+                            f"+2.5h {trigger_local.strftime('%H:%M')} {tz_name}"
+                        )
+                    lines.append(f"    - cron: '{cron}'  # {comment}")
+            elif rnd in existing_crons and rnd in future_rounds:
+                # Kolejka bez godzin w przyszłości — zachowaj istniejące
+                for existing_line in existing_crons[rnd]:
+                    lines.append(existing_line)
+
     lines.append(MARKER_END)
-    new_block = "\n".join(lines)
+    return lines
+
+
+def update_workflow(workflow_path: str, new_lines: list[str]):
+    """
+    Aktualizuje sekcję schedule w scrape.yml między markerami.
+    Przyjmuje już przygotowaną listę linii (z build_schedule_block).
+    """
+    with open(workflow_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    new_block = "\n".join(new_lines)
 
     # Zamień istniejący blok między markerami
     if MARKER_START in content and MARKER_END in content:
         pattern = re.escape(MARKER_START) + r".*?" + re.escape(MARKER_END)
         content = re.sub(pattern, new_block, content, flags=re.DOTALL)
     else:
-        # Pierwsze uruchomienie — wstaw przed "jobs:"
+        # Pierwsze uruchomzenie — wstaw przed "jobs:"
         # Szukaj starego zakomentowanego schedule
         old_schedule = re.search(
             r"\n  # Automatyczne uruchomienie.*?\n(  #   - cron:.*?\n)?",
@@ -338,7 +430,8 @@ def update_workflow(workflow_path: str, crons: list[tuple]):
 def check_missing_times(round_stats: dict) -> bool:
     """
     Sprawdza czy kolejki w ciągu ±14 dni mają mecze bez godziny.
-    Zwraca True jeśli znaleziono problemy (do exit 1).
+    Zwraca True jeśli znaleziono braki (ale NIE przerywa działania).
+    Wypisuje ostrzeżenia dla użytkownika.
     """
     today = datetime.now().date()
     window_start = today - timedelta(days=14)
@@ -355,7 +448,7 @@ def check_missing_times(round_stats: dict) -> bool:
             if without_time > 0:
                 print(
                     f"⚠️  Kolejka {round_num} ({stats['dates']}) — "
-                    f"{without_time} z {stats['total']} meczów bez godziny, pominięte"
+                    f"{without_time} z {stats['total']} meczów bez godziny, crony zachowane"
                 )
                 has_warnings = True
 
@@ -367,58 +460,70 @@ def main():
     matches, round_stats = parse_terminarz(TERMINARZ_FILE)
     print(f"   Znaleziono {len(matches)} meczów z godziną")
 
-    # Sprawdź mecze bez godziny w kolejkach w ciągu 14 dni
-    has_missing_times = check_missing_times(round_stats)
-    if has_missing_times:
-        print("\n❌ Zakończono z błędem — uzupełnij godziny w terminarz.txt")
+    # WALIDACJA: Sprawdź czy terminarz nie jest pusty/błędny
+    if not round_stats:
+        print("❌ Błąd: terminazarz.txt jest pusty lub niepoprawny!")
+        print("   scrape.yml NIE został zmieniony.")
         sys.exit(1)
 
-    if not matches:
-        print("⚠️  Brak meczów w terminarzu!")
-        return
+    # Sprawdź mecze bez godziny w kolejkach w ciągu 14 dni (ostrzeżenie, nie błąd)
+    has_missing_times = check_missing_times(round_stats)
+    if has_missing_times:
+        print("   ℹ️  Brakujące godziny — istniejące crony zostaną zachowane.")
 
-    # Generuj crony ze wszystkich meczów — przeszłe i tak nie odpalą się
-    crons = generate_crons(matches)
-    print(f"\n⏰ Wygenerowano {len(crons)} triggerów:")
-    for label, match_local, trigger_utc, cron, rnd in crons:
-        tz_name = match_local.strftime("%Z")
-        if label == "start":
-            trigger_local = match_local + timedelta(minutes=30)
-            tag = "START       "
-            print(
-                f"   {tag} K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
-                f" → {trigger_local.strftime('%H:%M')} {tz_name}"
-                f" ({trigger_utc.strftime('%H:%M')} UTC)"
-            )
-        elif label == "discord_pre":
-            tag = "📣 DISC PRE  "
-            print(
-                f"   {tag} K{rnd} {match_local.strftime('%d.%m')} 20:00 {tz_name}"
-                f" ({trigger_utc.strftime('%H:%M')} UTC)"
-            )
-        elif label == "discord_post":
-            tag = "📣 DISC POST "
-            print(
-                f"   {tag} K{rnd} {match_local.strftime('%d.%m')} 10:00 {tz_name}"
-                f" ({trigger_utc.strftime('%H:%M')} UTC)"
-            )
-        elif label == "discord_captains":
-            tag = "👑 DISC CAPT "
-            print(
-                f"   {tag} K{rnd} {match_local.strftime('%d.%m')} {match_local.strftime('%H:%M')} {tz_name}"
-                f" ({trigger_utc.strftime('%H:%M')} UTC)"
-            )
-        else:
-            trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
-            tag = "            "
-            print(
-                f"   {tag} K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
-                f" → {trigger_local.strftime('%H:%M')} {tz_name}"
-                f" ({trigger_utc.strftime('%H:%M')} UTC)"
-            )
+    # Krok 1: Wyciągnij istniejące crony z scrape.yml (do zachowania)
+    print(f"\n📝 Parsowanie {WORKFLOW_FILE}...")
+    existing_crons = extract_existing_crons(WORKFLOW_FILE)
+    print(f"   Znaleziono crony dla {len(existing_crons)} kolejek")
 
+    # Krok 2: Generuj nowe crony (tylko dla kolejek z godzinami)
+    crons = []
+    if matches:
+        crons = generate_crons(matches)
+        print(f"\n⏰ Wygenerowano {len(crons)} nowych triggerów:")
+        for label, match_local, trigger_utc, cron, rnd in crons:
+            tz_name = match_local.strftime("%Z")
+            if label == "start":
+                trigger_local = match_local + timedelta(minutes=30)
+                tag = "START       "
+                print(
+                    f"   {tag} K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
+                    f" → {trigger_local.strftime('%H:%M')} {tz_name}"
+                    f" ({trigger_utc.strftime('%H:%M')} UTC)"
+                )
+            elif label == "discord_pre":
+                tag = "📣 DISC PRE  "
+                print(
+                    f"   {tag} K{rnd} {match_local.strftime('%d.%m')} 20:00 {tz_name}"
+                    f" ({trigger_utc.strftime('%H:%M')} UTC)"
+                )
+            elif label == "discord_post":
+                tag = "📣 DISC POST "
+                print(
+                    f"   {tag} K{rnd} {match_local.strftime('%d.%m')} 10:00 {tz_name}"
+                    f" ({trigger_utc.strftime('%H:%M')} UTC)"
+                )
+            elif label == "discord_captains":
+                tag = "👑 DISC CAPT "
+                print(
+                    f"   {tag} K{rnd} {match_local.strftime('%d.%m')} {match_local.strftime('%H:%M')} {tz_name}"
+                    f" ({trigger_utc.strftime('%H:%M')} UTC)"
+                )
+            else:
+                trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
+                tag = "            "
+                print(
+                    f"   {tag} K{rnd} {match_local.strftime('%d.%m %H:%M')} {tz_name}"
+                    f" → {trigger_local.strftime('%H:%M')} {tz_name}"
+                    f" ({trigger_utc.strftime('%H:%M')} UTC)"
+                )
+
+    # Krok 3: Buduj nowy blok schedule w pamięci (nowe + zachowane)
+    new_lines = build_schedule_block(crons, existing_crons, round_stats)
+
+    # Krok 4: Zapisz scrape.yml (dopiero na końcu, po wszystkich walidacjach)
     print(f"\n📝 Aktualizacja {WORKFLOW_FILE}...")
-    update_workflow(WORKFLOW_FILE, crons)
+    update_workflow(WORKFLOW_FILE, new_lines)
     print("✅ Gotowe!")
 
 

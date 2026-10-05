@@ -51,6 +51,7 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                             current_round_date = f"{int(header_date.group(1)):02d}.{month:02d}"
                 continue
             # Opcjonalnie ignoruj frekwencję w nawiasie na końcu linii, np. "(14 569)"
+            # Wzorzec z godziną: "24 lipca, 17:30"
             date_match = re.search(r"(\d{1,2})\s+(\w+),\s*(\d{1,2}):(\d{2})\s*(?:\(\d[\d\s]*\))?\s*$", line)
             if date_match and current_round:
                 day = int(date_match.group(1))
@@ -59,12 +60,18 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                 if not month:
                     continue
                 teams_part = line[:date_match.start()].strip()
-                # Obsługa formatów: "DrużynaA\t-\tDrużynaB" lub "DrużynaA\t2-1\tDrużynaB" (z wynikiem)
+                # Obsługa formatów:
+                # - "DrużynaA\t-\tDrużynaB" (zwykły)
+                # - "DrużynaA\t2-1\tDrużynaB" (z wynikiem)
+                # - "DrużynaA\t18:00\tDrużynaB" (z godziną z FE)
                 parts = re.split(r'\t+\d*-\d*\t+', teams_part)
                 if len(parts) != 2:
                     parts = re.split(r'\t+-\t+', teams_part)
                 if len(parts) != 2:
                     parts = re.split(r'\s+-\s+', teams_part)
+                if len(parts) != 2:
+                    # Format z godziną: "DrużynaA\tHH:MM\tDrużynaB"
+                    parts = re.split(r'\t+\d{1,2}:\d{2}\t+', teams_part)
                 if len(parts) == 2:
                     home = parts[0].strip()
                     away = parts[1].strip()
@@ -76,6 +83,33 @@ def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
                         "date": f"{day:02d}.{month:02d}",
                         "date_confirmed": True,  # data z faktycznego wzorca "DD miesiąca, GG:MM"
                     })
+            # Wzorzec BEZ godziny (rozegrane mecze z FE): "24 lipca," - samej daty
+            # Ten wzorzec sprawdza tylko format "DD miesiąca," bez godziny na końcu
+            elif re.search(r"(\d{1,2})\s+(\w+),\s*$", line) and current_round:
+                date_match = re.search(r"(\d{1,2})\s+(\w+),", line)
+                if date_match:
+                    day = int(date_match.group(1))
+                    month_name = date_match.group(2)
+                    month = MONTHS_PL.get(month_name)
+                    if month:
+                        teams_part = line[:date_match.start()].strip()
+                        # Obsługa formatów z TAB i wynikiem np. "Radomiak\t2 : 1\tWieczysta\t24 lipca,"
+                        parts = re.split(r'\t+\d+\s*:\s*\d+\t+', teams_part)
+                        if len(parts) != 2:
+                            parts = re.split(r'\t+-\t+', teams_part)
+                        if len(parts) != 2:
+                            parts = re.split(r'\s+-\s+', teams_part)
+                        if len(parts) == 2:
+                            home = parts[0].strip()
+                            away = parts[1].strip()
+                            teams_set.add(home)
+                            teams_set.add(away)
+                            matches_by_round[current_round].append({
+                                "home": home,
+                                "away": away,
+                                "date": f"{day:02d}.{month:02d}",
+                                "date_confirmed": True,
+                            })
             elif current_round and ("–" in line or " - " in line or "\t-\t" in line):
                 # Użyj tabulatora jako separatora jeśli dostępny — unikamy cięcia na myślnikach w nazwach (np. Bruk-Bet)
                 if "\t-\t" in line:
