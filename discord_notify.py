@@ -26,6 +26,7 @@ from ai_client import call_deepseek, call_gemini, DEEPSEEK_MODEL, GEMINI_MODEL  
 from predictor import parse_ownership_pct, captain_differential_score, FDR_NEUTRAL
 from analytics import find_hidden_gem, find_disappointment, collect_captains
 from config import POS_MAP
+from utils import _normalize_team  # normalizacja nazw drużyn (strip, lower)
 
 
 # ============================================================
@@ -383,14 +384,30 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
     cap_pid = captain.get("player_id")
     cap_pts = captain.get("predicted_points") or 0.0
     cap_own = captain.get("popularity_pct", "?")
-    # opponent_short to skrót rywala (np. "LEG"), next_opponent to pełna nazwa
-    cap_opp = captain.get("opponent_short") or captain.get("next_opponent", "?")
-    cap_home_str = "D" if captain.get("is_home", True) else "W"  # D=dom, W=wyjazd
+    # DGW: sprawdź czy ma więcej niż 1 mecz
+    cap_fixtures_count = captain.get("fixtures_count", 1)
+    if cap_fixtures_count > 1:
+        # DGW: pokaż obu rywali — użyj opponent_short z fixtures_list jak dla zwykłych meczów
+        cap_fixtures_list = captain.get("fixtures_list", [])
+        cap_is_home_list = captain.get("is_home_list", [])
+        opp_parts = []
+        for i, fix in enumerate(cap_fixtures_list):
+            opp_short = fix.get("opponent_short") or fix.get("opponent", "?")
+            home_str = "D" if (cap_is_home_list[i] if i < len(cap_is_home_list) else True) else "W"
+            opp_parts.append(f"{opp_short} ({home_str})")
+        cap_opp_str = " + ".join(opp_parts) if opp_parts else "DGW"
+        cap_dgw_marker = " 🎲DGW"
+    else:
+        # Normalna kolejka
+        cap_opp = captain.get("opponent_short") or captain.get("next_opponent", "?")
+        cap_home_str = "D" if captain.get("is_home", True) else "W"  # D=dom, W=wyjazd
+        cap_opp_str = f"{cap_opp} ({cap_home_str})"
+        cap_dgw_marker = ""
     cap_team = captain.get("team", "")
 
     captain_text = (
-        f"👑 **{captain.get('name', '?')}** ({cap_team})\n"
-        f"Prognoza: **{cap_pts:.1f} pkt** | Ownership: {cap_own} | vs {cap_opp} ({cap_home_str})"
+        f"👑 **{captain.get('name', '?')}** ({cap_team}){cap_dgw_marker}\n"
+        f"Prognoza: **{cap_pts:.1f} pkt** | Ownership: {cap_own} | vs {cap_opp_str}"
     )
 
     # --- SEKCJA 2: TOP 5 PROGNOZ ---
@@ -402,8 +419,24 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
     top5_lines = []
     for i, pred in enumerate(top5):
         pts = pred.get("predicted_points") or 0.0
-        opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
-        home_str = "D" if pred.get("is_home", True) else "W"
+        # DGW: sprawdź czy ma więcej niż 1 mecz
+        fixtures_count = pred.get("fixtures_count", 1)
+        if fixtures_count > 1:
+            # DGW: użyj opponent_short z fixtures_list jak dla zwykłych meczów
+            fixtures_list = pred.get("fixtures_list", [])
+            is_home_list = pred.get("is_home_list", [])
+            opp_parts = []
+            for j, fix in enumerate(fixtures_list):
+                opp_short = fix.get("opponent_short") or fix.get("opponent", "?")
+                home_str = "D" if (is_home_list[j] if j < len(is_home_list) else True) else "W"
+                opp_parts.append(f"{opp_short} ({home_str})")
+            opp_str = " + ".join(opp_parts) if opp_parts else "DGW"
+            dgw_marker = " 🎲"
+        else:
+            opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
+            home_str = "D" if pred.get("is_home", True) else "W"
+            opp_str = f"{opp} ({home_str})"
+            dgw_marker = ""
         pos = pred.get("position", "")
         name = pred.get("name", "?")
         team = pred.get("team", "")
@@ -412,7 +445,7 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
         star = "⭐ " if pred.get("player_id") == cap_pid else "   "
 
         top5_lines.append(
-            f"`{medals[i]}` {star}**{name}** ({pos}, {team}) — **{pts:.1f} pkt** | vs {opp} ({home_str})"
+            f"`{medals[i]}` {star}**{name}** ({pos}, {team}){dgw_marker} — **{pts:.1f} pkt** | vs {opp_str}"
         )
 
     top5_text = "\n".join(top5_lines)
@@ -442,9 +475,23 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
             _parts = p.get("name", "?").split()
             name = _parts[-1] if _parts else "?"  # Tylko nazwisko
             pts = p.get("predicted_points") or 0
-            opp = p.get("opponent_short") or p.get("next_opponent", "?")
-            home_str = "D" if p.get("is_home", True) else "W"
-            top_pos_lines.append(f"{emoji} {pos}:  {name} — {pts:.1f} pkt | vs {opp} ({home_str})")
+            # DGW: sprawdź czy ma więcej niż 1 mecz
+            fixtures_count = p.get("fixtures_count", 1)
+            if fixtures_count > 1:
+                # DGW: użyj opponent_short z fixtures_list jak dla zwykłych meczów
+                fixtures_list = p.get("fixtures_list", [])
+                is_home_list = p.get("is_home_list", [])
+                opp_parts = []
+                for i, fix in enumerate(fixtures_list):
+                    opp_short = fix.get("opponent_short") or fix.get("opponent", "?")
+                    home_str = "D" if (is_home_list[i] if i < len(is_home_list) else True) else "W"
+                    opp_parts.append(f"{opp_short} ({home_str})")
+                opp_str = " + ".join(opp_parts) if opp_parts else "DGW"
+            else:
+                opp = p.get("opponent_short") or p.get("next_opponent", "?")
+                home_str = "D" if p.get("is_home", True) else "W"
+                opp_str = f"{opp} ({home_str})"
+            top_pos_lines.append(f"{emoji} {pos}:  {name} — {pts:.1f} pkt | vs {opp_str}")
         top_pos_text = "\n".join(top_pos_lines)
 
     # --- SEKCJA 4: DIFFERENTIAL PICK ---
@@ -457,11 +504,25 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
         if pts > 6 and own < 10:
             pos = pred.get("position", "")
             team = pred.get("team", "")
-            opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
-            home_str = "D" if pred.get("is_home", True) else "W"
+            # DGW: sprawdź czy ma więcej niż 1 mecz
+            fixtures_count = pred.get("fixtures_count", 1)
+            if fixtures_count > 1:
+                # DGW: użyj opponent_short z fixtures_list jak dla zwykłych meczów
+                fixtures_list = pred.get("fixtures_list", [])
+                is_home_list = pred.get("is_home_list", [])
+                opp_parts = []
+                for i, fix in enumerate(fixtures_list):
+                    opp_short = fix.get("opponent_short") or fix.get("opponent", "?")
+                    home_str = "D" if (is_home_list[i] if i < len(is_home_list) else True) else "W"
+                    opp_parts.append(f"{opp_short} ({home_str})")
+                opp_str = " + ".join(opp_parts) if opp_parts else "DGW"
+            else:
+                opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
+                home_str = "D" if pred.get("is_home", True) else "W"
+                opp_str = f"{opp} ({home_str})"
             diff_text = (
                 f"💎 **{pred.get('name', '?')}** ({pos}, {team}) — prognoza **{pts:.1f} pkt**\n"
-                f"   Ownership: {own:.0f}% · vs {opp} ({home_str})"
+                f"   Ownership: {own:.0f}% · vs {opp_str}"
             )
             break  # Bierzemy pierwszego (najwyższa prognoza, bo lista jest posortowana)
 
@@ -487,10 +548,24 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
             name = _parts[-1] if _parts else "?"  # Nazwisko
             pts = pred.get("predicted_points") or 0
             own = parse_ownership_pct(pred.get("popularity_pct", "0%"))
-            opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
-            home_str = "D" if pred.get("is_home", True) else "W"
+            # DGW: sprawdź czy ma więcej niż 1 mecz
+            fixtures_count = pred.get("fixtures_count", 1)
+            if fixtures_count > 1:
+                # DGW: użyj opponent_short z fixtures_list jak dla zwykłych meczów
+                fixtures_list = pred.get("fixtures_list", [])
+                is_home_list = pred.get("is_home_list", [])
+                opp_parts = []
+                for i, fix in enumerate(fixtures_list):
+                    opp_short = fix.get("opponent_short") or fix.get("opponent", "?")
+                    home_str = "D" if (is_home_list[i] if i < len(is_home_list) else True) else "W"
+                    opp_parts.append(f"{opp_short} ({home_str})")
+                opp_str = " + ".join(opp_parts) if opp_parts else "DGW"
+            else:
+                opp = pred.get("opponent_short") or pred.get("next_opponent", "?")
+                home_str = "D" if pred.get("is_home", True) else "W"
+                opp_str = f"{opp} ({home_str})"
             avoid_lines.append(
-                f"⚠️ {name} ({pos}) — {pts:.1f} pkt | Ownership: {own:.0f}% | vs {opp} ({home_str})"
+                f"⚠️ {name} ({pos}) — {pts:.1f} pkt | Ownership: {own:.0f}% | vs {opp_str}"
             )
         avoid_text = "\n".join(avoid_lines)
 
@@ -572,6 +647,27 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
 
     all_fields = fields_part1 + fields_part2
 
+    # DGW: jedna krótka linia informacyjna w opisie embedu (z danych, bez hardcodu).
+    # Wymienia drużyny z >1 meczem w tej kolejce, żeby było jasne, że prognoza = suma z 2 meczów.
+    # Buduj mapę znormalizowana_nazwa → ładna nazwa z fdr_data (duże litery z terminarza)
+    team_display_map = {}
+    if fdr_data:
+        for team_fdr in fdr_data.get("teams", []):
+            name = team_fdr.get("name", "")
+            if name:
+                team_display_map[_normalize_team(name)] = name
+    dgw_teams = []
+    for p in predictions:
+        if p.get("fixtures_count", 1) > 1:
+            t = p.get("team", "")
+            # Ładna nazwa z fdr_data, fallback: oryginał
+            t_display = team_display_map.get(t, t)
+            if t_display and t_display not in dgw_teams:
+                dgw_teams.append(t_display)
+    dgw_desc = ""
+    if dgw_teams:
+        dgw_desc = "🎲 DGW: " + ", ".join(dgw_teams) + " — prognoza = suma z 2 meczów"
+
     # Zmierz łączną długość tekstu w embedzie
     # 📖 LEKCJA: Discord liczy znaki w: title + description + field.name + field.value
     # + footer.text + author.name. Limit to 6000 znaków na embed.
@@ -588,6 +684,8 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
     single_embed = {
         "title": f"🔮 ScrapFEks — Kolejka {round_number} Prognoza",
         "color": 0x00BFFF,
+        # DGW: krótka linia o drużynach z 2 meczami (pusta gdy brak DGW)
+        "description": dgw_desc,
         "fields": all_fields,
         "footer": footer_obj,
     }
@@ -602,6 +700,8 @@ def send_pre_round(predictions, players_data, webhook_url, round_number,
         embed1 = {
             "title": f"🔮 ScrapFEks — Kolejka {round_number} Prognoza",
             "color": 0x00BFFF,
+            # DGW: krótka linia o drużynach z 2 meczami (pusta gdy brak DGW)
+            "description": dgw_desc,
             "fields": fields_part1,
         }
         embed2 = {
@@ -1194,7 +1294,7 @@ def _build_expert_context(all_data: dict) -> dict:
         # Top 10 prognoz
         top_preds = []
         for pred in predictions[:10]:
-            top_preds.append({
+            pred_data = {
                 "name": pred.get("name", "?"),
                 "team": pred.get("team", "?"),
                 "position": pred.get("position", "?"),
@@ -1202,7 +1302,12 @@ def _build_expert_context(all_data: dict) -> dict:
                 "ownership_pct": pred.get("popularity_pct", "?"),
                 "opponent": pred.get("opponent_short") or pred.get("next_opponent", "?"),
                 "is_home": pred.get("is_home", True),
-            })
+                # DGW: dodaj info o DGW dla AI
+                "fixtures_count": pred.get("fixtures_count", 1),
+                "opponents": pred.get("opponents", []),
+                "is_home_list": pred.get("is_home_list", []),
+            }
+            top_preds.append(pred_data)
         ctx["top_predictions"] = top_preds
         
         # Captain pick (differential formula)
@@ -1214,6 +1319,10 @@ def _build_expert_context(all_data: dict) -> dict:
                 "position": cap.get("position", "?"),
                 "predicted_points": round(cap.get("predicted_points") or 0, 1),
                 "ownership_pct": cap.get("popularity_pct", "?"),
+                # DGW: dodaj info o DGW dla AI
+                "fixtures_count": cap.get("fixtures_count", 1),
+                "opponents": cap.get("opponents", []),
+                "is_home_list": cap.get("is_home_list", []),
             }
 
         # Safe pick — dla Rabbtiego: solidny wybór z najwyższą pewnością prognozy.
@@ -1237,6 +1346,10 @@ def _build_expert_context(all_data: dict) -> dict:
                 "predicted_points": round(safe_pick.get("predicted_points") or 0, 1),
                 "ownership_pct": safe_pick.get("popularity_pct", "?"),
                 "confidence": safe_pick.get("confidence", "?"),
+                # DGW: dodaj info o DGW dla AI
+                "fixtures_count": safe_pick.get("fixtures_count", 1),
+                "opponents": safe_pick.get("opponents", []),
+                "is_home_list": safe_pick.get("is_home_list", []),
             }
 
         # Contrarian pick — najlepsza prognoza wśród zawodników z niskim ownership (<15%).
@@ -1267,6 +1380,10 @@ def _build_expert_context(all_data: dict) -> dict:
                 "predicted_points": round(contrarian_pick.get("predicted_points") or 0, 1),
                 "ownership_pct": contrarian_pick.get("popularity_pct", "?"),
                 "confidence": contrarian_pick.get("confidence", "?"),
+                # DGW: dodaj info o DGW dla AI
+                "fixtures_count": contrarian_pick.get("fixtures_count", 1),
+                "opponents": contrarian_pick.get("opponents", []),
+                "is_home_list": contrarian_pick.get("is_home_list", []),
             }
     
     # Ownership i kapitanowie (dla differential picks)

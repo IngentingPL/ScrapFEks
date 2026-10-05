@@ -26,6 +26,7 @@ def generate_dashboard_html(
     fdr_data: dict,
     transfers_data: dict,
     predictions_data: list[dict],
+    prediction_round: int,
     accuracy_history: list[dict],
     tuned_params: dict,
     league_history: dict,
@@ -818,7 +819,7 @@ select.input{{cursor:pointer;padding-right:26px}}
       {"<button class='entry' data-go='teams'><span class='e-num'>02 · Liga CMF</span><span class='e-name' style='font-size:18px'>Drużyny i duety</span><span class='e-desc'>Jesień, wiosna, suma, zmiana, medale na podium i rozwijany skład drużyny.</span><span class='e-go'>Otwórz →</span></button>" if has_league else ""}
       {"<button class='entry' data-go='fixtures'><span class='e-num'>03 · Terminarz</span><span class='e-name' style='font-size:18px'>Trudność meczów + Fixture Planner</span><span class='e-desc'>Skala 1–5 dla ataku i obrony, sortowanie po łatwości i para rotacyjna na wybrany zakres kolejek.</span><span class='e-go'>Otwórz →</span></button>" if has_fixtures else ""}
       {"<button class='entry' data-go='transfers'><span class='e-num'>04 · Transfery</span><span class='e-name' style='font-size:18px'>Kupna i sprzedaże</span><span class='e-desc'>Dwie listy top 15 z liczbą drużyn, udziałem procentowym i paskiem postępu.</span><span class='e-go'>Otwórz →</span></button>" if has_transfers else ""}
-      {"<button class='entry' data-go='predictions'><span class='e-num'>05 · Prognoza</span><span class='e-name' style='font-size:18px'>17 kolumn na następną kolejkę</span><span class='e-desc'>Potencjał z percentyli, użyty FDR, xA/90, xG/90 i pewność prognozy.</span><span class='e-go'>Otwórz →</span></button>" if has_predictions else ""}
+      {"<button class='entry' data-go='predictions'><span class='e-num'>05 · Prognoza</span><span class='e-name' style='font-size:18px'>17 kolumn na K" + str(prediction_round) + "</span><span class='e-desc'>Potencjał z percentyli, użyty FDR, xA/90, xG/90 i pewność prognozy.</span><span class='e-go'>Otwórz →</span></button>" if has_predictions else ""}
       {"<button class='entry' data-go='accuracy'><span class='e-num'>06 · Trafność</span><span class='e-name' style='font-size:18px'>MAE, hit rate i auto-tuning</span><span class='e-desc'>Karty metryk, wykres trendu MAE, szczegóły kolejki i status auto-tunera.</span><span class='e-go'>Otwórz →</span></button>" if has_accuracy else ""}
       {"<button class='entry' data-go='season'><span class='e-num'>07 · Sezon</span><span class='e-name' style='font-size:18px'>Historia ligi: pozycje i punkty</span><span class='e-desc'>Pozycje albo punkty łącznie, zakresy Top 5 / Dolne 5 i tabela z trendem.</span><span class='e-go'>Otwórz →</span></button>" if has_season else ""}
       <button class="entry" data-go="compare">
@@ -894,7 +895,6 @@ const LEAGUE_HISTORY = {league_history_json};
  const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
   Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
-
 // 📖 Normalizacja nazw drużyn — usuwa znaki diakrytyczne, mapuje polskie litery,
 // lowercase, trim. Używana do bezpiecznego porównywania nazw drużyn z FDR_DATA.
 function normalizeTeamNameJS(s) {{
@@ -1531,29 +1531,50 @@ function renderFixtures() {{
     h += '<tr>';
     h += '<td class="fdr-team-click" data-fdrteam="'+ti+'" style="cursor:pointer"><span class="team-name">'+team.short+'</span></td>';
 
-    // Σ ATK
-    const avgAtk = gws.length ? (team.total_atk / gws.length) : 3;
+    // 📖 Σ ATK/DEF = suma po kolejkach ze średniej z meczów (DGW nie zawyża)
+    const gwGroups = groupFixturesByGw(team, gws);
+    const totalAtk = Math.round(gwGroups.reduce((s, g) => s + avgFdrForGw(g, f => f.atk), 0));
+    const totalDef = Math.round(gwGroups.reduce((s, g) => s + avgFdrForGw(g, f => f.def), 0));
+    const avgAtk = gws.length ? totalAtk / gws.length : 3;
     const atkColor = avgAtk <= 2 ? 'var(--up)' : avgAtk <= 3 ? 'var(--text-muted)' : 'var(--down)';
-    h += '<td class="text-right fw-700" style="color:'+atkColor+'">'+team.total_atk+'</td>';
+    h += '<td class="text-right fw-700" style="color:'+atkColor+'">'+totalAtk+'</td>';
 
-    // Σ DEF
-    const avgDef = gws.length ? (team.total_def / gws.length) : 3;
+    const avgDef = gws.length ? totalDef / gws.length : 3;
     const defColor = avgDef <= 2 ? 'var(--up)' : avgDef <= 3 ? 'var(--text-muted)' : 'var(--down)';
-    h += '<td class="text-right fw-700" style="color:'+defColor+'">'+team.total_def+'</td>';
+    h += '<td class="text-right fw-700" style="color:'+defColor+'">'+totalDef+'</td>';
 
-    // Dual ATK/DEF tiles per gameweek
-    team.fixtures.forEach(f => {{
-      if (!f.opponent) {{
+    // 📖 Komórki kolejek: grupujemy po GW, DGW daje 2 kafelki w jednej komórce
+    gwGroups.forEach(g => {{
+      if (!g.matches.length) {{
         h += '<td class="text-center">—</td>';
         return;
       }}
-      const ha = f.home ? 'D' : 'W';
-      h += '<td class="text-center" title="'+f.opponent+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
-      h += '<span class="opp"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span>';
-      h += '<span style="display:flex;gap:3px">';
-      h += '<span class="fdr fdr-'+f.atk+'" title="ATK">A'+f.atk+'</span>';
-      h += '<span class="fdr fdr-'+f.def+'" title="DEF">D'+f.def+'</span>';
-      h += '</span></span></td>';
+      if (g.matches.length === 1) {{
+        // Pojedynczy mecz — obecny układ
+        const f = g.matches[0];
+        const ha = f.home ? 'D' : 'W';
+        h += '<td class="text-center" title="'+f.opponent+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
+        h += '<span class="opp"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span>';
+        h += '<span style="display:flex;gap:3px">';
+        h += '<span class="fdr fdr-'+f.atk+'" title="ATK">A'+f.atk+'</span>';
+        h += '<span class="fdr fdr-'+f.def+'" title="DEF">D'+f.def+'</span>';
+        h += '</span></span></td>';
+      }} else {{
+        // DGW: 2 mecze w jednej komórce, jeden pod drugim
+        h += '<td class="text-center" style="padding:4px 6px">';
+        h += '<div style="display:flex;flex-direction:column;gap:3px;align-items:center">';
+        g.matches.forEach(f => {{
+          const ha = f.home ? 'D' : 'W';
+          h += '<span class="opp" style="font-size:11px"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span>';
+          h += '<span style="display:flex;gap:2px">';
+          h += '<span class="fdr fdr-'+f.atk+'" title="ATK" style="font-size:10px;padding:1px 3px">A'+f.atk+'</span>';
+          h += '<span class="fdr fdr-'+f.def+'" title="DEF" style="font-size:10px;padding:1px 3px">D'+f.def+'</span>';
+          h += '</span></span>';
+        }});
+        h += '</div>';
+        h += '<span style="font-size:9px;font-weight:700;color:var(--accent);margin-top:2px">DGW</span>';
+        h += '</td>';
+      }}
     }});
 
     h += '</tr>';
@@ -1588,6 +1609,22 @@ function fpGetFdr(fixture, mode) {{
   if (mode === 'atk') return fixture.def;
   if (mode === 'def') return fixture.atk;
   return Math.round((fixture.atk + fixture.def) / 2);
+}}
+
+// 📖 Grupuje fixtures po kolejce: [{{gw, matches: [f1, f2?]}}...] — DGW daje 2 mecze w jednej grupie.
+function groupFixturesByGw(team, gws) {{
+  return gws.map(gw => {{
+    const matches = team.fixtures.filter(f => f.gw === gw && f.opponent);
+    return {{ gw: gw, matches: matches }};
+  }});
+}}
+
+// 📖 Średnia wartość FDR z meczów danej kolejki (DGW nie zawyża sumy).
+// valueFn: f => liczba (np. f.atk albo fpGetFdr(f, fpMode)).
+function avgFdrForGw(gwGroup, valueFn) {{
+  if (!gwGroup.matches.length) return 3;  // neutralne gdy brak meczu
+  const sum = gwGroup.matches.reduce((s, f) => s + valueFn(f), 0);
+  return sum / gwGroup.matches.length;
 }}
 
 function renderFixturePlanner() {{
@@ -1632,19 +1669,19 @@ function renderFixturePlanner() {{
 
   // Oblicz dane planera dla każdej drużyny
   const planData = fdrTeams.map(team => {{
-    const fixturesInRange = selectedGws.map(gw => {{
-      const f = team.fixtures.find(fx => fx.gw === gw);
-      return f || null;
-    }});
-    const fdrValues = fixturesInRange.map(f => fpGetFdr(f, fpMode));
+    // 📖 Grupujemy po kolejkach — DGW daje 2 mecze w jednej grupie
+    const gwGroups = groupFixturesByGw(team, selectedGws);
+    const fdrValues = gwGroups.map(g => avgFdrForGw(g, f => fpGetFdr(f, fpMode)));
     const sum = fdrValues.reduce((a, b) => a + b, 0);
     const avg = fdrValues.length ? sum / fdrValues.length : 3;
-    const easy = fdrValues.filter(v => v <= 2).length;
-    const hard = fdrValues.filter(v => v >= 4).length;
+    // 📖 easy/hard liczone na MECZ (każdy mecz osobno)
+    const allMatches = gwGroups.flatMap(g => g.matches);
+    const easy = allMatches.filter(f => fpGetFdr(f, fpMode) <= 2).length;
+    const hard = allMatches.filter(f => fpGetFdr(f, fpMode) >= 4).length;
     return {{
       name: team.name,
       short: team.short,
-      fixtures: fixturesInRange,
+      gwGroups: gwGroups,
       fdrValues: fdrValues,
       sum: sum,
       avg: avg,
@@ -1695,16 +1732,32 @@ function renderFixturePlanner() {{
     h += '<td class="fp-team-cell'+(isSelected ? ' fp-selected' : '')+'" data-fpteam="'+team.name+'" style="cursor:pointer"><span class="team-name">'+team.short+'</span></td>';
 
     // Kafelki FDR per kolejka
-    team.fixtures.forEach((f, fi) => {{
-      if (!f || !f.opponent) {{
+    team.gwGroups.forEach((g, fi) => {{
+      if (!g.matches.length) {{
         h += '<td class="text-center">—</td>';
         return;
       }}
-      const fdr = team.fdrValues[fi];
-      const ha = f.home ? 'D' : 'W';
-      h += '<td class="text-center" title="'+f.opponent+' ('+(f.home?'dom':'wyjazd')+') '+f.date+'">';
-      h += '<span class="opp"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span><span class="fdr fdr-'+fdr+'">'+fdr+'</span></span>';
-      h += '</td>';
+      const avgFdr = team.fdrValues[fi];
+      if (g.matches.length === 1) {{
+        // Pojedynczy mecz
+        const f = g.matches[0];
+        const ha = f.home ? 'D' : 'W';
+        h += '<td class="text-center" title="'+f.opponent+' ('+(f.home?'dom':'wyjazd')+') '+f.date+'">';
+        h += '<span class="opp"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span><span class="fdr fdr-'+avgFdr+'">'+avgFdr+'</span></span>';
+        h += '</td>';
+      }} else {{
+        // DGW: 2 mecze
+        h += '<td class="text-center" style="padding:4px 6px">';
+        h += '<div style="display:flex;flex-direction:column;gap:3px;align-items:center">';
+        g.matches.forEach(f => {{
+          const ha = f.home ? 'D' : 'W';
+          const ffdr = fpGetFdr(f, fpMode);
+          h += '<span class="opp" style="font-size:11px"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span><span class="fdr fdr-'+ffdr+'" style="font-size:10px;padding:1px 3px">'+ffdr+'</span></span>';
+        }});
+        h += '</div>';
+        h += '<span style="font-size:9px;font-weight:700;color:var(--accent);margin-top:2px">DGW</span>';
+        h += '</td>';
+      }}
     }});
 
     // Suma FDR
@@ -1727,18 +1780,14 @@ function renderFixturePlanner() {{
   // 📖 Szybki widok "Najlepsze drużyny na X kolejek" — podsumowanie (insights)
   // Sortujemy osobno wg ATK (DEF rywali), DEF (ATK rywali), i ogólnie najtrudniejsze
   const atkRanked = fdrTeams.map(team => {{
-    const vals = selectedGws.map(gw => {{
-      const f = team.fixtures.find(fx => fx.gw === gw);
-      return fpGetFdr(f, 'atk');
-    }});
+    const gwGroups = groupFixturesByGw(team, selectedGws);
+    const vals = gwGroups.map(g => avgFdrForGw(g, f => fpGetFdr(f, 'atk')));
     return {{ short: team.short, avg: vals.reduce((a,b)=>a+b,0) / (vals.length||1) }};
   }}).sort((a,b) => a.avg - b.avg);
 
   const defRanked = fdrTeams.map(team => {{
-    const vals = selectedGws.map(gw => {{
-      const f = team.fixtures.find(fx => fx.gw === gw);
-      return fpGetFdr(f, 'def');
-    }});
+    const gwGroups = groupFixturesByGw(team, selectedGws);
+    const vals = gwGroups.map(g => avgFdrForGw(g, f => fpGetFdr(f, 'def')));
     return {{ short: team.short, avg: vals.reduce((a,b)=>a+b,0) / (vals.length||1) }};
   }}).sort((a,b) => a.avg - b.avg);
 
@@ -1765,7 +1814,9 @@ function renderFixturePlanner() {{
   h += '<div class="insights">';
   h += '<div class="insight"><h4>Najłatwiejszy (ATK)</h4><ol>'+insightList(atkRanked)+'</ol></div>';
   h += '<div class="insight"><h4>Najłatwiejszy (DEF)</h4><ol>'+insightList(defRanked)+'</ol></div>';
-  h += '<div class="insight"><h4>Najtrudniejszy</h4><ol>'+insightList(hardRanked)+'</ol></div>';
+  // 📖 "Najtrudniejszy" to ta sama perspektywa ATK (DEF rywali), tylko odwrócona kolejność.
+  // Celowo doprecyzowana etykieta: Planner Σ/Śr. pokazuje tryb MIX (inne wartości) — to nie ta sama liczba.
+  h += '<div class="insight"><h4>Najtrudniejszy (ATK)</h4><ol>'+insightList(hardRanked)+'</ol></div>';
   h += '<div class="insight"><h4>Najlepsza para rotacyjna</h4>';
   if (bestPair.t1) {{
     const bestPct = selectedGws.length > 0 ? Math.round(bestPair.coverage / selectedGws.length * 100) : 0;
@@ -1981,16 +2032,27 @@ function renderPredictions() {{
     return '<span class="conf '+m.cls+'">'+m.label+'</span>';
   }}
 
-   let h = '<div class="page-title">Prognoza Punktów — Następna Kolejka</div>';
-   h += '<div class="page-sub"><span class="mono">Powered by <a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener">Ekstraklasa Scouting</a></span></div>';
+   let h = '<div class="page-title">Prognoza Punktów — K{prediction_round}</div>';
+    h += '<div class="page-sub"><span class="mono">Powered by <a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener">Ekstraklasa Scouting</a></span></div>';
 
-  // Metoda
-   h += '<div class="method">';
-   h += '<span class="m-row"><b>Jak czytać FDR:</b> NAP/POM dostaje <code>FDR DEF</code> rywala, BR/OBR dostaje <code>FDR ATK</code> rywala.</span>';
-   h += '<span class="m-row"><b>Potencjał</b> = średnia percentyli pozycyjnych zawodnika (0–100).</span>';
-   h += '<span class="m-row"><b>Wzory punktacji:</b> <code>BR = obrony + CS</code> · <code>OBR = CS + stracone + xG + xA + szanse</code> · <code>POM/NAP = strzały + szanse</code></span>';
-   h += '<span class="m-row">Skala trudności 1–5 (zielony → czerwony) jest identyczna jak w Terminarzu i Porównaniu.</span>';
-   h += '</div>';
+   // Pasek DGW - pokazuje drużyny z Double Gameweek
+   const dgwTeams = [...new Set(data.filter(p => p.fixtures_count > 1).map(p => p.team))];
+   if (dgwTeams.length > 0) {{
+     h += '<div class="dgw-banner" style="background:var(--tint-accent);border:1px solid var(--border-accent);border-radius:12px;padding:12px 16px;margin:12px 0 16px;display:flex;align-items:center;gap:10px">';
+     h += '<span style="font-size:16px">🎲</span>';
+     h += '<span style="font-size:13px;font-weight:700;color:var(--accent)">DGW w K' + {prediction_round} + ': ' + dgwTeams.join(', ') + '</span>';
+     h += '<span style="font-size:12px;color:var(--text-muted);margin-left:auto">Double Gameweek - suma punktów z 2 meczów</span>';
+     h += '</div>';
+   }}
+
+   // Metoda
+    h += '<div class="method">';
+    h += '<span class="m-row"><b>Jak czytać FDR:</b> NAP/POM dostaje <code>FDR DEF</code> rywala, BR/OBR dostaje <code>FDR ATK</code> rywala.</span>';
+    h += '<span class="m-row"><b>Potencjał</b> = średnia percentyli pozycyjnych zawodnika (0–100).</span>';
+    h += '<span class="m-row"><b>Wzory punktacji:</b> <code>BR = obrony + CS</code> · <code>OBR = CS + stracone + xG + xA + szanse</code> · <code>POM/NAP = strzały + szanse</code></span>';
+    h += '<span class="m-row"><b>DGW:</b> Double Gameweek = suma prognoz z obu meczów; FDR liczony osobno dla każdego meczu.</span>';
+    h += '<span class="m-row">Skala trudności 1–5 (zielony → czerwony) jest identyczna jak w Terminarzu i Porównaniu.</span>';
+    h += '</div>';
 
   // Position filters
   h += '<div class="toolbar">';
@@ -2047,13 +2109,48 @@ function renderPredictions() {{
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
 
-    // Rywal z FDR kolorem (używamy wyższego FDR)
-    const oppName = p.opponent_short || p.next_opponent || '';
-    const oppFdr = Math.max(oppFdrAtk, oppFdrDef);
-    h += '<td class="text-center"><span class="opp"><span class="o-code"><span class="o-nm">'+oppName+'</span></span><span class="fdr fdr-'+oppFdr+'">'+oppFdr+'</span></span></td>';
+    // Rywal z FDR kolorem - obsługa DGW (dwa mecze)
+    let oppCell = '';
+    const fixturesList = p.fixtures_list || [];
+    const isDGW = fixturesList.length > 1;
+    
+    if (isDGW) {{
+      // DGW: dwa chipy w jednej komórce, każdy z własnym FDR
+      let chipsHtml = '';
+      fixturesList.forEach((fix, idx) => {{
+        const opp = fix.opponent_short || fix.opponent || '';
+        const fdr = Math.max(fix.atk || 3, fix.def || 3);
+        const home = fix.home ? 'D' : 'W';
+        chipsHtml += '<span class="fdr fdr-'+fdr+'" style="display:inline-flex;align-items:center;gap:4px;margin:2px">';
+        chipsHtml += '<span class="o-nm">'+opp+'</span>';
+        chipsHtml += '<span class="hw '+home.toLowerCase()+'">'+home+'</span>';
+        chipsHtml += '</span>';
+      }});
+      oppCell = '<td class="text-center"><span class="opp-multi" style="display:flex;flex-direction:column;gap:4px">';
+      oppCell += chipsHtml;
+      oppCell += '<span style="font-size:9px;font-weight:700;color:var(--accent);margin-top:2px">DGW</span>';
+      oppCell += '</span></td>';
+    }} else {{
+      // Normalna kolejka - jeden rywal
+      const oppName = p.opponent_short || p.next_opponent || '';
+      const oppFdr = Math.max(oppFdrAtk, oppFdrDef);
+      oppCell = '<td class="text-center"><span class="opp"><span class="o-code"><span class="o-nm">'+oppName+'</span></span><span class="fdr fdr-'+oppFdr+'">'+oppFdr+'</span></span></td>';
+    }}
+    h += oppCell;
 
-    // Dom/Wyjazd
-    h += '<td class="text-center"><span class="hw'+(p.is_home?' d':'')+'">'+(p.is_home?'D':'W')+'</span></td>';
+    // Dom/Wyjazd - obsługa DGW
+    if (isDGW && p.is_home_list) {{
+      // DGW: pokaż D/W dla każdego meczu
+      const dwList = p.is_home_list.map(h => h ? 'D' : 'W');
+      h += '<td class="text-center"><span style="display:flex;flex-direction:column;gap:4px;align-items:center">';
+      dwList.forEach(dw => {{
+        h += '<span class="hw'+(dw==='D'?' d':'')+'">'+dw+'</span>';
+      }});
+      h += '</span></td>';
+    }} else {{
+      // Normalna kolejka
+      h += '<td class="text-center"><span class="hw'+(p.is_home?' d':'')+'">'+(p.is_home?'D':'W')+'</span></td>';
+    }}
 
     // Prognoza — pogrubiona, gradient; dla niedostępnych: "—"
     if (isUnavailable) {{
@@ -2070,12 +2167,41 @@ function renderPredictions() {{
     const karpRating = p.karpinski_rating;
     h += '<td class="text-right c-muted">'+(karpRating != null ? karpRating.toFixed(1) : '—')+'</td>';
 
-    // FDR ATK/DEF rywala
-    h += '<td class="text-center">'+fdrTile(oppFdrAtk)+'</td>';
-    h += '<td class="text-center">'+fdrTile(oppFdrDef)+'</td>';
+    // FDR ATK/DEF rywala - obsługa DGW
+    if (isDGW && fixturesList.length > 1) {{
+      // DGW: pokaż FDR ATK/DEF dla każdego meczu
+      let atkHtml = '<td class="text-center"><span style="display:flex;flex-direction:column;gap:4px;align-items:center">';
+      let defHtml = '<td class="text-center"><span style="display:flex;flex-direction:column;gap:4px;align-items:center">';
+      fixturesList.forEach(fix => {{
+        const atk = fix.atk || 3;
+        const def = fix.def || 3;
+        atkHtml += fdrTile(atk);
+        defHtml += fdrTile(def);
+      }});
+      atkHtml += '</span></td>';
+      defHtml += '</span></td>';
+      h += atkHtml + defHtml;
+    }} else {{
+      // Normalna kolejka
+      h += '<td class="text-center">'+fdrTile(oppFdrAtk)+'</td>';
+      h += '<td class="text-center">'+fdrTile(oppFdrDef)+'</td>';
+    }}
 
-    // Użyty FDR
-    h += '<td class="text-center">'+fdrUsedLabel(p.position, fdrMod)+'</td>';
+    // Użyty FDR - dla DGW pokazujemy wartość z każdego meczu osobno
+    if (isDGW) {{
+      // DGW: wartość FDR na mecz (jak D/W i FDR ATK/DEF)
+      let usedFdrHtml = '<td class="text-center"><span style="display:flex;flex-direction:column;gap:4px;align-items:center">';
+      fixturesList.forEach(fix => {{
+        // Dla NAP/POM: DEF rywala, dla BR/OBR: ATK rywala (analogicznie do predictor.py:470-472)
+        const usedVal = (p.position === 'NAP' || p.position === 'POM') ? fix.def : fix.atk;
+        usedFdrHtml += fdrTile(usedVal);
+      }});
+      usedFdrHtml += '</span></td>';
+      h += usedFdrHtml;
+    }} else {{
+      // Normalna kolejka
+      h += '<td class="text-center">'+fdrUsedLabel(p.position, fdrMod)+'</td>';
+    }}
 
     // Potencjał — średnia percentyli pozycyjnych (0-100), tooltip z rozbiciem na percentyle składowe
     function pctStr(val) {{ return val != null ? Math.round(val) : '—'; }}
