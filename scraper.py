@@ -512,6 +512,7 @@ def main():
 
     # 8.8 Prognoza punktów (predictor)
     predictions_data = []
+    prediction_round = 0  # numer kolejki dla której jest prognoza (do wyświetlenia w dashboard)
     if fdr_data.get("teams") and fdr_data.get("gameweeks"):
         # Znajdź pierwszą naprawdę nierozpoczętą kolejkę — pomijamy bieżącą,
         # która może mieć przełożone mecze w przyszłości (np. K31 z meczami 13.05)
@@ -529,24 +530,26 @@ def main():
             print(f"  ⚠️  Brak kolejki do prognozy (kolejka {next_gw} nie ma meczów w terminarzu)")
             # Dalej pomijamy predykcję — next_matches pusta, pred_fixtures będzie {}
 
-        # Buduj fixtures w formacie predictora: {team: {opponent, is_home}}
-        # Nazwy drużyn normalizowane (strip, NFKD, lower) dla zgodności z player["team"]
-        pred_fixtures = {}
+        # Buduj fixtures w formacie predictora: {team: [{opponent, is_home}, ...]}
+        # DGW: drużyna może mieć więcej niż 1 mecz w kolejce → lista
+        from collections import defaultdict
+        pred_fixtures = defaultdict(list)
         for m in next_matches:
-            pred_fixtures[_normalize_team(m["home"])] = {"opponent": m["away"], "is_home": True}
-            pred_fixtures[_normalize_team(m["away"])] = {"opponent": m["home"], "is_home": False}
+            pred_fixtures[_normalize_team(m["home"])].append({"opponent": m["away"], "is_home": True})
+            pred_fixtures[_normalize_team(m["away"])].append({"opponent": m["home"], "is_home": False})
 
-        # Buduj fdr_data w formacie predictora: {team: {atk, def}}
-        # Użyj FDR z pierwszej kolejki w fdr_data (next_gw)
-        pred_fdr = {}
+        # Buduj fdr_data w formacie predictora: {team: [{atk, def, opponent}, ...]}
+        # DGW: drużyna może mieć więcej niż 1 mecz w kolejce → lista
+        pred_fdr = defaultdict(list)
         for team_fdr in fdr_data["teams"]:
             for fix in team_fdr.get("fixtures", []):
                 if fix.get("gw") == next_gw and fix.get("opponent"):
                     # FDR rywala: atk i def rywala
-                    pred_fdr[fix["opponent"]] = {
+                    pred_fdr[fix["opponent"]].append({
                         "atk": fix.get("atk", 3),
                         "def": fix.get("def", 3),
-                    }
+                        "opponent": team_fdr["name"],  # drużyna która ma ten FDR
+                    })
 
         # Mapuj pozycje z pełnych nazw na skróty dla predictora
         players_for_pred = []
@@ -576,24 +579,40 @@ def main():
             print(f"   DEBUG: top3 pred: {[(p.get('name'), p.get('predicted_points')) for p in predictions_data[:3]]}")
 
         # Dodaj informacje o rywalu z FDR dla dashboardu
-        fdr_by_team = {}
+        # DGW: fdr_by_team[team] = lista meczów zamiast pojedynczego meczu
+        fdr_by_team = defaultdict(list)
         for team_fdr in fdr_data["teams"]:
             for fix in team_fdr.get("fixtures", []):
                 if fix.get("gw") == next_gw:
-                    fdr_by_team[_normalize_team(team_fdr["name"])] = {
+                    fdr_by_team[_normalize_team(team_fdr["name"])].append({
                         "opponent": fix.get("opponent", ""),
                         "opponent_short": fix.get("opponent_short", ""),
                         "home": fix.get("home", True),
                         "atk": fix.get("atk", 3),
                         "def": fix.get("def", 3),
-                    }
+                    })
+        # Dla DGW: bierzemy pierwszy mecz do podstawowych pól (backward compat)
+        # pełna lista jest dostępna przez fixtures_list
         for pred in predictions_data:
             team = pred.get("team", "")
-            fi = fdr_by_team.get(team, {})
-            pred["opponent_short"] = fi.get("opponent_short", "")
-            pred["fdr_atk_team"] = fi.get("atk", 3)
-            pred["fdr_def_team"] = fi.get("def", 3)
+            fixtures_list = fdr_by_team.get(team, [])
+            if fixtures_list:
+                # Pierwszy mecz jako główny (backward compat)
+                fi = fixtures_list[0]
+                pred["opponent_short"] = fi.get("opponent_short", "")
+                pred["fdr_atk_team"] = fi.get("atk", 3)
+                pred["fdr_def_team"] = fi.get("def", 3)
+                # DGW: zapisz pełną listę meczów
+                pred["fixtures_list"] = fixtures_list
+                pred["fixtures_count"] = len(fixtures_list)
+            else:
+                pred["opponent_short"] = ""
+                pred["fdr_atk_team"] = 3
+                pred["fdr_def_team"] = 3
+                pred["fixtures_list"] = []
+                pred["fixtures_count"] = 0
             pred["round_number"] = next_gw  # kolejka której dotyczy prognoza
+        prediction_round = next_gw if predictions_data else 0  # zapisz dla dashboard
 
         # Zapisz CSV z prognozami
         if predictions_data:
@@ -605,11 +624,28 @@ def main():
                 "confidence", "detail",
                 "unavailable", "availability_reason",  # status dostępności
                 "round_number",  # numer kolejki, której dotyczy prognoza (dla accuracy.py)
+                # DGW: nowe pola (nie psują starego CSV, bo extrasaction="ignore")
+                "opponents",  # lista rywali (JSON string)
+                "is_home_list",  # lista dom/wyjazd (JSON string)
+                "fixtures_count",  # liczba meczów (1 lub 2)
             ]
+            # Przygotuj dane: zamień listy na JSON string
+            csv_data = []
+            for p in predictions_data:
+                row = dict(p)
+                # Zamień listy na JSON string dla CSV
+                if "opponents" in row and isinstance(row["opponents"], list):
+                    row["opponents"] = json.dumps(row["opponents"], ensure_ascii=False)
+                if "is_home_list" in row and isinstance(row["is_home_list"], list):
+                    row["is_home_list"] = json.dumps(row["is_home_list"])
+                if "fixtures_list" in row:
+                    # Nie zapisujemy pełnej listy meczów do CSV (za dużo danych)
+                    del row["fixtures_list"]
+                csv_data.append(row)
             with open(pred_csv, "w", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=pred_fields, extrasaction="ignore")
                 writer.writeheader()
-                writer.writerows(predictions_data)
+                writer.writerows(csv_data)
             print(f"  🔮 Prognoza: {len(predictions_data)} zawodników → {os.path.basename(pred_csv)}")
 
     # 8.8b Sprawdź trafność prognoz z poprzedniego uruchomienia
@@ -883,6 +919,7 @@ def main():
         fdr_data=fdr_data,
         transfers_data=transfers_data,
         predictions_data=predictions_data,
+        prediction_round=prediction_round,
         accuracy_history=accuracy_history,
         tuned_params=tuned_params,
         league_history=league_history,

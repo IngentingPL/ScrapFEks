@@ -5,6 +5,7 @@ ataku (ATK) i obrony (DEF) rywala w skali 1-5.
 """
 
 from datetime import datetime
+from collections import defaultdict
 
 
 def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0, num_rounds: int = 6) -> dict:
@@ -144,7 +145,8 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
     # Zbierz surowe wartości ATK i DEF rywala dla kwantyli
     raw_atk_vals = []
     raw_def_vals = []
-    fixture_map = {}  # (team, round) -> {atk_raw, def_raw}
+    # DGW: (team, round) -> lista meczów zamiast pojedynczego meczu
+    fixture_map = defaultdict(list)  # (team, round) -> [{atk_raw, def_raw, opponent, home}, ...]
 
     for r in shown_rounds:
         ms = matches.get(str(r), [])
@@ -164,8 +166,17 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
 
             raw_atk_vals.extend([atk_raw_h, atk_raw_a])
             raw_def_vals.extend([def_raw_h, def_raw_a])
-            fixture_map[(home_team, r)] = {"atk": atk_raw_h, "def": def_raw_h}
-            fixture_map[(away_team, r)] = {"atk": atk_raw_a, "def": def_raw_a}
+            # DGW: dodajemy do listy zamiast nadpisywania
+            fixture_map[(home_team, r)].append({
+                "atk": atk_raw_h, "def": def_raw_h,
+                "opponent": away_team, "home": True,
+                "date": m.get("date", "")
+            })
+            fixture_map[(away_team, r)].append({
+                "atk": atk_raw_a, "def": def_raw_a,
+                "opponent": home_team, "home": False,
+                "date": m.get("date", "")
+            })
 
     # Kwantyle dla ATK (direct: wysoki attack_strength → wysoki rating 5)
     def _quantile_thresholds(vals):
@@ -195,12 +206,12 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
         if val <= thr[3]: return 2
         return 1
 
-    # Buduj lookup O(1) meczów: (round, team) → match dict
-    match_lookup = {}
+    # Buduj lookup: (round, team) → lista meczów (dla DGW może być >1)
+    match_lookup = defaultdict(list)
     for r, ms in matches.items():
         for m in ms:
-            match_lookup[(int(r), m["home"])] = m
-            match_lookup[(int(r), m["away"])] = m
+            match_lookup[(int(r), m["home"])].append(m)
+            match_lookup[(int(r), m["away"])].append(m)
 
     # Buduj dane per drużyna
     fdr_teams = []
@@ -210,33 +221,42 @@ def compute_fdr(ekstra_stats: dict, fixtures_data: dict, current_round: int = 0,
         total_atk = 0
         total_def = 0
         for r in shown_rounds:
-            m = match_lookup.get((r, team))
-            if m:
-                is_home = m["home"] == team
-                fixture_info = {
-                    "opponent": m["away"] if is_home else m["home"],
-                    "home": is_home,
-                    "date": m.get("date", ""),
-                }
-            else:
-                fixture_info = None
-            if fixture_info:
-                raw = fixture_map.get((team, r), {"atk": 1.0, "def": 1.0})
-                atk_r = _val_to_rating(raw["atk"], atk_thr)
-                # DEF: niska defense_strength = mało bramek traci = silna obrona = rating 5
-                def_r = _val_to_rating_inv(raw["def"], def_thr)
-                total_atk += atk_r
-                total_def += def_r
-                opp_ab = abbrevs.get(fixture_info["opponent"], fixture_info["opponent"][:3].upper())
-                fixtures_list.append({
-                    "gw": r,
-                    "opponent": fixture_info["opponent"],
-                    "opponent_short": opp_ab,
-                    "home": fixture_info["home"],
-                    "atk": atk_r,
-                    "def": def_r,
-                    "date": fixture_info["date"],
-                })
+            # DGW: pobierz listę meczów dla (r, team)
+            match_list = match_lookup.get((r, team), [])
+            if match_list:
+                # DGW: iteruj po wszystkich meczach w tej kolejce
+                for m in match_list:
+                    is_home = m["home"] == team
+                    fixture_info = {
+                        "opponent": m["away"] if is_home else m["home"],
+                        "home": is_home,
+                        "date": m.get("date", ""),
+                    }
+                    # DGW: pobierz dane FDR dla tego konkretnego meczu z listy
+                    fixture_data_list = fixture_map.get((team, r), [])
+                    # Znajdź dane dla tego konkretnego rywala
+                    raw = None
+                    for fd in fixture_data_list:
+                        if fd["opponent"] == fixture_info["opponent"]:
+                            raw = fd
+                            break
+                    if raw is None:
+                        raw = {"atk": 1.0, "def": 1.0}
+                    atk_r = _val_to_rating(raw["atk"], atk_thr)
+                    # DEF: niska defense_strength = mało bramek traci = silna obrona = rating 5
+                    def_r = _val_to_rating_inv(raw["def"], def_thr)
+                    total_atk += atk_r
+                    total_def += def_r
+                    opp_ab = abbrevs.get(fixture_info["opponent"], fixture_info["opponent"][:3].upper())
+                    fixtures_list.append({
+                        "gw": r,
+                        "opponent": fixture_info["opponent"],
+                        "opponent_short": opp_ab,
+                        "home": fixture_info["home"],
+                        "atk": atk_r,
+                        "def": def_r,
+                        "date": fixture_info["date"],
+                    })
             else:
                 fixtures_list.append({"gw": r, "opponent": "", "opponent_short": "—", "home": True, "atk": 0, "def": 0, "date": ""})
 

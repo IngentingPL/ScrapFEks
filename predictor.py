@@ -405,10 +405,15 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
     i wywołuje ją w pętli dla każdego gracza. To częsty wzorzec w programowaniu:
     masz jedną funkcję dla jednego elementu, i drugą, która ją stosuje do wielu.
 
+    DGW (Double Gameweek): Jeśli drużyna gra 2 mecze w kolejce, sumujemy prognozy
+    z obu meczów. predicted_points = suma z każdego meczu osobno.
+
     Parametry:
         players: lista graczy z fantasy_full JSON
-        fdr_data: dict z FDR drużyn {"Lech": {"atk": 4, "def": 2}, ...}
-        fixtures: dict z następnymi meczami {"Lech": {"opponent": "Legia", "is_home": True}, ...}
+        fdr_data: dict z FDR drużyn {"Lech": [{"atk": 4, "def": 2, "opponent": "..."}, ...], ...}
+                  DGW: lista FDR per mecz zamiast pojedynczego dicta
+        fixtures: dict z następnymi meczami {"Lech": [{"opponent": "Legia", "is_home": True}, ...], ...}
+                  DGW: lista meczów zamiast pojedynczego dicta
 
     Zwraca:
         lista dictów z prognozami (posortowana od najwyższej prognozy)
@@ -417,13 +422,77 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
 
     for player in players:
         team = player.get("team", "")
-        next_fix = fixtures.get(team)
+        next_fix_list = fixtures.get(team, [])
 
-        if not next_fix:
+        # Normalizuj: jeśli fixtures to dict (stary format) → zamień na listę
+        if isinstance(next_fix_list, dict):
+            next_fix_list = [next_fix_list]
+
+        if not next_fix_list:
             print(f"[Prognoza skip] Brak meczu dla '{team}' — pomijam '{player.get('name', '')}'")
             continue  # Brak info o następnym meczu → pomijamy
 
-        pred = predict_points(player, fdr_data, next_fix, lookback=lookback)
+        # DGW: prognozuj osobno dla każdego meczu, potem sumuj
+        individual_preds = []
+        opponents = []
+        is_home_list = []
+
+        for fix in next_fix_list:
+            # Pobierz FDR dla tego konkretnego rywala
+            opponent = fix.get("opponent", "")
+            # fdr_data[opponent] to lista dla DGW
+            fdr_list = fdr_data.get(opponent, [])
+            if isinstance(fdr_list, dict):
+                # Stary format - pojedynczy dict
+                opponent_fdr = fdr_list
+            elif fdr_list:
+                # DGW - znajdź FDR dla tego gracza (drużyny)
+                # fdr_list zawiera FDR tego opponenta względem różnych drużyn
+                # Bierzemy pierwszy pasujący (domyślnie)
+                opponent_fdr = fdr_list[0] if fdr_list else {"atk": 3, "def": 3}
+            else:
+                opponent_fdr = {"atk": 3, "def": 3}
+
+            pred = predict_points(player, {opponent: opponent_fdr}, fix, lookback=lookback)
+            individual_preds.append(pred)
+            opponents.append(opponent)
+            is_home_list.append(fix.get("is_home", False))
+
+        # DGW: sumuj prognozy z wszystkich meczów
+        if len(individual_preds) == 1:
+            # Normalna kolejka (1 mecz)
+            combined_pred = individual_preds[0]
+            next_opponent = opponents[0]
+            is_home = is_home_list[0]
+            detail_suffix = ""
+        else:
+            # DGW: sumuj predicted_points z każdego meczu
+            total_predicted = sum(p.get("predicted_points", 0) or 0 for p in individual_preds)
+            # Średnie dla innych pól
+            base_avg = sum(p.get("base_avg", 0) or 0 for p in individual_preds) / len(individual_preds)
+            # Bierzemy najniższy confidence (najgorszy przypadek)
+            confidences = [p.get("confidence", "medium") for p in individual_preds]
+            confidence = min(confidences, key=lambda c: {"high": 3, "medium": 2, "low": 1}.get(c, 0))
+            # Dla DGW: pierwszy rywal w next_opponent (backward compat), pełna lista w opponents
+            next_opponent = opponents[0] if opponents else ""
+            is_home = is_home_list[0] if is_home_list else False
+            # Bez powtórzonego prefiksu "DGW:" — już jest na początku detail
+            detail_suffix = f" | {', '.join(opponents)}"
+
+            combined_pred = {
+                "predicted_points": round(total_predicted, 1),
+                "base_avg": round(base_avg, 1),
+                "fdr_modifier": individual_preds[0].get("fdr_modifier", 1.0),  # z pierwszego
+                "minutes_factor": individual_preds[0].get("minutes_factor", 1.0),
+                "home_away_factor": individual_preds[0].get("home_away_factor", 1.0),
+                "avg_minutes": individual_preds[0].get("avg_minutes", 0),
+                "rounds_used": individual_preds[0].get("rounds_used", 0),
+                "used_fdr_value": individual_preds[0].get("used_fdr_value", 3),
+                "potential_value": individual_preds[0].get("potential_value"),
+                "confidence_rank": individual_preds[0].get("confidence_rank", 2),
+                "confidence": confidence,
+                "detail": f"DGW: {len(individual_preds)} mecze, suma = {round(total_predicted, 1)} pkt{detail_suffix}",
+            }
 
         predictions.append({
             "player_id": player.get("player_id"),
@@ -433,8 +502,13 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             "price": player.get("price", 0),
             "total_points": player.get("total_points", 0),
             "popularity_pct": player.get("popularity_pct", ""),
-            "next_opponent": next_fix.get("opponent", ""),
-            "is_home": next_fix.get("is_home", False),
+            "next_opponent": next_opponent,  # backward compat: pierwszy rywal
+            "is_home": is_home,  # backward compat: pierwszy mecz
+            # DGW: nowe pola z pełną listą
+            "opponents": opponents,  # lista wszystkich rywali
+            "is_home_list": is_home_list,  # lista dom/wyjazd dla każdego meczu
+            "fixtures_count": len(next_fix_list),  # liczba meczów (1 lub 2)
+            "fixtures_list": next_fix_list,  # pełne fixture'y (opponent_short, home, atk, def, date)
             # xA i percentyle z conceptually_client (przekazywane przez scraper.py)
             "xa_per_90": player.get("xa_per_90"),
             "percentile_xa": player.get("percentile_xa"),
@@ -452,7 +526,7 @@ def predict_all_players(players, fdr_data, fixtures, lookback=DEFAULT_LOOKBACK):
             "percentile_goals_conceded": player.get("percentile_goals_conceded"),
             "percentile_goals_prevented": player.get("percentile_goals_prevented"),
             "karpinski_rating": player.get("karpinski_rating"),
-            **pred,  # 📖 ** "rozpakuje" dict — dodaje wszystkie klucze z pred do tego dicta
+            **combined_pred,  # 📖 ** "rozpakuje" dict — dodaje wszystkie klucze z pred do tego dicta
         })
 
     # Sortuj: najpierw dostępni zawodnicy wg prognozy malejąco, potem niedostępni (prognoza 0)
