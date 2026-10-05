@@ -935,6 +935,10 @@ function posBadge(p) {{
   const short = POS_MAP[k] || POS_MAP[p] || p;
   return '<span class="badge-pos pos-'+short+'">'+short+'</span>';
 }}
+// 📖 Kafelek FDR (1-5) — wspólny dla zakładek Prognoza i Porównanie
+function fdrTile(val) {{
+  return '<span class="fdr fdr-'+val+'">'+val+'</span>';
+}}
 function arrow(tab, col) {{
   const s = sorts[tab];
   return s.col === col ? (s.dir === 'desc' ? ' ▼' : ' ▲') : '';
@@ -1989,10 +1993,6 @@ function renderPredictions() {{
     return 'background:var(--tint-soft);color:var(--text-dim)';
   }}
 
-  function fdrTile(val) {{
-    return '<span class="fdr fdr-'+val+'">'+val+'</span>';
-  }}
-
   function fdrUsedLabel(position, fdr_mod) {{
     const pk = POS_ID[position] || position;
     let label = 'MIX';
@@ -2036,7 +2036,11 @@ function renderPredictions() {{
     h += '<div class="page-sub"><span class="mono">Powered by <a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener">Ekstraklasa Scouting</a></span></div>';
 
    // Pasek DGW - pokazuje drużyny z Double Gameweek
-   const dgwTeams = [...new Set(data.filter(p => p.fixtures_count > 1).map(p => p.team))];
+   // 📖 Ładne nazwy (np. "GKS Katowice") z FDR_DATA/terminarza zamiast lowercase z prognoz
+   const fdrNameByNorm = {{}};
+   (FDR_DATA.teams || []).forEach(t => {{ fdrNameByNorm[normalizeTeamNameJS(t.name)] = t.name; }});
+   const dgwTeams = [...new Set(data.filter(p => p.fixtures_count > 1).map(p => p.team))]
+     .map(t => fdrNameByNorm[normalizeTeamNameJS(t)] || t);
    if (dgwTeams.length > 0) {{
      h += '<div class="dgw-banner" style="background:var(--tint-accent);border:1px solid var(--border-accent);border-radius:12px;padding:12px 16px;margin:12px 0 16px;display:flex;align-items:center;gap:10px">';
      h += '<span style="font-size:16px">🎲</span>';
@@ -2979,18 +2983,18 @@ function renderComparison() {{
     const played = (p.form || []).filter(f => f.p);
     const formAvg = played.length ? (played.reduce((s,f) => s + f.pts, 0) / played.length).toFixed(1) : '—';
     const predPts = p.predicted_points != null ? p.predicted_points.toFixed(1) : '—';
-    // 📖 Następny rywal z FDR — szukamy w FDR_DATA
+    // 📖 Następny rywal z FDR — bierzemy WSZYSTKIE mecze najbliższej kolejki (DGW = 2 mecze)
     const teamFdr = (FDR_DATA.teams || []).find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(p.team));
-    const nextFix = teamFdr ? (teamFdr.fixtures || [])[0] : null;
+    const teamFixes = teamFdr ? (teamFdr.fixtures || []) : [];
+    const firstRealFix = teamFixes.find(f => f.opponent);
+    const nextGw = firstRealFix ? firstRealFix.gw : null;
+    const roundFixes = nextGw != null ? teamFixes.filter(f => f.gw === nextGw && f.opponent) : [];
+    const nextFix = roundFixes[0] || null;
     const nextOpp = nextFix ? nextFix.opponent_short : (p.next_opponent || '—');
-    const nextFdrAtk = nextFix ? nextFix.atk : (p.fdr_atk_opponent || 3);
-    const nextFdrDef = nextFix ? nextFix.def : (p.fdr_def_opponent || 3);
-    // 📖 FDR uśredniony do jednej wartości (zależy od pozycji)
+    // 📖 FDR zależy od pozycji: NAP/POM → DEF rywala, BR/OBR → ATK rywala
     const isAttacker = (pk === 'NAP' || pk === 'POM');
-    const mainFdr = isAttacker ? nextFdrDef : nextFdrAtk;
-    const fdrC = FDR_COLORS[mainFdr] || FDR_COLORS[3];
+    const mainFdr = nextFix ? (isAttacker ? nextFix.def : nextFix.atk) : (isAttacker ? (p.fdr_def_opponent || 3) : (p.fdr_atk_opponent || 3));
     const isHome = nextFix ? nextFix.home : p.is_home;
-    const haLabel = isHome ? '(D)' : '(W)';
 
     h += '<div class="cmp-card"><span class="cc-bar" style="background:'+CMP_COLORS[i]+'"></span>';
     h += '<div class="cc-pos">' + posBadge(p.position) + '</div>';
@@ -3001,7 +3005,23 @@ function renderComparison() {{
     h += '<div class="ccmp-stat"><span class="cs-k">Łączne pkt</span><span class="cs-v">' + (p.total_points || 0) + '</span></div>';
     h += '<div class="ccmp-stat"><span class="cs-k">Średnia (forma)</span><span class="cs-v">' + formAvg + '</span></div>';
     h += '<div class="ccmp-stat"><span class="cs-k">Prognoza</span><span class="cs-v" style="color:var(--accent)">' + predPts + '</span></div>';
-    h += '<div class="ccmp-stat"><span class="cs-k">Następny rywal</span><span class="cs-v">' + nextOpp + ' <span class="hw'+(isHome?' d':'')+'">'+(isHome?'D':'W')+'</span> <span class="fdr fdr-'+mainFdr+'">'+mainFdr+'</span></span></div>';
+    // 📖 Zwykła kolejka — jeden rywal (bez zmian); DGW — oba kafelki (każdy w kolorze własnego FDR) + znaczek DGW
+    let rivalHtml;
+    if (roundFixes.length > 1) {{
+      rivalHtml = '<span style="display:inline-flex;flex-direction:column;gap:4px;align-items:flex-end">';
+      roundFixes.forEach(f => {{
+        const fMain = isAttacker ? f.def : f.atk;
+        rivalHtml += '<span class="fdr fdr-'+fMain+'" style="display:inline-flex;align-items:center;gap:4px">';
+        rivalHtml += '<span class="o-nm">'+f.opponent_short+'</span>';
+        rivalHtml += '<span class="hw'+(f.home?' d':'')+'">'+(f.home?'D':'W')+'</span>';
+        rivalHtml += '</span>';
+      }});
+      rivalHtml += '<span style="font-size:9px;font-weight:700;color:var(--accent)">DGW</span>';
+      rivalHtml += '</span>';
+    }} else {{
+      rivalHtml = nextOpp + ' <span class="hw'+(isHome?' d':'')+'">'+(isHome?'D':'W')+'</span> ' + fdrTile(mainFdr);
+    }}
+    h += '<div class="ccmp-stat"><span class="cs-k">Następny rywal</span><span class="cs-v">' + rivalHtml + '</span></div>';
     h += '</div></div>';
   }});
   h += '</div>';
@@ -3130,13 +3150,31 @@ function renderComparison() {{
       h += '<tr><td class="text-left fw-700 c-muted">' + gw + '</td>';
       selected.forEach((p, pi) => {{
         const teamFdr = fdrTeams.find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(p.team));
-        const fix = teamFdr ? (teamFdr.fixtures || []).find(f => f.gw === gw) : null;
-        if (fix) {{
+        // 📖 Bierzemy WSZYSTKIE mecze kolejki (DGW daje 2), nie tylko pierwszy
+        const fixes = teamFdr ? (teamFdr.fixtures || []).filter(f => f.gw === gw && f.opponent) : [];
+        if (fixes.length) {{
           const pk = POS_ID[p.position] || p.position || '';
           const isAtk = (pk === 'NAP' || pk === 'POM');
-          const mainFdr = isAtk ? fix.def : fix.atk;
-          const ha = fix.home ? 'D' : 'W';
-          h += '<td class="text-center"><span class="opp"><span class="o-code"><span class="o-nm">' + fix.opponent_short + '</span><span class="hw'+(fix.home?' d':'')+'">' + ha + '</span></span><span class="fdr fdr-'+mainFdr+'">'+mainFdr+'</span></span></td>';
+          // 📖 FDR z perspektywy pozycji: NAP/POM → DEF rywala, BR/OBR → ATK rywala
+          const fdrVal = f => isAtk ? f.def : f.atk;
+          if (fixes.length === 1) {{
+            // Zwykła kolejka — bez zmian
+            const fix = fixes[0];
+            const mainFdr = fdrVal(fix);
+            const ha = fix.home ? 'D' : 'W';
+            h += '<td class="text-center"><span class="opp"><span class="o-code"><span class="o-nm">' + fix.opponent_short + '</span><span class="hw'+(fix.home?' d':'')+'">' + ha + '</span></span>' + fdrTile(mainFdr) + '</span></td>';
+          }} else {{
+            // DGW: pokazujemy wszystkich rywali, FDR = średnia z meczów kolejki (jak w Plannerze)
+            const avgFdr = Math.round(fixes.reduce((s, f) => s + fdrVal(f), 0) / fixes.length);
+            h += '<td class="text-center" style="padding:4px 6px"><div style="display:flex;flex-direction:column;gap:3px;align-items:center">';
+            fixes.forEach(f => {{
+              const ha = f.home ? 'D' : 'W';
+              h += '<span class="opp" style="font-size:11px"><span class="o-code"><span class="o-nm">' + f.opponent_short + '</span><span class="hw'+(f.home?' d':'')+'">' + ha + '</span></span></span>';
+            }});
+            h += fdrTile(avgFdr);
+            h += '<span style="font-size:9px;font-weight:700;color:var(--accent);margin-top:2px">DGW</span>';
+            h += '</div></td>';
+          }}
         }} else {{
           h += '<td class="text-center c-dim">—</td>';
         }}
