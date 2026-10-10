@@ -2332,12 +2332,12 @@
     "date": "2026-10-10",
     "mae": 2.9,
     "mae_by_pos": {
-      "BR": 2.0,
+      "BR": 2.1,
       "OBR": 3.0,
       "POM": 3.1,
       "NAP": 3.1
     },
-    "top10_mae": 4.2,
+    "top10_mae": 4.3,
     "hit_rate": 0.61,
     "sample_size": 46,
     "worst_misses": [
@@ -2694,15 +2694,6 @@
         "error": 3.5
       },
       {
-        "player_id": "1795",
-        "name": "Sławomir Abramowicz",
-        "position": "BR",
-        "team": "jagiellonia białystok",
-        "predicted": 1.5,
-        "actual": 5,
-        "error": -3.5
-      },
-      {
         "player_id": "2160",
         "name": "Roman Jakuba",
         "position": "OBR",
@@ -2710,15 +2701,6 @@
         "predicted": 3.7,
         "actual": 0,
         "error": 3.7
-      },
-      {
-        "player_id": "166",
-        "name": "Rafał Janicki",
-        "position": "OBR",
-        "team": "górnik zabrze",
-        "predicted": 9.0,
-        "actual": 5,
-        "error": 4.0
       },
       {
         "player_id": "2945",
@@ -2748,6 +2730,15 @@
         "error": 4.5
       },
       {
+        "player_id": "1795",
+        "name": "Sławomir Abramowicz",
+        "position": "BR",
+        "team": "jagiellonia białystok",
+        "predicted": 1.5,
+        "actual": 6,
+        "error": -4.5
+      },
+      {
         "player_id": "2759",
         "name": "Eman Markovic",
         "position": "POM",
@@ -2755,6 +2746,15 @@
         "predicted": 6.9,
         "actual": 2,
         "error": 4.9
+      },
+      {
+        "player_id": "166",
+        "name": "Rafał Janicki",
+        "position": "OBR",
+        "team": "górnik zabrze",
+        "predicted": 9.0,
+        "actual": 4,
+        "error": 5.0
       },
       {
         "player_id": "681",
