@@ -34,11 +34,9 @@ on:
 
   # AUTO-SCHEDULE-START
   schedule:
-    - cron: '0 18 8 10 *'  # K10 DISCORD PRE 08.10 20:00 CEST — prognoza przed kolejką
-    - cron: '30 16 9 10 *'  # K10 START 09.10 mecz 18:00 CEST → +30min 18:30 CEST
-    - cron: '0 17 9 10 *'  # K10 DISCORD CAPTAINS 09.10 19:00 CEST — podsumowanie kapitanów
-    - cron: '30 18 9 10 *'  # K10 09.10 mecz 18:00 CEST → +2.5h 20:30 CEST
-    - cron: '0 21 9 10 *'  # K10 09.10 mecz 20:30 CEST → +2.5h 23:00 CEST
+    - cron: '0 18 9 10 *'  # K10 DISCORD PRE 09.10 20:00 CEST — prognoza przed kolejką
+    - cron: '15 13 10 10 *'  # K10 START 10.10 mecz 14:45 CEST → +30min 15:15 CEST
+    - cron: '45 13 10 10 *'  # K10 DISCORD CAPTAINS 10.10 15:45 CEST — podsumowanie kapitanów
     - cron: '15 15 10 10 *'  # K10 10.10 mecz 14:45 CEST → +2.5h 17:15 CEST
     - cron: '0 18 10 10 *'  # K10 10.10 mecz 17:30 CEST → +2.5h 20:00 CEST
     - cron: '45 20 10 10 *'  # K10 10.10 mecz 20:15 CEST → +2.5h 22:45 CEST
