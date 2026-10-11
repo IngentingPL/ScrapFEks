@@ -20,7 +20,6 @@ import time
 import threading
 import os
 import sys
-import glob
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -54,7 +53,8 @@ from squads import (
 )
 
 from transfers import compute_league_transfers, compute_player_stats_per90
-from schedule import parse_terminarz, cleanup_old_output_files
+from schedule import parse_terminarz, cleanup_old_output_files, has_archive_season
+from snapshot import save_dashboard_snapshot
 
 
 def get_player_ids_by_scanning(session: requests.Session, max_id: int = 3000) -> list[int]:
@@ -903,7 +903,10 @@ def main():
     if current_round and league_teams_detail:
         save_league_squads_history(league_teams_detail, current_round)
 
-    generate_dashboard_html(
+    # Zbierz wszystkie dane wejściowe dashboardu do jednego słownika —
+    # użyje go zarówno generate_dashboard_html, jak i snapshot JSON.
+    dashboard_timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M")
+    dashboard_inputs = dict(
         summary_data=summary_data,
         tiers=tiers,
         teams_count=TEAMS_TO_SCRAPE,
@@ -923,10 +926,22 @@ def main():
         accuracy_history=accuracy_history,
         tuned_params=tuned_params,
         league_history=league_history,
-        # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona, newsletter_history.json write-only
-        timestamp=datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M"),
         filename=dashboard_file,
-        has_archive=len(glob.glob("docs/archive/sezon-*.html")) > 0,
+    )
+
+    # Zapisz snapshot danych dashboardu (JSON) — pozwala później przebudować
+    # HTML przez build_dashboard.py bez scrapowania. Błąd zapisu nie przerywa
+    # scrapera — tylko logujemy ostrzeżenie.
+    try:
+        save_dashboard_snapshot(dashboard_inputs, dashboard_timestamp)
+        print("  💾 Zapisano snapshot danych: output/dashboard_snapshot.json")
+    except Exception as e:
+        print(f"  ⚠️  Nie udało się zapisać snapshotu danych: {e}")
+
+    generate_dashboard_html(
+        **dashboard_inputs,
+        timestamp=dashboard_timestamp,
+        has_archive=has_archive_season(),
     )
 
     # ============================================================

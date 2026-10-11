@@ -10,6 +10,11 @@ import glob
 from config import MONTHS_PL, TEAM_ABBREVS
 
 
+def has_archive_season(archive_dir: str = "docs/archive") -> bool:
+    """Czy istnieje jakikolwiek zarchiwizowany sezon (docs/archive/sezon-*.html)."""
+    return len(glob.glob(os.path.join(archive_dir, "sezon-*.html"))) > 0
+
+
 def parse_terminarz(filepath: str = "terminarz.txt") -> dict:
     """Parsuje terminarz.txt i zwraca dane do fixture ticker."""
     if not os.path.exists(filepath):

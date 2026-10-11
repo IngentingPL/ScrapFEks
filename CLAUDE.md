@@ -40,7 +40,9 @@ ScrapFEks/
 ├── karpinski_client.py         # Statystyki xG, xA, strzały, chances_created, clean_sheet, goals_conceded, goals_prevented i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h
 ├── fdr.py                      # Obliczenia FDR (Fixture Difficulty Rating)
 ├── transfers.py                # Transfery ligowe, statystyki per 90 minut
-├── schedule.py                 # Parsowanie terminarz.txt, czyszczenie starych plików
+├── schedule.py                 # Parsowanie terminarz.txt, czyszczenie starych plików, has_archive_season()
+├── snapshot.py                 # Zapis/odczyt snapshotu danych dashboardu (output/dashboard_snapshot.json, atomowo)
+├── build_dashboard.py          # Buduje HTML dashboardu ze snapshotu — bez sieci i logowania (domyślnie /tmp/dashboard_from_snapshot.html)
 ├── tuner.py                    # Optymalizacja parametrów predykcji
 ├── accuracy.py                 # Śledzenie trafności prognoz
 ├── ai_client.py                 # Wspólny klient AI (DeepSeek + Gemini) – używany przez discord_notify.py i newsletter.py
@@ -256,6 +258,10 @@ python scraper.py
 ```
 
 Dashboard generuje się do `output/dashboard.html` i `docs/index.html`.
+
+### Snapshot danych dashboardu
+
+Przed wygenerowaniem HTML scraper zapisuje wszystkie dane wejściowe dashboardu do `output/dashboard_snapshot.json` (przez `snapshot.py`; zapis atomowy — najpierw plik `.tmp`, potem `os.replace`; błąd zapisu tylko loguje ostrzeżenie). Skrypt `python build_dashboard.py` wczytuje snapshot i generuje HTML bez scrapowania, sieci i logowania (domyślnie `/tmp/dashboard_from_snapshot.html`; nadpisuje `filename` ze snapshotu, więc nie rusza `docs/index.html`). Round-trip test: `python3 test_snapshot_roundtrip.py`.
 
 ---
 

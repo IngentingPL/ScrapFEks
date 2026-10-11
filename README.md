@@ -215,6 +215,7 @@ Wszystkie pliki zapisywane do katalogu `output/` ze znacznikiem czasu (`YYYYMMDD
 | Plik | Zawartość |
 |---|---|
 | `dashboard.html` | Interaktywny dashboard (kopiowany też do `docs/index.html` → GitHub Pages) |
+| `dashboard_snapshot.json` | Snapshot wszystkich danych wejściowych dashboardu (JSON) — pozwala przebudować HTML bez scrapowania |
 | `fantasy_full_*.json` | Pełne dane — wszystkie kolejki, historia cen |
 | `fantasy_players_*.csv` | Podsumowanie: imię, drużyna, punkty, cena, pkt/cena, popularność, forma |
 | `fantasy_rounds_*.csv` | Statystyki per kolejka + zmiana ceny |
@@ -224,6 +225,10 @@ Wszystkie pliki zapisywane do katalogu `output/` ze znacznikiem czasu (`YYYYMMDD
 | `checkpoint_league.json` | Punkt wznowienia dla scrapowania drużyn |
 
 Artefakty z GitHub Actions przechowywane przez **7 dni**.
+
+### Snapshot dashboardu
+
+Przed wygenerowaniem HTML scraper zapisuje wszystkie dane wejściowe dashboardu do `output/dashboard_snapshot.json` (przez `snapshot.py`, zapis atomowy). Dzięki temu `python build_dashboard.py` potrafi przebudować dashboard ze snapshotu — bez ponownego scrapowania, bez sieci i bez logowania. Domyślne wyjście to `/tmp/dashboard_from_snapshot.html`, więc bezpiecznie testujesz zmiany wyglądu na starych danych (ścieżki zmienisz przez `--snapshot` / `--out`).
 
 ---
 
@@ -244,6 +249,8 @@ Artefakty z GitHub Actions przechowywane przez **7 dni**.
 | `fdr.py` | Obliczenia FDR (Fixture Difficulty Rating) |
 | `transfers.py` | Transfery ligowe, statystyki per 90 minut |
 | `schedule.py` | Parsowanie terminarz.txt, czyszczenie starych plików |
+| `snapshot.py` | Zapis/odczyt snapshotu danych dashboardu (`output/dashboard_snapshot.json`, zapis atomowy) |
+| `build_dashboard.py` | Buduje HTML ze snapshotu bez scrapowania, sieci i logowania: `python build_dashboard.py` (domyślnie `/tmp/dashboard_from_snapshot.html`) |
 | `karpinski_client.py` | Statystyki xG, xA, strzały, chances_created, clean_sheet, goals_conceded, goals_prevented i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h |
 | `predictor.py` | Logika prognoz punktowych zawodników |
 | `tuner.py` | Auto-tuning parametrów predykcji na podstawie trafności |
