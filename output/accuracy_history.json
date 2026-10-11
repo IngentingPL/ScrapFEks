@@ -2329,17 +2329,17 @@
   },
   {
     "round": 10,
-    "date": "2026-10-10",
-    "mae": 2.9,
+    "date": "2026-10-11",
+    "mae": 2.7,
     "mae_by_pos": {
-      "BR": 1.7,
+      "BR": 1.6,
       "OBR": 3.0,
-      "POM": 3.1,
-      "NAP": 3.1
+      "POM": 3.0,
+      "NAP": 2.8
     },
-    "top10_mae": 4.5,
-    "hit_rate": 0.65,
-    "sample_size": 49,
+    "top10_mae": 4.8,
+    "hit_rate": 0.66,
+    "sample_size": 79,
     "worst_misses": [
       {
         "name": "Ilja Szkurin",
@@ -2354,6 +2354,12 @@
         "error": 8.0
       },
       {
+        "name": "Paul Mukairu",
+        "predicted": 4.3,
+        "actual": 12,
+        "error": -7.7
+      },
+      {
         "name": "Josip Ćorluka",
         "predicted": 6.1,
         "actual": -1,
@@ -2364,15 +2370,15 @@
         "predicted": 9.0,
         "actual": 2,
         "error": 7.0
-      },
-      {
-        "name": "Ajdin Hasić",
-        "predicted": 6.5,
-        "actual": 13,
-        "error": -6.5
       }
     ],
     "best_hits": [
+      {
+        "name": "Bartłomiej Drągowski",
+        "predicted": 2.0,
+        "actual": 2,
+        "error": 0.0
+      },
       {
         "name": "Rodrigo Conceicao",
         "predicted": 1.0,
@@ -2386,25 +2392,28 @@
         "error": -0.2
       },
       {
-        "name": "Sławomir Abramowicz",
-        "predicted": 1.5,
-        "actual": 2,
-        "error": -0.5
+        "name": "Darko Čurlinov",
+        "predicted": 4.4,
+        "actual": 4,
+        "error": 0.4
       },
       {
-        "name": "Karol Fila",
-        "predicted": 5.4,
-        "actual": 6,
-        "error": -0.6
-      },
-      {
-        "name": "Maksym Chłań",
-        "predicted": 3.6,
-        "actual": 3,
-        "error": 0.6
+        "name": "Daniel Bąk",
+        "predicted": 0.6,
+        "actual": 1,
+        "error": -0.4
       }
     ],
     "details": [
+      {
+        "player_id": "2801",
+        "name": "Bartłomiej Drągowski",
+        "position": "BR",
+        "team": "widzew łódź",
+        "predicted": 2.0,
+        "actual": 2,
+        "error": 0.0
+      },
       {
         "player_id": "2945",
         "name": "Rodrigo Conceicao",
@@ -2422,6 +2431,24 @@
         "predicted": 6.8,
         "actual": 7,
         "error": -0.2
+      },
+      {
+        "player_id": "2490",
+        "name": "Darko Čurlinov",
+        "position": "POM",
+        "team": "pogoń szczecin",
+        "predicted": 4.4,
+        "actual": 4,
+        "error": 0.4
+      },
+      {
+        "player_id": "2295",
+        "name": "Daniel Bąk",
+        "position": "NAP",
+        "team": "korona kielce",
+        "predicted": 0.6,
+        "actual": 1,
+        "error": -0.4
       },
       {
         "player_id": "1795",
@@ -2460,6 +2487,15 @@
         "error": -0.6
       },
       {
+        "player_id": "2629",
+        "name": "Morgan Faßbender",
+        "position": "POM",
+        "team": "korona kielce",
+        "predicted": 1.6,
+        "actual": 1,
+        "error": 0.6
+      },
+      {
         "player_id": "2966",
         "name": "Jeremy Agbonifo",
         "position": "POM",
@@ -2467,6 +2503,24 @@
         "predicted": 0.6,
         "actual": 0,
         "error": 0.6
+      },
+      {
+        "player_id": "1931",
+        "name": "Steve Kapuadi",
+        "position": "OBR",
+        "team": "widzew łódź",
+        "predicted": 1.8,
+        "actual": 1,
+        "error": 0.8
+      },
+      {
+        "player_id": "2676",
+        "name": "Emmanuel Twumasi",
+        "position": "OBR",
+        "team": "piast gliwice",
+        "predicted": 3.9,
+        "actual": 3,
+        "error": 0.9
       },
       {
         "player_id": "2384",
@@ -2514,6 +2568,24 @@
         "error": 1.2
       },
       {
+        "player_id": "2659",
+        "name": "Marcel Łubik",
+        "position": "BR",
+        "team": "wisła kraków",
+        "predicted": 3.8,
+        "actual": 5,
+        "error": -1.2
+      },
+      {
+        "player_id": "2225",
+        "name": "Fran Álvarez",
+        "position": "POM",
+        "team": "widzew łódź",
+        "predicted": 3.2,
+        "actual": 2,
+        "error": 1.2
+      },
+      {
         "player_id": "1341",
         "name": "Fran Tudor",
         "position": "OBR",
@@ -2550,6 +2622,15 @@
         "error": 1.5
       },
       {
+        "player_id": "1507",
+        "name": "Łukasz Zjawiński",
+        "position": "NAP",
+        "team": "legia warszawa",
+        "predicted": 3.6,
+        "actual": 2,
+        "error": 1.6
+      },
+      {
         "player_id": "1490",
         "name": "Kacper Trelowski",
         "position": "BR",
@@ -2557,6 +2638,15 @@
         "predicted": 1.6,
         "actual": 0,
         "error": 1.6
+      },
+      {
+        "player_id": "374",
+        "name": "Alan Uryga",
+        "position": "OBR",
+        "team": "wisła kraków",
+        "predicted": 6.7,
+        "actual": 5,
+        "error": 1.7
       },
       {
         "player_id": "1925",
@@ -2568,12 +2658,48 @@
         "error": 1.7
       },
       {
+        "player_id": "2880",
+        "name": "Marko Bozic",
+        "position": "POM",
+        "team": "wisła kraków",
+        "predicted": 4.8,
+        "actual": 3,
+        "error": 1.8
+      },
+      {
+        "player_id": "3001",
+        "name": "Ondřej Lingr",
+        "position": "POM",
+        "team": "korona kielce",
+        "predicted": 3.8,
+        "actual": 2,
+        "error": 1.8
+      },
+      {
         "player_id": "1168",
         "name": "Patryk Makuch",
         "position": "NAP",
         "team": "raków częstochowa",
         "predicted": 7.9,
         "actual": 6,
+        "error": 1.9
+      },
+      {
+        "player_id": "1386",
+        "name": "Ariel Mosór",
+        "position": "OBR",
+        "team": "korona kielce",
+        "predicted": 2.9,
+        "actual": 1,
+        "error": 1.9
+      },
+      {
+        "player_id": "1400",
+        "name": "Xavier Dziekoński",
+        "position": "BR",
+        "team": "korona kielce",
+        "predicted": 2.9,
+        "actual": 1,
         "error": 1.9
       },
       {
@@ -2622,6 +2748,33 @@
         "error": 2.0
       },
       {
+        "player_id": "2881",
+        "name": "Ángel Rodado",
+        "position": "NAP",
+        "team": "wisła kraków",
+        "predicted": 4.0,
+        "actual": 2,
+        "error": 2.0
+      },
+      {
+        "player_id": "2752",
+        "name": "Slobodan Rubežić",
+        "position": "OBR",
+        "team": "korona kielce",
+        "predicted": 3.0,
+        "actual": 1,
+        "error": 2.0
+      },
+      {
+        "player_id": "2805",
+        "name": "Otto Hindrich",
+        "position": "BR",
+        "team": "legia warszawa",
+        "predicted": 3.0,
+        "actual": 5,
+        "error": -2.0
+      },
+      {
         "player_id": "2387",
         "name": "José Manuel Josema",
         "position": "OBR",
@@ -2640,6 +2793,15 @@
         "error": -2.3
       },
       {
+        "player_id": "2924",
+        "name": "Domen Gril",
+        "position": "BR",
+        "team": "piast gliwice",
+        "predicted": 5.4,
+        "actual": 3,
+        "error": 2.4
+      },
+      {
         "player_id": "765",
         "name": "Jesús Imaz",
         "position": "POM",
@@ -2655,6 +2817,15 @@
         "team": "lech poznań",
         "predicted": 4.4,
         "actual": 2,
+        "error": 2.4
+      },
+      {
+        "player_id": "2163",
+        "name": "Marcel Pięczek",
+        "position": "OBR",
+        "team": "korona kielce",
+        "predicted": 3.4,
+        "actual": 1,
         "error": 2.4
       },
       {
@@ -2680,6 +2851,15 @@
         "name": "Lukas Klemenz",
         "position": "OBR",
         "team": "gks katowice",
+        "predicted": 4.7,
+        "actual": 2,
+        "error": 2.7
+      },
+      {
+        "player_id": "1529",
+        "name": "Mariusz Fornalczyk",
+        "position": "POM",
+        "team": "widzew łódź",
         "predicted": 4.7,
         "actual": 2,
         "error": 2.7
@@ -2712,6 +2892,24 @@
         "error": -3.2
       },
       {
+        "player_id": "2719",
+        "name": "Leandro Sanca",
+        "position": "POM",
+        "team": "piast gliwice",
+        "predicted": 6.3,
+        "actual": 3,
+        "error": 3.3
+      },
+      {
+        "player_id": "1987",
+        "name": "Jordi Sánchez",
+        "position": "NAP",
+        "team": "pogoń szczecin",
+        "predicted": 6.4,
+        "actual": 3,
+        "error": 3.4
+      },
+      {
         "player_id": "1299",
         "name": "Jean Carlos Silva",
         "position": "OBR",
@@ -2739,6 +2937,15 @@
         "error": 3.7
       },
       {
+        "player_id": "1319",
+        "name": "Paweł Wszołek",
+        "position": "OBR",
+        "team": "legia warszawa",
+        "predicted": 8.9,
+        "actual": 5,
+        "error": 3.9
+      },
+      {
         "player_id": "480",
         "name": "Bartosz Nowak",
         "position": "POM",
@@ -2748,6 +2955,24 @@
         "error": 4.4
       },
       {
+        "player_id": "860",
+        "name": "Wiktor Długosz",
+        "position": "POM",
+        "team": "korona kielce",
+        "predicted": 6.4,
+        "actual": 2,
+        "error": 4.4
+      },
+      {
+        "player_id": "2491",
+        "name": "Maciej Wojciechowski",
+        "position": "POM",
+        "team": "pogoń szczecin",
+        "predicted": 3.6,
+        "actual": 8,
+        "error": -4.4
+      },
+      {
         "player_id": "2454",
         "name": "Pau Resta",
         "position": "OBR",
@@ -2755,6 +2980,15 @@
         "predicted": 7.5,
         "actual": 3,
         "error": 4.5
+      },
+      {
+        "player_id": "303",
+        "name": "Mariusz Stępiński",
+        "position": "NAP",
+        "team": "korona kielce",
+        "predicted": 6.6,
+        "actual": 2,
+        "error": 4.6
       },
       {
         "player_id": "2759",
@@ -2775,6 +3009,24 @@
         "error": 4.9
       },
       {
+        "player_id": "923",
+        "name": "Rafał Augustyniak",
+        "position": "OBR",
+        "team": "legia warszawa",
+        "predicted": 10.0,
+        "actual": 5,
+        "error": 5.0
+      },
+      {
+        "player_id": "2728",
+        "name": "Juande Rivas",
+        "position": "OBR",
+        "team": "piast gliwice",
+        "predicted": 8.1,
+        "actual": 3,
+        "error": 5.1
+      },
+      {
         "player_id": "681",
         "name": "Michał Nalepa",
         "position": "OBR",
@@ -2782,6 +3034,15 @@
         "predicted": 5.1,
         "actual": 0,
         "error": 5.1
+      },
+      {
+        "player_id": "2940",
+        "name": "Mario García",
+        "position": "OBR",
+        "team": "widzew łódź",
+        "predicted": 5.3,
+        "actual": 0,
+        "error": 5.3
       },
       {
         "player_id": "3014",
@@ -2827,6 +3088,15 @@
         "predicted": 6.1,
         "actual": -1,
         "error": 7.1
+      },
+      {
+        "player_id": "2679",
+        "name": "Paul Mukairu",
+        "position": "POM",
+        "team": "pogoń szczecin",
+        "predicted": 4.3,
+        "actual": 12,
+        "error": -7.7
       },
       {
         "player_id": "951",

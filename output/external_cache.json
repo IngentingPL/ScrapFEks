@@ -1,18 +1,29 @@
 {
   "90minut_table": {
-    "timestamp": "2026-10-10T00:34:05.659692",
+    "timestamp": "2026-10-11T18:12:41.538412",
     "ttl_hours": 24,
     "data": {
       "Górnik Zabrze": {
-        "gf": 16,
-        "ga": 8,
-        "mp": 9,
+        "gf": 19,
+        "ga": 9,
+        "mp": 10,
         "gf_home": 8,
         "ga_home": 6,
         "mp_home": 4,
-        "gf_away": 8,
-        "ga_away": 2,
-        "mp_away": 5
+        "gf_away": 11,
+        "ga_away": 3,
+        "mp_away": 6
+      },
+      "Lech Poznań": {
+        "gf": 21,
+        "ga": 8,
+        "mp": 9,
+        "gf_home": 11,
+        "ga_home": 2,
+        "mp_home": 5,
+        "gf_away": 10,
+        "ga_away": 6,
+        "mp_away": 4
       },
       "Legia Warszawa": {
         "gf": 19,
@@ -25,15 +36,15 @@
         "ga_away": 5,
         "mp_away": 5
       },
-      "Lech Poznań": {
-        "gf": 17,
-        "ga": 7,
-        "mp": 8,
-        "gf_home": 11,
-        "ga_home": 2,
-        "mp_home": 5,
-        "gf_away": 6,
-        "ga_away": 5,
+      "Pogoń Szczecin": {
+        "gf": 14,
+        "ga": 6,
+        "mp": 9,
+        "gf_home": 10,
+        "ga_home": 5,
+        "mp_home": 6,
+        "gf_away": 4,
+        "ga_away": 1,
         "mp_away": 3
       },
       "Wisła Kraków": {
@@ -47,6 +58,17 @@
         "ga_away": 9,
         "mp_away": 4
       },
+      "Piast Gliwice": {
+        "gf": 18,
+        "ga": 16,
+        "mp": 10,
+        "gf_home": 14,
+        "ga_home": 11,
+        "mp_home": 6,
+        "gf_away": 4,
+        "ga_away": 5,
+        "mp_away": 4
+      },
       "GKS Katowice": {
         "gf": 20,
         "ga": 14,
@@ -58,60 +80,49 @@
         "ga_away": 11,
         "mp_away": 6
       },
-      "Pogoń Szczecin": {
-        "gf": 12,
-        "ga": 6,
-        "mp": 8,
-        "gf_home": 8,
-        "ga_home": 5,
-        "mp_home": 5,
-        "gf_away": 4,
-        "ga_away": 1,
-        "mp_away": 3
-      },
       "Korona Kielce": {
         "gf": 12,
-        "ga": 10,
-        "mp": 9,
+        "ga": 12,
+        "mp": 10,
         "gf_home": 6,
         "ga_home": 7,
         "mp_home": 5,
         "gf_away": 6,
-        "ga_away": 3,
-        "mp_away": 4
+        "ga_away": 5,
+        "mp_away": 5
       },
       "Zagłębie Lubin": {
-        "gf": 11,
-        "ga": 10,
-        "mp": 9,
+        "gf": 12,
+        "ga": 13,
+        "mp": 10,
         "gf_home": 6,
         "ga_home": 4,
         "mp_home": 5,
-        "gf_away": 5,
-        "ga_away": 6,
-        "mp_away": 4
-      },
-      "Piast Gliwice": {
-        "gf": 16,
-        "ga": 15,
-        "mp": 9,
-        "gf_home": 12,
-        "ga_home": 10,
-        "mp_home": 5,
-        "gf_away": 4,
-        "ga_away": 5,
-        "mp_away": 4
+        "gf_away": 6,
+        "ga_away": 9,
+        "mp_away": 5
       },
       "Jagiellonia Białystok": {
-        "gf": 12,
-        "ga": 13,
-        "mp": 8,
-        "gf_home": 4,
-        "ga_home": 6,
-        "mp_home": 4,
+        "gf": 13,
+        "ga": 16,
+        "mp": 9,
+        "gf_home": 5,
+        "ga_home": 9,
+        "mp_home": 5,
         "gf_away": 8,
         "ga_away": 7,
         "mp_away": 4
+      },
+      "Cracovia": {
+        "gf": 12,
+        "ga": 15,
+        "mp": 10,
+        "gf_home": 8,
+        "ga_home": 7,
+        "mp_home": 5,
+        "gf_away": 4,
+        "ga_away": 8,
+        "mp_away": 5
       },
       "Wisła Płock": {
         "gf": 9,
@@ -125,15 +136,15 @@
         "mp_away": 6
       },
       "Widzew Łódź": {
-        "gf": 13,
-        "ga": 13,
-        "mp": 9,
+        "gf": 14,
+        "ga": 15,
+        "mp": 10,
         "gf_home": 7,
         "ga_home": 9,
         "mp_home": 5,
-        "gf_away": 6,
-        "ga_away": 4,
-        "mp_away": 4
+        "gf_away": 7,
+        "ga_away": 6,
+        "mp_away": 5
       },
       "Wieczysta Kraków": {
         "gf": 14,
@@ -146,17 +157,6 @@
         "ga_away": 14,
         "mp_away": 6
       },
-      "Cracovia": {
-        "gf": 9,
-        "ga": 14,
-        "mp": 9,
-        "gf_home": 5,
-        "ga_home": 6,
-        "mp_home": 4,
-        "gf_away": 4,
-        "ga_away": 8,
-        "mp_away": 5
-      },
       "Radomiak Radom": {
         "gf": 7,
         "ga": 20,
@@ -168,17 +168,6 @@
         "ga_away": 13,
         "mp_away": 4
       },
-      "Śląsk Wrocław": {
-        "gf": 11,
-        "ga": 15,
-        "mp": 9,
-        "gf_home": 6,
-        "ga_home": 6,
-        "mp_home": 4,
-        "gf_away": 5,
-        "ga_away": 9,
-        "mp_away": 5
-      },
       "Motor Lublin": {
         "gf": 9,
         "ga": 15,
@@ -189,6 +178,17 @@
         "gf_away": 5,
         "ga_away": 8,
         "mp_away": 4
+      },
+      "Śląsk Wrocław": {
+        "gf": 12,
+        "ga": 19,
+        "mp": 10,
+        "gf_home": 7,
+        "ga_home": 10,
+        "mp_home": 5,
+        "gf_away": 5,
+        "ga_away": 9,
+        "mp_away": 5
       },
       "Raków Częstochowa": {
         "gf": 13,
