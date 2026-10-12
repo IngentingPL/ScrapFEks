@@ -1,6 +1,6 @@
 {
   "90minut_table": {
-    "timestamp": "2026-10-11T18:12:41.538412",
+    "timestamp": "2026-10-12T23:16:00.795058",
     "ttl_hours": 24,
     "data": {
       "Górnik Zabrze": {
@@ -26,12 +26,12 @@
         "mp_away": 4
       },
       "Legia Warszawa": {
-        "gf": 19,
+        "gf": 21,
         "ga": 8,
-        "mp": 9,
-        "gf_home": 10,
+        "mp": 10,
+        "gf_home": 12,
         "ga_home": 3,
-        "mp_home": 4,
+        "mp_home": 5,
         "gf_away": 9,
         "ga_away": 5,
         "mp_away": 5
@@ -47,16 +47,27 @@
         "ga_away": 1,
         "mp_away": 3
       },
+      "GKS Katowice": {
+        "gf": 22,
+        "ga": 15,
+        "mp": 10,
+        "gf_home": 13,
+        "ga_home": 4,
+        "mp_home": 4,
+        "gf_away": 9,
+        "ga_away": 11,
+        "mp_away": 6
+      },
       "Wisła Kraków": {
         "gf": 17,
-        "ga": 12,
-        "mp": 9,
+        "ga": 14,
+        "mp": 10,
         "gf_home": 10,
         "ga_home": 3,
         "mp_home": 5,
         "gf_away": 7,
-        "ga_away": 9,
-        "mp_away": 4
+        "ga_away": 11,
+        "mp_away": 5
       },
       "Piast Gliwice": {
         "gf": 18,
@@ -68,17 +79,6 @@
         "gf_away": 4,
         "ga_away": 5,
         "mp_away": 4
-      },
-      "GKS Katowice": {
-        "gf": 20,
-        "ga": 14,
-        "mp": 9,
-        "gf_home": 11,
-        "ga_home": 3,
-        "mp_home": 3,
-        "gf_away": 9,
-        "ga_away": 11,
-        "mp_away": 6
       },
       "Korona Kielce": {
         "gf": 12,
@@ -146,37 +146,37 @@
         "ga_away": 6,
         "mp_away": 5
       },
-      "Wieczysta Kraków": {
-        "gf": 14,
-        "ga": 17,
-        "mp": 9,
-        "gf_home": 5,
-        "ga_home": 3,
-        "mp_home": 3,
-        "gf_away": 9,
-        "ga_away": 14,
-        "mp_away": 6
-      },
-      "Radomiak Radom": {
-        "gf": 7,
-        "ga": 20,
-        "mp": 9,
-        "gf_home": 5,
-        "ga_home": 7,
-        "mp_home": 5,
-        "gf_away": 2,
-        "ga_away": 13,
-        "mp_away": 4
-      },
       "Motor Lublin": {
-        "gf": 9,
-        "ga": 15,
-        "mp": 9,
+        "gf": 12,
+        "ga": 17,
+        "mp": 10,
         "gf_home": 4,
         "ga_home": 7,
         "mp_home": 5,
-        "gf_away": 5,
-        "ga_away": 8,
+        "gf_away": 8,
+        "ga_away": 10,
+        "mp_away": 5
+      },
+      "Wieczysta Kraków": {
+        "gf": 15,
+        "ga": 19,
+        "mp": 10,
+        "gf_home": 5,
+        "ga_home": 3,
+        "mp_home": 3,
+        "gf_away": 10,
+        "ga_away": 16,
+        "mp_away": 7
+      },
+      "Radomiak Radom": {
+        "gf": 9,
+        "ga": 23,
+        "mp": 10,
+        "gf_home": 7,
+        "ga_home": 10,
+        "mp_home": 6,
+        "gf_away": 2,
+        "ga_away": 13,
         "mp_away": 4
       },
       "Śląsk Wrocław": {
