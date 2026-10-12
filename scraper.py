@@ -819,6 +819,7 @@ def main():
 
             # Oblicz rank_change vs. poprzednia kolejka
             current_ranking = {}
+            combined_pos = 0  # domyślna pozycja (pusta lista); pętla niżej ustawia właściwą
             for i, t in enumerate(league_teams_detail):
                 combined_pos = i + 1
                 norm_key = normalize_team_name(t.get("display_name", t["slug"].replace("-", " ")))
