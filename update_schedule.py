@@ -14,6 +14,7 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
+from round_dates import round_date_range
 
 TERMINARZ_FILE = "terminarz.txt"
 WORKFLOW_FILE = ".github/workflows/scrape.yml"
@@ -32,6 +33,8 @@ TZ_WARSAW = ZoneInfo("Europe/Warsaw")
 TZ_UTC = ZoneInfo("UTC")
 
 TRIGGER_DELAY_HOURS = 2.5
+DEFAULT_FIRST_MATCH_HOUR = 21
+DEFAULT_FIRST_MATCH_MINUTE = 0
 
 
 def parse_terminarz(filepath: str) -> tuple[list[dict], dict]:
@@ -105,6 +108,8 @@ def parse_terminarz(filepath: str) -> tuple[list[dict], dict]:
                         "with_time": 0,
                         "start_date": round_start_date,
                         "dates": date_str,
+                        "match_dates": [],
+                        "all_dates_confirmed": True,
                     }
                 continue
 
@@ -141,14 +146,23 @@ def parse_terminarz(filepath: str) -> tuple[list[dict], dict]:
                     }
                 )
 
+                if current_round in round_stats:
+                    round_stats[current_round]["match_dates"].append(match_local.date())
+
                 # Zlicz mecze w kolejce
                 if current_round in round_stats:
                     round_stats[current_round]["total"] += 1
                     round_stats[current_round]["with_time"] += 1
             else:
-                # Mecz bez godziny - sprawdź czy to linia meczu (zawiera " - ")
-                # Pomijamy linie z cyframi (strzelcy goli) i opisami kartek
-                if current_round and (" - " in line or "\t-\t" in line or "–" in line):
+                # Mecz bez godziny może mieć zwykły myślnik albo zapisany wynik.
+                has_match_separator = (
+                    " - " in line
+                    or "\t-\t" in line
+                    or "–" in line
+                    or re.search(r"\t+\d+\s*:\s*\d+\t+", line)
+                    or re.search(r"\t+\d+-\d+\t+", line)
+                )
+                if current_round and has_match_separator:
                     # Filtruj: mecz to linia bez cyfr w nazwach drużyn i bez opisów zdarzeń
                     has_digit_in_teams = re.search(r'^[^\d]*\d[^\d]*[–\-]', line)
                     is_event_line = re.search(r'żółt|kartk|czerwon|ukar|sędzi|minucie', line, re.IGNORECASE)
@@ -156,11 +170,59 @@ def parse_terminarz(filepath: str) -> tuple[list[dict], dict]:
                         # To mecz bez godziny
                         if current_round in round_stats:
                             round_stats[current_round]["total"] += 1
+                            # Zachowaj jawną datę meczu, nawet jeśli nie ma godziny.
+                            no_time_date = re.search(r"(\d{1,2})\s+(\w+),\s*$", line)
+                            if no_time_date:
+                                month = MONTHS_PL.get(no_time_date.group(2))
+                                if month:
+                                    now = datetime.now()
+                                    year = now.year
+                                    if month < now.month - 6:
+                                        year += 1
+                                    try:
+                                        match_day = datetime(
+                                            year, month, int(no_time_date.group(1))
+                                        ).date()
+                                    except ValueError:
+                                        match_day = None
+                                    if match_day:
+                                        round_stats[current_round]["match_dates"].append(match_day)
+                                    else:
+                                        round_stats[current_round]["all_dates_confirmed"] = False
+                                else:
+                                    round_stats[current_round]["all_dates_confirmed"] = False
+                            else:
+                                round_stats[current_round]["all_dates_confirmed"] = False
 
     return matches, round_stats
 
 
-def generate_crons(matches: list[dict]) -> list[tuple]:
+def select_first_day_datetime(
+    matches: list[dict], first_day
+) -> datetime:
+    """Wybiera najwcześniejszą godzinę z pierwszego dnia lub używa 21:00."""
+    same_day = [
+        m["datetime"]
+        for m in matches
+        if m.get("datetime") is not None and m["datetime"].date() == first_day
+    ]
+    if same_day:
+        return min(same_day)
+    return datetime(
+        first_day.year,
+        first_day.month,
+        first_day.day,
+        DEFAULT_FIRST_MATCH_HOUR,
+        DEFAULT_FIRST_MATCH_MINUTE,
+        tzinfo=TZ_WARSAW,
+    )
+
+
+def generate_crons(
+    matches: list[dict],
+    round_dates: dict[int, list] | None = None,
+    all_dates_confirmed: dict[int, bool] | None = None,
+) -> list[tuple]:
     """
     Generuje cron triggery:
     1. 30 min po pierwszym meczu każdej kolejki (szybkie odświeżenie)
@@ -176,14 +238,29 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
 
     sorted_matches = sorted(matches, key=lambda x: x["datetime"])
 
-    # Pierwszy i ostatni mecz per kolejka
-    first_per_round = {}
-    last_per_round = {}
+    # Daty kolejki obejmują też mecze bez godziny.
+    round_dates = round_dates or {}
+    all_dates_confirmed = all_dates_confirmed or {}
+    matches_per_round = {}
     for m in sorted_matches:
         rnd = m["round"]
-        if rnd not in first_per_round:
-            first_per_round[rnd] = m
-        last_per_round[rnd] = m  # nadpisujemy — ostatni wygrywa
+        matches_per_round.setdefault(rnd, []).append(m)
+
+    first_per_round = {}
+    last_day_per_round = {}
+    for rnd, round_matches in matches_per_round.items():
+        all_dates = list(round_dates.get(rnd, []))
+        all_dates.extend(m["datetime"].date() for m in round_matches)
+        first_day, last_day = round_date_range(
+            all_dates, all_dates_confirmed.get(rnd, True)
+        )
+        if first_day is None:
+            continue
+        first_per_round[rnd] = {
+            "round": rnd,
+            "datetime": select_first_day_datetime(round_matches, first_day),
+        }
+        last_day_per_round[rnd] = last_day
 
     # 1. Pierwszy mecz per kolejka + 30 min (szybkie odświeżenie po starcie kolejki)
     for rnd, m in sorted(first_per_round.items()):
@@ -248,8 +325,7 @@ def generate_crons(matches: list[dict]) -> list[tuple]:
 
     # 4. Dzień po ostatnim meczu o 12:00 (Discord post-round notification)
     # Scraper sprawdzi warunek timingowy i wyśle podsumowanie kolejki na Discord
-    for rnd, m in sorted(last_per_round.items()):
-        last_day = m["datetime"].date()
+    for rnd, last_day in sorted(last_day_per_round.items()):
         notify_day = last_day + timedelta(days=1)
         notify_local = datetime(
             notify_day.year, notify_day.month, notify_day.day, 12, 0,
@@ -479,7 +555,15 @@ def main():
     # Krok 2: Generuj nowe crony (tylko dla kolejek z godzinami)
     crons = []
     if matches:
-        crons = generate_crons(matches)
+        dates_by_round = {
+            rnd: stats.get("match_dates", [])
+            for rnd, stats in round_stats.items()
+        }
+        confirmed_by_round = {
+            rnd: stats.get("all_dates_confirmed", True)
+            for rnd, stats in round_stats.items()
+        }
+        crons = generate_crons(matches, dates_by_round, confirmed_by_round)
         print(f"\n⏰ Wygenerowano {len(crons)} nowych triggerów:")
         for label, match_local, trigger_utc, cron, rnd in crons:
             tz_name = match_local.strftime("%Z")

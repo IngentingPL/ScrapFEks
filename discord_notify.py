@@ -27,6 +27,7 @@ from predictor import parse_ownership_pct, captain_differential_score, FDR_NEUTR
 from analytics import find_hidden_gem, find_disappointment, collect_captains
 from config import POS_MAP
 from utils import _normalize_team  # normalizacja nazw drużyn (strip, lower)
+from round_dates import round_date_range
 
 
 # ============================================================
@@ -253,16 +254,16 @@ def _get_round_date_range(fixtures_data, round_num):
     """
     matches = fixtures_data.get("matches", {}).get(str(round_num), [])
     dates = []
+    all_dates_confirmed = True
     for m in matches:
         # Sprawdź czy data jest potwierdzona — jeśli nie, zakres nieznany
         if not m.get("date_confirmed", True):
-            return None, None
+            all_dates_confirmed = False
+            continue
         d = _parse_date_str(m.get("date", ""))
         if d:
             dates.append(d)
-    if not dates:
-        return None, None
-    return min(dates), max(dates)
+    return round_date_range(dates, all_dates_confirmed)
 
 
 # ============================================================
