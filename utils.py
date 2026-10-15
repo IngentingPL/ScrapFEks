@@ -8,6 +8,19 @@ import re
 import unicodedata
 
 
+def round_points(player: dict, round_number: int):
+    """Zwróć sumę punktów z rozegranych meczów zawodnika w kolejce."""
+    played_rounds = [
+        entry for entry in player.get("rounds", [])
+        if isinstance(entry, dict)
+        and entry.get("round") == round_number
+        and entry.get("played")
+    ]
+    if not played_rounds:
+        return None
+    return sum((entry.get("points", 0) or 0) for entry in played_rounds)
+
+
 def normalize_team_name(name: str) -> str:
     """Normalizuj nazwę drużyny: lowercase + usuń polskie diakrytyki."""
     nfkd = unicodedata.normalize("NFKD", name)

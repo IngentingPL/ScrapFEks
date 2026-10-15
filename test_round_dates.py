@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
@@ -10,7 +12,30 @@ from update_schedule import select_first_day_datetime
 
 class RoundDateTests(unittest.TestCase):
     def test_generator_keeps_explicit_dates_without_kickoff_time(self):
-        _, round_stats = parse_schedule_for_generator("terminarz.txt")
+        # Stały tekst-fixture zamiast żywego terminarz.txt (test nie zależy
+        # od tego, co scraper zapisze w pliku): kolejka 10 ma 10 meczów
+        # z jawnymi datami, ale tylko 2 z godziną kick-offu.
+        fixture = "\n".join(
+            [
+                "Kolejka 10 - 9-12 października",
+                "",
+                "Drużyna A - Drużyna B\t9 października, 18:00",
+                "Drużyna C - Drużyna D\t9 października, 20:30",
+                "Drużyna E - Drużyna F\t10 października,",
+                "Drużyna G - Drużyna H\t10 października,",
+                "Drużyna I - Drużyna J\t10 października,",
+                "Drużyna K - Drużyna L\t11 października,",
+                "Drużyna M - Drużyna N\t11 października,",
+                "Drużyna O - Drużyna P\t11 października,",
+                "Drużyna R - Drużyna S\t12 października,",
+                "Drużyna T - Drużyna U\t12 października,",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            fixture_path = os.path.join(tmp_dir, "terminarz.txt")
+            with open(fixture_path, "w", encoding="utf-8") as f:
+                f.write(fixture + "\n")
+            _, round_stats = parse_schedule_for_generator(fixture_path)
         season_year = datetime.now().year
         self.assertEqual(round_stats[10]["total"], 10)
         self.assertEqual(round_stats[10]["with_time"], 2)

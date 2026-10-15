@@ -5,6 +5,7 @@ i zwraca kompletny string HTML. Zero globalnego stanu, zero
 operacji I/O - czysty transform danych → HTML.
 """
 import json
+from utils import round_points
 
 # Etykieta bieżącego sezonu — pokazywana w mastheadzie i na landing page.
 # Zmienia się raz w roku (sezon piłkarski przecina lata kalendarzowe).
@@ -142,11 +143,17 @@ def generate_dashboard_html(
         _last_r = int(current_round_label)
         _best = None
         for p in summary_data:
-            for f in (p.get("form") or []):
-                if f.get("p") and f.get("r") == _last_r:
-                    _pts = f.get("pts", 0) or 0
-                    if _best is None or _pts > _best["pts"]:
-                        _best = {"name": p.get("name", ""), "pts": _pts}
+            _pts = round_points(
+                {
+                    "rounds": [
+                        {"round": f.get("r"), "points": f.get("pts", 0), "played": f.get("p")}
+                        for f in (p.get("form") or [])
+                    ]
+                },
+                _last_r,
+            )
+            if _pts is not None and (_best is None or _pts > _best["pts"]):
+                _best = {"name": p.get("name", ""), "pts": _pts}
         round_star = _best
 
     # Średnia punktów ligi / kolejkę (z ostatniej rundy league_history)
@@ -3089,7 +3096,10 @@ function renderComparison() {{
     const svgW = 500, svgH = 180, padL = 40, padR = 20, padT = 20, padB = 30;
     const chartW = svgW - padL - padR, chartH = svgH - padT - padB;
     let maxPts = 0;
-    selected.forEach(p => (p.form||[]).forEach(f => {{ if (f.p && f.pts > maxPts) maxPts = f.pts; }}));
+    selected.forEach(p => rounds.forEach(r => {{
+      const pts = (p.form||[]).filter(f => f.r === r && f.p).reduce((sum, f) => sum + (f.pts || 0), 0);
+      if (pts > maxPts) maxPts = pts;
+    }}));
     if (maxPts === 0) maxPts = 10;
     maxPts = Math.ceil(maxPts * 1.15); // 📖 Trochę marginesu na górze
 
@@ -3116,8 +3126,11 @@ function renderComparison() {{
       const form = p.form || [];
       const points = [];
       rounds.forEach((r, idx) => {{
-        const f = form.find(ff => ff.r === r);
-        if (f && f.p) points.push({{x: xScale(idx), y: yScale(f.pts), pts: f.pts}});
+        const roundEntries = form.filter(ff => ff.r === r && ff.p);
+        if (roundEntries.length) {{
+          const pts = roundEntries.reduce((sum, f) => sum + (f.pts || 0), 0);
+          points.push({{x: xScale(idx), y: yScale(pts), pts}});
+        }}
       }});
       if (points.length < 2) return;
       // 📖 Polyline — łączna linia z punktami

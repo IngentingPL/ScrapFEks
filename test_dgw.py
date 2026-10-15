@@ -18,6 +18,55 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from predictor import predict_points, predict_all_players
+from utils import round_points
+from accuracy import extract_round_points, compute_accuracy
+from analytics import find_hidden_gem, find_disappointment, collect_captains
+from export import filter_by_round
+
+
+def test_dgw_round_points():
+    print("\n=== Test sumowania punktów rundy ===")
+    players = [
+        {"player_id": "1", "name": "DGW", "popularity_pct": "10%", "rounds": [
+            {"round": 10, "played": True, "points": 11},
+            {"round": 10, "played": True, "points": 14},
+        ]},
+        {"player_id": "2", "name": "Jeden mecz", "popularity_pct": "80%", "rounds": [
+            {"round": 10, "played": True, "points": 27},
+        ]},
+        {"player_id": "3", "name": "Jeden z dwóch", "popularity_pct": "90%", "rounds": [
+            {"round": 10, "played": False, "points": 0},
+            {"round": 10, "played": True, "points": 9},
+        ]},
+        {"player_id": "4", "name": "Nie grał", "rounds": [
+            {"round": 10, "played": False, "points": 0},
+        ]},
+    ]
+    assert round_points(players[0], 10) == 25
+    assert extract_round_points(players[0], 10) == 25
+    assert round_points(players[1], 10) == 27
+    assert round_points(players[2], 10) == 9
+    assert round_points(players[3], 10) is None
+    assert filter_by_round(players, 10)[0]["round_points"] == 25
+    assert find_hidden_gem(players, 10)[0] is players[0]
+    assert find_disappointment(players, 10)[0] is players[2]
+    captains = collect_captains(
+        [{"slug": "team", "players": [{"pid": "1", "name": "DGW", "pos": "POM", "C": True}]}],
+        players,
+        10,
+        [{"slug": "team", "display_name": "Team"}],
+    )
+    assert captains[0]["cap_pts"] == 25
+
+    predictions = [
+        {"player_id": p["player_id"], "name": p["name"], "predicted_points": 10}
+        for p in players
+    ]
+    result = compute_accuracy(predictions, players, 10)
+    actuals = {d["player_id"]: d["actual"] for d in result["details"]}
+    assert actuals == {"1": 25, "2": 27, "3": 9}
+    print("  analytics=25, accuracy=25, jeden mecz=27, 1 z 2 meczów=9, niegrający pominięty")
+    return True
 
 
 def test_dgw_suma_prognoz():
@@ -293,6 +342,7 @@ def main():
     print("=" * 60)
     
     tests = [
+        test_dgw_round_points,
         test_dgw_suma_prognoz,
         test_single_match_backward_compat,
         test_dgw_normalizacja_wejscia,

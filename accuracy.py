@@ -18,6 +18,7 @@ import json
 import os
 import sys
 from datetime import datetime
+from utils import round_points
 
 
 # Ścieżka do pliku z historią trafności — tu zapisujemy wyniki po każdej kolejce
@@ -73,11 +74,7 @@ def extract_round_points(player_data, round_number):
     if not isinstance(rounds, list):
         return None
 
-    for entry in rounds:
-        if isinstance(entry, dict) and entry.get("round") == round_number:
-            if entry.get("played"):  # played = czy grał w tej kolejce
-                return entry.get("points", 0)
-    return None
+    return round_points({"rounds": rounds}, round_number)
 
 
 def build_player_lookup(players_data):
@@ -357,23 +354,51 @@ def evaluate_predictions(predictions_csv_path, current_players_data, round_numbe
     Zwraca:
         słownik z metrykami lub None
     """
-    if not predictions_csv_path or not os.path.exists(predictions_csv_path):
-        print("  📊 Trafność: brak pliku prognoz — pomijam (pierwsze uruchomienie?)")
-        return None
-
     if not current_players_data:
         print("  📊 Trafność: brak danych graczy — pomijam")
+        return None
+
+    history = load_accuracy_history()
+    if history is None:
+        print(f"[accuracy] Pomijam zapis historii — plik uszkodzony, nie chcę nadpisać danych. "
+              f"Napraw ręcznie (np. z gita: git log -- output/accuracy_history.json) i uruchom ponownie.")
         return None
 
     print(f"\n📊 Sprawdzam trafność prognoz dla kolejki {round_number}...")
 
     # Wczytaj prognozy z pliku CSV
-    predictions = load_predictions_from_csv(predictions_csv_path)
-    if not predictions:
-        print("  ⚠️  Pusty plik prognoz — pomijam")
-        return None
+    if predictions_csv_path and os.path.exists(predictions_csv_path):
+        predictions = load_predictions_from_csv(predictions_csv_path)
+    else:
+        predictions = []
 
-    print(f"  Wczytano {len(predictions)} prognoz z {os.path.basename(predictions_csv_path)}")
+    # Gdy CSV już usunięto, zachowaj prognozy zapisane dla trwającej kolejki.
+    if not predictions:
+        previous = next(
+            (entry for entry in history if entry.get("round") == round_number),
+            None,
+        )
+        predictions = (previous or {}).get("predictions", [])
+        if not predictions and previous:
+            predictions = [
+                {
+                    "player_id": detail.get("player_id"),
+                    "name": detail.get("name", ""),
+                    "position": detail.get("position", ""),
+                    "team": detail.get("team", ""),
+                    "predicted_points": detail.get("predicted", 0),
+                }
+                for detail in previous.get("details", [])
+            ]
+        if not predictions:
+            print("  📊 Trafność: brak pliku prognoz i zapisanych prognoz — pomijam")
+            return None
+        print("  Używam prognoz zapisanych dla trwającej kolejki")
+
+    if predictions_csv_path and os.path.exists(predictions_csv_path):
+        print(f"  Wczytano {len(predictions)} prognoz z {os.path.basename(predictions_csv_path)}")
+    else:
+        print(f"  Wczytano {len(predictions)} zapisanych prognoz")
 
     # Guard: sprawdź czy plik prognoz dotyczy tej samej kolejki
     # (nowe pliki CSV mają kolumnę round_number, stare nie — nie blokujemy na nich)
@@ -396,12 +421,16 @@ def evaluate_predictions(predictions_csv_path, current_players_data, round_numbe
         print("  ⚠️  Nie udało się porównać żadnego zawodnika — pomijam")
         return None
 
-    # Wczytaj historię i dodaj nowy wynik
-    history = load_accuracy_history()
-    if history is None:
-        print(f"[accuracy] Pomijam zapis historii — plik uszkodzony, nie chcę nadpisać danych. "
-              f"Napraw ręcznie (np. z gita: git log -- output/accuracy_history.json) i uruchom ponownie.")
-        return None
+    result["predictions"] = [
+        {
+            "player_id": str(pred.get("player_id", "")),
+            "name": pred.get("name", ""),
+            "position": pred.get("position", ""),
+            "team": pred.get("team", ""),
+            "predicted_points": pred.get("predicted_points", 0),
+        }
+        for pred in predictions
+    ]
 
     # Sprawdź czy ta kolejka już jest w historii — jeśli tak, nadpisz
     history = [h for h in history if h.get("round") != round_number]
@@ -424,6 +453,7 @@ def evaluate_predictions(predictions_csv_path, current_players_data, round_numbe
                     for d in entry["details"]
                 ]
                 trimmed_count += 1
+            entry.pop("predictions", None)
 
     if trimmed_count > 0:
         size_after_kb = sys.getsizeof(history) / 1024

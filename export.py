@@ -7,6 +7,7 @@ import csv
 import json
 import os
 from utils import _safe_float
+from utils import round_points
 
 
 def filter_by_round(players: list[dict], round_num: int) -> list[dict]:
@@ -14,6 +15,7 @@ def filter_by_round(players: list[dict], round_num: int) -> list[dict]:
     filtered = []
     for p in players:
         round_stats = None
+        round_pts = round_points(p, round_num)
         for r in p.get("rounds", []):
             if r.get("round") == round_num:
                 round_stats = r
@@ -28,14 +30,14 @@ def filter_by_round(players: list[dict], round_num: int) -> list[dict]:
             "price": p.get("price", 0),
             "popularity_pct": p.get("popularity_pct", ""),
             "round": round_num,
-            "round_played": round_stats.get("played", False) if round_stats else None,
+            "round_played": round_pts is not None if round_stats else None,
             "round_opponent": round_stats.get("opponent", "") if round_stats else "",
             "round_minutes": round_stats.get("minutes", 0) if round_stats else 0,
             "round_goals": round_stats.get("goals", 0) if round_stats else 0,
             "round_assists": round_stats.get("assists", 0) if round_stats else 0,
             "round_yellow_cards": round_stats.get("yellow_cards", 0) if round_stats else 0,
             "round_red_cards": round_stats.get("red_cards", 0) if round_stats else 0,
-            "round_points": round_stats.get("points", 0) if round_stats else 0,
+            "round_points": round_pts if round_pts is not None else 0,
         })
 
     return filtered

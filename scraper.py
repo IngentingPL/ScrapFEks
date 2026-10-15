@@ -185,6 +185,21 @@ from dashboard import generate_dashboard_html
 # GŁÓWNA LOGIKA
 # ============================================================
 
+def strip_predictions_from_history(history):
+    """Zwraca kopię historii trafności bez ciężkiego pola "predictions".
+
+    accuracy_history.json przechowuje zapisane prognozy ("predictions") —
+    są potrzebne dla fallbacku evaluate_predictions, gdy CSV prognoz już
+    usunięto. Snapshot dashboardu i HTML tych danych nie potrzebują,
+    więc usuwamy je z kopii przekazywanej do dashboard_inputs.
+    """
+    return [
+        {k: v for k, v in entry.items() if k != "predictions"}
+        if isinstance(entry, dict)
+        else entry
+        for entry in (history or [])
+    ]
+
 def main():
     timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y%m%d_%H%M%S")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -658,8 +673,7 @@ def main():
         prev_pred_csv = find_predictions_csv_for_round(
             current_round, OUTPUT_DIR, exclude_path=current_pred_csv
         )
-        if prev_pred_csv:
-            accuracy_data = evaluate_predictions(prev_pred_csv, players, current_round)
+        accuracy_data = evaluate_predictions(prev_pred_csv, players, current_round)
 
     # Wczytaj historię trafności dla dashboardu
     accuracy_history = load_accuracy_history() or []
@@ -907,6 +921,9 @@ def main():
     # Zbierz wszystkie dane wejściowe dashboardu do jednego słownika —
     # użyje go zarówno generate_dashboard_html, jak i snapshot JSON.
     dashboard_timestamp = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y-%m-%d %H:%M")
+    # accuracy_history.json zachowuje "predictions" (fallback evaluate), ale
+    # snapshot i HTML nie muszą ich przenosić — przekazujemy kopię bez nich.
+    accuracy_history_payload = strip_predictions_from_history(accuracy_history)
     dashboard_inputs = dict(
         summary_data=summary_data,
         tiers=tiers,
@@ -924,7 +941,7 @@ def main():
         transfers_data=transfers_data,
         predictions_data=predictions_data,
         prediction_round=prediction_round,
-        accuracy_history=accuracy_history,
+        accuracy_history=accuracy_history_payload,
         tuned_params=tuned_params,
         league_history=league_history,
         filename=dashboard_file,

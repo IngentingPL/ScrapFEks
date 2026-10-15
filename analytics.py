@@ -6,6 +6,7 @@ Discord embed - inaczej użytkownik zobaczy niespójność.
 """
 from predictor import parse_ownership_pct
 from config import POS_MAP
+from utils import round_points
 
 
 def find_hidden_gem(players_data, round_number, ownership_threshold=20.0):
@@ -21,13 +22,10 @@ def find_hidden_gem(players_data, round_number, ownership_threshold=20.0):
         own = parse_ownership_pct(player.get("popularity_pct", "100%"))
         if own >= ownership_threshold:
             continue
-        for r in player.get("rounds", []):
-            if r.get("round") == round_number and r.get("played"):
-                pts = r.get("points", 0) or 0
-                if pts > best_pts:
-                    best_pts = pts
-                    best = player
-                break
+        pts = round_points(player, round_number)
+        if pts is not None and pts > best_pts:
+            best_pts = pts
+            best = player
     return best, best_pts
 
 
@@ -44,13 +42,10 @@ def find_disappointment(players_data, round_number, ownership_threshold=40.0):
         own = parse_ownership_pct(player.get("popularity_pct", "0%"))
         if own <= ownership_threshold:
             continue
-        for r in player.get("rounds", []):
-            if r.get("round") == round_number and r.get("played"):
-                pts = r.get("points", 0) or 0
-                if worst_pts is None or pts < worst_pts:
-                    worst_pts = pts
-                    worst = player
-                break
+        pts = round_points(player, round_number)
+        if pts is not None and (worst_pts is None or pts < worst_pts):
+            worst_pts = pts
+            worst = player
     if worst is None:
         return None, None
     return worst, worst_pts
@@ -70,10 +65,9 @@ def collect_captains(league_teams_detail, players_data, round_number, league_dat
             pid = str(player.get("player_id", ""))
             if not pid:
                 continue
-            for r in player.get("rounds", []):
-                if r.get("round") == round_number and r.get("played"):
-                    player_round_pts[pid] = r.get("points", 0) or 0
-                    break
+            pts = round_points(player, round_number)
+            if pts is not None:
+                player_round_pts[pid] = pts
 
     display_name_map = {
         t.get("slug", ""): t.get("display_name") or t.get("slug", "").replace("-", " ").title()
