@@ -2714,16 +2714,16 @@
   {
     "round": 11,
     "date": "2026-10-17",
-    "mae": 2.2,
+    "mae": 2.4,
     "mae_by_pos": {
       "BR": 1.6,
-      "OBR": 2.2,
-      "POM": 2.1,
-      "NAP": 3.0
+      "OBR": 2.6,
+      "POM": 2.4,
+      "NAP": 2.9
     },
-    "top10_mae": 4.2,
-    "hit_rate": 0.75,
-    "sample_size": 40,
+    "top10_mae": 4.6,
+    "hit_rate": 0.74,
+    "sample_size": 46,
     "worst_misses": [
       {
         "name": "Bartosz Nowak",
@@ -2738,6 +2738,12 @@
         "error": 8.5
       },
       {
+        "name": "Rafał Augustyniak",
+        "predicted": 10.2,
+        "actual": 2,
+        "error": 8.2
+      },
+      {
         "name": "Ángel Rodado",
         "predicted": 6.2,
         "actual": -1,
@@ -2748,12 +2754,6 @@
         "predicted": 8.1,
         "actual": 2,
         "error": 6.1
-      },
-      {
-        "name": "Kamil Pestka",
-        "predicted": 5.5,
-        "actual": 1,
-        "error": 4.5
       }
     ],
     "best_hits": [
@@ -2898,6 +2898,15 @@
         "error": 0.8
       },
       {
+        "player_id": "2053",
+        "name": "Sebastian Madejski",
+        "position": "BR",
+        "team": "cracovia",
+        "predicted": 1.2,
+        "actual": 2,
+        "error": -0.8
+      },
+      {
         "player_id": "2423",
         "name": "Mbaye N'Diaye",
         "position": "POM",
@@ -3015,6 +3024,24 @@
         "error": -2.2
       },
       {
+        "player_id": "1319",
+        "name": "Paweł Wszołek",
+        "position": "OBR",
+        "team": "legia warszawa",
+        "predicted": 7.5,
+        "actual": 5,
+        "error": 2.5
+      },
+      {
+        "player_id": "1507",
+        "name": "Łukasz Zjawiński",
+        "position": "NAP",
+        "team": "legia warszawa",
+        "predicted": 4.5,
+        "actual": 2,
+        "error": 2.5
+      },
+      {
         "player_id": "374",
         "name": "Alan Uryga",
         "position": "OBR",
@@ -3055,6 +3082,15 @@
         "name": "Mariusz Fornalczyk",
         "position": "POM",
         "team": "widzew łódź",
+        "predicted": 4.9,
+        "actual": 2,
+        "error": 2.9
+      },
+      {
+        "player_id": "2805",
+        "name": "Otto Hindrich",
+        "position": "BR",
+        "team": "legia warszawa",
         "predicted": 4.9,
         "actual": 2,
         "error": 2.9
@@ -3114,6 +3150,15 @@
         "error": 4.5
       },
       {
+        "player_id": "2481",
+        "name": "Ajdin Hasić",
+        "position": "POM",
+        "team": "cracovia",
+        "predicted": 7.4,
+        "actual": 2,
+        "error": 5.4
+      },
+      {
         "player_id": "2902",
         "name": "Lucas Piazón",
         "position": "POM",
@@ -3130,6 +3175,15 @@
         "predicted": 6.2,
         "actual": -1,
         "error": 7.2
+      },
+      {
+        "player_id": "923",
+        "name": "Rafał Augustyniak",
+        "position": "OBR",
+        "team": "legia warszawa",
+        "predicted": 10.2,
+        "actual": 2,
+        "error": 8.2
       },
       {
         "player_id": "2671",
