@@ -2713,18 +2713,30 @@
   },
   {
     "round": 11,
-    "date": "2026-10-16",
+    "date": "2026-10-17",
     "mae": 2.2,
     "mae_by_pos": {
-      "BR": 1.7,
-      "OBR": 2.7,
-      "POM": 1.8,
-      "NAP": 2.3
+      "BR": 1.6,
+      "OBR": 2.2,
+      "POM": 2.1,
+      "NAP": 3.0
     },
-    "top10_mae": 3.0,
+    "top10_mae": 4.2,
     "hit_rate": 0.75,
-    "sample_size": 24,
+    "sample_size": 40,
     "worst_misses": [
+      {
+        "name": "Bartosz Nowak",
+        "predicted": 10.7,
+        "actual": 2,
+        "error": 8.7
+      },
+      {
+        "name": "Karol Czubak",
+        "predicted": 7.5,
+        "actual": -1,
+        "error": 8.5
+      },
       {
         "name": "Ángel Rodado",
         "predicted": 6.2,
@@ -2742,18 +2754,6 @@
         "predicted": 5.5,
         "actual": 1,
         "error": 4.5
-      },
-      {
-        "name": "Bartłomiej Drągowski",
-        "predicted": 2.5,
-        "actual": 6,
-        "error": -3.5
-      },
-      {
-        "name": "Fran Tudor",
-        "predicted": -0.3,
-        "actual": 3,
-        "error": -3.3
       }
     ],
     "best_hits": [
@@ -2764,28 +2764,28 @@
         "error": 0.2
       },
       {
+        "name": "Darko Čurlinov",
+        "predicted": 4.3,
+        "actual": 4,
+        "error": 0.3
+      },
+      {
+        "name": "Maciej Wojciechowski",
+        "predicted": 4.3,
+        "actual": 4,
+        "error": 0.3
+      },
+      {
+        "name": "Adam Ciućka",
+        "predicted": 1.3,
+        "actual": 1,
+        "error": 0.3
+      },
+      {
         "name": "Patryk Makuch",
         "predicted": 6.4,
         "actual": 6,
         "error": 0.4
-      },
-      {
-        "name": "José de la Rosa",
-        "predicted": 2.4,
-        "actual": 2,
-        "error": 0.4
-      },
-      {
-        "name": "Mateusz Kochalski",
-        "predicted": 3.5,
-        "actual": 4,
-        "error": -0.5
-      },
-      {
-        "name": "Fran Álvarez",
-        "predicted": 2.7,
-        "actual": 2,
-        "error": 0.7
       }
     ],
     "details": [
@@ -2797,6 +2797,33 @@
         "predicted": 3.2,
         "actual": 3,
         "error": 0.2
+      },
+      {
+        "player_id": "2490",
+        "name": "Darko Čurlinov",
+        "position": "POM",
+        "team": "pogoń szczecin",
+        "predicted": 4.3,
+        "actual": 4,
+        "error": 0.3
+      },
+      {
+        "player_id": "2491",
+        "name": "Maciej Wojciechowski",
+        "position": "POM",
+        "team": "pogoń szczecin",
+        "predicted": 4.3,
+        "actual": 4,
+        "error": 0.3
+      },
+      {
+        "player_id": "2893",
+        "name": "Adam Ciućka",
+        "position": "POM",
+        "team": "śląsk wrocław",
+        "predicted": 1.3,
+        "actual": 1,
+        "error": 0.3
       },
       {
         "player_id": "1168",
@@ -2826,13 +2853,31 @@
         "error": -0.5
       },
       {
-        "player_id": "2225",
-        "name": "Fran Álvarez",
+        "player_id": "1092",
+        "name": "Piotr Samiec-Talar",
         "position": "POM",
-        "team": "widzew łódź",
-        "predicted": 2.7,
+        "team": "śląsk wrocław",
+        "predicted": 8.6,
+        "actual": 8,
+        "error": 0.6
+      },
+      {
+        "player_id": "1987",
+        "name": "Jordi Sánchez",
+        "position": "NAP",
+        "team": "pogoń szczecin",
+        "predicted": 6.4,
+        "actual": 7,
+        "error": -0.6
+      },
+      {
+        "player_id": "2417",
+        "name": "Filip Luberecki",
+        "position": "OBR",
+        "team": "motor lublin",
+        "predicted": 2.6,
         "actual": 2,
-        "error": 0.7
+        "error": 0.6
       },
       {
         "player_id": "1725",
@@ -2842,6 +2887,24 @@
         "predicted": 2.3,
         "actual": 3,
         "error": -0.7
+      },
+      {
+        "player_id": "2454",
+        "name": "Pau Resta",
+        "position": "OBR",
+        "team": "gks katowice",
+        "predicted": 2.8,
+        "actual": 2,
+        "error": 0.8
+      },
+      {
+        "player_id": "2423",
+        "name": "Mbaye N'Diaye",
+        "position": "POM",
+        "team": "motor lublin",
+        "predicted": 4.9,
+        "actual": 4,
+        "error": 0.9
       },
       {
         "player_id": "2659",
@@ -2862,13 +2925,13 @@
         "error": -1.0
       },
       {
-        "player_id": "2000",
-        "name": "Lisandro Semedo",
-        "position": "POM",
-        "team": "wieczysta kraków",
-        "predicted": 4.8,
-        "actual": 6,
-        "error": -1.2
+        "player_id": "563",
+        "name": "Marcin Wasielewski",
+        "position": "OBR",
+        "team": "gks katowice",
+        "predicted": 3.2,
+        "actual": 2,
+        "error": 1.2
       },
       {
         "player_id": "2901",
@@ -2878,6 +2941,42 @@
         "predicted": 3.2,
         "actual": 2,
         "error": 1.2
+      },
+      {
+        "player_id": "1925",
+        "name": "Gabriel Kobylak",
+        "position": "BR",
+        "team": "gks katowice",
+        "predicted": 1.8,
+        "actual": 3,
+        "error": -1.2
+      },
+      {
+        "player_id": "2286",
+        "name": "Valentin Cojocaru",
+        "position": "BR",
+        "team": "pogoń szczecin",
+        "predicted": 5.7,
+        "actual": 7,
+        "error": -1.3
+      },
+      {
+        "player_id": "2505",
+        "name": "Dimítrios Keramítsis",
+        "position": "OBR",
+        "team": "pogoń szczecin",
+        "predicted": 4.6,
+        "actual": 6,
+        "error": -1.4
+      },
+      {
+        "player_id": "994",
+        "name": "Lukas Klemenz",
+        "position": "OBR",
+        "team": "gks katowice",
+        "predicted": 2.5,
+        "actual": 1,
+        "error": 1.5
       },
       {
         "player_id": "1853",
@@ -2896,15 +2995,6 @@
         "predicted": 0.4,
         "actual": 2,
         "error": -1.6
-      },
-      {
-        "player_id": "2353",
-        "name": "Mikkel Maigaard",
-        "position": "POM",
-        "team": "wieczysta kraków",
-        "predicted": 3.7,
-        "actual": 2,
-        "error": 1.7
       },
       {
         "player_id": "1490",
@@ -2934,12 +3024,30 @@
         "error": 2.6
       },
       {
+        "player_id": "1880",
+        "name": "Ilja Szkurin",
+        "position": "NAP",
+        "team": "gks katowice",
+        "predicted": 4.6,
+        "actual": 2,
+        "error": 2.6
+      },
+      {
         "player_id": "1005",
         "name": "Karol Fila",
         "position": "OBR",
         "team": "wieczysta kraków",
         "predicted": 4.7,
         "actual": 2,
+        "error": 2.7
+      },
+      {
+        "player_id": "633",
+        "name": "Mateusz Wdowiak",
+        "position": "POM",
+        "team": "gks katowice",
+        "predicted": 3.7,
+        "actual": 1,
         "error": 2.7
       },
       {
@@ -2961,6 +3069,15 @@
         "error": 3.0
       },
       {
+        "player_id": "2679",
+        "name": "Paul Mukairu",
+        "position": "POM",
+        "team": "pogoń szczecin",
+        "predicted": 7.1,
+        "actual": 4,
+        "error": 3.1
+      },
+      {
         "player_id": "1341",
         "name": "Fran Tudor",
         "position": "OBR",
@@ -2977,6 +3094,15 @@
         "predicted": 2.5,
         "actual": 6,
         "error": -3.5
+      },
+      {
+        "player_id": "2384",
+        "name": "Borja Galán",
+        "position": "OBR",
+        "team": "gks katowice",
+        "predicted": 6.1,
+        "actual": 2,
+        "error": 4.1
       },
       {
         "player_id": "10",
@@ -3004,6 +3130,24 @@
         "predicted": 6.2,
         "actual": -1,
         "error": 7.2
+      },
+      {
+        "player_id": "2671",
+        "name": "Karol Czubak",
+        "position": "NAP",
+        "team": "motor lublin",
+        "predicted": 7.5,
+        "actual": -1,
+        "error": 8.5
+      },
+      {
+        "player_id": "480",
+        "name": "Bartosz Nowak",
+        "position": "POM",
+        "team": "gks katowice",
+        "predicted": 10.7,
+        "actual": 2,
+        "error": 8.7
       }
     ],
     "predictions": [
