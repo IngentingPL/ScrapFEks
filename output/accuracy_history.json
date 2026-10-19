@@ -2713,17 +2713,17 @@
   },
   {
     "round": 11,
-    "date": "2026-10-18",
-    "mae": 2.5,
+    "date": "2026-10-19",
+    "mae": 2.4,
     "mae_by_pos": {
       "BR": 2.2,
-      "OBR": 2.5,
+      "OBR": 2.4,
       "POM": 2.5,
       "NAP": 2.7
     },
     "top10_mae": 5.4,
-    "hit_rate": 0.68,
-    "sample_size": 79,
+    "hit_rate": 0.69,
+    "sample_size": 80,
     "worst_misses": [
       {
         "name": "Pablo Rodríguez",
@@ -3037,6 +3037,15 @@
         "name": "Marcin Wasielewski",
         "position": "OBR",
         "team": "gks katowice",
+        "predicted": 3.2,
+        "actual": 2,
+        "error": 1.2
+      },
+      {
+        "player_id": "1225",
+        "name": "Jan Grzesik",
+        "position": "OBR",
+        "team": "radomiak radom",
         "predicted": 3.2,
         "actual": 2,
         "error": 1.2
