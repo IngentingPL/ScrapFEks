@@ -2713,7 +2713,7 @@
   },
   {
     "round": 11,
-    "date": "2026-10-19",
+    "date": "2026-10-22",
     "mae": 2.4,
     "mae_by_pos": {
       "BR": 2.2,
@@ -2728,8 +2728,8 @@
       {
         "name": "Pablo Rodríguez",
         "predicted": 10.3,
-        "actual": 21,
-        "error": -10.7
+        "actual": 22,
+        "error": -11.7
       },
       {
         "name": "Bartosz Nowak",
@@ -2764,6 +2764,18 @@
         "error": 0.0
       },
       {
+        "name": "Patrik Wålemark",
+        "predicted": 9.1,
+        "actual": 9,
+        "error": 0.1
+      },
+      {
+        "name": "Erik Janža",
+        "predicted": 7.2,
+        "actual": 7,
+        "error": 0.2
+      },
+      {
         "name": "Oskar Repka",
         "predicted": 3.2,
         "actual": 3,
@@ -2774,18 +2786,6 @@
         "predicted": 6.7,
         "actual": 7,
         "error": -0.3
-      },
-      {
-        "name": "Darko Čurlinov",
-        "predicted": 4.3,
-        "actual": 4,
-        "error": 0.3
-      },
-      {
-        "name": "Maciej Wojciechowski",
-        "predicted": 4.3,
-        "actual": 4,
-        "error": 0.3
       }
     ],
     "details": [
@@ -2797,6 +2797,24 @@
         "predicted": 2.0,
         "actual": 2,
         "error": 0.0
+      },
+      {
+        "player_id": "2498",
+        "name": "Patrik Wålemark",
+        "position": "POM",
+        "team": "lech poznań",
+        "predicted": 9.1,
+        "actual": 9,
+        "error": 0.1
+      },
+      {
+        "player_id": "1192",
+        "name": "Erik Janža",
+        "position": "OBR",
+        "team": "górnik zabrze",
+        "predicted": 7.2,
+        "actual": 7,
+        "error": 0.2
       },
       {
         "player_id": "979",
@@ -2853,6 +2871,15 @@
         "error": -0.3
       },
       {
+        "player_id": "1092",
+        "name": "Piotr Samiec-Talar",
+        "position": "POM",
+        "team": "śląsk wrocław",
+        "predicted": 8.6,
+        "actual": 9,
+        "error": -0.4
+      },
+      {
         "player_id": "1168",
         "name": "Patryk Makuch",
         "position": "NAP",
@@ -2905,15 +2932,6 @@
         "predicted": 2.5,
         "actual": 2,
         "error": 0.5
-      },
-      {
-        "player_id": "1092",
-        "name": "Piotr Samiec-Talar",
-        "position": "POM",
-        "team": "śląsk wrocław",
-        "predicted": 8.6,
-        "actual": 8,
-        "error": 0.6
       },
       {
         "player_id": "1987",
@@ -3013,24 +3031,6 @@
         "predicted": 2.0,
         "actual": 3,
         "error": -1.0
-      },
-      {
-        "player_id": "2498",
-        "name": "Patrik Wålemark",
-        "position": "POM",
-        "team": "lech poznań",
-        "predicted": 9.1,
-        "actual": 8,
-        "error": 1.1
-      },
-      {
-        "player_id": "1192",
-        "name": "Erik Janža",
-        "position": "OBR",
-        "team": "górnik zabrze",
-        "predicted": 7.2,
-        "actual": 6,
-        "error": 1.2
       },
       {
         "player_id": "563",
@@ -3384,15 +3384,6 @@
         "error": 3.9
       },
       {
-        "player_id": "2160",
-        "name": "Roman Jakuba",
-        "position": "OBR",
-        "team": "zagłębie lubin",
-        "predicted": 2.1,
-        "actual": 6,
-        "error": -3.9
-      },
-      {
         "player_id": "2384",
         "name": "Borja Galán",
         "position": "OBR",
@@ -3418,6 +3409,15 @@
         "predicted": 1.7,
         "actual": -3,
         "error": 4.7
+      },
+      {
+        "player_id": "2160",
+        "name": "Roman Jakuba",
+        "position": "OBR",
+        "team": "zagłębie lubin",
+        "predicted": 2.1,
+        "actual": 7,
+        "error": -4.9
       },
       {
         "player_id": "1327",
@@ -3506,8 +3506,8 @@
         "position": "POM",
         "team": "lech poznań",
         "predicted": 10.3,
-        "actual": 21,
-        "error": -10.7
+        "actual": 22,
+        "error": -11.7
       }
     ],
     "predictions": [

@@ -2,7 +2,7 @@
   {
     "slug": "widzewbaluty",
     "rank": 1,
-    "pts": 756,
+    "pts": 757,
     "players": [
       {
         "pid": "166",
@@ -230,7 +230,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": true,
@@ -258,7 +258,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -560,12 +560,12 @@
         ]
       }
     ],
-    "autumn_pts": 756,
+    "autumn_pts": 757,
     "best_gw_autumn": 129,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Widzewbaluty",
-    "total_pts": 756,
+    "total_pts": 757,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -574,7 +574,7 @@
   {
     "slug": "makkabi-bialystok",
     "rank": 2,
-    "pts": 742,
+    "pts": 743,
     "players": [
       {
         "pid": "480",
@@ -839,7 +839,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -867,7 +867,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -911,14 +911,40 @@
       },
       {
         "pid": "2531",
-        "name": "Tratnik",
-        "pos": "1",
-        "pts": 0,
+        "name": "Gašper Tratnik",
+        "pos": "Bramkarz",
+        "pts": 14,
         "price": 1.6,
         "C": false,
         "VC": false,
         "R": false,
-        "form": []
+        "form": [
+          {
+            "r": 7,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 8,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 2,
+            "p": true
+          }
+        ]
       },
       {
         "pid": "166",
@@ -1080,12 +1106,12 @@
         "form": []
       }
     ],
-    "autumn_pts": 742,
+    "autumn_pts": 743,
     "best_gw_autumn": 114,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Makkabi Bialystok",
-    "total_pts": 742,
+    "total_pts": 743,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -1094,13 +1120,13 @@
   {
     "slug": "lelek-kozodoj",
     "rank": 3,
-    "pts": 726,
+    "pts": 727,
     "players": [
       {
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -1128,7 +1154,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -1652,12 +1678,12 @@
         ]
       }
     ],
-    "autumn_pts": 726,
+    "autumn_pts": 727,
     "best_gw_autumn": 123,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Lelek Kozodoj",
-    "total_pts": 726,
+    "total_pts": 727,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -1666,7 +1692,7 @@
   {
     "slug": "huragan-primore",
     "rank": 4,
-    "pts": 724,
+    "pts": 725,
     "players": [
       {
         "pid": "480",
@@ -1894,7 +1920,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -1922,7 +1948,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -2224,12 +2250,12 @@
         ]
       }
     ],
-    "autumn_pts": 724,
+    "autumn_pts": 725,
     "best_gw_autumn": 135,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Huragan Primore",
-    "total_pts": 724,
+    "total_pts": 725,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -2238,7 +2264,7 @@
   {
     "slug": "lowcy-blanczurow",
     "rank": 5,
-    "pts": 718,
+    "pts": 720,
     "players": [
       {
         "pid": "480",
@@ -2466,7 +2492,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -2494,7 +2520,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -2503,7 +2529,7 @@
         "pid": "2717",
         "name": "Pablo Rodríguez",
         "pos": "Pomocnik",
-        "pts": 76,
+        "pts": 77,
         "price": 2.2,
         "C": false,
         "VC": false,
@@ -2531,7 +2557,7 @@
           },
           {
             "r": 11,
-            "pts": 21,
+            "pts": 22,
             "p": true
           }
         ]
@@ -2796,12 +2822,12 @@
         ]
       }
     ],
-    "autumn_pts": 718,
+    "autumn_pts": 720,
     "best_gw_autumn": 102,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Lowcy Blanczurow",
-    "total_pts": 718,
+    "total_pts": 720,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -2810,7 +2836,7 @@
   {
     "slug": "dunder-mifflin",
     "rank": 6,
-    "pts": 716,
+    "pts": 717,
     "players": [
       {
         "pid": "480",
@@ -3001,7 +3027,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -3029,7 +3055,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -3368,12 +3394,12 @@
         ]
       }
     ],
-    "autumn_pts": 716,
+    "autumn_pts": 717,
     "best_gw_autumn": 105,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Dunder Mifflin",
-    "total_pts": 716,
+    "total_pts": 717,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -3382,7 +3408,7 @@
   {
     "slug": "kosciol-klubu-kuby",
     "rank": 7,
-    "pts": 689,
+    "pts": 692,
     "players": [
       {
         "pid": "480",
@@ -3610,7 +3636,7 @@
         "pid": "2717",
         "name": "Pablo Rodríguez",
         "pos": "Pomocnik",
-        "pts": 76,
+        "pts": 77,
         "price": 2.2,
         "C": false,
         "VC": false,
@@ -3638,7 +3664,7 @@
           },
           {
             "r": 11,
-            "pts": 21,
+            "pts": 22,
             "p": true
           }
         ]
@@ -3684,7 +3710,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": true,
         "VC": false,
@@ -3712,7 +3738,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -3940,12 +3966,12 @@
         ]
       }
     ],
-    "autumn_pts": 689,
+    "autumn_pts": 692,
     "best_gw_autumn": 116,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Kosciol Klubu Kuby",
-    "total_pts": 689,
+    "total_pts": 692,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -3954,7 +3980,7 @@
   {
     "slug": "fc-przypal",
     "rank": 8,
-    "pts": 686,
+    "pts": 687,
     "players": [
       {
         "pid": "480",
@@ -4219,7 +4245,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -4247,7 +4273,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -4512,12 +4538,12 @@
         ]
       }
     ],
-    "autumn_pts": 686,
+    "autumn_pts": 687,
     "best_gw_autumn": 105,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Fc Przypal",
-    "total_pts": 686,
+    "total_pts": 687,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -4526,7 +4552,7 @@
   {
     "slug": "lubliniankakonskie",
     "rank": 9,
-    "pts": 666,
+    "pts": 667,
     "players": [
       {
         "pid": "480",
@@ -4865,7 +4891,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -4893,7 +4919,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -5084,12 +5110,12 @@
         ]
       }
     ],
-    "autumn_pts": 666,
+    "autumn_pts": 667,
     "best_gw_autumn": 114,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Lubliniankakonskie",
-    "total_pts": 666,
+    "total_pts": 667,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -5098,7 +5124,7 @@
   {
     "slug": "ks-wojtkovia",
     "rank": 10,
-    "pts": 665,
+    "pts": 666,
     "players": [
       {
         "pid": "480",
@@ -5326,7 +5352,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -5354,7 +5380,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -5656,12 +5682,12 @@
         ]
       }
     ],
-    "autumn_pts": 665,
+    "autumn_pts": 666,
     "best_gw_autumn": 100,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Ks Wojtkovia",
-    "total_pts": 665,
+    "total_pts": 666,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -5670,7 +5696,7 @@
   {
     "slug": "poznan-festung",
     "rank": 11,
-    "pts": 659,
+    "pts": 660,
     "players": [
       {
         "pid": "480",
@@ -5898,7 +5924,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -5926,7 +5952,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -6228,12 +6254,12 @@
         ]
       }
     ],
-    "autumn_pts": 659,
+    "autumn_pts": 660,
     "best_gw_autumn": 131,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Poznan Festung",
-    "total_pts": 659,
+    "total_pts": 660,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -6242,7 +6268,7 @@
   {
     "slug": "kauno-zalgiris",
     "rank": 12,
-    "pts": 646,
+    "pts": 648,
     "players": [
       {
         "pid": "480",
@@ -6396,7 +6422,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": true,
         "VC": false,
@@ -6424,7 +6450,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -6800,12 +6826,12 @@
         ]
       }
     ],
-    "autumn_pts": 646,
+    "autumn_pts": 648,
     "best_gw_autumn": 119,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Kauno Zalgiris",
-    "total_pts": 646,
+    "total_pts": 648,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -6814,7 +6840,7 @@
   {
     "slug": "polski-kibel",
     "rank": 13,
-    "pts": 630,
+    "pts": 632,
     "players": [
       {
         "pid": "923",
@@ -7079,7 +7105,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": true,
         "VC": false,
@@ -7107,7 +7133,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -7372,12 +7398,12 @@
         ]
       }
     ],
-    "autumn_pts": 630,
+    "autumn_pts": 632,
     "best_gw_autumn": 79,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Polski Kibel",
-    "total_pts": 630,
+    "total_pts": 632,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 1,
@@ -7386,7 +7412,7 @@
   {
     "slug": "gouda-team",
     "rank": 14,
-    "pts": 623,
+    "pts": 624,
     "players": [
       {
         "pid": "480",
@@ -7614,7 +7640,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -7642,7 +7668,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -7892,12 +7918,12 @@
         ]
       }
     ],
-    "autumn_pts": 623,
+    "autumn_pts": 624,
     "best_gw_autumn": 123,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Gouda Team",
-    "total_pts": 623,
+    "total_pts": 624,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -1,
@@ -7906,7 +7932,7 @@
   {
     "slug": "mcroyal-polska",
     "rank": 15,
-    "pts": 621,
+    "pts": 622,
     "players": [
       {
         "pid": "480",
@@ -8171,7 +8197,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -8199,7 +8225,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -8464,12 +8490,12 @@
         ]
       }
     ],
-    "autumn_pts": 621,
+    "autumn_pts": 622,
     "best_gw_autumn": 102,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Mcroyal Polska",
-    "total_pts": 621,
+    "total_pts": 622,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -8998,7 +9024,7 @@
   {
     "slug": "vfb-osterode",
     "rank": 17,
-    "pts": 587,
+    "pts": 589,
     "players": [
       {
         "pid": "480",
@@ -9226,7 +9252,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": true,
@@ -9254,7 +9280,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -9530,12 +9556,12 @@
         ]
       }
     ],
-    "autumn_pts": 587,
+    "autumn_pts": 589,
     "best_gw_autumn": 110,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Vfb Osterode",
-    "total_pts": 587,
+    "total_pts": 589,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -9544,7 +9570,7 @@
   {
     "slug": "wszystko-czuj",
     "rank": 18,
-    "pts": 582,
+    "pts": 583,
     "players": [
       {
         "pid": "480",
@@ -9772,7 +9798,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": true,
@@ -9800,7 +9826,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -10102,20 +10128,540 @@
         ]
       }
     ],
-    "autumn_pts": 582,
+    "autumn_pts": 583,
     "best_gw_autumn": 121,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Wszystko Czuj",
-    "total_pts": 582,
+    "total_pts": 583,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
     "hockey_pos": 18
   },
   {
-    "slug": "fc-abw",
+    "slug": "misterna-porazka",
     "rank": 19,
+    "pts": 568,
+    "players": [
+      {
+        "pid": "480",
+        "name": "Bartosz Nowak",
+        "pos": "Pomocnik",
+        "pts": 77,
+        "price": 3.5,
+        "C": true,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 8,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 9,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 11,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 15,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1026",
+        "name": "Mateusz Lis",
+        "pos": "Bramkarz",
+        "pts": 39,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 7,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 8,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 4,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 4,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1092",
+        "name": "Piotr Samiec-Talar",
+        "pos": "Pomocnik",
+        "pts": 59,
+        "price": 2.2,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 7,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 8,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 9,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 10,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 9,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2821",
+        "name": "Szalai",
+        "pos": "2",
+        "pts": 0,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": []
+      },
+      {
+        "pid": "1507",
+        "name": "Łukasz Zjawiński",
+        "pos": "Napastnik",
+        "pts": 43,
+        "price": 2.1,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 7,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 8,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 9,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1987",
+        "name": "Jordi Sánchez",
+        "pos": "Napastnik",
+        "pts": 70,
+        "price": 2.2,
+        "C": false,
+        "VC": true,
+        "R": false,
+        "form": [
+          {
+            "r": 7,
+            "pts": 4,
+            "p": true
+          },
+          {
+            "r": 8,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 7,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2431",
+        "name": "Rúben Vinagre",
+        "pos": "Obrońca",
+        "pts": 47,
+        "price": 2.0,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 7,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 8,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 11,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "2577",
+        "name": "Josip Ćorluka",
+        "pos": "Obrońca",
+        "pts": 35,
+        "price": 1.8,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 8,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 8,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 10,
+            "pts": -1,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 6,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "184",
+        "name": "Rafał Wolski",
+        "pos": "Pomocnik",
+        "pts": 40,
+        "price": 2.2,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 7,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 8,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 1,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "1880",
+        "name": "Ilja Szkurin",
+        "pos": "Napastnik",
+        "pts": 67,
+        "price": 2.4,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 8,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 7,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2481",
+        "name": "Ajdin Hasić",
+        "pos": "Pomocnik",
+        "pts": 57,
+        "price": 2.3,
+        "C": false,
+        "VC": false,
+        "R": false,
+        "form": [
+          {
+            "r": 7,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 8,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 5,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 14,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2561",
+        "name": "Michał Mikielewicz",
+        "pos": "Bramkarz",
+        "pts": 0,
+        "price": 0.7,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 8,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 8,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 9,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 10,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 11,
+            "pts": 0,
+            "p": false
+          }
+        ]
+      },
+      {
+        "pid": "1319",
+        "name": "Paweł Wszołek",
+        "pos": "Obrońca",
+        "pts": 67,
+        "price": 2.3,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 7,
+            "pts": 0,
+            "p": false
+          },
+          {
+            "r": 8,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 12,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 6,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 5,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2901",
+        "name": "Tobias Christensen",
+        "pos": "Pomocnik",
+        "pts": 40,
+        "price": 1.9,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": [
+          {
+            "r": 8,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 9,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 2,
+            "p": true
+          },
+          {
+            "r": 10,
+            "pts": 3,
+            "p": true
+          },
+          {
+            "r": 11,
+            "pts": 2,
+            "p": true
+          }
+        ]
+      },
+      {
+        "pid": "2915",
+        "name": "Warczak",
+        "pos": "",
+        "pts": 0,
+        "price": 1.5,
+        "C": false,
+        "VC": false,
+        "R": true,
+        "form": []
+      }
+    ],
+    "autumn_pts": 568,
+    "best_gw_autumn": 108,
+    "spring_pts": 0,
+    "best_gw_spring": 0,
+    "display_name": "Misterna Porazka",
+    "total_pts": 568,
+    "autumn_only": false,
+    "spring_only": false,
+    "rank_change": 2,
+    "hockey_pos": 19
+  },
+  {
+    "slug": "fc-abw",
+    "rank": 20,
     "pts": 568,
     "players": [
       {
@@ -10656,533 +11202,13 @@
     "total_pts": 568,
     "autumn_only": false,
     "spring_only": false,
-    "rank_change": 0,
-    "hockey_pos": 19
-  },
-  {
-    "slug": "misterna-porazka",
-    "rank": 20,
-    "pts": 566,
-    "players": [
-      {
-        "pid": "480",
-        "name": "Bartosz Nowak",
-        "pos": "Pomocnik",
-        "pts": 77,
-        "price": 3.5,
-        "C": true,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 8,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 9,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 11,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 15,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1026",
-        "name": "Mateusz Lis",
-        "pos": "Bramkarz",
-        "pts": 39,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 7,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 8,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 4,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 4,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1092",
-        "name": "Piotr Samiec-Talar",
-        "pos": "Pomocnik",
-        "pts": 58,
-        "price": 2.2,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 7,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 8,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 9,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 10,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 8,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2821",
-        "name": "Szalai",
-        "pos": "2",
-        "pts": 0,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": []
-      },
-      {
-        "pid": "1507",
-        "name": "Łukasz Zjawiński",
-        "pos": "Napastnik",
-        "pts": 43,
-        "price": 2.1,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 7,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 8,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 9,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1987",
-        "name": "Jordi Sánchez",
-        "pos": "Napastnik",
-        "pts": 70,
-        "price": 2.2,
-        "C": false,
-        "VC": true,
-        "R": false,
-        "form": [
-          {
-            "r": 7,
-            "pts": 4,
-            "p": true
-          },
-          {
-            "r": 8,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 7,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2431",
-        "name": "Rúben Vinagre",
-        "pos": "Obrońca",
-        "pts": 47,
-        "price": 2.0,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 7,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 8,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 11,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "2577",
-        "name": "Josip Ćorluka",
-        "pos": "Obrońca",
-        "pts": 35,
-        "price": 1.8,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 8,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 8,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 10,
-            "pts": -1,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 6,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "184",
-        "name": "Rafał Wolski",
-        "pos": "Pomocnik",
-        "pts": 40,
-        "price": 2.2,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 7,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 8,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 1,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "1880",
-        "name": "Ilja Szkurin",
-        "pos": "Napastnik",
-        "pts": 67,
-        "price": 2.4,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 8,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 7,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2481",
-        "name": "Ajdin Hasić",
-        "pos": "Pomocnik",
-        "pts": 57,
-        "price": 2.3,
-        "C": false,
-        "VC": false,
-        "R": false,
-        "form": [
-          {
-            "r": 7,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 8,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 5,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 14,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2561",
-        "name": "Michał Mikielewicz",
-        "pos": "Bramkarz",
-        "pts": 0,
-        "price": 0.7,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 8,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 8,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 9,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 10,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 11,
-            "pts": 0,
-            "p": false
-          }
-        ]
-      },
-      {
-        "pid": "1319",
-        "name": "Paweł Wszołek",
-        "pos": "Obrońca",
-        "pts": 67,
-        "price": 2.3,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 7,
-            "pts": 0,
-            "p": false
-          },
-          {
-            "r": 8,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 12,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 6,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 5,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2901",
-        "name": "Tobias Christensen",
-        "pos": "Pomocnik",
-        "pts": 40,
-        "price": 1.9,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": [
-          {
-            "r": 8,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 9,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 2,
-            "p": true
-          },
-          {
-            "r": 10,
-            "pts": 3,
-            "p": true
-          },
-          {
-            "r": 11,
-            "pts": 2,
-            "p": true
-          }
-        ]
-      },
-      {
-        "pid": "2915",
-        "name": "Warczak",
-        "pos": "",
-        "pts": 0,
-        "price": 1.5,
-        "C": false,
-        "VC": false,
-        "R": true,
-        "form": []
-      }
-    ],
-    "autumn_pts": 566,
-    "best_gw_autumn": 108,
-    "spring_pts": 0,
-    "best_gw_spring": 0,
-    "display_name": "Misterna Porazka",
-    "total_pts": 566,
-    "autumn_only": false,
-    "spring_only": false,
-    "rank_change": 1,
+    "rank_change": -1,
     "hockey_pos": 20
   },
   {
     "slug": "negative-szczecin",
     "rank": 21,
-    "pts": 561,
+    "pts": 563,
     "players": [
       {
         "pid": "1455",
@@ -11373,7 +11399,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": true,
         "VC": false,
@@ -11401,7 +11427,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -11714,12 +11740,12 @@
         "form": []
       }
     ],
-    "autumn_pts": 561,
+    "autumn_pts": 563,
     "best_gw_autumn": 78,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Negative Szczecin",
-    "total_pts": 561,
+    "total_pts": 563,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 4,
@@ -11728,7 +11754,7 @@
   {
     "slug": "duma-koziego-grodu",
     "rank": 22,
-    "pts": 559,
+    "pts": 560,
     "players": [
       {
         "pid": "480",
@@ -12104,7 +12130,7 @@
         "pid": "2717",
         "name": "Pablo Rodríguez",
         "pos": "Pomocnik",
-        "pts": 76,
+        "pts": 77,
         "price": 2.2,
         "C": false,
         "VC": false,
@@ -12132,7 +12158,7 @@
           },
           {
             "r": 11,
-            "pts": 21,
+            "pts": 22,
             "p": true
           }
         ]
@@ -12260,12 +12286,12 @@
         ]
       }
     ],
-    "autumn_pts": 559,
+    "autumn_pts": 560,
     "best_gw_autumn": 109,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Duma Koziego Grodu",
-    "total_pts": 559,
+    "total_pts": 560,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -2,
@@ -12274,7 +12300,7 @@
   {
     "slug": "ks-bialy-sad",
     "rank": 23,
-    "pts": 558,
+    "pts": 559,
     "players": [
       {
         "pid": "166",
@@ -12354,7 +12380,7 @@
         "pid": "1092",
         "name": "Piotr Samiec-Talar",
         "pos": "Pomocnik",
-        "pts": 58,
+        "pts": 59,
         "price": 2.2,
         "C": false,
         "VC": false,
@@ -12382,7 +12408,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -12832,12 +12858,12 @@
         ]
       }
     ],
-    "autumn_pts": 558,
+    "autumn_pts": 559,
     "best_gw_autumn": 94,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Ks Bialy Sad",
-    "total_pts": 558,
+    "total_pts": 559,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -1,
@@ -12846,7 +12872,7 @@
   {
     "slug": "medi-top-glonovia",
     "rank": 24,
-    "pts": 549,
+    "pts": 550,
     "players": [
       {
         "pid": "480",
@@ -13111,7 +13137,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -13139,7 +13165,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -13404,12 +13430,12 @@
         ]
       }
     ],
-    "autumn_pts": 549,
+    "autumn_pts": 550,
     "best_gw_autumn": 85,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Medi Top Glonovia",
-    "total_pts": 549,
+    "total_pts": 550,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -1,
@@ -13418,7 +13444,7 @@
   {
     "slug": "wynalazcy-wslizgu",
     "rank": 25,
-    "pts": 539,
+    "pts": 540,
     "players": [
       {
         "pid": "374",
@@ -13683,7 +13709,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -13711,7 +13737,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -13950,12 +13976,12 @@
         ]
       }
     ],
-    "autumn_pts": 539,
+    "autumn_pts": 540,
     "best_gw_autumn": 73,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Wynalazcy Wslizgu",
-    "total_pts": 539,
+    "total_pts": 540,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 1,
@@ -13964,7 +13990,7 @@
   {
     "slug": "ks-rozanka",
     "rank": 26,
-    "pts": 533,
+    "pts": 534,
     "players": [
       {
         "pid": "166",
@@ -14018,7 +14044,7 @@
         "pid": "1092",
         "name": "Piotr Samiec-Talar",
         "pos": "Pomocnik",
-        "pts": 58,
+        "pts": 59,
         "price": 2.2,
         "C": false,
         "VC": true,
@@ -14046,7 +14072,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -14444,12 +14470,12 @@
         "form": []
       }
     ],
-    "autumn_pts": 533,
+    "autumn_pts": 534,
     "best_gw_autumn": 61,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Ks Rozanka",
-    "total_pts": 533,
+    "total_pts": 534,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 1,
@@ -14978,7 +15004,7 @@
   {
     "slug": "ks-blueface",
     "rank": 28,
-    "pts": 513,
+    "pts": 514,
     "players": [
       {
         "pid": "480",
@@ -15132,7 +15158,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -15160,7 +15186,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -15458,12 +15484,12 @@
         "form": []
       }
     ],
-    "autumn_pts": 513,
+    "autumn_pts": 514,
     "best_gw_autumn": 68,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Ks Blueface",
-    "total_pts": 513,
+    "total_pts": 514,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 0,
@@ -15472,7 +15498,7 @@
   {
     "slug": "mauroball",
     "rank": 29,
-    "pts": 501,
+    "pts": 503,
     "players": [
       {
         "pid": "951",
@@ -15589,7 +15615,7 @@
         "pid": "2498",
         "name": "Patrik Wålemark",
         "pos": "Pomocnik",
-        "pts": 62,
+        "pts": 63,
         "price": 2.4,
         "C": false,
         "VC": false,
@@ -15617,7 +15643,7 @@
           },
           {
             "r": 11,
-            "pts": 8,
+            "pts": 9,
             "p": true
           }
         ]
@@ -15978,12 +16004,12 @@
         ]
       }
     ],
-    "autumn_pts": 501,
+    "autumn_pts": 503,
     "best_gw_autumn": 66,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Mauroball",
-    "total_pts": 501,
+    "total_pts": 503,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": 1,
@@ -15992,7 +16018,7 @@
   {
     "slug": "mewy-1fc",
     "rank": 30,
-    "pts": 491,
+    "pts": 492,
     "players": [
       {
         "pid": "184",
@@ -16168,7 +16194,7 @@
         "pid": "1192",
         "name": "Erik Janža",
         "pos": "Obrońca",
-        "pts": 40,
+        "pts": 41,
         "price": 2.2,
         "C": false,
         "VC": false,
@@ -16196,7 +16222,7 @@
           },
           {
             "r": 11,
-            "pts": 6,
+            "pts": 7,
             "p": true
           }
         ]
@@ -16420,12 +16446,12 @@
         ]
       }
     ],
-    "autumn_pts": 491,
+    "autumn_pts": 492,
     "best_gw_autumn": 95,
     "spring_pts": 0,
     "best_gw_spring": 0,
     "display_name": "Mewy 1Fc",
-    "total_pts": 491,
+    "total_pts": 492,
     "autumn_only": false,
     "spring_only": false,
     "rank_change": -1,
