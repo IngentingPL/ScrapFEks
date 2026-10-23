@@ -1,18 +1,18 @@
 {
   "90minut_table": {
-    "timestamp": "2026-10-22T21:31:08.720375",
+    "timestamp": "2026-10-23T21:41:54.669101",
     "ttl_hours": 24,
     "data": {
       "Górnik Zabrze": {
-        "gf": 20,
-        "ga": 10,
-        "mp": 11,
+        "gf": 21,
+        "ga": 11,
+        "mp": 12,
         "gf_home": 9,
         "ga_home": 7,
         "mp_home": 5,
-        "gf_away": 11,
-        "ga_away": 3,
-        "mp_away": 6
+        "gf_away": 12,
+        "ga_away": 4,
+        "mp_away": 7
       },
       "Lech Poznań": {
         "gf": 27,
@@ -47,6 +47,17 @@
         "ga_away": 1,
         "mp_away": 4
       },
+      "Zagłębie Lubin": {
+        "gf": 15,
+        "ga": 15,
+        "mp": 12,
+        "gf_home": 7,
+        "ga_home": 4,
+        "mp_home": 6,
+        "gf_away": 8,
+        "ga_away": 11,
+        "mp_away": 6
+      },
       "GKS Katowice": {
         "gf": 22,
         "ga": 16,
@@ -68,17 +79,6 @@
         "gf_away": 7,
         "ga_away": 11,
         "mp_away": 6
-      },
-      "Zagłębie Lubin": {
-        "gf": 13,
-        "ga": 13,
-        "mp": 11,
-        "gf_home": 7,
-        "ga_home": 4,
-        "mp_home": 6,
-        "gf_away": 6,
-        "ga_away": 9,
-        "mp_away": 5
       },
       "Piast Gliwice": {
         "gf": 19,
@@ -113,6 +113,17 @@
         "ga_away": 12,
         "mp_away": 6
       },
+      "Motor Lublin": {
+        "gf": 17,
+        "ga": 21,
+        "mp": 12,
+        "gf_home": 9,
+        "ga_home": 11,
+        "mp_home": 7,
+        "gf_away": 8,
+        "ga_away": 10,
+        "mp_away": 5
+      },
       "Cracovia": {
         "gf": 13,
         "ga": 16,
@@ -122,17 +133,6 @@
         "mp_home": 6,
         "gf_away": 4,
         "ga_away": 8,
-        "mp_away": 5
-      },
-      "Motor Lublin": {
-        "gf": 15,
-        "ga": 19,
-        "mp": 11,
-        "gf_home": 7,
-        "ga_home": 9,
-        "mp_home": 6,
-        "gf_away": 8,
-        "ga_away": 10,
         "mp_away": 5
       },
       "Jagiellonia Białystok": {
@@ -147,12 +147,12 @@
         "mp_away": 5
       },
       "Widzew Łódź": {
-        "gf": 14,
-        "ga": 15,
-        "mp": 11,
-        "gf_home": 7,
-        "ga_home": 9,
-        "mp_home": 6,
+        "gf": 15,
+        "ga": 16,
+        "mp": 12,
+        "gf_home": 8,
+        "ga_home": 10,
+        "mp_home": 7,
         "gf_away": 7,
         "ga_away": 6,
         "mp_away": 5
