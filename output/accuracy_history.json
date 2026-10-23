@@ -3114,14 +3114,14 @@
   {
     "round": 12,
     "date": "2026-10-23",
-    "mae": 2.5,
+    "mae": 2.4,
     "mae_by_pos": {
-      "BR": 1.4,
+      "BR": 1.1,
       "OBR": 3.0,
       "POM": 2.1,
       "NAP": 4.6
     },
-    "top10_mae": 3.2,
+    "top10_mae": 3.1,
     "hit_rate": 0.74,
     "sample_size": 19,
     "worst_misses": [
@@ -3244,6 +3244,15 @@
         "error": -1.4
       },
       {
+        "player_id": "2895",
+        "name": "Philipp Schulze",
+        "position": "BR",
+        "team": "górnik zabrze",
+        "predicted": 4.4,
+        "actual": 3,
+        "error": 1.4
+      },
+      {
         "player_id": "724",
         "name": "Zlatan Alomerović",
         "position": "BR",
@@ -3287,15 +3296,6 @@
         "predicted": 4.2,
         "actual": 2,
         "error": 2.2
-      },
-      {
-        "player_id": "2895",
-        "name": "Philipp Schulze",
-        "position": "BR",
-        "team": "górnik zabrze",
-        "predicted": 4.4,
-        "actual": 2,
-        "error": 2.4
       },
       {
         "player_id": "2577",
