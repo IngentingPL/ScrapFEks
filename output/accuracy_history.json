@@ -3114,16 +3114,16 @@
   {
     "round": 12,
     "date": "2026-10-24",
-    "mae": 3.1,
+    "mae": 2.9,
     "mae_by_pos": {
       "BR": 2.7,
-      "OBR": 3.0,
-      "POM": 3.2,
-      "NAP": 3.8
+      "OBR": 2.7,
+      "POM": 3.3,
+      "NAP": 3.3
     },
-    "top10_mae": 5.3,
-    "hit_rate": 0.58,
-    "sample_size": 57,
+    "top10_mae": 5.1,
+    "hit_rate": 0.66,
+    "sample_size": 59,
     "worst_misses": [
       {
         "name": "Bartosz Nowak",
@@ -3158,15 +3158,9 @@
     ],
     "best_hits": [
       {
-        "name": "Marcel Łubik",
-        "predicted": 5.0,
-        "actual": 5,
-        "error": 0.0
-      },
-      {
-        "name": "Oskar Repka",
-        "predicted": 3.0,
-        "actual": 3,
+        "name": "Bogdan Racovițan",
+        "predicted": 1.0,
+        "actual": 1,
         "error": 0.0
       },
       {
@@ -3186,25 +3180,22 @@
         "predicted": 3.1,
         "actual": 3,
         "error": 0.1
+      },
+      {
+        "name": "Gabriel Kobylak",
+        "predicted": 2.8,
+        "actual": 3,
+        "error": -0.2
       }
     ],
     "details": [
       {
-        "player_id": "2659",
-        "name": "Marcel Łubik",
-        "position": "BR",
-        "team": "wisła kraków",
-        "predicted": 5.0,
-        "actual": 5,
-        "error": 0.0
-      },
-      {
-        "player_id": "979",
-        "name": "Oskar Repka",
-        "position": "POM",
+        "player_id": "1853",
+        "name": "Bogdan Racovițan",
+        "position": "OBR",
         "team": "raków częstochowa",
-        "predicted": 3.0,
-        "actual": 3,
+        "predicted": 1.0,
+        "actual": 1,
         "error": 0.0
       },
       {
@@ -3242,6 +3233,24 @@
         "predicted": 2.8,
         "actual": 3,
         "error": -0.2
+      },
+      {
+        "player_id": "374",
+        "name": "Alan Uryga",
+        "position": "OBR",
+        "team": "wisła kraków",
+        "predicted": 7.3,
+        "actual": 7,
+        "error": 0.3
+      },
+      {
+        "player_id": "979",
+        "name": "Oskar Repka",
+        "position": "POM",
+        "team": "raków częstochowa",
+        "predicted": 3.0,
+        "actual": 2,
+        "error": 1.0
       },
       {
         "player_id": "3029",
@@ -3307,6 +3316,24 @@
         "error": 1.4
       },
       {
+        "player_id": "1725",
+        "name": "Mahir Emreli",
+        "position": "NAP",
+        "team": "raków częstochowa",
+        "predicted": 2.5,
+        "actual": 1,
+        "error": 1.5
+      },
+      {
+        "player_id": "1299",
+        "name": "Jean Carlos Silva",
+        "position": "OBR",
+        "team": "raków częstochowa",
+        "predicted": 0.5,
+        "actual": 2,
+        "error": -1.5
+      },
+      {
         "player_id": "563",
         "name": "Marcin Wasielewski",
         "position": "OBR",
@@ -3361,12 +3388,30 @@
         "error": 1.9
       },
       {
+        "player_id": "1490",
+        "name": "Kacper Trelowski",
+        "position": "BR",
+        "team": "raków częstochowa",
+        "predicted": 1.1,
+        "actual": 3,
+        "error": -1.9
+      },
+      {
         "player_id": "860",
         "name": "Wiktor Długosz",
         "position": "POM",
         "team": "korona kielce",
         "predicted": 6.0,
         "actual": 4,
+        "error": 2.0
+      },
+      {
+        "player_id": "2659",
+        "name": "Marcel Łubik",
+        "position": "BR",
+        "team": "wisła kraków",
+        "predicted": 5.0,
+        "actual": 3,
         "error": 2.0
       },
       {
@@ -3385,6 +3430,15 @@
         "team": "pogoń szczecin",
         "predicted": 8.1,
         "actual": 6,
+        "error": 2.1
+      },
+      {
+        "player_id": "2881",
+        "name": "Ángel Rodado",
+        "position": "NAP",
+        "team": "wisła kraków",
+        "predicted": 5.1,
+        "actual": 3,
         "error": 2.1
       },
       {
@@ -3422,15 +3476,6 @@
         "predicted": 3.2,
         "actual": 1,
         "error": 2.2
-      },
-      {
-        "player_id": "374",
-        "name": "Alan Uryga",
-        "position": "OBR",
-        "team": "wisła kraków",
-        "predicted": 7.3,
-        "actual": 5,
-        "error": 2.3
       },
       {
         "player_id": "1889",
@@ -3487,13 +3532,13 @@
         "error": 2.8
       },
       {
-        "player_id": "2881",
-        "name": "Ángel Rodado",
-        "position": "NAP",
+        "player_id": "2880",
+        "name": "Marko Bozic",
+        "position": "POM",
         "team": "wisła kraków",
-        "predicted": 5.1,
+        "predicted": 4.9,
         "actual": 2,
-        "error": 3.1
+        "error": 2.9
       },
       {
         "player_id": "303",
@@ -3521,24 +3566,6 @@
         "predicted": 5.7,
         "actual": 2,
         "error": 3.7
-      },
-      {
-        "player_id": "1490",
-        "name": "Kacper Trelowski",
-        "position": "BR",
-        "team": "raków częstochowa",
-        "predicted": 1.1,
-        "actual": 5,
-        "error": -3.9
-      },
-      {
-        "player_id": "1853",
-        "name": "Bogdan Racovițan",
-        "position": "OBR",
-        "team": "raków częstochowa",
-        "predicted": 1.0,
-        "actual": 5,
-        "error": -4.0
       },
       {
         "player_id": "2016",
@@ -3592,15 +3619,6 @@
         "team": "radomiak radom",
         "predicted": 2.5,
         "actual": 7,
-        "error": -4.5
-      },
-      {
-        "player_id": "1299",
-        "name": "Jean Carlos Silva",
-        "position": "OBR",
-        "team": "raków częstochowa",
-        "predicted": 0.5,
-        "actual": 5,
         "error": -4.5
       },
       {
