@@ -46,7 +46,7 @@ ScrapFEks/
 ├── tuner.py                    # Optymalizacja parametrów predykcji
 ├── accuracy.py                 # Śledzenie trafności prognoz
 ├── ai_client.py                 # Wspólny klient AI (DeepSeek + Gemini) – używany przez discord_notify.py i newsletter.py
-├── discord_notify.py           # Wysyłanie powiadomień Discord + eksperci Rabbti i Tlinf
+├── discord_notify.py           # Wysyłanie powiadomień Discord (pre-round, post-round, kapitanowie)
 ├── newsletter.py               # Newsletter przez DeepSeek (fallback: Gemini)
 ├── analytics.py                # Wspólne funkcje analityczne (hidden gem, disappointment, kapitanowie)
 ├── league_tracker.py           # Tracker sezonu ligowego
@@ -133,15 +133,11 @@ Powiadomienia są wysyłane przez `discord_notify.py` i zarządzane w `scraper.p
 
 | Kiedy | Co |
 |---|---|
-| Dzień przed pierwszym meczem | Pre-match: prognoza + eksperci Rabbti i Tlinf |
+| Dzień przed pierwszym meczem | Pre-match: prognoza |
 | Godzinę po pierwszym meczu | Podsumowanie kapitanów |
 | Po ostatnim meczu kolejki | Post-match: wyniki |
 
-### Eksperci AI:
-- **⚽ Rabbti** – doświadczony analityk Ekstraklasy, rzetelny, pracuje na danych
-- **🛋️ Tlinf** – zwykły kibic, kontrowersyjny, podważa konsensus
-
-Każda wiadomość Discord max **2000 znaków** (limit webhooków). Wiadomości ekspertów są wysyłane jako zwykły tekst (nie embed), jako osobne webhook calle.
+Każda wiadomość Discord max **2000 znaków** (limit webhooków).
 
 ---
 
@@ -149,12 +145,12 @@ Każda wiadomość Discord max **2000 znaków** (limit webhooków). Wiadomości 
 
 - **DeepSeek** (`deepseek-chat`) – główny model, próbowany pierwszy
 - **Gemini** (`gemini-2.5-flash`) – fallback, używany tylko gdy DeepSeek zawiedzie (błąd HTTP, timeout, brak klucza)
-- Wspólna logika wywołań HTTP do obu API żyje w `ai_client.py` (funkcje `call_deepseek()`, `call_gemini()`) – używana przez `newsletter.py` i `discord_notify.py`
-- Logika fallbacku (kolejność prób, retry, parsowanie wyniku) jest osobna w każdym pliku – `newsletter.py` ma `call_ai()`, `discord_notify.py` ma `_call_ai_expert()` (z retry + exponential backoff dla ekspertów)
+- Wspólna logika wywołań HTTP do obu API żyje w `ai_client.py` (funkcje `call_deepseek()`, `call_gemini()`) – używana przez `newsletter.py`
+- Logika fallbacku (kolejność prób, retry, parsowanie wyniku) jest w `newsletter.py` (`call_ai()`)
 - Klucze API: `DEEPSEEK_API_KEY` (główny), `GEMINI_API_KEY` (fallback)
-- Używany w: `newsletter.py` (newsletter), `discord_notify.py` (eksperci Rabbti i Tlinf)
+- Używany w: `newsletter.py` (newsletter)
 
-**Jeśli zmieniasz coś w wywołaniu API (URL, nagłówki, timeout)** – zmień w `ai_client.py`, nie twórz nowej kopii w `newsletter.py` albo `discord_notify.py`.
+**Jeśli zmieniasz coś w wywołaniu API (URL, nagłówki, timeout)** – zmień w `ai_client.py`, nie twórz nowej kopii w `newsletter.py`.
 
 ---
 

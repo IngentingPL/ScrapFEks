@@ -973,7 +973,6 @@ def main():
         send_pre_round,
         send_post_round,
         send_captains_summary,
-        send_expert_predictions,
         should_send_pre_round,
         should_send_post_round,
         should_send_captains_summary,
@@ -1031,46 +1030,6 @@ def main():
                 fixtures=fixtures_data,
                 fdr_data=fdr_data,
             )
-
-            # Prognozy eksperckie (Rabbti + Tlinf) — generowane zawsze razem z prognozą
-            deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "")
-            gemini_key = os.environ.get("GEMINI_API_KEY", "")
-            if (deepseek_key or gemini_key):
-                # Buduj mapę slug → display_name dla ładniejszych nazw drużyn
-                display_name_map = {
-                    t.get("slug", ""): t.get("display_name", "")
-                    for t in league_teams_detail
-                    if t.get("display_name")
-                }
-                # Wzbogać league_teams o display_name
-                discord_league = []
-                for t in (league_teams or []):
-                    entry = dict(t)
-                    slug = entry.get("slug", "")
-                    if slug in display_name_map:
-                        entry["display_name"] = display_name_map[slug]
-                    discord_league.append(entry)
-
-                # Przygotuj wszystkie dane dla ekspertów
-                expert_data = {
-                    "round_number": discord_next_gw,
-                    "predictions_data": predictions_data,
-                    "fixtures_data": fixtures_data,
-                    "ekstra_stats": ekstra_stats,
-                    "fdr_data": fdr_data,
-                    "league_teams": discord_league,
-                    "league_teams_detail": league_teams_detail,
-                }
-                send_expert_predictions(
-                    all_data=expert_data,
-                    webhook_url=webhook_url,
-                    deepseek_key=deepseek_key,
-                    gemini_key=gemini_key,
-                    round_number=discord_next_gw,
-                )
-            else:
-                # Brak kluczy API — pomijamy generowanie ekspertów
-                print("  ℹ️  Eksperci: brak kluczy API (DEEPSEEK_API_KEY ani GEMINI_API_KEY) — pomijam generowanie")
 
         # POST-ROUND: wyślij dzień po ostatnim meczu kolejki.
         # Wzbogacamy league_teams o display_name z league_teams_detail jeśli dostępne,

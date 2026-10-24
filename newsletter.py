@@ -30,7 +30,7 @@ MAX_NEWSLETTER_CHARS = 1500
 # 📖 GEMINI_MODEL, DEEPSEEK_MODEL przeniesione do ai_client.py
 # 📖 GEMINI_TIMEOUT, DEEPSEEK_TIMEOUT, GEMINI_THINKING_BUDGET, DEEPSEEK_HEADERS
 #     usunięte jako martwy kod — używane tylko w usuniętych funkcjach transportowych
-GEMINI_MAX_OUTPUT_TOKENS = 2200  # lokalna wartość dla newslettera (różna od discord_notify)
+GEMINI_MAX_OUTPUT_TOKENS = 2200  # lokalna wartość dla newslettera (`call_ai()`)
 
 NEWSLETTER_END_MARKER = "### KONIEC NEWSLETTERA ###"
 
