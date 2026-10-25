@@ -3114,16 +3114,16 @@
   {
     "round": 12,
     "date": "2026-10-25",
-    "mae": 2.7,
+    "mae": 2.8,
     "mae_by_pos": {
       "BR": 2.7,
       "OBR": 2.7,
-      "POM": 2.9,
+      "POM": 3.0,
       "NAP": 2.6
     },
     "top10_mae": 5.7,
-    "hit_rate": 0.66,
-    "sample_size": 88,
+    "hit_rate": 0.64,
+    "sample_size": 90,
     "worst_misses": [
       {
         "name": "Bartosz Nowak",
@@ -3182,10 +3182,10 @@
         "error": 0.1
       },
       {
-        "name": "Mateusz Szczepaniak",
-        "predicted": 1.9,
-        "actual": 2,
-        "error": -0.1
+        "name": "Gabriel Kobylak",
+        "predicted": 2.8,
+        "actual": 3,
+        "error": -0.2
       }
     ],
     "details": [
@@ -3226,15 +3226,6 @@
         "error": 0.1
       },
       {
-        "player_id": "2467",
-        "name": "Mateusz Szczepaniak",
-        "position": "POM",
-        "team": "legia warszawa",
-        "predicted": 1.9,
-        "actual": 2,
-        "error": -0.1
-      },
-      {
         "player_id": "1925",
         "name": "Gabriel Kobylak",
         "position": "BR",
@@ -3262,13 +3253,13 @@
         "error": 0.3
       },
       {
-        "player_id": "1712",
-        "name": "Joel Pereira",
+        "player_id": "1169",
+        "name": "Mateusz Skrzypczak",
         "position": "OBR",
         "team": "lech poznań",
-        "predicted": 4.7,
-        "actual": 5,
-        "error": -0.3
+        "predicted": 3.3,
+        "actual": 3,
+        "error": 0.3
       },
       {
         "player_id": "2214",
@@ -3289,6 +3280,15 @@
         "error": -0.4
       },
       {
+        "player_id": "2123",
+        "name": "Michał Gurgul",
+        "position": "OBR",
+        "team": "lech poznań",
+        "predicted": 3.9,
+        "actual": 3,
+        "error": 0.9
+      },
+      {
         "player_id": "2901",
         "name": "Tobias Christensen",
         "position": "POM",
@@ -3302,6 +3302,15 @@
         "name": "Antonio Milić",
         "position": "OBR",
         "team": "wieczysta kraków",
+        "predicted": 1.9,
+        "actual": 1,
+        "error": 0.9
+      },
+      {
+        "player_id": "2467",
+        "name": "Mateusz Szczepaniak",
+        "position": "POM",
+        "team": "legia warszawa",
         "predicted": 1.9,
         "actual": 1,
         "error": 0.9
@@ -3352,15 +3361,6 @@
         "error": 1.1
       },
       {
-        "player_id": "2123",
-        "name": "Michał Gurgul",
-        "position": "OBR",
-        "team": "lech poznań",
-        "predicted": 3.9,
-        "actual": 5,
-        "error": -1.1
-      },
-      {
         "player_id": "1931",
         "name": "Steve Kapuadi",
         "position": "OBR",
@@ -3386,15 +3386,6 @@
         "predicted": 2.2,
         "actual": 1,
         "error": 1.2
-      },
-      {
-        "player_id": "2805",
-        "name": "Otto Hindrich",
-        "position": "BR",
-        "team": "legia warszawa",
-        "predicted": 3.7,
-        "actual": 5,
-        "error": -1.3
       },
       {
         "player_id": "1327",
@@ -3451,6 +3442,24 @@
         "error": 1.6
       },
       {
+        "player_id": "1126",
+        "name": "Kamil Piątkowski",
+        "position": "OBR",
+        "team": "legia warszawa",
+        "predicted": 2.6,
+        "actual": 1,
+        "error": 1.6
+      },
+      {
+        "player_id": "2919",
+        "name": "Robert Deziel",
+        "position": "OBR",
+        "team": "legia warszawa",
+        "predicted": 2.6,
+        "actual": 1,
+        "error": 1.6
+      },
+      {
         "player_id": "2629",
         "name": "Morgan Faßbender",
         "position": "POM",
@@ -3466,6 +3475,15 @@
         "team": "jagiellonia białystok",
         "predicted": 5.7,
         "actual": 4,
+        "error": 1.7
+      },
+      {
+        "player_id": "1712",
+        "name": "Joel Pereira",
+        "position": "OBR",
+        "team": "lech poznań",
+        "predicted": 4.7,
+        "actual": 3,
         "error": 1.7
       },
       {
@@ -3622,24 +3640,6 @@
         "error": 2.4
       },
       {
-        "player_id": "1126",
-        "name": "Kamil Piątkowski",
-        "position": "OBR",
-        "team": "legia warszawa",
-        "predicted": 2.6,
-        "actual": 5,
-        "error": -2.4
-      },
-      {
-        "player_id": "2919",
-        "name": "Robert Deziel",
-        "position": "OBR",
-        "team": "legia warszawa",
-        "predicted": 2.6,
-        "actual": 5,
-        "error": -2.4
-      },
-      {
         "player_id": "827",
         "name": "Mateusz Grzybek",
         "position": "OBR",
@@ -3676,13 +3676,13 @@
         "error": -2.7
       },
       {
-        "player_id": "1319",
-        "name": "Paweł Wszołek",
-        "position": "OBR",
+        "player_id": "2805",
+        "name": "Otto Hindrich",
+        "position": "BR",
         "team": "legia warszawa",
-        "predicted": 6.8,
-        "actual": 4,
-        "error": 2.8
+        "predicted": 3.7,
+        "actual": 1,
+        "error": 2.7
       },
       {
         "player_id": "2719",
@@ -3719,6 +3719,15 @@
         "predicted": 4.0,
         "actual": 1,
         "error": 3.0
+      },
+      {
+        "player_id": "1026",
+        "name": "Mateusz Lis",
+        "position": "BR",
+        "team": "lech poznań",
+        "predicted": 2.0,
+        "actual": 5,
+        "error": -3.0
       },
       {
         "player_id": "923",
@@ -3784,15 +3793,6 @@
         "error": -3.7
       },
       {
-        "player_id": "1026",
-        "name": "Mateusz Lis",
-        "position": "BR",
-        "team": "lech poznań",
-        "predicted": 2.0,
-        "actual": 6,
-        "error": -4.0
-      },
-      {
         "player_id": "2016",
         "name": "Jakub Lewicki",
         "position": "OBR",
@@ -3817,6 +3817,15 @@
         "team": "raków częstochowa",
         "predicted": 6.2,
         "actual": 2,
+        "error": 4.2
+      },
+      {
+        "player_id": "2431",
+        "name": "Rúben Vinagre",
+        "position": "OBR",
+        "team": "legia warszawa",
+        "predicted": 4.2,
+        "actual": 0,
         "error": 4.2
       },
       {
@@ -3917,6 +3926,15 @@
         "predicted": 7.4,
         "actual": 2,
         "error": 5.4
+      },
+      {
+        "player_id": "1319",
+        "name": "Paweł Wszołek",
+        "position": "OBR",
+        "team": "legia warszawa",
+        "predicted": 6.8,
+        "actual": 1,
+        "error": 5.8
       },
       {
         "player_id": "2752",
