@@ -34,13 +34,6 @@ on:
 
   # AUTO-SCHEDULE-START
   schedule:
-    - cron: '0 18 22 10 *'  # K12 DISCORD PRE 22.10 20:00 CEST — prognoza przed kolejką
-    - cron: '30 19 23 10 *'  # K12 START 23.10 mecz 21:00 CEST → +30min 21:30 CEST
-    - cron: '0 20 23 10 *'  # K12 DISCORD CAPTAINS 23.10 22:00 CEST — podsumowanie kapitanów
-    - cron: '45 13 25 10 *'  # K12 25.10 mecz 12:15 CET → +2.5h 14:45 CET
-    - cron: '15 16 25 10 *'  # K12 25.10 mecz 14:45 CET → +2.5h 17:15 CET
-    - cron: '0 19 25 10 *'  # K12 25.10 mecz 17:30 CET → +2.5h 20:00 CET
-    - cron: '0 11 26 10 *'  # K12 DISCORD POST 26.10 12:00 CET — podsumowanie po kolejce
     - cron: '0 19 29 10 *'  # K13 DISCORD PRE 29.10 20:00 CET — prognoza przed kolejką
     - cron: '30 17 30 10 *'  # K13 START 30.10 mecz 18:00 CET → +30min 18:30 CET
     - cron: '0 18 30 10 *'  # K13 DISCORD CAPTAINS 30.10 19:00 CET — podsumowanie kapitanów
