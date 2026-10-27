@@ -665,6 +665,8 @@ def main():
 
     # 8.8b Sprawdź trafność prognoz z poprzedniego uruchomienia
     accuracy_data = None
+    # None oznacza, że nie znaleźliśmy starego CSV albo nie ma bieżącej kolejki.
+    prev_pred_csv = None
     if current_round:
         # Szukamy pliku prognoz DLA TEJ KONKRETNEJ kolejki (round_number == current_round).
         # "Najnowszy plik" to za mało — w trakcie kolejki scraper nadpisuje prognozy
@@ -677,6 +679,35 @@ def main():
 
     # Wczytaj historię trafności dla dashboardu
     accuracy_history = load_accuracy_history() or []
+
+    # 8.8b-BEST11 Ocena "Najlepszej Jedenastki" dla rozegranej kolejki.
+    # Odpalamy przy tym samym warunku, dla tej samej kolejki i z tym samym
+    # plikiem prognoz co evaluate_predictions powyżej.
+    # Błąd Best11 NIE może wywrócić całego runu — łapiemy wyjątek
+    # i zostawiamy tylko ostrzeżenie w logu.
+    if current_round:
+        try:
+            from best11 import aktualizuj_historie_best11, normalizuj_prognozy
+            aktualizuj_historie_best11(
+                round_number=current_round,
+                predictions_csv_path=prev_pred_csv,
+                players_data=players,
+                accuracy_history=accuracy_history,
+                fixtures_data=fixtures_data,
+                league_teams_detail=league_teams_detail,
+                expected_forecast_count=len(normalizuj_prognozy(predictions_data)),
+            )
+        except Exception as e:
+            print(f"  ⚠️  Best11: pomijam ocenę historii — {e}")
+
+    # 8.8b-BEST11 Proponowany skład na następną kolejkę — z aktualnych
+    # prognoz predictora (predictions_data dotyczy kolejki prediction_round)
+    # → output/best11_next.json. Także tutaj błąd nie wywraca runu.
+    try:
+        from best11 import zapisz_nastepny_sklad
+        zapisz_nastepny_sklad(predictions_data, prediction_round)
+    except Exception as e:
+        print(f"  ⚠️  Best11: pomijam skład na następną kolejkę — {e}")
 
     # 8.8c Auto-tuning parametrów predictora (po zebraniu min. 4 kolejek)
     # Uruchamiamy PO ewaluacji trafności — dane są już aktualne
