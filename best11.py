@@ -31,6 +31,7 @@ i funkcji round_points z utils.py. Funkcje obliczeniowe są "czyste"
 """
 
 import csv
+from datetime import datetime, timezone
 import json
 import os
 import re
@@ -64,11 +65,16 @@ MAPA_POZYCJI = {
     "OBR": "DEF",  # obrońca
     "POM": "MID",  # pomocnik
     "NAP": "FWD",  # napastnik
+    "GK": "GK",    # już znormalizowana pozycja z picku Best11
+    "DEF": "DEF",
+    "MID": "MID",
+    "FWD": "FWD",
 }
 
 # Pliki wynikowe — leżą obok accuracy_history.json (katalog output/).
 BEST11_HISTORY_FILE = os.path.join("output", "best11_history.json")
 BEST11_NEXT_FILE = os.path.join("output", "best11_next.json")
+BEST11_PICKS_FILE = os.path.join("output", "best11_picks.json")
 LEAGUE_HISTORY_FILE = os.path.join("output", "league_history.json")
 LEAGUE_TEAMS_DETAIL_FILE = os.path.join("output", "league_teams_detail.json")
 TERMINARZ_FILE = "terminarz.txt"
@@ -131,13 +137,30 @@ def normalizuj_prognozy(prognozy):
             continue
         wynik.append({
             "player_id": str(p.get("player_id", "") or ""),
+            "id": p.get("id", p.get("player_id")),
             "name": p.get("name", "") or "",
             "team": p.get("team", "") or "",
             "position": pozycja,
             "predicted": predicted,
+            "opponents": _lista_json(p.get("opponents")),
+            "is_home_list": _lista_json(p.get("is_home_list")),
+            "fixtures_count": int(_na_float(p.get("fixtures_count")) or 0),
         })
     wynik.sort(key=_klucz_rankingu)
     return wynik
+
+
+def _lista_json(value):
+    """CSV przechowuje niektóre listy jako JSON-tekst; odtwarzamy je tutaj."""
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str) and value:
+        try:
+            data = json.loads(value)
+        except json.JSONDecodeError:
+            return []
+        return data if isinstance(data, list) else []
+    return []
 
 
 def wybierz_sklad(prognozy, formacja):
@@ -345,11 +368,15 @@ def zbuduj_wpis_historii(
         # dodatkową kopię punktów kapitana zgodnie z mnożnikiem x2.
         actual_total += actual * (MNOZNIK_KAPITANA if czy_kapitan else 1)
         gracze.append({
+            "id": p["id"],
             "position": p["position"],
             "name": p["name"],
             "team": p["team"],
             "predicted": p["predicted"],
             "actual": round(actual, 1),
+            "opponents": p["opponents"],
+            "is_home_list": p["is_home_list"],
+            "fixtures_count": p["fixtures_count"],
             "is_captain": czy_kapitan,
         })
 
@@ -388,10 +415,14 @@ def zbuduj_nastepny_sklad(round_number, prognozy_raw):
     gracze = [
         {
             "position": p["position"],
+            "id": p["id"],
             "name": p["name"],
             "team": p["team"],
             "predicted": p["predicted"],
             "actual": None,  # mecze jeszcze nie rozegrane
+            "opponents": p["opponents"],
+            "is_home_list": p["is_home_list"],
+            "fixtures_count": p["fixtures_count"],
             "is_captain": p is kapitan,
         }
         for p in sklad
@@ -479,6 +510,27 @@ def _prognozy_z_wpisu(entry):
     return None
 
 
+def _prognozy_z_pick(pick):
+    """Zamienia zamrożony skład z JSON na wejście wspólne dla oceny historii."""
+    if not isinstance(pick, dict) or not isinstance(pick.get("players"), list):
+        return None
+    return [
+        {
+            "player_id": str(player.get("id", player.get("player_id", "")) or ""),
+            "id": player.get("id", player.get("player_id")),
+            "name": player.get("name", ""),
+            "team": player.get("team", ""),
+            "position": player.get("position", ""),
+            "predicted": player.get("predicted"),
+            "opponents": player.get("opponents", []),
+            "is_home_list": player.get("is_home_list", []),
+            "fixtures_count": player.get("fixtures_count", 0),
+        }
+        for player in pick["players"]
+        if isinstance(player, dict)
+    ]
+
+
 def _actual_z_graczy(players_data, round_number):
     """Buduje funkcję (player_id) → realne punkty w kolejce.
 
@@ -553,6 +605,28 @@ def zapisz_best11_history(history, path=BEST11_HISTORY_FILE):
     os.replace(tmp_path, path)
 
 
+def wczytaj_best11_picks(path=BEST11_PICKS_FILE):
+    """Wczytuje zamrożone składy; brak/uszkodzenie nie zatrzymuje scrapera."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def zapisz_best11_picks(picks, path=BEST11_PICKS_FILE):
+    """Zapisuje picki atomowo, jak snapshot: tmp, flush/fsync i os.replace."""
+    parent_dir = os.path.dirname(os.path.abspath(path))
+    os.makedirs(parent_dir, exist_ok=True)
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(picks, f, ensure_ascii=False, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, path)
+
+
 def wczytaj_league_history(path=LEAGUE_HISTORY_FILE):
     """Wczytuje output/league_history.json (dane ligi CMF).
 
@@ -586,6 +660,7 @@ def aktualizuj_historie_best11(
     league_teams_detail=None,
     expected_forecast_count=None,
     terminarz_path=TERMINARZ_FILE,
+    picks_path=BEST11_PICKS_FILE,
 ):
     """Aktualizuje output/best11_history.json.
 
@@ -595,7 +670,8 @@ def aktualizuj_historie_best11(
 
     Jak to działa:
     1. Bieżąca kolejka: wpis powstaje dopiero, gdy każdy mecz ma wynik.
-       Prognozy pochodzą z CSV (a gdy CSV już usunięto — z accuracy history).
+       Najpierw używamy zamrożonego picku, potem CSV, a na końcu
+       przybliżonych danych accuracy history.
        W trakcie kolejki istniejący wpis nie jest zmieniany.
     2. Starsze kolejki: tylko te, które mają w accuracy history
        kompletne dane prognoz (pole "predictions" albo pełne "details").
@@ -623,32 +699,36 @@ def aktualizuj_historie_best11(
 
     # --- 1) Bieżąca kolejka ---
     if round_number:
-        prognozy = _prognozy_z_csv(predictions_csv_path, round_number)
+        saved_picks = wczytaj_best11_picks(picks_path)
+        saved_pick = saved_picks.get(str(round_number), saved_picks.get(round_number))
+        prognozy = _prognozy_z_pick(saved_pick)
         wpis_accuracy = None
-        zrodlo = "csv" if prognozy else "accuracy_history"
+        if prognozy:
+            zrodlo = "zapisany"
+        else:
+            prognozy = _prognozy_z_csv(predictions_csv_path, round_number)
+            zrodlo = "csv" if prognozy else "przyblizone"
         if not prognozy:
             # CSV prognoz już usunięto — użyj zapisanych prognoz z accuracy.
             wpis_accuracy = _wpis_accuracy(accuracy_history, round_number)
             prognozy = _prognozy_z_wpisu(wpis_accuracy)
         if prognozy:
-            zrodlo_wpisu = "dokładne"
+            zrodlo_wpisu = zrodlo
             info = None
-            if zrodlo == "accuracy_history":
+            if zrodlo == "przyblizone":
                 details_count = len((wpis_accuracy or {}).get("details") or [])
                 expected_count = expected_forecast_count or len(prognozy)
-                if details_count < expected_count:
-                    zrodlo_wpisu = "przyblizone"
-                    info = (
-                        f"details: {details_count}; prognoza porównawcza: "
-                        f"{expected_count}; różnica: {expected_count - details_count}"
+                info = (
+                    f"details: {details_count}; prognoza porównawcza: "
+                    f"{expected_count}; różnica: {expected_count - details_count}"
+                )
+                saved_forecasts = len((wpis_accuracy or {}).get("predictions") or [])
+                if saved_forecasts:
+                    info += (
+                        f"; prognozy tej kolejki: {saved_forecasts}; "
+                        f"brakujące details względem nich: "
+                        f"{max(saved_forecasts - details_count, 0)}"
                     )
-                    saved_forecasts = len((wpis_accuracy or {}).get("predictions") or [])
-                    if saved_forecasts:
-                        info += (
-                            f"; prognozy tej kolejki: {saved_forecasts}; "
-                            f"brakujące details względem nich: "
-                            f"{max(saved_forecasts - details_count, 0)}"
-                        )
             wpis = zbuduj_wpis_historii(
                 round_number,
                 prognozy,
@@ -698,13 +778,12 @@ def aktualizuj_historie_best11(
             continue
         details_count = len(entry.get("details") or [])
         expected_count = expected_forecast_count or len(prognozy)
-        zrodlo_wpisu = "przyblizone" if details_count < expected_count else "dokładne"
-        info = None
+        zrodlo_wpisu = "przyblizone"
+        info = (
+            f"details: {details_count}; prognoza porównawcza: "
+            f"{expected_count}; różnica: {expected_count - details_count}"
+        )
         if zrodlo_wpisu == "przyblizone":
-            info = (
-                f"details: {details_count}; prognoza porównawcza: "
-                f"{expected_count}; różnica: {expected_count - details_count}"
-            )
             saved_forecasts = len(entry.get("predictions") or [])
             if saved_forecasts:
                 info += (
@@ -736,7 +815,12 @@ def aktualizuj_historie_best11(
     return history
 
 
-def zapisz_nastepny_sklad(predictions_data, round_number, path=BEST11_NEXT_FILE):
+def zapisz_nastepny_sklad(
+    predictions_data,
+    round_number,
+    path=BEST11_NEXT_FILE,
+    picks_path=BEST11_PICKS_FILE,
+):
     """Zapisuje output/best11_next.json — proponowany skład na następną
     kolejkę z aktualnych prognoz predictora.
 
@@ -746,28 +830,50 @@ def zapisz_nastepny_sklad(predictions_data, round_number, path=BEST11_NEXT_FILE)
     if not predictions_data or not round_number:
         print("  ℹ️  Best11: brak prognoz na następną kolejkę — pomijam")
         # Pusta wartość zapobiega pokazaniu starego składu z poprzedniego runu.
-        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        with open(path + ".tmp", "w", encoding="utf-8") as f:
-            json.dump(None, f, ensure_ascii=False, indent=2)
-        os.replace(path + ".tmp", path)
+        _zapisz_json_atomowo(None, path)
         return None
     payload = zbuduj_nastepny_sklad(round_number, predictions_data)
     if payload is None:
         print("  ℹ️  Best11: za mało prognoz, aby ustawić skład na następną kolejkę")
         # Pusta wartość zapobiega pokazaniu starego składu z poprzedniego runu.
-        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        with open(path + ".tmp", "w", encoding="utf-8") as f:
-            json.dump(None, f, ensure_ascii=False, indent=2)
-        os.replace(path + ".tmp", path)
+        _zapisz_json_atomowo(None, path)
         return None
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    tmp_path = path + ".tmp"
-    with open(tmp_path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
-    os.replace(tmp_path, path)
+    _zapisz_json_atomowo(payload, path)
+
+    # Zapisujemy tylko pick bieżącej prognozy, a pozostałe kolejki zostają.
+    picks = wczytaj_best11_picks(picks_path)
+    picks[str(round_number)] = {
+        **payload,
+        "saved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    # Zachowujemy dziesięć najnowszych numerów kolejek.
+    uporzadkowane = sorted(
+        picks.items(), key=lambda item: _numer_kolejki(item[0]), reverse=True
+    )[:10]
+    zapisz_best11_picks(dict(uporzadkowane), picks_path)
     print(
         f"  🏆 Best11: skład na kolejkę {round_number} — formacja "
         f"{payload['formation']}, kapitan {payload['captain']}, "
         f"prognoza {payload['predicted_total']} pkt → {os.path.basename(path)}"
     )
     return payload
+
+
+def _numer_kolejki(key):
+    """Pozwala bezpiecznie sortować klucze kolejki zapisane w JSON."""
+    try:
+        return int(key)
+    except (TypeError, ValueError):
+        return -1
+
+
+def _zapisz_json_atomowo(data, path):
+    """Zapisuje JSON do pliku tymczasowego i dopiero potem podmienia plik."""
+    parent_dir = os.path.dirname(os.path.abspath(path))
+    os.makedirs(parent_dir, exist_ok=True)
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp_path, path)

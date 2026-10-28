@@ -687,7 +687,11 @@ def main():
     # i zostawiamy tylko ostrzeżenie w logu.
     if current_round:
         try:
-            from best11 import aktualizuj_historie_best11, normalizuj_prognozy
+            from best11 import (
+                BEST11_PICKS_FILE,
+                aktualizuj_historie_best11,
+                normalizuj_prognozy,
+            )
             aktualizuj_historie_best11(
                 round_number=current_round,
                 predictions_csv_path=prev_pred_csv,
@@ -696,6 +700,7 @@ def main():
                 fixtures_data=fixtures_data,
                 league_teams_detail=league_teams_detail,
                 expected_forecast_count=len(normalizuj_prognozy(predictions_data)),
+                picks_path=BEST11_PICKS_FILE,
             )
         except Exception as e:
             print(f"  ⚠️  Best11: pomijam ocenę historii — {e}")
@@ -704,8 +709,12 @@ def main():
     # prognoz predictora (predictions_data dotyczy kolejki prediction_round)
     # → output/best11_next.json. Także tutaj błąd nie wywraca runu.
     try:
-        from best11 import zapisz_nastepny_sklad
-        zapisz_nastepny_sklad(predictions_data, prediction_round)
+        from best11 import BEST11_PICKS_FILE, zapisz_nastepny_sklad
+        zapisz_nastepny_sklad(
+            predictions_data,
+            prediction_round,
+            picks_path=BEST11_PICKS_FILE,
+        )
     except Exception as e:
         print(f"  ⚠️  Best11: pomijam skład na następną kolejkę — {e}")
 

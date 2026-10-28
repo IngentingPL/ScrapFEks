@@ -14,6 +14,7 @@ from best11 import (
     normalizuj_prognozy,
     wybierz_formacje_i_sklad,
     wybierz_sklad,
+    zapisz_nastepny_sklad,
 )
 
 
@@ -35,6 +36,12 @@ def _prognozy_testowe():
         {"player_id": "f2", "name": "Fwd 2", "team": "B", "position": "NAP", "predicted_points": 6},
         {"player_id": "f3", "name": "Fwd 3", "team": "C", "position": "NAP", "predicted_points": 5},
     ]
+    for index, player in enumerate(gracze):
+        player.update({
+            "opponents": [f"Rywal {index}"],
+            "is_home_list": [index % 2 == 0],
+            "fixtures_count": 1,
+        })
     return gracze
 
 
@@ -252,6 +259,128 @@ def test_historia_oznacza_brakujace_details_jako_przyblizone():
         assert "różnica: 9" in wpisy[0]["zrodlo_info"]
 
 
+def test_pick_zapisuje_tylko_kolejke_prognozy_i_zachowuje_pozostale():
+    """Nowy przebieg zmienia swój pick, ale nie rusza picków innych kolejek."""
+    with tempfile.TemporaryDirectory() as katalog:
+        picks_path = os.path.join(katalog, "best11_picks.json")
+        next_path = os.path.join(katalog, "best11_next.json")
+        stare = {
+            "11": {"round": 11, "players": [{"name": "Pick K11"}]},
+            "12": {"round": 12, "players": [{"name": "Pick K12"}]},
+        }
+        with open(picks_path, "w", encoding="utf-8") as plik:
+            json.dump(stare, plik)
+
+        pick13 = zapisz_nastepny_sklad(_prognozy_testowe(), 13, next_path, picks_path)
+        with open(picks_path, encoding="utf-8") as plik:
+            po_k13 = json.load(plik)
+        assert set(po_k13) == {"11", "12", "13"}
+        assert po_k13["11"] == stare["11"]
+        assert po_k13["12"] == stare["12"]
+        assert po_k13["13"]["round"] == 13
+        assert po_k13["13"]["saved_at"]
+        assert pick13["round"] == 13
+
+        zapisz_nastepny_sklad(_prognozy_testowe(), 14, next_path, picks_path)
+        with open(picks_path, encoding="utf-8") as plik:
+            po_k14 = json.load(plik)
+        assert po_k14["13"] == po_k13["13"]
+        assert po_k14["11"] == stare["11"]
+        assert po_k14["12"] == stare["12"]
+        assert po_k14["14"]["round"] == 14
+
+
+def test_picki_sa_przycinane_do_10_najnowszych_kolejek():
+    """Po zapisie kolejki 11 zostają tylko picki 2–11."""
+    with tempfile.TemporaryDirectory() as katalog:
+        picks_path = os.path.join(katalog, "best11_picks.json")
+        next_path = os.path.join(katalog, "best11_next.json")
+        with open(picks_path, "w", encoding="utf-8") as plik:
+            json.dump({str(r): {"round": r} for r in range(1, 11)}, plik)
+        zapisz_nastepny_sklad(_prognozy_testowe(), 11, next_path, picks_path)
+        with open(picks_path, encoding="utf-8") as plik:
+            zapisane = json.load(plik)
+        assert set(zapisane) == {str(r) for r in range(2, 12)}
+
+
+def test_pola_ui_sa_w_nastepnym_skladzie_i_historii():
+    """Każdy zawodnik ma ID, rywali, liczbę meczów i bool kapitana."""
+    with tempfile.TemporaryDirectory() as katalog:
+        next_path = os.path.join(katalog, "best11_next.json")
+        picks_path = os.path.join(katalog, "best11_picks.json")
+        payload = zapisz_nastepny_sklad(
+            _prognozy_testowe(), 13, next_path, picks_path
+        )
+        assert len(payload["players"]) == 11
+        for player in payload["players"]:
+            assert player["id"]
+            assert player["opponents"]
+            assert player["is_home_list"]
+            assert isinstance(player["fixtures_count"], int)
+            assert isinstance(player["is_captain"], bool)
+        assert sum(player["is_captain"] for player in payload["players"]) == 1
+
+
+def test_zrodlo_oceny_ma_kolejnosc_pick_csv_accuracy():
+    """Ocena używa najpierw picku, potem CSV, a na końcu accuracy history."""
+    with tempfile.TemporaryDirectory() as katalog:
+        csv_path = os.path.join(katalog, "predictions.csv")
+        league_path = os.path.join(katalog, "league_history.json")
+        history_path = os.path.join(katalog, "best11_history.json")
+        picks_path = os.path.join(katalog, "best11_picks.json")
+        next_path = os.path.join(katalog, "best11_next.json")
+        terminarz_path = os.path.join(katalog, "terminarz.txt")
+        prognozy = _prognozy_testowe()
+        with open(csv_path, "w", newline="", encoding="utf-8") as plik:
+            writer = csv.DictWriter(plik, fieldnames=list(prognozy[0]) + ["round_number"])
+            writer.writeheader()
+            for row in prognozy:
+                writer.writerow({**row, "round_number": 12})
+        with open(league_path, "w", encoding="utf-8") as plik:
+            json.dump({"rounds": []}, plik)
+        with open(terminarz_path, "w", encoding="utf-8") as plik:
+            plik.write("Kolejka 12\nA\t2 : 1\tB\t23 października,\n")
+        fixtures_data = {"matches": {"12": [{"home": "A", "away": "B"}]}}
+
+        # Najpierw jest zapisany pick, choć dostępny jest też CSV.
+        zapisz_nastepny_sklad(prognozy, 12, next_path, picks_path)
+        wpisy = aktualizuj_historie_best11(
+            12, csv_path, [], [], league_path, history_path,
+            fixtures_data=fixtures_data, terminarz_path=terminarz_path,
+            picks_path=picks_path,
+        )
+        assert wpisy[-1]["zrodlo"] == "zapisany"
+
+        # Bez picku używany jest CSV.
+        with open(picks_path, "w", encoding="utf-8") as plik:
+            json.dump({}, plik)
+        wpisy = aktualizuj_historie_best11(
+            12, csv_path, [], [], league_path, history_path,
+            fixtures_data=fixtures_data, terminarz_path=terminarz_path,
+            picks_path=picks_path,
+        )
+        assert wpisy[-1]["zrodlo"] == "csv"
+
+        # Bez picku i CSV pozostaje przybliżone źródło accuracy history.
+        os.remove(csv_path)
+        wpisy = aktualizuj_historie_best11(
+            12, None, [], [{
+                "round": 12,
+                "predictions": prognozy,
+                "details": [{"player_id": "f1", "actual": 2}],
+            }], league_path, history_path,
+            fixtures_data=fixtures_data, terminarz_path=terminarz_path,
+            picks_path=picks_path,
+        )
+        assert wpisy[-1]["zrodlo"] == "przyblizone"
+        for player in wpisy[-1]["players"]:
+            assert player["id"]
+            assert "opponents" in player
+            assert "is_home_list" in player
+            assert isinstance(player["fixtures_count"], int)
+            assert isinstance(player["is_captain"], bool)
+
+
 if __name__ == "__main__":
     test_limity_pozycji_dla_kazdej_formacji()
     test_wybiera_najlepsza_formacje_na_przykladzie()
@@ -262,4 +391,8 @@ if __name__ == "__main__":
     test_kolejka_kompletna_wymaga_wynikow_dgw()
     test_nazwa_cmf_pochodzi_z_tabeli_ligi()
     test_historia_oznacza_brakujace_details_jako_przyblizone()
+    test_pick_zapisuje_tylko_kolejke_prognozy_i_zachowuje_pozostale()
+    test_picki_sa_przycinane_do_10_najnowszych_kolejek()
+    test_pola_ui_sa_w_nastepnym_skladzie_i_historii()
+    test_zrodlo_oceny_ma_kolejnosc_pick_csv_accuracy()
     print("Wszystkie testy Best11 przeszły")
