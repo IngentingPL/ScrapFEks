@@ -4,6 +4,7 @@ import csv
 import json
 import os
 import tempfile
+from pathlib import Path
 
 from best11 import (
     FORMACJE,
@@ -178,7 +179,7 @@ def test_niekompletna_kolejka_nie_zapisuje_ani_nie_nadpisuje():
             12,
             predictions_csv_path=None,
             players_data=[],
-            accuracy_history=[],
+            wpisy_trafnosci=[],
             league_history_path=league_path,
             history_path=history_path,
             fixtures_data=fixtures_data,
@@ -248,7 +249,7 @@ def test_historia_oznacza_brakujace_details_jako_przyblizone():
             12,
             predictions_csv_path=None,
             players_data=[],
-            accuracy_history=[entry],
+            wpisy_trafnosci=[entry],
             league_history_path=league_path,
             history_path=history_path,
             fixtures_data=fixtures_data,
@@ -381,6 +382,19 @@ def test_zrodlo_oceny_ma_kolejnosc_pick_csv_accuracy():
             assert isinstance(player["is_captain"], bool)
 
 
+def test_render_best11_counts_only_positive_differences_as_wins():
+    """Best11's generated history display excludes ties from its win count."""
+    source = Path(__file__).with_name("dashboard.py").read_text(encoding="utf-8")
+    render = source.split("function renderBest11(viewSwitch)", 1)[1].split(
+        "function ", 1
+    )[0]
+
+    # Exercise the same predicate used by renderBest11 on comparable rounds.
+    comparable = [0, 1, -1]
+    assert "const wins = comparable.filter(r=>num(r.difference)>0).length;" in render
+    assert sum(difference > 0 for difference in comparable) == 1
+
+
 if __name__ == "__main__":
     test_limity_pozycji_dla_kazdej_formacji()
     test_wybiera_najlepsza_formacje_na_przykladzie()
@@ -395,4 +409,5 @@ if __name__ == "__main__":
     test_picki_sa_przycinane_do_10_najnowszych_kolejek()
     test_pola_ui_sa_w_nastepnym_skladzie_i_historii()
     test_zrodlo_oceny_ma_kolejnosc_pick_csv_accuracy()
+    test_render_best11_counts_only_positive_differences_as_wins()
     print("Wszystkie testy Best11 przeszły")

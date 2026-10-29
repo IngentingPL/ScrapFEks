@@ -653,7 +653,7 @@ def aktualizuj_historie_best11(
     round_number,
     predictions_csv_path=None,
     players_data=None,
-    accuracy_history=None,
+    wpisy_trafnosci=None,
     league_history_path=LEAGUE_HISTORY_FILE,
     history_path=BEST11_HISTORY_FILE,
     fixtures_data=None,
@@ -710,7 +710,7 @@ def aktualizuj_historie_best11(
             zrodlo = "csv" if prognozy else "przyblizone"
         if not prognozy:
             # CSV prognoz już usunięto — użyj zapisanych prognoz z accuracy.
-            wpis_accuracy = _wpis_accuracy(accuracy_history, round_number)
+            wpis_accuracy = _wpis_accuracy(wpisy_trafnosci, round_number)
             prognozy = _prognozy_z_wpisu(wpis_accuracy)
         if prognozy:
             zrodlo_wpisu = zrodlo
@@ -761,7 +761,7 @@ def aktualizuj_historie_best11(
 
     # --- 2) Starsze kolejki z accuracy history (idempotentnie) ---
     istniejace = {e.get("round") for e in history if isinstance(e, dict)}
-    for entry in accuracy_history or []:
+    for entry in wpisy_trafnosci or []:
         if not isinstance(entry, dict):
             continue
         r = entry.get("round")

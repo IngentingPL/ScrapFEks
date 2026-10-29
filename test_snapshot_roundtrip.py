@@ -165,12 +165,43 @@ def test_load_missing_returns_none():
         print("  OK Brak pliku snapshotu: load_dashboard_snapshot zwraca None")
 
 
+def test_best11_inputs_optional():
+    """Puste i uszkodzone dane Best11 nie blokują generatora ani tabel."""
+    with tempfile.TemporaryDirectory() as tmp:
+        cases = (
+            ("empty_history", {"best11_next": None, "best11_history": []}),
+            ("missing_next", {"best11_history": []}),
+            # Starsze snapshoty nie zawierają jeszcze pól Best11.
+            ("legacy", {}),
+            ("missing_fields", {
+                "best11_next": {"players": [{"name": "Best11 marker"}]},
+                "best11_history": [{"round": 1}],
+            }),
+            ("null_values", {"best11_next": None, "best11_history": None}),
+            ("empty_players", {
+                "best11_next": {"round": 1, "players": []},
+                "best11_history": [{"round": 1, "players": []}],
+            }),
+        )
+        for suffix, extra in cases:
+            inputs = make_sample_inputs(os.path.join(tmp, f"{suffix}.html"))
+            inputs.update(extra)
+            generate_dashboard_html(**inputs, timestamp="2026-01-01 12:00", has_archive=False)
+            with open(inputs["filename"], encoding="utf-8") as html_file:
+                html = html_file.read()
+            assert "<table" in html.lower(), f"{suffix}: dashboard table missing"
+            if suffix == "missing_fields":
+                assert "Best11 marker" in html, "Malformed Best11 player table content missing"
+        print("  OK Best11: puste, starsze i malformed dane zachowują HTML/tabele")
+
+
 if __name__ == "__main__":
     print("Testy round-trip snapshotu dashboardu:\n")
     test_snapshot_structure()
     test_snapshot_raw_key_order()
     test_direct_vs_snapshot_html_identical()
     test_load_missing_returns_none()
+    test_best11_inputs_optional()
     print("\nWszystkie testy przeszły — snapshot jest wiernym zapisem danych dashboardu")
 
 # UWAGA o round-trip JSON (do przeglądu, bez wdrożenia):

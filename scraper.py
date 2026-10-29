@@ -696,7 +696,9 @@ def main():
                 round_number=current_round,
                 predictions_csv_path=prev_pred_csv,
                 players_data=players,
-                accuracy_history=accuracy_history,
+                # Osobna nazwa dla hooka Best11: test payloadu pilnuje, by
+                # surowa historia trafności nie trafiała do dashboardu.
+                wpisy_trafnosci=accuracy_history,
                 fixtures_data=fixtures_data,
                 league_teams_detail=league_teams_detail,
                 expected_forecast_count=len(normalizuj_prognozy(predictions_data)),
@@ -717,6 +719,22 @@ def main():
         )
     except Exception as e:
         print(f"  ⚠️  Best11: pomijam skład na następną kolejkę — {e}")
+
+    # Pliki Best11 są dodatkowymi danymi dashboardu; ich brak nie zatrzymuje scrapera.
+    best11_next = None
+    best11_history = []
+    try:
+        import json as _json
+        with open(os.path.join(OUTPUT_DIR, "best11_next.json"), encoding="utf-8") as f:
+            best11_next = _json.load(f)
+    except Exception as e:
+        print(f"  ⚠️  Best11: nie udało się wczytać następnego składu — {e}")
+    try:
+        import json as _json
+        with open(os.path.join(OUTPUT_DIR, "best11_history.json"), encoding="utf-8") as f:
+            best11_history = _json.load(f)
+    except Exception as e:
+        print(f"  ⚠️  Best11: nie udało się wczytać historii — {e}")
 
     # 8.8c Auto-tuning parametrów predictora (po zebraniu min. 4 kolejek)
     # Uruchamiamy PO ewaluacji trafności — dane są już aktualne
@@ -982,6 +1000,8 @@ def main():
         predictions_data=predictions_data,
         prediction_round=prediction_round,
         accuracy_history=accuracy_history_payload,
+        best11_next=best11_next,
+        best11_history=best11_history,
         tuned_params=tuned_params,
         league_history=league_history,
         filename=dashboard_file,

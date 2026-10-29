@@ -35,6 +35,8 @@ def generate_dashboard_html(
     timestamp: str,
     filename: str,
     has_archive: bool = False,
+    best11_next=None,
+    best11_history=None,
 ):
     """Generuje interaktywny dashboard HTML z danymi Fantasy Ekstraklasa."""
 
@@ -81,6 +83,8 @@ def generate_dashboard_html(
     transfers_data_json = json.dumps(transfers_data or {}, ensure_ascii=False)
     predictions_json = json.dumps(predictions_data or [], ensure_ascii=False)
     accuracy_json = json.dumps(accuracy_history or [], ensure_ascii=False)
+    best11_next_json = json.dumps(best11_next, ensure_ascii=False)
+    best11_history_json = json.dumps(best11_history or [], ensure_ascii=False)
     tuned_params_json = json.dumps(tuned_params or None, ensure_ascii=False)
     league_history_json = json.dumps(league_history or {"rounds": []}, ensure_ascii=False)
     # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona
@@ -225,7 +229,7 @@ def generate_dashboard_html(
   --fdr-3:#e8b923;
   --fdr-4:#f08a2c;
   --fdr-5:#e5484d;
-  --fdr-ink:#131313;
+  --fdr-ink:#000000;
   --up:#17cca0;
   --down:#ff9e9e;
   --flat:#ababab;
@@ -285,7 +289,7 @@ html.theme-fantasy{{
   --fdr-3:#e8b923;
   --fdr-4:#f08a2c;
   --fdr-5:#e5484d;
-  --fdr-ink:#131313;
+  --fdr-ink:#000000;
   --up:#0a7342;
   --down:#b91c1c;
   --flat:#666666;
@@ -476,8 +480,8 @@ select.input{{cursor:pointer;padding-right:26px}}
 .opp .o-code{{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.6px;display:flex;align-items:center;gap:5px;min-width:0;max-width:100%}}
 .opp .o-nm{{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 .opp .hw{{flex-shrink:0}}
-.hw{{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;letter-spacing:.6px;background:var(--tint-soft);color:var(--text-muted);border:1px solid var(--border)}}
-.hw.d{{background:var(--tint-accent);color:var(--accent);border-color:transparent}}
+.hw{{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;letter-spacing:.6px;background:var(--tint-soft);color:var(--fdr-ink);border:1px solid var(--border)}}
+.hw.d{{background:var(--tint-accent);color:var(--fdr-ink);border-color:transparent}}
 
 .conf{{display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}}
 .conf-high{{background:var(--tint-up);color:var(--conf-high)}}
@@ -896,6 +900,8 @@ const EKSTRA_STATS = {ekstra_stats_json};
 const FDR_DATA = {fdr_data_json};
 const TRANSFERS_DATA = {transfers_data_json};
 const PREDICTIONS = {predictions_json};
+const BEST11_NEXT = {best11_next_json};
+const BEST11_HISTORY = {best11_history_json};
 const ACCURACY_HISTORY = {accuracy_json};
 const TUNED_PARAMS = {tuned_params_json};
 const LEAGUE_HISTORY = {league_history_json};
@@ -939,7 +945,8 @@ function bar(val, max, color) {{
 }}
 function posBadge(p) {{
   const k = POS_ID[p] || p;
-  const short = POS_MAP[k] || POS_MAP[p] || p;
+  const known = {{GK:'GK',DEF:'DEF',MID:'MID',FWD:'FWD'}};
+  const short = known[POS_MAP[k] || POS_MAP[p] || p] || '—';
   return '<span class="badge-pos pos-'+short+'">'+short+'</span>';
 }}
 // 📖 Kafelek FDR (1-5) — wspólny dla zakładek Prognoza i Porównanie
@@ -1858,6 +1865,7 @@ function renderFixturePlanner() {{
 // ============ Transfers Tab ============
 let trPos = 'ALL';
 let predPos = 'ALL';
+let predictionsView = 'table';
 if (!sorts.predictions) sorts.predictions = {{col:'predicted_points', dir:'desc'}};
 
 function priceChangeHtml(pc) {{
@@ -1944,14 +1952,80 @@ function renderTransfers() {{
   return h;
 }}
 
+function renderBest11(viewSwitch) {{
+  const next = BEST11_NEXT || {{}};
+  const history = Array.isArray(BEST11_HISTORY) ? BEST11_HISTORY.filter(r => r && typeof r === 'object') : [];
+  const esc = v => String(v == null ? '' : v).replace(/[&<>\"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}}[c]));
+  const lookup = p => PREDICTIONS.find(x => (p.id != null && String(x.player_id) === String(p.id)) || normalizeTeamNameJS(x.name) === normalizeTeamNameJS(p.name)) || {{}};
+  // Ujednolicenie nazw drużyn z tabelą prognoz na podstawie oficjalnych nazw FDR.
+  const teamNameFor = name => (((FDR_DATA.teams || []).find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(name)) || {{name:name || '—'}}).name);
+  const opponentCode = (short, full) => {{ const raw=String(short || ''), name=String(full || raw || '?'), team=(FDR_DATA.teams || []).find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(name)); const code=(team && (team.short_name || team.code || team.short)) || raw; return String(code || name.split(/\s+/).pop() || '?').match(/[A-Za-z0-9]{{2,4}}/)?.[0] || '?'; }};
+  let h = '<style>.best11-pitch{{background:linear-gradient(180deg,var(--tint-up),var(--tint-soft) 35%,var(--tint-accent) 70%,var(--tint-soft));border:1px solid var(--border);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;overflow:hidden}}.best11-line{{display:flex;align-items:center;gap:12px}}.best11-line-label{{font-size:10px;letter-spacing:.12em;font-weight:800;color:var(--text-muted);width:30px}}.best11-cards{{display:flex;justify-content:center;align-items:stretch;gap:10px;flex:1;flex-wrap:wrap}}.best11-card{{position:relative;flex:1 1 145px;max-width:220px;min-width:128px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;box-shadow:0 8px 20px rgba(0,0,0,.08)}}.best11-card-top{{display:flex;align-items:center;gap:7px}}.best11-team{{font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}.best11-captain{{margin-left:auto;border-radius:50%;background:var(--accent);color:white;width:24px;height:24px;display:grid;place-items:center;font-weight:900}}.best11-name{{display:block;color:var(--text);font-weight:750;text-decoration:none;margin:10px 0 8px;min-height:36px}}.best11-opponents{{display:flex;gap:4px;flex-wrap:wrap;min-height:26px}}.best11-points{{border-top:1px solid var(--border);margin-top:10px;padding-top:9px;display:flex;justify-content:space-between;color:var(--text-muted);font-size:12px}}.best11-points strong{{color:var(--accent);font-size:17px}}.best11-summary{{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid var(--border-accent);border-radius:12px;background:var(--tint-accent);margin-bottom:14px}}.best11-summary strong{{display:block;font-size:27px;color:var(--accent)}}.best11-summary small{{font-size:13px}}.best11-details summary{{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700}}.best11-history-players{{display:flex;flex-wrap:wrap;gap:8px}}.best11-history-players span{{background:var(--tint-soft);padding:7px 10px;border-radius:8px;font-size:12px}}@media(max-width:520px){{.best11-pitch{{padding:10px;gap:9px}}.best11-line{{align-items:flex-start;gap:6px}}.best11-line-label{{padding-top:15px;width:26px}}.best11-card{{flex-basis:calc(50% - 8px);min-width:115px;padding:9px}}.best11-name{{font-size:13px}}.best11-summary strong{{font-size:22px}}}}</style><div class="seg" role="group" aria-label="Widok prognozy" style="margin:14px 0"><button class="seg-btn prediction-view-btn" data-view="table">Tabela</button><button class="seg-btn prediction-view-btn active" data-view="best11">Najlepsza 11</button></div><div class="best11-wrap">';
+  h += '<style>.prediction-view-btn{{min-height:44px;min-width:100px}}.best11-history-summary{{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}}.best11-history-summary span{{flex:1;background:var(--tint-soft);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text-muted)}}.best11-history-summary b{{color:var(--accent)}}.best11-history-panel{{padding:0;overflow:hidden}}.best11-history{{width:100%}}.best11-details summary{{gap:8px}}.best11-details summary span{{color:var(--accent)}}.best11-history-players span{{color:var(--text)}}@media(max-width:600px){{.best11-history{{display:block}}.best11-history thead{{display:none}}.best11-history tbody,.best11-history tr{{display:block;width:100%}}.best11-history tbody tr:not(.best11-expand-row){{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:8px 12px;border-bottom:1px solid var(--border)}}.best11-history td{{display:flex;flex-direction:column;min-width:0;padding:8px 4px;border:0}}.best11-history td:before{{content:attr(data-label);font-size:10px;color:var(--text-muted);font-weight:700;margin-bottom:3px}}.best11-history .best11-expand-row td{{display:block;padding:4px 12px}}.best11-history-panel{{overflow:hidden}}.best11-history-players{{display:grid;grid-template-columns:1fr;max-width:100%}}.best11-history-players span{{overflow-wrap:anywhere}}}}</style>';
+  h += '<style>.best11-summary{{padding:7px 12px;margin-bottom:8px;gap:12px;flex-direction:row;flex-wrap:nowrap;min-width:0}}.best11-summary-top{{display:flex;align-items:center;gap:5px;white-space:nowrap;min-width:0}}.best11-summary-round,.best11-summary-formation,.best11-summary-total,.best11-summary-captain{{white-space:normal;overflow-wrap:anywhere}}.best11-summary-round,.best11-summary-formation{{font-size:13px}}.best11-summary-formation:before{{content:"· ";color:var(--text-muted)}}.best11-summary-total{{margin-left:auto;font-size:19px!important}}.best11-summary-captain{{font-size:13px;min-width:0;overflow-wrap:anywhere}}.best11-pitch{{padding:6px;gap:4px}}.best11-line{{gap:5px}}.best11-line-label{{width:25px}}.best11-cards{{gap:4px}}.best11-card{{flex:1 1 130px;min-width:0;padding:4px}}.best11-name{{margin:1px 0;min-height:44px;word-break:normal;overflow-wrap:anywhere;box-sizing:border-box}}.best11-points{{margin-top:2px;padding-top:2px}}.best11-opponents{{min-height:16px}}@media(max-width:480px){{.best11-summary{{display:grid;grid-template-columns:minmax(0,1fr);gap:3px;align-items:start}}.best11-summary-top{{display:flex;align-items:center;gap:5px;white-space:nowrap;min-width:0}}.best11-summary-round,.best11-summary-formation,.best11-summary-total{{white-space:nowrap}}.best11-summary-total{{margin-left:auto;font-size:17px!important}}.best11-summary-captain{{white-space:normal;overflow-wrap:anywhere}}.best11-line{{display:flex;flex-direction:column;align-items:stretch;gap:3px}}.best11-line-label{{width:auto}}.best11-cards{{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:4px}}.best11-card{{flex:0 0 calc((100% - 8px)/3);max-width:calc((100% - 8px)/3);min-width:0;padding:4px}}.best11-name{{font-size:12px;min-height:44px;word-break:normal;overflow-wrap:anywhere}}.best11-team{{font-size:9px}}.best11-card-top{{gap:2px;flex-wrap:wrap}}.best11-captain{{width:17px;height:17px;font-size:10px;margin-left:auto}}.best11-points strong{{font-size:12px}}.best11-opponents{{gap:1px}}.best11-opponents .fdr,.best11-opponents .opp{{font-size:9px!important;margin:1px!important}}.best11-history tbody tr:not(.best11-expand-row) td:nth-child(5),.best11-history tbody tr:not(.best11-expand-row) td:nth-child(6){{grid-column:1/-1}}.best11-history tbody tr:not(.best11-expand-row) td:nth-child(5){{overflow-wrap:anywhere}}}}</style>';
+   h += viewSwitch;
+  const players = Array.isArray(next.players) ? next.players.filter(p => p && typeof p === 'object') : [];
+  const captain = players.find(p => p.is_captain || String(next.captain) === String(p.id));
+   h += '<div class="best11-summary"><span class="best11-summary-top"><span class="best11-summary-round">K'+esc(next.round || {prediction_round})+'</span><span class="best11-summary-formation">'+esc(next.formation || 'Skład')+'</span><strong class="best11-summary-total">'+num(next.predicted_total).toFixed(1)+' pkt</strong></span><span class="best11-summary-captain c-muted" title="Kapitan, punkty liczone podwójnie"><b>C</b> '+esc(captain && captain.name || '—')+' ×2</span></div>';
+  if (!players.length) h += '<div class="empty-msg">Skład pojawi się po następnym przebiegu</div>';
+  else {{
+    const rows = {{FWD:[],MID:[],DEF:[],GK:[]}};
+    players.forEach(p => {{ const k = POS_MAP[p.position] || ({{'4':'FWD','3':'MID','2':'DEF','1':'GK'}}[p.position]) || p.position; if(rows[k]) rows[k].push(p); }});
+    h += '<div class="best11-pitch">';
+    ['FWD','MID','DEF','GK'].forEach(pos => {{
+      h += '<section class="best11-line"><span class="best11-line-label">'+pos+'</span><div class="best11-cards">';
+      rows[pos].forEach(p => {{
+        const pr = lookup(p), fixtures = pr.fixtures_list || [], opponents = p.opponents || [], homes = p.is_home_list || [];
+        let chips = '';
+        if (fixtures.length) fixtures.forEach((f,i) => {{ const full=f.opponent || f.opponent_name || f.opponent_short || '?', opp=opponentCode(f.opponent_short, full), level=Math.max(f.atk || 3,f.def || 3), hw=f.home?'D':'W'; chips += '<span class="fdr fdr-'+esc(level)+'" title="'+esc(full)+'" style="display:inline-flex;align-items:center;gap:4px;margin:2px"><span class="o-nm">'+esc(opp)+'</span><span class="hw '+hw.toLowerCase()+'">'+hw+'</span></span>'; }});
+        else opponents.forEach((opp,i) => {{ const hw=homes[i]?'D':'W', full=String(opp == null ? '?' : opp), code=opponentCode('', full), oppTeam=(FDR_DATA.teams || []).find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(full)), level=Math.max(num(oppTeam && oppTeam.atk) || num(pr.fdr_atk_opponent) || 3,num(oppTeam && oppTeam.def) || num(pr.fdr_def_opponent) || 3); chips += '<span class="fdr fdr-'+esc(level)+'" title="'+esc(full)+'" style="display:inline-flex;align-items:center;gap:4px;margin:2px"><span class="o-nm">'+esc(code)+'</span><span class="hw '+hw.toLowerCase()+'">'+hw+'</span></span>'; }});
+        if (!chips) chips = '<span class="c-muted">Brak terminarza</span>';
+        const link = p.id != null ? 'https://fantasy.ekstraklasa.org/player/'+encodeURIComponent(p.id) : (pr.karpinski_slug ? 'https://arturkarpinski.com/ekstraklasa-scouting/#sel='+encodeURIComponent(pr.karpinski_slug) : '');
+        const teamName = teamNameFor(p.team);
+        h += '<article class="best11-card"><div class="best11-card-top">'+posBadge(p.position)+'<span class="best11-team" title="'+esc(teamName)+'">'+esc(teamName)+'</span>'+(p.is_captain || String(next.captain)===String(p.id) ? '<span class="best11-captain" title="Kapitan">C</span>' : '')+'</div>';
+        h += '<a class="best11-name" '+(link?'href="'+esc(link)+'" target="_blank" rel="noopener"':'')+'>'+esc(p.name || '—')+'</a><div class="best11-opponents">'+chips+'</div><div class="best11-points"><span></span><strong>'+num(p.predicted).toFixed(1)+' pkt</strong></div></article>';
+      }});
+      h += '</div></section>';
+    }});
+    h += '</div>';
+  }}
+  h += '<div class="method"><span class="m-row">Skład z najwyższymi prognozami w dozwolonych ustawieniach (1 bramkarz, 3–5 obrońców, 3–5 pomocników, 1–3 napastników). Kapitan to najwyżej prognozowany zawodnik, jego punkty liczą się ×2.</span><span class="m-row">Realne punkty Najlepszej 11 to suma 11 zawodników z kapitanem, bez ławki i transferów. Wynik CMF to oficjalny wynik drużyny z API, bez rozbicia na kapitana, transfery i ławkę.</span><span class="m-row">Suma prognozy zwykle przewyższa realne punkty: wybieramy najwyższe prognozy, więc trafiają się też największe przeszacowania.</span></div>';
+   h += '<div class="page-title" style="margin-top:28px">Historia Najlepszej 11</div>';
+  if (!history.length) h += '<div class="empty-msg">Historia pojawi się po zakończeniu pierwszej kolejki od startu funkcji</div>';
+  else {{
+    const comparable = history.filter(r => r.difference != null && r.best_cmf && r.best_cmf.points != null);
+    if (comparable.length) {{
+      const meanDiff = comparable.reduce((s,r)=>s+num(r.difference),0) / comparable.length;
+      const meanDiffText = (meanDiff < 0 ? '−' : '') + Math.abs(meanDiff).toFixed(1);
+      const wins = comparable.filter(r=>num(r.difference)>0).length;
+      h += '<div class="best11-history-summary"><span>Średnia różnica <b>'+meanDiffText+'</b></span><span>Lepsza od CMF <b>'+wins+' / '+comparable.length+'</b> kolejek</span></div>';
+    }}
+    h += '<div class="panel best11-history-panel"><table class="dt best11-history"><thead><tr><th>Kolejka</th><th>Ustawienie</th><th>Najlepsza 11 (realne)</th><th>Prognoza</th><th>Najlepsza drużyna CMF</th><th>Różnica</th></tr></thead><tbody>';
+    history.slice().sort((a,b)=>num(b.round)-num(a.round)).forEach(r => {{
+      const approximate = r.zrodlo === 'przyblizone', players = Array.isArray(r.players) ? r.players.filter(p => p && typeof p === 'object') : [];
+      const diff = num(r.difference), marker = approximate ? ' ★' : '';
+      const diffClass = diff > 0 ? 'var(--up)' : diff < 0 ? 'var(--down)' : 'var(--text-muted)';
+      const diffText = (diff > 0 ? '+' : diff < 0 ? '−' : '') + Math.abs(diff).toFixed(1);
+      h += '<tr><td data-label="Kolejka">K'+esc(r.round)+marker+'</td><td data-label="Ustawienie">'+esc(r.formation || '—')+'</td><td data-label="Najlepsza 11 (realne)">'+num(r.actual_total).toFixed(1)+'</td><td data-label="Prognoza">'+num(r.predicted_total).toFixed(1)+'</td><td data-label="Najlepsza drużyna CMF">'+esc(r.best_cmf && r.best_cmf.name || '—')+' · '+num(r.best_cmf && r.best_cmf.points).toFixed(1)+'</td><td data-label="Różnica" style="color:'+diffClass+';font-weight:800">'+diffText+'</td></tr>';
+        if(players.length) h += '<tr class="best11-expand-row"><td colspan="6"><details class="best11-details"><summary><span>▶</span> Skład · '+players.length+' zawodników</summary><div class="best11-history-players">'+players.map(p => '<span><b>'+esc(p.name)+'</b> · '+esc(teamNameFor(p.team))+' · '+esc(POS_MAP[p.position] || p.position || '—')+' · prognoza '+num(p.predicted).toFixed(1)+' · realne '+num(p.actual).toFixed(1)+(p.is_captain?' · kapitan ×2':'')+'</span>').join('')+'</div></details></td></tr>';
+    }});
+    h += '</tbody></table></div>';
+    if (history.some(r => r.zrodlo === 'przyblizone')) h += '<p class="c-muted" style="font-size:12px">★ Wynik przybliżony — część danych historycznych może nie zawierać pełnych informacji o składzie.</p>';
+  }}
+  h += '</div>';
+  return h;
+}}
+
 function renderPredictions() {{
-  if (!PREDICTIONS || !PREDICTIONS.length) return '<div class="empty-msg">Brak danych prognoz — sprawdź czy predictor.py jest dostępny i dane FDR zostały obliczone</div>';
+  const viewSwitch = '<div class="page-title">Prognoza Punktów — K{prediction_round}</div><div class="seg" role="group" aria-label="Widok prognozy" style="margin:14px 0"><button class="seg-btn prediction-view-btn'+(predictionsView === 'table' ? ' active' : '')+'" style="min-height:44px;min-width:100px" data-view="table">Tabela</button><button class="seg-btn prediction-view-btn'+(predictionsView === 'best11' ? ' active' : '')+'" style="min-height:44px;min-width:100px" data-view="best11">Najlepsza 11</button></div>';
+  if (predictionsView === 'best11') {{ try {{ return renderBest11(viewSwitch); }} catch (e) {{ console.error('Nie udało się wyświetlić Najlepszej 11', e); return viewSwitch + '<div class="empty-msg">Nie udało się wyświetlić składu. Tabela prognoz pozostaje dostępna.</div>'; }} }}
+  if (!PREDICTIONS || !PREDICTIONS.length) return viewSwitch + '<div class="empty-msg">Brak danych prognoz — sprawdź czy predictor.py jest dostępny i dane FDR zostały obliczone</div>';
 
   let data = [...PREDICTIONS].filter(p => p.predicted_points !== null && p.predicted_points !== undefined);
   if (predPos !== 'ALL') data = data.filter(p => (POS_ID[p.position] || p.position) === predPos);
-  if (!data.length) return '<div class="empty-msg">Brak prognoz dla wybranej pozycji</div>';
+  if (!data.length) return viewSwitch + '<div class="empty-msg">Brak prognoz dla wybranej pozycji</div>';
   const hasRealPredictions = data.some(p => !p.unavailable);
-  if (!hasRealPredictions) return '<div class="empty-msg">Brak prognoz — potrzebne minimum 2 rozegrane kolejki</div>';
+  if (!hasRealPredictions) return viewSwitch + '<div class="empty-msg">Brak prognoz — potrzebne minimum 2 rozegrane kolejki</div>';
 
   // Sort
   const s = sorts.predictions;
@@ -2039,7 +2113,7 @@ function renderPredictions() {{
     return '<span class="conf '+m.cls+'">'+m.label+'</span>';
   }}
 
-   let h = '<div class="page-title">Prognoza Punktów — K{prediction_round}</div>';
+   let h = viewSwitch;
     h += '<div class="page-sub"><span class="mono">Powered by <a href="https://arturkarpinski.com/ekstraklasa-scouting/" target="_blank" rel="noopener">Ekstraklasa Scouting</a></span></div>';
 
    // Pasek DGW - pokazuje drużyny z Double Gameweek
@@ -3209,6 +3283,15 @@ function render() {{
   if (trEl) trEl.innerHTML = tab === 'transfers' ? renderTransfers() : '';
   const prEl = document.getElementById('tab-predictions');
   if (prEl) prEl.innerHTML = tab === 'predictions' ? renderPredictions() : '';
+  // Zachowaj jeden wspólny przełącznik widoku nawet przy starszym osadzonym widoku.
+  if (prEl && tab === 'predictions') {{
+    const viewGroups = [...prEl.querySelectorAll('[role="group"][aria-label="Widok prognozy"]')];
+    if (viewGroups.length > 1) {{
+      const styled = viewGroups.find(g => [...g.querySelectorAll('.prediction-view-btn')].some(b => b.style.minHeight === '44px'));
+      const keep = styled || viewGroups[0];
+      viewGroups.forEach(g => {{ if (g !== keep) g.remove(); }});
+    }}
+  }}
   const acEl = document.getElementById('tab-accuracy');
   if (acEl) acEl.innerHTML = tab === 'accuracy' ? renderAccuracy() : '';
   const seEl = document.getElementById('tab-season');
@@ -3229,6 +3312,7 @@ function render() {{
     b.classList.toggle('active', b.dataset.predpos === predPos);
     b.onclick = () => {{ predPos = b.dataset.predpos; render(); }};
   }});
+  document.querySelectorAll('.prediction-view-btn').forEach(b => {{ b.onclick = () => {{ predictionsView = b.dataset.view; render(); }}; }});
   // Sortable click handlers
   document.querySelectorAll('.sortable').forEach(th => {{
     th.onclick = () => {{
