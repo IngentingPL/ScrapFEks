@@ -1,0 +1,151 @@
+[
+  {
+    "round": 12,
+    "formation": "5-4-1",
+    "players": [
+      {
+        "id": "2286",
+        "position": "GK",
+        "name": "Valentin Cojocaru",
+        "team": "pogoń szczecin",
+        "predicted": 9.9,
+        "actual": 1.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "1192",
+        "position": "DEF",
+        "name": "Erik Janža",
+        "team": "górnik zabrze",
+        "predicted": 8.8,
+        "actual": 2.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "2505",
+        "position": "DEF",
+        "name": "Dimítrios Keramítsis",
+        "team": "pogoń szczecin",
+        "predicted": 8.1,
+        "actual": 6.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "923",
+        "position": "DEF",
+        "name": "Rafał Augustyniak",
+        "team": "legia warszawa",
+        "predicted": 8.1,
+        "actual": 5.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "166",
+        "position": "DEF",
+        "name": "Rafał Janicki",
+        "team": "górnik zabrze",
+        "predicted": 7.4,
+        "actual": 2.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "374",
+        "position": "DEF",
+        "name": "Alan Uryga",
+        "team": "wisła kraków",
+        "predicted": 7.3,
+        "actual": 7.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "2717",
+        "position": "MID",
+        "name": "Pablo Rodríguez",
+        "team": "lech poznań",
+        "predicted": 12.1,
+        "actual": 3.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": true
+      },
+      {
+        "id": "480",
+        "position": "MID",
+        "name": "Bartosz Nowak",
+        "team": "gks katowice",
+        "predicted": 10.3,
+        "actual": -2.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "2679",
+        "position": "MID",
+        "name": "Paul Mukairu",
+        "team": "pogoń szczecin",
+        "predicted": 10.3,
+        "actual": 6.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "1092",
+        "position": "MID",
+        "name": "Piotr Samiec-Talar",
+        "team": "śląsk wrocław",
+        "predicted": 10.3,
+        "actual": 11.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      },
+      {
+        "id": "1987",
+        "position": "FWD",
+        "name": "Jordi Sánchez",
+        "team": "pogoń szczecin",
+        "predicted": 9.4,
+        "actual": 5.0,
+        "opponents": [],
+        "is_home_list": [],
+        "fixtures_count": 0,
+        "is_captain": false
+      }
+    ],
+    "captain": "Pablo Rodríguez",
+    "predicted_total": 114.1,
+    "actual_total": 49.0,
+    "best_cmf": {
+      "name": "Wynalazcy Wslizgu",
+      "slug": "wynalazcy-wslizgu",
+      "points": 61.0
+    },
+    "zrodlo": "przyblizone",
+    "difference": -12.0,
+    "zrodlo_info": "details: 90; prognoza porównawcza: 111; różnica: 21; prognozy tej kolejki: 139; brakujące details względem nich: 49"
+  }
+]
