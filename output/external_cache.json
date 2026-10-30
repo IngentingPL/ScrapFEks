@@ -1,6 +1,6 @@
 {
   "90minut_table": {
-    "timestamp": "2026-10-29T23:14:53.262870",
+    "timestamp": "2026-10-30T23:15:22.010552",
     "ttl_hours": 24,
     "data": {
       "Lech Poznań": {
@@ -17,12 +17,23 @@
       "Górnik Zabrze": {
         "gf": 21,
         "ga": 11,
-        "mp": 12,
+        "mp": 13,
         "gf_home": 9,
         "ga_home": 7,
-        "mp_home": 5,
+        "mp_home": 6,
         "gf_away": 12,
         "ga_away": 4,
+        "mp_away": 7
+      },
+      "Legia Warszawa": {
+        "gf": 23,
+        "ga": 11,
+        "mp": 13,
+        "gf_home": 13,
+        "ga_home": 5,
+        "mp_home": 6,
+        "gf_away": 10,
+        "ga_away": 6,
         "mp_away": 7
       },
       "Pogoń Szczecin": {
@@ -35,17 +46,6 @@
         "gf_away": 5,
         "ga_away": 1,
         "mp_away": 4
-      },
-      "Legia Warszawa": {
-        "gf": 23,
-        "ga": 11,
-        "mp": 12,
-        "gf_home": 13,
-        "ga_home": 5,
-        "mp_home": 6,
-        "gf_away": 10,
-        "ga_away": 6,
-        "mp_away": 6
       },
       "Wisła Kraków": {
         "gf": 19,
@@ -102,6 +102,17 @@
         "ga_away": 11,
         "mp_away": 6
       },
+      "Motor Lublin": {
+        "gf": 19,
+        "ga": 22,
+        "mp": 13,
+        "gf_home": 9,
+        "ga_home": 11,
+        "mp_home": 7,
+        "gf_away": 10,
+        "ga_away": 11,
+        "mp_away": 6
+      },
       "Jagiellonia Białystok": {
         "gf": 14,
         "ga": 17,
@@ -124,24 +135,13 @@
         "ga_away": 13,
         "mp_away": 7
       },
-      "Motor Lublin": {
-        "gf": 17,
-        "ga": 21,
-        "mp": 12,
-        "gf_home": 9,
-        "ga_home": 11,
-        "mp_home": 7,
-        "gf_away": 8,
-        "ga_away": 10,
-        "mp_away": 5
-      },
       "Cracovia": {
-        "gf": 14,
-        "ga": 19,
-        "mp": 12,
-        "gf_home": 9,
-        "ga_home": 8,
-        "mp_home": 6,
+        "gf": 15,
+        "ga": 21,
+        "mp": 13,
+        "gf_home": 10,
+        "ga_home": 10,
+        "mp_home": 7,
         "gf_away": 5,
         "ga_away": 11,
         "mp_away": 6
