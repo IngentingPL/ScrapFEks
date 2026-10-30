@@ -4,6 +4,10 @@ import csv
 import json
 import os
 import tempfile
+import random
+import time
+import ast
+from itertools import combinations
 from pathlib import Path
 
 from best11 import (
@@ -17,6 +21,169 @@ from best11 import (
     wybierz_sklad,
     zapisz_nastepny_sklad,
 )
+
+
+def test_random_club_limit_and_picker_speed():
+    rng = random.Random(771)
+    for _ in range(20):
+        pool = [{"id": str(i), "name": str(i), "team": f"Club {rng.randrange(8)}",
+                 "position": rng.choice(["GK", "DEF", "MID", "FWD"]),
+                 "predicted_points": rng.randrange(20)} for i in range(160)]
+        result = wybierz_formacje_i_sklad(normalizuj_prognozy(pool))
+        if result:
+            chosen = result[1]
+            assert len(chosen) == 11
+            formation = result[0]
+            assert [sum(p["position"] == pos for p in chosen) for pos in ("GK", "DEF", "MID", "FWD")] == [1, *formation]
+            assert max(sum(p["team_key"] == team for p in chosen) for team in {p["team_key"] for p in chosen}) <= 3
+    pool = [{"id": str(i), "name": str(i), "team": f"C{i % 40}",
+             "position": ["GK", "DEF", "MID", "FWD"][i % 4], "predicted_points": i % 31}
+            for i in range(416)]
+    start = time.perf_counter()
+    wybierz_formacje_i_sklad(normalizuj_prognozy(pool))
+    assert time.perf_counter() - start < 1
+
+
+def test_top_unrestricted_four_from_club_limited_to_three():
+    pool = [{"id": f"A-{pos}{i}", "name": f"A-{pos}{i}", "team": "A", "position": pos,
+             "predicted_points": 30-i} for pos, n in [("GK",1),("DEF",2),("MID",1)] for i in range(n)]
+    pool += [{"id": f"x{i}", "name": f"x{i}", "team": f"B{i}", "position": p,
+              "predicted_points": 20-i} for i, p in enumerate(["DEF"]*5+["MID"]*5+["FWD"]*5)]
+    selected = wybierz_formacje_i_sklad(normalizuj_prognozy(pool))
+    assert selected
+    norm = normalizuj_prognozy(pool)
+    unrestricted_options = []
+    for formation in FORMACJE:
+        demand = [1, *formation]
+        positions = ["GK", "DEF", "MID", "FWD"]
+        lineup = [p for pos, n in zip(positions, demand)
+                  for p in [x for x in norm if x["position"] == pos][:n]]
+        if len(lineup) == 11:
+            unrestricted_options.append((sum(p["predicted"] for p in lineup) + max(p["predicted"] for p in lineup), lineup))
+    unrestricted = max(unrestricted_options, key=lambda result: result[0])[1]
+    assert max(sum(p["team_key"] == t for p in unrestricted) for t in {p["team_key"] for p in unrestricted}) == 4
+    assert max(sum(p["team_key"] == t for p in selected[1]) for t in {p["team_key"] for p in selected[1]}) == 3
+
+
+def test_negative_forecasts_use_real_captain_maximum():
+    pool = [{"id": str(i), "name": str(i), "team": f"T{i}", "position": pos,
+             "predicted_points": -i-1}
+            for i, pos in enumerate(["GK"] + ["DEF"]*5 + ["MID"]*5 + ["FWD"]*3)]
+    result = wybierz_formacje_i_sklad(normalizuj_prognozy(pool))
+    assert result is not None
+    chosen = result[1]
+    assert result[3] == sum(p["predicted"] for p in chosen) + max(p["predicted"] for p in chosen)
+
+
+def test_scraper_migration_rebuilds_only_unmarked_picks():
+    source = Path(__file__).with_name("scraper.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    helper = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_migrate_best11_picks")
+    namespace = {"os": os, "csv": csv}
+    exec(compile(ast.Module(body=[helper], type_ignores=[]), "scraper.py", "exec"), namespace)
+    _migrate_best11_picks = namespace["_migrate_best11_picks"]
+    with tempfile.TemporaryDirectory() as directory:
+        picks_path = os.path.join(directory, "picks.json")
+        paths = {}
+        for round_number in (12, 13):
+            path = os.path.join(directory, f"fantasy_predictions_{round_number}.csv")
+            rows = _prognozy_testowe()
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=list(rows[0]) + ["round_number"])
+                writer.writeheader()
+                writer.writerows([{**row, "round_number": round_number} for row in rows])
+            paths[round_number] = path
+        frozen = {"round": 13, "max_z_klubu": 3, "saved_at": "keep-this", "players": []}
+        with open(picks_path, "w", encoding="utf-8") as f:
+            json.dump({"12": {"round": 12, "players": []}, "13": frozen}, f)
+        next_path = os.path.join(directory, "next.json")
+        _migrate_best11_picks(directory, 12, lambda r, _dir: paths[r], picks_path, next_path)
+        assert os.path.exists(next_path)
+        with open(picks_path, encoding="utf-8") as f:
+            saved = json.load(f)
+        assert saved["12"]["max_z_klubu"] == 3
+        assert saved["13"] == frozen and saved["13"]["saved_at"] == "keep-this"
+
+
+def test_seeded_small_pools_match_exhaustive_oracle_and_id_ties():
+    rng = random.Random(4312)
+    for trial in range(10):
+        pool = [{"id": f"{trial}-{i:02}", "name": str(i), "team": f"T{i % 5}",
+                 "position": pos, "predicted_points": rng.randrange(1, 16)}
+                for i, pos in enumerate(["GK"]*3 + ["DEF"]*5 + ["MID"]*5 + ["FWD"]*4)]
+        norm = normalizuj_prognozy(pool)
+        got = wybierz_formacje_i_sklad(norm)
+        expected = None
+        for formation in FORMACJE:
+            demand = [1, *formation]
+            by_pos = [[p for p in norm if p["position"] == pos] for pos in ["GK", "DEF", "MID", "FWD"]]
+            def choices(i, chosen):
+                if i == 4:
+                    counts = {}
+                    for p in chosen:
+                        counts[p["team_key"]] = counts.get(p["team_key"], 0) + 1
+                    if max(counts.values()) <= 3:
+                        score = sum(p["predicted"] for p in chosen) + max(p["predicted"] for p in chosen)
+                        ids = tuple(sorted(p["player_id"] for p in chosen))
+                        yield score, ids, chosen
+                    return
+                for subset in combinations(by_pos[i], demand[i]):
+                    yield from choices(i+1, chosen+list(subset))
+            for result in choices(0, []):
+                if expected is None or result[0] > expected[0]:
+                    expected = result
+        assert got is not None and expected is not None
+        assert round(sum(p["predicted"] for p in got[1]) + max(p["predicted"] for p in got[1]), 8) == expected[0]
+        reversed_result = wybierz_formacje_i_sklad(normalizuj_prognozy(list(reversed(pool))))
+        assert tuple(sorted(p["player_id"] for p in got[1])) == tuple(sorted(p["player_id"] for p in reversed_result[1]))
+
+
+def test_unmarked_history_cleanup_idempotent_and_stale_pick_falls_back_csv():
+    with tempfile.TemporaryDirectory() as directory:
+        history = os.path.join(directory, "history.json")
+        picks = os.path.join(directory, "picks.json")
+        csv_path = os.path.join(directory, "pred.csv")
+        league = os.path.join(directory, "league.json")
+        fixtures = {"matches": {"12": [{"home": "A", "away": "B"}]}}
+        with open(history, "w", encoding="utf-8") as f:
+            json.dump([{"round": 11, "formation": "old"}], f)
+        with open(picks, "w", encoding="utf-8") as f:
+            json.dump({"12": {"round": 12, "max_z_klubu": 2, "players": []}}, f)
+        players = _prognozy_testowe()
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=list(players[0]) + ["round_number"])
+            writer.writeheader()
+            writer.writerows([{**p, "round_number": 12} for p in players])
+        with open(league, "w", encoding="utf-8") as f:
+            json.dump({"rounds": []}, f)
+        schedule = os.path.join(directory, "schedule.txt")
+        with open(schedule, "w", encoding="utf-8") as f:
+            f.write("Kolejka 12\nA\t2 : 1\tB\tdate\n")
+        kwargs = dict(round_number=12, predictions_csv_path=csv_path, players_data=[], wpisy_trafnosci=[],
+                      league_history_path=league, history_path=history, picks_path=picks,
+                      fixtures_data=fixtures, terminarz_path=schedule)
+        first = aktualizuj_historie_best11(**kwargs)
+        assert len(first) == 1 and first[0]["max_z_klubu"] == 3 and first[0]["zrodlo"] == "csv"
+        zapisz_nastepny_sklad(players, 12, os.path.join(directory, "next.json"), picks)
+        with open(picks, encoding="utf-8") as f:
+            assert json.load(f)["12"]["max_z_klubu"] == 3
+        assert first[0]["max_z_klubu"] == 3
+
+
+def test_history_marker_cleanup_idempotent_on_incomplete_round():
+    with tempfile.TemporaryDirectory() as directory:
+        history_path = os.path.join(directory, "history.json")
+        with open(history_path, "w", encoding="utf-8") as f:
+            json.dump([{"round": 12, "formation": "K12 old"}], f)
+        kwargs = dict(round_number=12, history_path=history_path,
+                      league_history_path=os.path.join(directory, "league.json"),
+                      fixtures_data={"matches": {"12": [{"home": "A", "away": "B"}]}},
+                      terminarz_path=os.path.join(directory, "no-schedule.txt"))
+        assert aktualizuj_historie_best11(**kwargs) == []
+        first_bytes = open(history_path, "rb").read()
+        assert json.loads(first_bytes) == []
+        assert aktualizuj_historie_best11(**kwargs) == []
+        assert open(history_path, "rb").read() == first_bytes
 
 
 def _prognozy_testowe():
@@ -64,14 +231,13 @@ def test_limity_pozycji_dla_kazdej_formacji():
 
 
 def test_wybiera_najlepsza_formacje_na_przykladzie():
-    """Ręcznie policzony wynik wskazuje 4-5-1 jako najlepszą formację."""
+    """Limit klubu zmienia zwycięską formację na 3-5-2."""
     wynik = wybierz_formacje_i_sklad(normalizuj_prognozy(_prognozy_testowe()))
     assert wynik is not None
     formacja, sklad, kapitan, suma = wynik
-    # 4-5-1: 10 + 34 + 50 + 13 = 107; kapitan Fwd 1 dodaje jeszcze 13.
-    assert formacja == (4, 5, 1)
+    assert formacja == (3, 5, 2)
     assert len(sklad) == 11
-    assert suma == 120
+    assert suma == 116
     assert kapitan["name"] == "Fwd 1"
 
 
@@ -157,7 +323,7 @@ def test_niekompletna_kolejka_nie_zapisuje_ani_nie_nadpisuje():
         history_path = os.path.join(katalog, "best11_history.json")
         league_path = os.path.join(katalog, "league_history.json")
         terminarz_path = os.path.join(katalog, "terminarz.txt")
-        poprzedni_wpis = [{"round": 12, "formation": "stary wpis"}]
+        poprzedni_wpis = [{"round": 12, "formation": "stary wpis", "max_z_klubu": 3}]
         with open(history_path, "w", encoding="utf-8") as plik:
             json.dump(poprzedni_wpis, plik)
         with open(league_path, "w", encoding="utf-8") as plik:
@@ -275,10 +441,10 @@ def test_pick_zapisuje_tylko_kolejke_prognozy_i_zachowuje_pozostale():
         pick13 = zapisz_nastepny_sklad(_prognozy_testowe(), 13, next_path, picks_path)
         with open(picks_path, encoding="utf-8") as plik:
             po_k13 = json.load(plik)
-        assert set(po_k13) == {"11", "12", "13"}
-        assert po_k13["11"] == stare["11"]
-        assert po_k13["12"] == stare["12"]
+        assert set(po_k13) == {"13"}
+        assert "11" not in po_k13 and "12" not in po_k13
         assert po_k13["13"]["round"] == 13
+        assert po_k13["13"]["max_z_klubu"] == 3
         assert po_k13["13"]["saved_at"]
         assert pick13["round"] == 13
 
@@ -286,8 +452,7 @@ def test_pick_zapisuje_tylko_kolejke_prognozy_i_zachowuje_pozostale():
         with open(picks_path, encoding="utf-8") as plik:
             po_k14 = json.load(plik)
         assert po_k14["13"] == po_k13["13"]
-        assert po_k14["11"] == stare["11"]
-        assert po_k14["12"] == stare["12"]
+        assert "11" not in po_k14 and "12" not in po_k14
         assert po_k14["14"]["round"] == 14
 
 
@@ -301,7 +466,7 @@ def test_picki_sa_przycinane_do_10_najnowszych_kolejek():
         zapisz_nastepny_sklad(_prognozy_testowe(), 11, next_path, picks_path)
         with open(picks_path, encoding="utf-8") as plik:
             zapisane = json.load(plik)
-        assert set(zapisane) == {str(r) for r in range(2, 12)}
+        assert set(zapisane) == {"11"}
 
 
 def test_pola_ui_sa_w_nastepnym_skladzie_i_historii():
@@ -313,6 +478,7 @@ def test_pola_ui_sa_w_nastepnym_skladzie_i_historii():
             _prognozy_testowe(), 13, next_path, picks_path
         )
         assert len(payload["players"]) == 11
+        assert payload["max_z_klubu"] == 3
         for player in payload["players"]:
             assert player["id"]
             assert player["opponents"]
@@ -410,4 +576,11 @@ if __name__ == "__main__":
     test_pola_ui_sa_w_nastepnym_skladzie_i_historii()
     test_zrodlo_oceny_ma_kolejnosc_pick_csv_accuracy()
     test_render_best11_counts_only_positive_differences_as_wins()
+    test_random_club_limit_and_picker_speed()
+    test_top_unrestricted_four_from_club_limited_to_three()
+    test_negative_forecasts_use_real_captain_maximum()
+    test_seeded_small_pools_match_exhaustive_oracle_and_id_ties()
+    test_unmarked_history_cleanup_idempotent_and_stale_pick_falls_back_csv()
+    test_scraper_migration_rebuilds_only_unmarked_picks()
+    test_history_marker_cleanup_idempotent_on_incomplete_round()
     print("Wszystkie testy Best11 przeszły")

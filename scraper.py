@@ -25,6 +25,34 @@ from zoneinfo import ZoneInfo
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from predictor import predict_all_players
 from accuracy import evaluate_predictions, load_accuracy_history, find_predictions_csv_for_round
+
+
+def _migrate_best11_picks(output_dir, current_round, finder, picks_path=None, next_path=None):
+    """Odtwarza tylko brakujące lub nieoznaczone picki z pasujących CSV."""
+    import glob as _glob
+    from best11 import (BEST11_PICKS_FILE, _prognozy_z_csv,
+                        BEST11_NEXT_FILE, wczytaj_best11_picks, zapisz_nastepny_sklad)
+    picks_path = picks_path or BEST11_PICKS_FILE
+    next_path = next_path or BEST11_NEXT_FILE
+    rounds = set()
+    for csv_path in _glob.glob(os.path.join(output_dir, "fantasy_predictions_*.csv")):
+        try:
+            with open(csv_path, encoding="utf-8-sig", newline="") as source:
+                rows = list(csv.DictReader(source))
+            round_number = int(rows[0].get("round_number")) if rows else None
+        except (OSError, csv.Error, TypeError, ValueError):
+            continue
+        if round_number is not None and round_number >= current_round:
+            rounds.add(round_number)
+    for round_number in sorted(rounds):
+        saved = wczytaj_best11_picks(picks_path)
+        pick = saved.get(str(round_number), saved.get(round_number))
+        if isinstance(pick, dict) and pick.get("max_z_klubu") == 3:
+            continue
+        matching_csv = finder(round_number, output_dir)
+        raw = _prognozy_z_csv(matching_csv, round_number) if matching_csv else []
+        if raw:
+            zapisz_nastepny_sklad(raw, round_number, path=next_path, picks_path=picks_path)
 from tuner import run_tuning
 from utils import normalize_team_name, _normalize_team, _normalize_name
 from players import fetch_all_players
@@ -689,9 +717,11 @@ def main():
         try:
             from best11 import (
                 BEST11_PICKS_FILE,
+                wczytaj_best11_picks,
                 aktualizuj_historie_best11,
                 normalizuj_prognozy,
             )
+            _migrate_best11_picks(OUTPUT_DIR, current_round, find_predictions_csv_for_round)
             aktualizuj_historie_best11(
                 round_number=current_round,
                 predictions_csv_path=prev_pred_csv,

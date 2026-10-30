@@ -32,6 +32,7 @@ i funkcji round_points z utils.py. Funkcje obliczeniowe są "czyste"
 
 import csv
 from datetime import datetime, timezone
+from itertools import combinations
 import json
 import os
 import re
@@ -75,6 +76,7 @@ MAPA_POZYCJI = {
 BEST11_HISTORY_FILE = os.path.join("output", "best11_history.json")
 BEST11_NEXT_FILE = os.path.join("output", "best11_next.json")
 BEST11_PICKS_FILE = os.path.join("output", "best11_picks.json")
+MAX_Z_KLUBU = 3
 LEAGUE_HISTORY_FILE = os.path.join("output", "league_history.json")
 LEAGUE_TEAMS_DETAIL_FILE = os.path.join("output", "league_teams_detail.json")
 TERMINARZ_FILE = "terminarz.txt"
@@ -99,13 +101,8 @@ def _na_float(wartosc):
 
 
 def _klucz_rankingu(prognoza):
-    """Klucz sortowania graczy: wyższa prognoza = wyżej na liście,
-    remis prognoz → nazwisko wcześniejsze alfabetycznie.
-
-    _normalize_name usuwa polskie znaki i zamienia na małe litery,
-    więc "Łukasz" i "Lukasz" porównują się tak samo (deterministycznie).
-    """
-    return (-prognoza["predicted"], _normalize_name(prognoza["name"]))
+    """Wyższa prognoza pierwsza, remis rozstrzyga ID gracza."""
+    return (-prognoza["predicted"], str(prognoza.get("player_id", prognoza.get("id", ""))))
 
 
 def normalizuj_prognozy(prognozy):
@@ -136,10 +133,11 @@ def normalizuj_prognozy(prognozy):
         if predicted is None:
             continue
         wynik.append({
-            "player_id": str(p.get("player_id", "") or ""),
+            "player_id": str(p.get("player_id", p.get("id", "")) or ""),
             "id": p.get("id", p.get("player_id")),
             "name": p.get("name", "") or "",
             "team": p.get("team", "") or "",
+            "team_key": normalize_team_name(p.get("team", "") or "") or "__unknown__",
             "position": pozycja,
             "predicted": predicted,
             "opponents": _lista_json(p.get("opponents")),
@@ -175,13 +173,58 @@ def wybierz_sklad(prognozy, formacja):
     """
     obr, pom, nap = formacja
     wymagane = [("GK", 1), ("DEF", obr), ("MID", pom), ("FWD", nap)]
-    sklad = []
+    # Dla klubu zachowujemy maksymalnie trzech najlepszych na pozycję.
+    kandydaci = {}
     for pozycja, ile in wymagane:
-        kandydaci = [p for p in prognozy if p["position"] == pozycja]
-        if len(kandydaci) < ile:
-            return None  # niepełny skład — pomijamy tę formację
-        sklad.extend(kandydaci[:ile])
-    return sklad
+        grupy = {}
+        for p in prognozy:
+            if p["position"] == pozycja:
+                grupy.setdefault(p.get("team_key") or "__unknown__", []).append(p)
+        limit = 1 if pozycja == "GK" else MAX_Z_KLUBU
+        wybor = [p for grupa in grupy.values() for p in sorted(grupa, key=_klucz_rankingu)[:limit]]
+        if len(wybor) < ile:
+            return None
+        kandydaci[pozycja] = wybor
+    # Grupujemy klubami. Każdy klub ma najwyżej trzy wybrane osoby; stany DP
+    # mają tylko liczniki pozycji oraz Pareto (suma, maksimum) kapitana.
+    positions = [p for p, _ in wymagane]
+    quotas = tuple(n for _, n in wymagane)
+    clubs = {}
+    for pos in positions:
+        for p in kandydaci[pos]:
+            clubs.setdefault(p.get("team_key") or "__unknown__", []).append(p)
+    states = {(0, 0, 0, 0): [(0.0, float("-inf"), ())]}
+    for team in sorted(clubs):
+        options = [()] + [(p,) for p in clubs[team]]
+        options += list(combinations(clubs[team], 2))
+        options += list(combinations(clubs[team], 3))
+        next_states = {}
+        for counts, frontier in states.items():
+            for subset in options:
+                delta = tuple(sum(p["position"] == pos for p in subset) for pos in positions)
+                new_counts = tuple(a + b for a, b in zip(counts, delta))
+                if any(n > q for n, q in zip(new_counts, quotas)):
+                    continue
+                dest = next_states.setdefault(new_counts, [])
+                for total, maximum, players in frontier:
+                    nt = total + sum(p["predicted"] for p in subset)
+                    nm = max([maximum] + [p["predicted"] for p in subset])
+                    np = players + subset
+                    # Pareto dominance; ties use lexicographically sorted IDs.
+                    ids = tuple(sorted(str(p.get("player_id") or p.get("id") or "") for p in np))
+                    if any(t >= nt and m >= nm and (t > nt or m > nm or oldids <= ids)
+                           for t, m, old in dest
+                           for oldids in [tuple(sorted(str(p.get("player_id") or p.get("id") or "") for p in old))]):
+                        continue
+                    dest[:] = [(t, m, old) for t, m, old in dest
+                               if not (nt >= t and nm >= m and (nt > t or nm > m or ids < tuple(sorted(str(p.get("player_id") or p.get("id") or "") for p in old))))]
+                    dest.append((nt, nm, np))
+        states = next_states
+    results = states.get(quotas, [])
+    if not results:
+        return None
+    best = min(results, key=lambda x: (-(x[0] + x[1]), tuple(sorted(str(p.get("player_id") or p.get("id") or "") for p in x[2]))))
+    return list(best[2])
 
 
 def _nazwa_formacji(formacja):
@@ -382,6 +425,7 @@ def zbuduj_wpis_historii(
 
     wpis = {
         "round": round_number,
+        "max_z_klubu": MAX_Z_KLUBU,
         "formation": _nazwa_formacji(formacja),
         "players": gracze,
         "captain": kapitan["name"],
@@ -429,6 +473,7 @@ def zbuduj_nastepny_sklad(round_number, prognozy_raw):
     ]
     return {
         "round": round_number,
+        "max_z_klubu": MAX_Z_KLUBU,
         "formation": _nazwa_formacji(formacja),
         "players": gracze,
         "captain": kapitan["name"],
@@ -512,7 +557,8 @@ def _prognozy_z_wpisu(entry):
 
 def _prognozy_z_pick(pick):
     """Zamienia zamrożony skład z JSON na wejście wspólne dla oceny historii."""
-    if not isinstance(pick, dict) or not isinstance(pick.get("players"), list):
+    if (not isinstance(pick, dict) or pick.get("max_z_klubu") != MAX_Z_KLUBU
+            or not isinstance(pick.get("players"), list)):
         return None
     return [
         {
@@ -686,6 +732,9 @@ def aktualizuj_historie_best11(
     if history is None:
         # Uszkodzony plik — nie nadpisujemy, użytkownik naprawi ręcznie.
         return []
+    original_history = history
+    history = [e for e in history if isinstance(e, dict) and e.get("max_z_klubu") == MAX_Z_KLUBU]
+    sanitation_changed = history != original_history
     league_history = wczytaj_league_history(league_history_path)
     if round_number and not czy_kolejka_jest_kompletna(
         round_number, fixtures_data, terminarz_path
@@ -694,8 +743,10 @@ def aktualizuj_historie_best11(
             f"  ℹ️  Best11: kolejka {round_number} nie ma wyników "
             "dla wszystkich meczów — historii nie zmieniam"
         )
+        if sanitation_changed:
+            zapisz_best11_history(history, history_path)
         return history
-    zmieniono = False
+    zmieniono = sanitation_changed
 
     # --- 1) Bieżąca kolejka ---
     if round_number:
@@ -842,6 +893,7 @@ def zapisz_nastepny_sklad(
 
     # Zapisujemy tylko pick bieżącej prognozy, a pozostałe kolejki zostają.
     picks = wczytaj_best11_picks(picks_path)
+    picks = {k: v for k, v in picks.items() if isinstance(v, dict) and v.get("max_z_klubu") == MAX_Z_KLUBU}
     picks[str(round_number)] = {
         **payload,
         "saved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

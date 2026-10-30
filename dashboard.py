@@ -1989,7 +1989,7 @@ function renderBest11(viewSwitch) {{
     }});
     h += '</div>';
   }}
-  h += '<div class="method"><span class="m-row">Skład z najwyższymi prognozami w dozwolonych ustawieniach (1 bramkarz, 3–5 obrońców, 3–5 pomocników, 1–3 napastników). Kapitan to najwyżej prognozowany zawodnik, jego punkty liczą się ×2.</span><span class="m-row">Realne punkty Najlepszej 11 to suma 11 zawodników z kapitanem, bez ławki i transferów. Wynik CMF to oficjalny wynik drużyny z API, bez rozbicia na kapitana, transfery i ławkę.</span><span class="m-row">Suma prognozy zwykle przewyższa realne punkty: wybieramy najwyższe prognozy, więc trafiają się też największe przeszacowania.</span></div>';
+  h += '<div class="method"><span class="m-row">Skład z najwyższymi prognozami w dozwolonych ustawieniach (1 bramkarz, 3–5 obrońców, 3–5 pomocników, 1–3 napastników, maks. 3 zawodników z jednego klubu). Kapitan to najwyżej prognozowany zawodnik, jego punkty liczą się ×2.</span><span class="m-row">Realne punkty Najlepszej 11 to suma 11 zawodników z kapitanem, bez ławki i transferów. Wynik CMF to oficjalny wynik drużyny z API, bez rozbicia na kapitana, transfery i ławkę.</span><span class="m-row">Suma prognozy zwykle przewyższa realne punkty: wybieramy najwyższe prognozy, więc trafiają się też największe przeszacowania.</span></div>';
    h += '<div class="page-title" style="margin-top:28px">Historia Najlepszej 11</div>';
   if (!history.length) h += '<div class="empty-msg">Historia pojawi się po zakończeniu pierwszej kolejki od startu funkcji</div>';
   else {{
