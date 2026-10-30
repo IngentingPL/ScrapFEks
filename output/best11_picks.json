@@ -1,17 +1,114 @@
 {
-  "13": {
-    "round": 13,
+  "14": {
+    "round": 14,
+    "max_z_klubu": 3,
     "formation": "4-5-1",
     "players": [
+      {
+        "position": "MID",
+        "id": 2110,
+        "name": "Camilo Mena",
+        "team": "korona kielce",
+        "predicted": 9.3,
+        "actual": null,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2717,
+        "name": "Pablo Rodríguez",
+        "team": "lech poznań",
+        "predicted": 12.0,
+        "actual": null,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": true
+      },
+      {
+        "position": "MID",
+        "id": 2498,
+        "name": "Patrik Wålemark",
+        "team": "lech poznań",
+        "predicted": 9.8,
+        "actual": null,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 923,
+        "name": "Rafał Augustyniak",
+        "team": "legia warszawa",
+        "predicted": 8.8,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 1319,
+        "name": "Paweł Wszołek",
+        "team": "legia warszawa",
+        "predicted": 7.2,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2747,
+        "name": "Hugo Vallejo",
+        "team": "piast gliwice",
+        "predicted": 9.5,
+        "actual": null,
+        "opponents": [
+          "Śląsk Wrocław"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
       {
         "position": "GK",
         "id": 2286,
         "name": "Valentin Cojocaru",
         "team": "pogoń szczecin",
-        "predicted": 7.2,
+        "predicted": 7.8,
         "actual": null,
         "opponents": [
-          "Raków Częstochowa"
+          "Widzew Łódź"
         ],
         "is_home_list": [
           false
@@ -24,10 +121,10 @@
         "id": 2505,
         "name": "Dimítrios Keramítsis",
         "team": "pogoń szczecin",
-        "predicted": 7.8,
+        "predicted": 8.5,
         "actual": null,
         "opponents": [
-          "Raków Częstochowa"
+          "Widzew Łódź"
         ],
         "is_home_list": [
           false
@@ -36,14 +133,14 @@
         "is_captain": false
       },
       {
-        "position": "DEF",
-        "id": 923,
-        "name": "Rafał Augustyniak",
-        "team": "legia warszawa",
-        "predicted": 7.6,
+        "position": "FWD",
+        "id": 1987,
+        "name": "Jordi Sánchez",
+        "team": "pogoń szczecin",
+        "predicted": 7.3,
         "actual": null,
         "opponents": [
-          "Górnik Zabrze"
+          "Widzew Łódź"
         ],
         "is_home_list": [
           false
@@ -52,11 +149,11 @@
         "is_captain": false
       },
       {
-        "position": "DEF",
-        "id": 701,
-        "name": "Patryk Kun",
-        "team": "wisła płock",
-        "predicted": 6.1,
+        "position": "MID",
+        "id": 1092,
+        "name": "Piotr Samiec-Talar",
+        "team": "śląsk wrocław",
+        "predicted": 9.4,
         "actual": null,
         "opponents": [
           "Piast Gliwice"
@@ -69,23 +166,49 @@
       },
       {
         "position": "DEF",
-        "id": 3021,
-        "name": "Alessandro Riccio",
-        "team": "pogoń szczecin",
-        "predicted": 6.0,
+        "id": 374,
+        "name": "Alan Uryga",
+        "team": "wisła kraków",
+        "predicted": 8.9,
         "actual": null,
         "opponents": [
-          "Raków Częstochowa"
+          "Cracovia"
         ],
         "is_home_list": [
-          false
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      }
+    ],
+    "captain": "Pablo Rodríguez",
+    "predicted_total": 110.5,
+    "saved_at": "2026-10-30T21:46:44+00:00"
+  },
+  "13": {
+    "round": 13,
+    "max_z_klubu": 3,
+    "formation": "4-5-1",
+    "players": [
+      {
+        "position": "DEF",
+        "id": "1712",
+        "name": "Joel Pereira",
+        "team": "lech poznań",
+        "predicted": 5.9,
+        "actual": null,
+        "opponents": [
+          "Wisła Kraków"
+        ],
+        "is_home_list": [
+          true
         ],
         "fixtures_count": 1,
         "is_captain": false
       },
       {
         "position": "MID",
-        "id": 2717,
+        "id": "2717",
         "name": "Pablo Rodríguez",
         "team": "lech poznań",
         "predicted": 13.0,
@@ -101,23 +224,7 @@
       },
       {
         "position": "MID",
-        "id": 1092,
-        "name": "Piotr Samiec-Talar",
-        "team": "śląsk wrocław",
-        "predicted": 10.7,
-        "actual": null,
-        "opponents": [
-          "Radomiak Radom"
-        ],
-        "is_home_list": [
-          false
-        ],
-        "fixtures_count": 1,
-        "is_captain": false
-      },
-      {
-        "position": "MID",
-        "id": 2498,
+        "id": "2498",
         "name": "Patrik Wålemark",
         "team": "lech poznań",
         "predicted": 10.6,
@@ -132,14 +239,14 @@
         "is_captain": false
       },
       {
-        "position": "MID",
-        "id": 2679,
-        "name": "Paul Mukairu",
-        "team": "pogoń szczecin",
-        "predicted": 9.9,
+        "position": "DEF",
+        "id": "923",
+        "name": "Rafał Augustyniak",
+        "team": "legia warszawa",
+        "predicted": 7.6,
         "actual": null,
         "opponents": [
-          "Raków Częstochowa"
+          "Górnik Zabrze"
         ],
         "is_home_list": [
           false
@@ -149,7 +256,7 @@
       },
       {
         "position": "MID",
-        "id": 2747,
+        "id": "2747",
         "name": "Hugo Vallejo",
         "team": "piast gliwice",
         "predicted": 7.8,
@@ -164,8 +271,40 @@
         "is_captain": false
       },
       {
+        "position": "GK",
+        "id": "2286",
+        "name": "Valentin Cojocaru",
+        "team": "pogoń szczecin",
+        "predicted": 7.2,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": "2679",
+        "name": "Paul Mukairu",
+        "team": "pogoń szczecin",
+        "predicted": 9.9,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
         "position": "FWD",
-        "id": 1987,
+        "id": "1987",
         "name": "Jordi Sánchez",
         "team": "pogoń szczecin",
         "predicted": 8.7,
@@ -178,10 +317,58 @@
         ],
         "fixtures_count": 1,
         "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": "1092",
+        "name": "Piotr Samiec-Talar",
+        "team": "śląsk wrocław",
+        "predicted": 10.7,
+        "actual": null,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": "701",
+        "name": "Patryk Kun",
+        "team": "wisła płock",
+        "predicted": 6.1,
+        "actual": null,
+        "opponents": [
+          "Piast Gliwice"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": "2781",
+        "name": "Žan Rogelj",
+        "team": "wisła płock",
+        "predicted": 6.0,
+        "actual": null,
+        "opponents": [
+          "Piast Gliwice"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
       }
     ],
     "captain": "Pablo Rodríguez",
-    "predicted_total": 108.4,
-    "saved_at": "2026-10-29T23:15:01+00:00"
+    "predicted_total": 106.5,
+    "saved_at": "2026-10-30T21:46:34+00:00"
   }
 }
