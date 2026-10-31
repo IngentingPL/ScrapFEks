@@ -3554,17 +3554,23 @@
   {
     "round": 13,
     "date": "2026-10-31",
-    "mae": 2.3,
+    "mae": 2.4,
     "mae_by_pos": {
-      "BR": 2.0,
-      "OBR": 2.7,
-      "POM": 2.2,
-      "NAP": 1.8
+      "BR": 1.8,
+      "OBR": 2.4,
+      "POM": 2.9,
+      "NAP": 2.1
     },
-    "top10_mae": 3.0,
-    "hit_rate": 0.75,
-    "sample_size": 59,
+    "top10_mae": 3.9,
+    "hit_rate": 0.76,
+    "sample_size": 58,
     "worst_misses": [
+      {
+        "name": "Bartosz Nowak",
+        "predicted": 7.3,
+        "actual": 18,
+        "error": -10.7
+      },
       {
         "name": "Bernardo Vital",
         "predicted": 1.0,
@@ -3588,12 +3594,6 @@
         "predicted": 5.8,
         "actual": 0,
         "error": 5.8
-      },
-      {
-        "name": "Alan Uryga",
-        "predicted": 5.5,
-        "actual": 0,
-        "error": 5.5
       }
     ],
     "best_hits": [
@@ -3610,16 +3610,16 @@
         "error": 0.0
       },
       {
+        "name": "Arkadiusz Jędrych",
+        "predicted": 2.0,
+        "actual": 2,
+        "error": 0.0
+      },
+      {
         "name": "Karol Czubak",
         "predicted": 3.1,
         "actual": 3,
         "error": 0.1
-      },
-      {
-        "name": "Filip Luberecki",
-        "predicted": 2.9,
-        "actual": 3,
-        "error": -0.1
       },
       {
         "name": "Efthýmios Kouloúris",
@@ -3648,6 +3648,15 @@
         "error": 0.0
       },
       {
+        "player_id": "951",
+        "name": "Arkadiusz Jędrych",
+        "position": "OBR",
+        "team": "gks katowice",
+        "predicted": 2.0,
+        "actual": 2,
+        "error": 0.0
+      },
+      {
         "player_id": "2671",
         "name": "Karol Czubak",
         "position": "NAP",
@@ -3655,15 +3664,6 @@
         "predicted": 3.1,
         "actual": 3,
         "error": 0.1
-      },
-      {
-        "player_id": "2417",
-        "name": "Filip Luberecki",
-        "position": "OBR",
-        "team": "motor lublin",
-        "predicted": 2.9,
-        "actual": 3,
-        "error": -0.1
       },
       {
         "player_id": "2214",
@@ -3702,15 +3702,6 @@
         "error": -0.3
       },
       {
-        "player_id": "1464",
-        "name": "Kajetan Szmyt",
-        "position": "POM",
-        "team": "jagiellonia białystok",
-        "predicted": 3.4,
-        "actual": 3,
-        "error": 0.4
-      },
-      {
         "player_id": "1384",
         "name": "Mateusz Kochalski",
         "position": "BR",
@@ -3720,13 +3711,13 @@
         "error": 0.4
       },
       {
-        "player_id": "2801",
-        "name": "Bartłomiej Drągowski",
-        "position": "BR",
-        "team": "widzew łódź",
-        "predicted": 2.5,
+        "player_id": "2454",
+        "name": "Pau Resta",
+        "position": "OBR",
+        "team": "gks katowice",
+        "predicted": 2.6,
         "actual": 2,
-        "error": 0.5
+        "error": 0.6
       },
       {
         "player_id": "166",
@@ -3735,6 +3726,15 @@
         "team": "górnik zabrze",
         "predicted": 4.7,
         "actual": 4,
+        "error": 0.7
+      },
+      {
+        "player_id": "1925",
+        "name": "Gabriel Kobylak",
+        "position": "BR",
+        "team": "gks katowice",
+        "predicted": 2.7,
+        "actual": 2,
         "error": 0.7
       },
       {
@@ -3747,6 +3747,15 @@
         "error": 0.9
       },
       {
+        "player_id": "563",
+        "name": "Marcin Wasielewski",
+        "position": "OBR",
+        "team": "gks katowice",
+        "predicted": 2.9,
+        "actual": 2,
+        "error": 0.9
+      },
+      {
         "player_id": "2781",
         "name": "Žan Rogelj",
         "position": "OBR",
@@ -3754,6 +3763,15 @@
         "predicted": 6.0,
         "actual": 5,
         "error": 1.0
+      },
+      {
+        "player_id": "994",
+        "name": "Lukas Klemenz",
+        "position": "OBR",
+        "team": "gks katowice",
+        "predicted": 3.1,
+        "actual": 2,
+        "error": 1.1
       },
       {
         "player_id": "1192",
@@ -3792,22 +3810,22 @@
         "error": -1.4
       },
       {
-        "player_id": "480",
-        "name": "Bartosz Nowak",
-        "position": "POM",
-        "team": "gks katowice",
-        "predicted": 7.3,
-        "actual": 9,
-        "error": -1.7
+        "player_id": "2801",
+        "name": "Bartłomiej Drągowski",
+        "position": "BR",
+        "team": "widzew łódź",
+        "predicted": 2.5,
+        "actual": 1,
+        "error": 1.5
       },
       {
-        "player_id": "1880",
-        "name": "Ilja Szkurin",
-        "position": "NAP",
+        "player_id": "2384",
+        "name": "Borja Galán",
+        "position": "OBR",
         "team": "gks katowice",
-        "predicted": 4.3,
-        "actual": 6,
-        "error": -1.7
+        "predicted": 3.6,
+        "actual": 2,
+        "error": 1.6
       },
       {
         "player_id": "2719",
@@ -3861,6 +3879,15 @@
         "team": "motor lublin",
         "predicted": 1.9,
         "actual": 4,
+        "error": -2.1
+      },
+      {
+        "player_id": "2053",
+        "name": "Sebastian Madejski",
+        "position": "BR",
+        "team": "cracovia",
+        "predicted": 0.9,
+        "actual": 3,
         "error": -2.1
       },
       {
@@ -3945,15 +3972,6 @@
         "error": -2.3
       },
       {
-        "player_id": "2384",
-        "name": "Borja Galán",
-        "position": "OBR",
-        "team": "gks katowice",
-        "predicted": 3.6,
-        "actual": 6,
-        "error": -2.4
-      },
-      {
         "player_id": "2659",
         "name": "Marcel Łubik",
         "position": "BR",
@@ -3969,15 +3987,6 @@
         "team": "lech poznań",
         "predicted": 10.6,
         "actual": 8,
-        "error": 2.6
-      },
-      {
-        "player_id": "1169",
-        "name": "Mateusz Skrzypczak",
-        "position": "OBR",
-        "team": "lech poznań",
-        "predicted": 5.6,
-        "actual": 3,
         "error": 2.6
       },
       {
@@ -4017,24 +4026,6 @@
         "error": 2.9
       },
       {
-        "player_id": "994",
-        "name": "Lukas Klemenz",
-        "position": "OBR",
-        "team": "gks katowice",
-        "predicted": 3.1,
-        "actual": 6,
-        "error": -2.9
-      },
-      {
-        "player_id": "563",
-        "name": "Marcin Wasielewski",
-        "position": "OBR",
-        "team": "gks katowice",
-        "predicted": 2.9,
-        "actual": 6,
-        "error": -3.1
-      },
-      {
         "player_id": "1005",
         "name": "Karol Fila",
         "position": "OBR",
@@ -4042,15 +4033,6 @@
         "predicted": 2.2,
         "actual": -1,
         "error": 3.2
-      },
-      {
-        "player_id": "1925",
-        "name": "Gabriel Kobylak",
-        "position": "BR",
-        "team": "gks katowice",
-        "predicted": 2.7,
-        "actual": 6,
-        "error": -3.3
       },
       {
         "player_id": "1795",
@@ -4071,15 +4053,6 @@
         "error": 3.4
       },
       {
-        "player_id": "2454",
-        "name": "Pau Resta",
-        "position": "OBR",
-        "team": "gks katowice",
-        "predicted": 2.6,
-        "actual": 6,
-        "error": -3.4
-      },
-      {
         "player_id": "923",
         "name": "Rafał Augustyniak",
         "position": "OBR",
@@ -4096,6 +4069,15 @@
         "predicted": 4.6,
         "actual": 1,
         "error": 3.6
+      },
+      {
+        "player_id": "1880",
+        "name": "Ilja Szkurin",
+        "position": "NAP",
+        "team": "gks katowice",
+        "predicted": 4.3,
+        "actual": 8,
+        "error": -3.7
       },
       {
         "player_id": "2869",
@@ -4159,6 +4141,15 @@
         "predicted": 1.0,
         "actual": 9,
         "error": -8.0
+      },
+      {
+        "player_id": "480",
+        "name": "Bartosz Nowak",
+        "position": "POM",
+        "team": "gks katowice",
+        "predicted": 7.3,
+        "actual": 18,
+        "error": -10.7
       }
     ],
     "predictions": [

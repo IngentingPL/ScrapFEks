@@ -8,7 +8,7 @@
       "id": 480,
       "name": "Bartosz Nowak",
       "team": "gks katowice",
-      "predicted": 9.2,
+      "predicted": 12.7,
       "actual": null,
       "opponents": [
         "Jagiellonia Białystok"
@@ -17,7 +17,7 @@
         false
       ],
       "fixtures_count": 1,
-      "is_captain": false
+      "is_captain": true
     },
     {
       "position": "MID",
@@ -49,7 +49,7 @@
         true
       ],
       "fixtures_count": 1,
-      "is_captain": true
+      "is_captain": false
     },
     {
       "position": "MID",
@@ -180,6 +180,6 @@
       "is_captain": false
     }
   ],
-  "captain": "Pablo Rodríguez",
-  "predicted_total": 109.4
+  "captain": "Bartosz Nowak",
+  "predicted_total": 113.7
 }
