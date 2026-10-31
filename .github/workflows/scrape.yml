@@ -90,6 +90,16 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          # Przebieg z kolejki concurrency startuje ze starym SHA; ta linia
+          # pobiera najnowszy stan gałęzi w chwili startu joba.
+          ref: ${{ github.ref_name }}
+
+      - name: Stan checkoutu
+        run: |
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "HEAD=$(git rev-parse HEAD)"
+          git log -1 --oneline
 
       - name: Setup Python
         uses: actions/setup-python@v5
