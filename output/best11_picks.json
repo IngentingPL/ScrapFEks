@@ -6,6 +6,22 @@
     "players": [
       {
         "position": "MID",
+        "id": 480,
+        "name": "Bartosz Nowak",
+        "team": "gks katowice",
+        "predicted": 9.2,
+        "actual": null,
+        "opponents": [
+          "Jagiellonia Białystok"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
         "id": 2110,
         "name": "Camilo Mena",
         "team": "korona kielce",
@@ -25,7 +41,7 @@
         "id": 2717,
         "name": "Pablo Rodríguez",
         "team": "lech poznań",
-        "predicted": 12.0,
+        "predicted": 11.9,
         "actual": null,
         "opponents": [
           "Zagłębie Lubin"
@@ -41,7 +57,7 @@
         "id": 2498,
         "name": "Patrik Wålemark",
         "team": "lech poznań",
-        "predicted": 9.8,
+        "predicted": 10.8,
         "actual": null,
         "opponents": [
           "Zagłębie Lubin"
@@ -80,22 +96,6 @@
         ],
         "is_home_list": [
           true
-        ],
-        "fixtures_count": 1,
-        "is_captain": false
-      },
-      {
-        "position": "MID",
-        "id": 2747,
-        "name": "Hugo Vallejo",
-        "team": "piast gliwice",
-        "predicted": 9.1,
-        "actual": null,
-        "opponents": [
-          "Śląsk Wrocław"
-        ],
-        "is_home_list": [
-          false
         ],
         "fixtures_count": 1,
         "is_captain": false
@@ -166,10 +166,10 @@
       },
       {
         "position": "DEF",
-        "id": 374,
-        "name": "Alan Uryga",
+        "id": 2869,
+        "name": "Jakub Krzyżanowski",
         "team": "wisła kraków",
-        "predicted": 8.9,
+        "predicted": 7.3,
         "actual": null,
         "opponents": [
           "Cracovia"
@@ -182,8 +182,8 @@
       }
     ],
     "captain": "Pablo Rodríguez",
-    "predicted_total": 110.1,
-    "saved_at": "2026-10-31T01:32:50+00:00"
+    "predicted_total": 109.4,
+    "saved_at": "2026-10-31T20:08:35+00:00"
   },
   "13": {
     "round": 13,
