@@ -21,6 +21,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
+          # Przebieg z kolejki concurrency startuje ze starym SHA; ta linia
+          # pobiera najnowszy stan gałęzi w chwili startu joba.
+          ref: ${{ github.ref_name }}
           token: ${{ secrets.WORKFLOW_PAT }}
 
       - name: Setup Python
