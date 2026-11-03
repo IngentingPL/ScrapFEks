@@ -25,7 +25,7 @@
         "id": 2110,
         "name": "Camilo Mena",
         "team": "korona kielce",
-        "predicted": 9.3,
+        "predicted": 9.5,
         "actual": null,
         "opponents": [
           "Radomiak Radom"
@@ -69,11 +69,27 @@
         "is_captain": false
       },
       {
+        "position": "GK",
+        "id": 2805,
+        "name": "Otto Hindrich",
+        "team": "legia warszawa",
+        "predicted": 4.2,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
         "position": "DEF",
         "id": 923,
         "name": "Rafał Augustyniak",
         "team": "legia warszawa",
-        "predicted": 8.8,
+        "predicted": 8.0,
         "actual": null,
         "opponents": [
           "Raków Częstochowa"
@@ -89,7 +105,7 @@
         "id": 1319,
         "name": "Paweł Wszołek",
         "team": "legia warszawa",
-        "predicted": 7.2,
+        "predicted": 6.5,
         "actual": null,
         "opponents": [
           "Raków Częstochowa"
@@ -101,27 +117,11 @@
         "is_captain": false
       },
       {
-        "position": "GK",
-        "id": 2286,
-        "name": "Valentin Cojocaru",
+        "position": "MID",
+        "id": 2679,
+        "name": "Paul Mukairu",
         "team": "pogoń szczecin",
-        "predicted": 7.8,
-        "actual": null,
-        "opponents": [
-          "Widzew Łódź"
-        ],
-        "is_home_list": [
-          false
-        ],
-        "fixtures_count": 1,
-        "is_captain": false
-      },
-      {
-        "position": "DEF",
-        "id": 2505,
-        "name": "Dimítrios Keramítsis",
-        "team": "pogoń szczecin",
-        "predicted": 8.5,
+        "predicted": 8.3,
         "actual": null,
         "opponents": [
           "Widzew Łódź"
@@ -137,7 +137,7 @@
         "id": 1987,
         "name": "Jordi Sánchez",
         "team": "pogoń szczecin",
-        "predicted": 7.3,
+        "predicted": 6.0,
         "actual": null,
         "opponents": [
           "Widzew Łódź"
@@ -149,17 +149,17 @@
         "is_captain": false
       },
       {
-        "position": "MID",
-        "id": 1092,
-        "name": "Piotr Samiec-Talar",
-        "team": "śląsk wrocław",
-        "predicted": 9.4,
+        "position": "DEF",
+        "id": 1225,
+        "name": "Jan Grzesik",
+        "team": "radomiak radom",
+        "predicted": 9.8,
         "actual": null,
         "opponents": [
-          "Piast Gliwice"
+          "Korona Kielce"
         ],
         "is_home_list": [
-          true
+          false
         ],
         "fixtures_count": 1,
         "is_captain": false
@@ -182,8 +182,8 @@
       }
     ],
     "captain": "Bartosz Nowak",
-    "predicted_total": 113.7,
-    "saved_at": "2026-11-01T00:34:57+00:00"
+    "predicted_total": 107.7,
+    "saved_at": "2026-11-03T01:53:16+00:00"
   },
   "13": {
     "round": 13,
