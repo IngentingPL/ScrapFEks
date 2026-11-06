@@ -37213,12 +37213,12 @@
   },
   {
     "round": 13,
-    "timestamp": "2026-11-03T04:31:28+01:00",
+    "timestamp": "2026-11-06T01:06:06+01:00",
     "teams": [
       {
         "slug": "widzewbaluty",
         "display_name": "Widzewbaluty",
-        "total_pts": 872,
+        "total_pts": 877,
         "players": [
           {
             "pid": "480",
@@ -37328,121 +37328,9 @@
         ]
       },
       {
-        "slug": "makkabi-bialystok",
-        "display_name": "Makkabi Bialystok",
-        "total_pts": 841,
-        "players": [
-          {
-            "pid": "166",
-            "name": "Rafał Janicki",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "480",
-            "name": "Bartosz Nowak",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": true
-          },
-          {
-            "pid": "1319",
-            "name": "Paweł Wszołek",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1327",
-            "name": "Kacper Urbański",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1880",
-            "name": "Ilja Szkurin",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1987",
-            "name": "Jordi Sánchez",
-            "pos": "Napastnik",
-            "C": true,
-            "VC": false
-          },
-          {
-            "pid": "2531",
-            "name": "Gašper Tratnik",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2671",
-            "name": "Karol Czubak",
-            "pos": "Napastnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2498",
-            "name": "Patrik Wålemark",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2490",
-            "name": "Darko Čurlinov",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "1455",
-            "name": "Aleks Ławniczak",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2741",
-            "name": "Alex Peškovič",
-            "pos": "Bramkarz",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2477",
-            "name": "Marcel Reguła",
-            "pos": "Pomocnik",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "563",
-            "name": "Marcin Wasielewski",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          },
-          {
-            "pid": "2676",
-            "name": "Emmanuel Twumasi",
-            "pos": "Obrońca",
-            "C": false,
-            "VC": false
-          }
-        ]
-      },
-      {
         "slug": "lowcy-blanczurow",
         "display_name": "Lowcy Blanczurow",
-        "total_pts": 840,
+        "total_pts": 844,
         "players": [
           {
             "pid": "480",
@@ -37552,9 +37440,121 @@
         ]
       },
       {
+        "slug": "makkabi-bialystok",
+        "display_name": "Makkabi Bialystok",
+        "total_pts": 843,
+        "players": [
+          {
+            "pid": "166",
+            "name": "Rafał Janicki",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "480",
+            "name": "Bartosz Nowak",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": true
+          },
+          {
+            "pid": "1319",
+            "name": "Paweł Wszołek",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1327",
+            "name": "Kacper Urbański",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1880",
+            "name": "Ilja Szkurin",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1987",
+            "name": "Jordi Sánchez",
+            "pos": "Napastnik",
+            "C": true,
+            "VC": false
+          },
+          {
+            "pid": "2531",
+            "name": "Gašper Tratnik",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2671",
+            "name": "Karol Czubak",
+            "pos": "Napastnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2498",
+            "name": "Patrik Wålemark",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2490",
+            "name": "Darko Čurlinov",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "1455",
+            "name": "Aleks Ławniczak",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2741",
+            "name": "Alex Peškovič",
+            "pos": "Bramkarz",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2477",
+            "name": "Marcel Reguła",
+            "pos": "Pomocnik",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "563",
+            "name": "Marcin Wasielewski",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          },
+          {
+            "pid": "2676",
+            "name": "Emmanuel Twumasi",
+            "pos": "Obrońca",
+            "C": false,
+            "VC": false
+          }
+        ]
+      },
+      {
         "slug": "dunder-mifflin",
         "display_name": "Dunder Mifflin",
-        "total_pts": 834,
+        "total_pts": 838,
         "players": [
           {
             "pid": "480",
@@ -37666,7 +37666,7 @@
       {
         "slug": "lelek-kozodoj",
         "display_name": "Lelek Kozodoj",
-        "total_pts": 817,
+        "total_pts": 820,
         "players": [
           {
             "pid": "480",
@@ -37778,7 +37778,7 @@
       {
         "slug": "huragan-primore",
         "display_name": "Huragan Primore",
-        "total_pts": 813,
+        "total_pts": 816,
         "players": [
           {
             "pid": "480",
@@ -37890,7 +37890,7 @@
       {
         "slug": "fc-przypal",
         "display_name": "Fc Przypal",
-        "total_pts": 797,
+        "total_pts": 799,
         "players": [
           {
             "pid": "923",
@@ -38002,7 +38002,7 @@
       {
         "slug": "kosciol-klubu-kuby",
         "display_name": "Kosciol Klubu Kuby",
-        "total_pts": 781,
+        "total_pts": 784,
         "players": [
           {
             "pid": "166",
@@ -38114,7 +38114,7 @@
       {
         "slug": "ks-wojtkovia",
         "display_name": "Ks Wojtkovia",
-        "total_pts": 773,
+        "total_pts": 776,
         "players": [
           {
             "pid": "480",
@@ -38226,7 +38226,7 @@
       {
         "slug": "kauno-zalgiris",
         "display_name": "Kauno Zalgiris",
-        "total_pts": 767,
+        "total_pts": 770,
         "players": [
           {
             "pid": "480",
@@ -38338,7 +38338,7 @@
       {
         "slug": "poznan-festung",
         "display_name": "Poznan Festung",
-        "total_pts": 760,
+        "total_pts": 762,
         "players": [
           {
             "pid": "480",
@@ -38450,7 +38450,7 @@
       {
         "slug": "lubliniankakonskie",
         "display_name": "Lubliniankakonskie",
-        "total_pts": 756,
+        "total_pts": 760,
         "players": [
           {
             "pid": "2717",
@@ -38562,7 +38562,7 @@
       {
         "slug": "polski-kibel",
         "display_name": "Polski Kibel",
-        "total_pts": 738,
+        "total_pts": 740,
         "players": [
           {
             "pid": "923",
@@ -38674,7 +38674,7 @@
       {
         "slug": "gouda-team",
         "display_name": "Gouda Team",
-        "total_pts": 729,
+        "total_pts": 730,
         "players": [
           {
             "pid": "166",
@@ -38786,7 +38786,7 @@
       {
         "slug": "mcroyal-polska",
         "display_name": "Mcroyal Polska",
-        "total_pts": 722,
+        "total_pts": 726,
         "players": [
           {
             "pid": "166",
@@ -38898,7 +38898,7 @@
       {
         "slug": "vfb-osterode",
         "display_name": "Vfb Osterode",
-        "total_pts": 697,
+        "total_pts": 700,
         "players": [
           {
             "pid": "480",
@@ -39010,7 +39010,7 @@
       {
         "slug": "wszystko-czuj",
         "display_name": "Wszystko Czuj",
-        "total_pts": 694,
+        "total_pts": 699,
         "players": [
           {
             "pid": "166",
@@ -39122,7 +39122,7 @@
       {
         "slug": "batory-bandit",
         "display_name": "Batory Bandit",
-        "total_pts": 685,
+        "total_pts": 687,
         "players": [
           {
             "pid": "166",
@@ -39234,7 +39234,7 @@
       {
         "slug": "ks-bialy-sad",
         "display_name": "Ks Bialy Sad",
-        "total_pts": 660,
+        "total_pts": 661,
         "players": [
           {
             "pid": "166",
@@ -39346,7 +39346,7 @@
       {
         "slug": "fc-abw",
         "display_name": "Fc Abw",
-        "total_pts": 660,
+        "total_pts": 661,
         "players": [
           {
             "pid": "480",
@@ -39458,7 +39458,7 @@
       {
         "slug": "wynalazcy-wslizgu",
         "display_name": "Wynalazcy Wslizgu",
-        "total_pts": 657,
+        "total_pts": 659,
         "players": [
           {
             "pid": "166",
@@ -39570,7 +39570,7 @@
       {
         "slug": "misterna-porazka",
         "display_name": "Misterna Porazka",
-        "total_pts": 656,
+        "total_pts": 658,
         "players": [
           {
             "pid": "480",
@@ -39682,7 +39682,7 @@
       {
         "slug": "duma-koziego-grodu",
         "display_name": "Duma Koziego Grodu",
-        "total_pts": 654,
+        "total_pts": 655,
         "players": [
           {
             "pid": "480",
@@ -39794,7 +39794,7 @@
       {
         "slug": "negative-szczecin",
         "display_name": "Negative Szczecin",
-        "total_pts": 647,
+        "total_pts": 649,
         "players": [
           {
             "pid": "1455",
@@ -39906,7 +39906,7 @@
       {
         "slug": "medi-top-glonovia",
         "display_name": "Medi Top Glonovia",
-        "total_pts": 633,
+        "total_pts": 636,
         "players": [
           {
             "pid": "374",
@@ -40018,7 +40018,7 @@
       {
         "slug": "glks-klomnice",
         "display_name": "Glks Klomnice",
-        "total_pts": 624,
+        "total_pts": 627,
         "players": [
           {
             "pid": "480",
@@ -40242,7 +40242,7 @@
       {
         "slug": "mewy-1fc",
         "display_name": "Mewy 1Fc",
-        "total_pts": 603,
+        "total_pts": 608,
         "players": [
           {
             "pid": "184",
@@ -40354,7 +40354,7 @@
       {
         "slug": "ks-blueface",
         "display_name": "Ks Blueface",
-        "total_pts": 588,
+        "total_pts": 590,
         "players": [
           {
             "pid": "480",
@@ -40466,7 +40466,7 @@
       {
         "slug": "mauroball",
         "display_name": "Mauroball",
-        "total_pts": 573,
+        "total_pts": 577,
         "players": [
           {
             "pid": "765",

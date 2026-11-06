@@ -1,1 +1,195 @@
-[]
+[
+  {
+    "round": 13,
+    "max_z_klubu": 3,
+    "formation": "4-5-1",
+    "players": [
+      {
+        "id": "1712",
+        "position": "DEF",
+        "name": "Joel Pereira",
+        "team": "lech poznań",
+        "predicted": 5.9,
+        "actual": 4.0,
+        "opponents": [
+          "Wisła Kraków"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "2717",
+        "position": "MID",
+        "name": "Pablo Rodríguez",
+        "team": "lech poznań",
+        "predicted": 13.0,
+        "actual": 6.0,
+        "opponents": [
+          "Wisła Kraków"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": true
+      },
+      {
+        "id": "2498",
+        "position": "MID",
+        "name": "Patrik Wålemark",
+        "team": "lech poznań",
+        "predicted": 10.6,
+        "actual": 9.0,
+        "opponents": [
+          "Wisła Kraków"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "923",
+        "position": "DEF",
+        "name": "Rafał Augustyniak",
+        "team": "legia warszawa",
+        "predicted": 7.6,
+        "actual": 4.0,
+        "opponents": [
+          "Górnik Zabrze"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "2747",
+        "position": "MID",
+        "name": "Hugo Vallejo",
+        "team": "piast gliwice",
+        "predicted": 7.8,
+        "actual": 5.0,
+        "opponents": [
+          "Wisła Płock"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "2286",
+        "position": "GK",
+        "name": "Valentin Cojocaru",
+        "team": "pogoń szczecin",
+        "predicted": 7.2,
+        "actual": -3.0,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "2679",
+        "position": "MID",
+        "name": "Paul Mukairu",
+        "team": "pogoń szczecin",
+        "predicted": 9.9,
+        "actual": 2.0,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "1987",
+        "position": "FWD",
+        "name": "Jordi Sánchez",
+        "team": "pogoń szczecin",
+        "predicted": 8.7,
+        "actual": 1.0,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "1092",
+        "position": "MID",
+        "name": "Piotr Samiec-Talar",
+        "team": "śląsk wrocław",
+        "predicted": 10.7,
+        "actual": 2.0,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "701",
+        "position": "DEF",
+        "name": "Patryk Kun",
+        "team": "wisła płock",
+        "predicted": 6.1,
+        "actual": 0.0,
+        "opponents": [
+          "Piast Gliwice"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": "2781",
+        "position": "DEF",
+        "name": "Žan Rogelj",
+        "team": "wisła płock",
+        "predicted": 6.0,
+        "actual": 5.0,
+        "opponents": [
+          "Piast Gliwice"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      }
+    ],
+    "captain": "Pablo Rodríguez",
+    "predicted_total": 106.5,
+    "actual_total": 41.0,
+    "best_cmf": {
+      "name": "Lowcy Blanczurow",
+      "slug": "lowcy-blanczurow",
+      "points": 86.0
+    },
+    "zrodlo": "zapisany",
+    "difference": -45.0
+  }
+]
