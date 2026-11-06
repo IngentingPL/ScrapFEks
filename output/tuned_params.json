@@ -1,6 +1,6 @@
 {
   "last_tuned": "2026-11-06",
-  "rounds_used": 11,
+  "rounds_used": 12,
   "decay": 0.5,
   "fdr_strength": 0.5,
   "home_away_bonus": 0.0,
@@ -12,6 +12,6 @@
   "lookback_threshold_high": 10,
   "lookback_max": 7,
   "mae_before": 2.6,
-  "mae_after": 2.3,
-  "improvement_pct": 8.8
+  "mae_after": 2.4,
+  "improvement_pct": 7.6
 }

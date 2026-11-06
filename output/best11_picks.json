@@ -1,4 +1,190 @@
 {
+  "15": {
+    "round": 15,
+    "max_z_klubu": 3,
+    "formation": "4-5-1",
+    "players": [
+      {
+        "position": "MID",
+        "id": 480,
+        "name": "Bartosz Nowak",
+        "team": "gks katowice",
+        "predicted": 10.7,
+        "actual": null,
+        "opponents": [
+          "Lech Poznań"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": true
+      },
+      {
+        "position": "DEF",
+        "id": 1192,
+        "name": "Erik Janža",
+        "team": "górnik zabrze",
+        "predicted": 6.5,
+        "actual": null,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 765,
+        "name": "Jesús Imaz",
+        "team": "jagiellonia białystok",
+        "predicted": 8.3,
+        "actual": null,
+        "opponents": [
+          "Cracovia"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2717,
+        "name": "Pablo Rodríguez",
+        "team": "lech poznań",
+        "predicted": 9.8,
+        "actual": null,
+        "opponents": [
+          "GKS Katowice"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2498,
+        "name": "Patrik Wålemark",
+        "team": "lech poznań",
+        "predicted": 9.2,
+        "actual": null,
+        "opponents": [
+          "GKS Katowice"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 923,
+        "name": "Rafał Augustyniak",
+        "team": "legia warszawa",
+        "predicted": 8.8,
+        "actual": null,
+        "opponents": [
+          "Wisła Płock"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 1319,
+        "name": "Paweł Wszołek",
+        "team": "legia warszawa",
+        "predicted": 7.3,
+        "actual": null,
+        "opponents": [
+          "Wisła Płock"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2679,
+        "name": "Paul Mukairu",
+        "team": "pogoń szczecin",
+        "predicted": 9.2,
+        "actual": null,
+        "opponents": [
+          "Śląsk Wrocław"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "FWD",
+        "id": 1987,
+        "name": "Jordi Sánchez",
+        "team": "pogoń szczecin",
+        "predicted": 7.1,
+        "actual": null,
+        "opponents": [
+          "Śląsk Wrocław"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 1225,
+        "name": "Jan Grzesik",
+        "team": "radomiak radom",
+        "predicted": 10.2,
+        "actual": null,
+        "opponents": [
+          "Wisła Kraków"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "GK",
+        "id": 2659,
+        "name": "Marcel Łubik",
+        "team": "wisła kraków",
+        "predicted": 5.1,
+        "actual": null,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      }
+    ],
+    "captain": "Bartosz Nowak",
+    "predicted_total": 102.9,
+    "saved_at": "2026-11-06T22:22:08+00:00"
+  },
   "14": {
     "round": 14,
     "max_z_klubu": 3,
