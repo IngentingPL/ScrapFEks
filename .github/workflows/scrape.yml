@@ -35,11 +35,8 @@ on:
   # AUTO-SCHEDULE-START
   schedule:
     - cron: '0 19 5 11 *'  # K14 DISCORD PRE 05.11 20:00 CET — prognoza przed kolejką
-    - cron: '30 17 6 11 *'  # K14 START 06.11 mecz 18:00 CET → +30min 18:30 CET
-    - cron: '0 18 6 11 *'  # K14 DISCORD CAPTAINS 06.11 19:00 CET — podsumowanie kapitanów
-    - cron: '30 19 6 11 *'  # K14 06.11 mecz 18:00 CET → +2.5h 20:30 CET
-    - cron: '0 22 6 11 *'  # K14 06.11 mecz 20:30 CET → +2.5h 23:00 CET
-    - cron: '45 13 7 11 *'  # K14 07.11 mecz 12:15 CET → +2.5h 14:45 CET
+    - cron: '30 20 6 11 *'  # K14 START 06.11 mecz 21:00 CET → +30min 21:30 CET
+    - cron: '0 21 6 11 *'  # K14 DISCORD CAPTAINS 06.11 22:00 CET — podsumowanie kapitanów
     - cron: '15 16 7 11 *'  # K14 07.11 mecz 14:45 CET → +2.5h 17:15 CET
     - cron: '0 19 7 11 *'  # K14 07.11 mecz 17:30 CET → +2.5h 20:00 CET
     - cron: '45 21 7 11 *'  # K14 07.11 mecz 20:15 CET → +2.5h 22:45 CET
