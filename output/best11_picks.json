@@ -18,14 +18,14 @@
           true
         ],
         "fixtures_count": 1,
-        "is_captain": true
+        "is_captain": false
       },
       {
         "position": "DEF",
         "id": 1192,
         "name": "Erik Janža",
         "team": "górnik zabrze",
-        "predicted": 6.5,
+        "predicted": 7.8,
         "actual": null,
         "opponents": [
           "Zagłębie Lubin"
@@ -117,14 +117,14 @@
         "is_captain": false
       },
       {
-        "position": "MID",
-        "id": 2679,
-        "name": "Paul Mukairu",
-        "team": "pogoń szczecin",
-        "predicted": 9.2,
+        "position": "GK",
+        "id": 2924,
+        "name": "Domen Gril",
+        "team": "piast gliwice",
+        "predicted": 5.8,
         "actual": null,
         "opponents": [
-          "Śląsk Wrocław"
+          "Korona Kielce"
         ],
         "is_home_list": [
           true
@@ -133,11 +133,11 @@
         "is_captain": false
       },
       {
-        "position": "FWD",
-        "id": 1987,
-        "name": "Jordi Sánchez",
+        "position": "MID",
+        "id": 2679,
+        "name": "Paul Mukairu",
         "team": "pogoń szczecin",
-        "predicted": 7.1,
+        "predicted": 7.5,
         "actual": null,
         "opponents": [
           "Śląsk Wrocław"
@@ -153,7 +153,7 @@
         "id": 1225,
         "name": "Jan Grzesik",
         "team": "radomiak radom",
-        "predicted": 10.2,
+        "predicted": 15.6,
         "actual": null,
         "opponents": [
           "Wisła Kraków"
@@ -162,17 +162,17 @@
           true
         ],
         "fixtures_count": 1,
-        "is_captain": false
+        "is_captain": true
       },
       {
-        "position": "GK",
-        "id": 2659,
-        "name": "Marcel Łubik",
-        "team": "wisła kraków",
-        "predicted": 5.1,
+        "position": "FWD",
+        "id": 95,
+        "name": "Karol Świderski",
+        "team": "widzew łódź",
+        "predicted": 7.6,
         "actual": null,
         "opponents": [
-          "Radomiak Radom"
+          "Raków Częstochowa"
         ],
         "is_home_list": [
           false
@@ -181,9 +181,9 @@
         "is_captain": false
       }
     ],
-    "captain": "Bartosz Nowak",
-    "predicted_total": 102.9,
-    "saved_at": "2026-11-07T01:51:25+00:00"
+    "captain": "Jan Grzesik",
+    "predicted_total": 114.0,
+    "saved_at": "2026-11-07T20:21:32+00:00"
   },
   "14": {
     "round": 14,
