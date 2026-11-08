@@ -2,14 +2,14 @@
   "15": {
     "round": 15,
     "max_z_klubu": 3,
-    "formation": "4-5-1",
+    "formation": "3-5-2",
     "players": [
       {
         "position": "MID",
         "id": 480,
         "name": "Bartosz Nowak",
         "team": "gks katowice",
-        "predicted": 10.7,
+        "predicted": 7.6,
         "actual": null,
         "opponents": [
           "Lech Poznań"
@@ -41,7 +41,7 @@
         "id": 765,
         "name": "Jesús Imaz",
         "team": "jagiellonia białystok",
-        "predicted": 8.3,
+        "predicted": 7.4,
         "actual": null,
         "opponents": [
           "Cracovia"
@@ -70,29 +70,13 @@
       },
       {
         "position": "MID",
-        "id": 2498,
-        "name": "Patrik Wålemark",
-        "team": "lech poznań",
-        "predicted": 9.2,
+        "id": 2423,
+        "name": "Mbaye N'Diaye",
+        "team": "motor lublin",
+        "predicted": 7.2,
         "actual": null,
         "opponents": [
-          "GKS Katowice"
-        ],
-        "is_home_list": [
-          false
-        ],
-        "fixtures_count": 1,
-        "is_captain": false
-      },
-      {
-        "position": "DEF",
-        "id": 923,
-        "name": "Rafał Augustyniak",
-        "team": "legia warszawa",
-        "predicted": 8.8,
-        "actual": null,
-        "opponents": [
-          "Wisła Płock"
+          "Wieczysta Kraków"
         ],
         "is_home_list": [
           false
@@ -117,27 +101,11 @@
         "is_captain": false
       },
       {
-        "position": "MID",
-        "id": 2679,
-        "name": "Paul Mukairu",
-        "team": "pogoń szczecin",
-        "predicted": 7.5,
-        "actual": null,
-        "opponents": [
-          "Śląsk Wrocław"
-        ],
-        "is_home_list": [
-          true
-        ],
-        "fixtures_count": 1,
-        "is_captain": false
-      },
-      {
         "position": "DEF",
         "id": 1225,
         "name": "Jan Grzesik",
         "team": "radomiak radom",
-        "predicted": 15.6,
+        "predicted": 14.2,
         "actual": null,
         "opponents": [
           "Wisła Kraków"
@@ -147,6 +115,22 @@
         ],
         "fixtures_count": 1,
         "is_captain": true
+      },
+      {
+        "position": "FWD",
+        "id": 1168,
+        "name": "Patryk Makuch",
+        "team": "raków częstochowa",
+        "predicted": 7.4,
+        "actual": null,
+        "opponents": [
+          "Widzew Łódź"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
       },
       {
         "position": "DEF",
@@ -179,11 +163,27 @@
         ],
         "fixtures_count": 1,
         "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2477,
+        "name": "Marcel Reguła",
+        "team": "zagłębie lubin",
+        "predicted": 7.2,
+        "actual": null,
+        "opponents": [
+          "Górnik Zabrze"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
       }
     ],
     "captain": "Jan Grzesik",
-    "predicted_total": 114.9,
-    "saved_at": "2026-11-08T01:02:46+00:00"
+    "predicted_total": 104.4,
+    "saved_at": "2026-11-08T20:36:16+00:00"
   },
   "14": {
     "round": 14,

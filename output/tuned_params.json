@@ -1,7 +1,7 @@
 {
   "last_tuned": "2026-11-08",
   "rounds_used": 12,
-  "decay": 0.65,
+  "decay": 0.8,
   "fdr_strength": 0.5,
   "home_away_bonus": 0.0,
   "trend_threshold": 2.0,
@@ -13,5 +13,5 @@
   "lookback_max": 7,
   "mae_before": 2.6,
   "mae_after": 2.5,
-  "improvement_pct": 5.6
+  "improvement_pct": 4.9
 }
