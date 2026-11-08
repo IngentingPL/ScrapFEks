@@ -5,11 +5,11 @@ i zwraca kompletny string HTML. Zero globalnego stanu, zero
 operacji I/O - czysty transform danych → HTML.
 """
 import json
-from utils import round_points
 
 # Etykieta bieżącego sezonu — pokazywana w mastheadzie i na landing page.
 # Zmienia się raz w roku (sezon piłkarski przecina lata kalendarzowe).
 SEASON_LABEL = "Sezon 2026/27"
+MIN_FORM_APPEARANCES = 3
 
 def generate_dashboard_html(
     summary_data: list[dict],
@@ -141,33 +141,87 @@ def generate_dashboard_html(
         if _played_rounds:
             current_round_label = str(max(_played_rounds))
 
-    # Gracz kolejki — najwyższy wynik w ostatniej rozegranej kolejce (best-effort)
-    round_star = None
-    if summary_data and current_round_label:
-        _last_r = int(current_round_label)
-        _best = None
-        for p in summary_data:
-            _pts = round_points(
-                {
-                    "rounds": [
-                        {"round": f.get("r"), "points": f.get("pts", 0), "played": f.get("p")}
-                        for f in (p.get("form") or [])
-                    ]
-                },
-                _last_r,
-            )
-            if _pts is not None and (_best is None or _pts > _best["pts"]):
-                _best = {"name": p.get("name", ""), "pts": _pts}
-        round_star = _best
+    # --- Dane trzech kafelków landing page ---
+    # Tabela ligi jest już posortowana po total_pts przez warstwę wywołującą.
+    landing_league_rows = ""
+    for rank, team in enumerate(league_teams_detail[:5], 1):
+        name = team.get("display_name") or team.get("slug", "").replace("-", " ").title()
+        landing_league_rows += (
+            f"<tr><td class='rank'>{rank:02d}</td><td class='strong'><span class='clip'>{name}</span></td>"
+            f"<td class='num strong'>{team.get('total_pts', 0):,}</td></tr>"
+        )
+    league_landing_content = (
+        "<div class='tscroll'><table class='dt landing-table'><thead><tr><th>#</th><th>Drużyna</th>"
+        "<th class='text-right'>Pkt</th></tr></thead><tbody>" + landing_league_rows + "</tbody></table></div>"
+        if landing_league_rows else "<div class='landing-empty'>Brak danych tabeli ligi.</div>"
+    )
 
-    # Średnia punktów ligi / kolejkę (z ostatniej rundy league_history)
-    league_avg_round = None
-    if (league_history or {}).get("rounds"):
-        _lr = league_history["rounds"][-1]
-        _sts = _lr.get("standings") or []
-        _vals = [s.get("round_points") for s in _sts if s.get("round_points") is not None]
-        if _vals:
-            league_avg_round = round(sum(_vals) / len(_vals), 1)
+    # Najbliższa kolejka pochodzi wyłącznie z przygotowanego snapshotu FDR.
+    landing_fdr = fdr_data or {}
+    landing_gws = landing_fdr.get("gameweeks") or []
+    landing_gw = landing_gws[0] if landing_gws else None
+    landing_fixtures = []
+    landing_teams = landing_fdr.get("teams", [])
+    # Starsze snapshoty mogą trzymać drużyny w słowniku; używaj tylko wpisów z listą meczów.
+    if isinstance(landing_teams, dict):
+        landing_teams = [team for team in landing_teams.values()
+                         if isinstance(team, dict) and isinstance(team.get("fixtures"), list)]
+    elif not isinstance(landing_teams, list):
+        landing_teams = []
+    if landing_gw is not None:
+        for team in landing_teams:
+            if not isinstance(team, dict) or not isinstance(team.get("fixtures"), list):
+                continue
+            matches = [f for f in team["fixtures"] if isinstance(f, dict) and f.get("gw") == landing_gw and f.get("opponent")]
+            for fixture in matches:
+                landing_fixtures.append((team, fixture, len(matches)))
+
+    def landing_fixture_list(metric):
+        # atk = siła ATK rywala (wysoki = trudny dla naszych obrońców),
+        # def = siła DEF rywala (wysoki = trudny dla naszych napastników).
+        # Dlatego najłatwiejsze dla ATAKU wybieramy po niskim def, a dla OBRONY po niskim atk.
+        field = "def" if metric == "attack" else "atk"
+        ordered = sorted((item for item in landing_fixtures if item[1].get(field) in (1, 2, 3, 4, 5)), key=lambda item: (
+            item[1].get(field, 99), item[0].get("name", "").casefold(),
+            item[1].get("opponent", "").casefold(), not bool(item[1].get("home")),
+        ))[:5]
+        rows = ""
+        for team, fixture, match_count in ordered:
+            rating = fixture.get(field)
+            if rating not in (1, 2, 3, 4, 5):
+                continue
+            venue = "DOM" if fixture.get("home") else "WYJ"
+            dgw = " <span class='landing-dgw'>DGW</span>" if match_count > 1 else ""
+            rows += ("<li><span class='landing-match'><span class='landing-team'>" + str(team.get("name") or "—") + dgw +
+                     "</span><span class='landing-opponent'><span class='landing-opponent-name'>" + str(fixture.get("opponent") or "—") +
+                     "</span><span class='hw" + (" d" if fixture.get("home") else "") + "'>" + venue + "</span></span></span>"+
+                     "<span class='fdr fdr-" + str(rating) + "'>" + str(rating) + "</span></li>")
+        return "<ol class='landing-fixture-list'>" + rows + "</ol>" if rows else "<div class='landing-empty'>Brak meczów dla najbliższej kolejki.</div>"
+
+    landing_attack_rows = landing_fixture_list("attack")
+    landing_defence_rows = landing_fixture_list("defence")
+
+    # Ostatnie maksymalnie 5 wpisów formy; p === false wyklucza kolejkę nierozstrzygniętą.
+    landing_form = []
+    for player in summary_data:
+        recent = sorted(player.get("form") or [], key=lambda item: item.get("r", 0), reverse=True)[:5]
+        played = [item for item in recent if item.get("p") is not False]
+        if len(played) >= MIN_FORM_APPEARANCES:
+            landing_form.append((sum((item.get("pts") or 0) for item in played) / len(played), player, len(played), len(recent)))
+    landing_form.sort(key=lambda item: (-item[0], str(item[1].get("name", "")).casefold(), str(item[1].get("team", "")).casefold()))
+    landing_form_rows = ""
+    for rank, (average, player, appearances, sample_size) in enumerate(landing_form[:5], 1):
+        position = _POS_SHORT.get(player.get("position"), player.get("position", "—"))
+        landing_form_rows += (
+            f"<tr><td class='rank'>{rank:02d}</td><td class='strong'><span class='clip'>{player.get('name', '—')}</span></td>"
+            f"<td><span class='clip'>{player.get('team', '—')}</span></td><td><span class='badge-pos pos-{position}'>{position}</span></td>"
+            f"<td class='num strong'>{average:.1f}</td><td class='num muted'>{appearances}/{sample_size}</td></tr>"
+        )
+    form_landing_content = (
+        "<div class='tscroll'><table class='dt landing-table landing-form-table'><thead><tr><th>#</th><th>Zawodnik</th>"
+        "<th>Klub</th><th>Poz.</th><th class='text-right'>Śr.</th><th class='text-right'>Wyst.</th></tr></thead><tbody>" + landing_form_rows + "</tbody></table></div>"
+        if landing_form_rows else "<div class='landing-empty'>Brak zawodników z co najmniej 3 rozegranymi kolejkami formy.</div>"
+    )
 
     # Default scope
     default_scope = "top10" if "top10" in scopes_data else ("top100" if "top100" in scopes_data else "league")
@@ -498,37 +552,67 @@ select.input{{cursor:pointer;padding-right:26px}}
 .occ-lo{{color:var(--text-muted)}}
 .used{{display:inline-block;background:var(--tint-soft);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;letter-spacing:.4px}}
 
-/* ===== LANDING ===== */
-.hero{{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:stretch;margin-top:26px}}
-.hero-kicker{{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2.4px;text-transform:uppercase;color:var(--accent);margin-bottom:16px}}
-.hero h1{{font-size:clamp(34px,5.2vw,64px);font-weight:800;letter-spacing:-2.4px;line-height:.98}}
-.hero h1 em{{font-style:normal;color:var(--accent)}}
-.hero .lede{{margin-top:18px}}
-.hero-cta{{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap}}
-.btn-primary,.btn-ghost{{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 26px;border-radius:24px;font-size:13px;font-weight:700;letter-spacing:.6px;cursor:pointer;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}}
-.btn-primary{{background:var(--accent);color:var(--text-inverse)}}
-.btn-primary:hover{{background:var(--text);color:var(--text-inverse)}}
-.btn-ghost{{background:transparent;border-color:var(--border-accent);color:var(--accent)}}
-.btn-ghost:hover{{background:var(--accent);color:var(--text-inverse)}}
-.fact-strip{{display:flex;gap:0;flex-wrap:wrap;border:1px solid var(--border);border-radius:20px;background:var(--surface-inset);margin-top:24px;overflow:hidden}}
-.fact{{flex:1 1 180px;padding:14px 18px;border-right:1px solid var(--border);min-width:0}}
-.fact:last-child{{border-right:0}}
-.fact .fk{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-dim)}}
-.fact .fv{{font-size:15px;font-weight:700;margin-top:5px}}
-.entry-grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}}
-.entry{{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;text-align:left;min-height:172px;transition:border-color .15s,background .15s;color:var(--text)}}
-.entry:hover{{border-color:var(--border-strong);background:var(--surface-hover);color:var(--text)}}
-.entry .e-num{{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.6px;color:var(--text-dim);text-transform:uppercase}}
-.entry .e-val{{font-size:34px;font-weight:800;letter-spacing:-1.6px;line-height:1}}
-.entry .e-name{{font-size:14px;font-weight:700}}
-.entry .e-desc{{font-size:12px;color:var(--text-muted);line-height:1.5;margin-top:auto}}
-.entry .e-go{{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-top:8px}}
-.entry-feature{{background:var(--accent);border-color:var(--accent);color:var(--text-inverse)}}
-.entry-feature .e-num,.entry-feature .e-desc,.entry-feature .e-go{{color:var(--text-inverse)}}
-.entry-feature:hover{{background:var(--text);border-color:var(--text);color:var(--text-inverse)}}
-.entry-feature:hover .e-num,.entry-feature:hover .e-desc,.entry-feature:hover .e-go{{color:var(--text-inverse)}}
-@media (max-width:1000px){{.hero{{grid-template-columns:1fr}}.entry-grid{{grid-template-columns:repeat(2,1fr)}}}}
-@media (max-width:520px){{.entry-grid{{grid-template-columns:1fr}}}}
+ /* ===== LANDING ===== */
+.landing-hero{{margin:30px 0 24px;padding:0 2px}}
+.landing-kicker{{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}}
+.landing-hero h1{{font-size:clamp(30px,4.3vw,52px);font-weight:800;letter-spacing:-1.9px;line-height:1.02;max-width:900px}}
+.landing-hero h1 em{{font-style:normal;color:var(--accent)}}
+.landing-grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}}
+.landing-card{{background:var(--surface);border:1px solid var(--border);border-radius:18px;min-width:0;overflow:hidden;display:flex;flex-direction:column}}
+.landing-card-head{{min-height:68px;padding:16px 17px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px}}
+.landing-card-head h2{{font-size:13px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}}
+.landing-card-head p{{font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.4}}
+.landing-card-body{{padding:0 10px;flex:1;min-height:260px}}
+.landing-card .dt{{font-size:12px}}
+.landing-card .dt thead th{{padding:10px 8px;font-size:9px}}
+.landing-card .dt td{{padding:10px 8px}}
+.landing-table{{table-layout:fixed}}
+.landing-table th:first-child,.landing-table td:first-child{{width:32px}}
+.landing-table .clip{{max-width:100%}}
+.landing-form-table th:first-child,.landing-form-table td:first-child{{width:28px}}
+.landing-form-table th:nth-child(2){{width:28%}}
+.landing-form-table th:nth-child(3){{width:28%}}
+.landing-form-table th:nth-child(4){{width:50px}}
+.landing-form-table th:nth-child(5),.landing-form-table th:nth-child(6){{width:46px}}
+.landing-fixture-lists{{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 4px}}
+.landing-fixture-group{{min-width:0}}
+.landing-fixture-group h3{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin:0 0 7px 4px}}
+.landing-fixture-list{{list-style:none;display:flex;flex-direction:column;gap:4px}}
+.landing-fixture-list li{{display:flex;justify-content:space-between;align-items:center;gap:4px;min-height:34px;padding:4px;border-bottom:1px solid var(--border);font-size:11px}}
+.landing-match{{min-width:0;display:flex;flex-direction:column;gap:2px}}
+.landing-team{{font-size:11px;font-weight:700;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}}
+.landing-opponent{{display:flex;align-items:flex-start;gap:4px;font-size:10px;color:var(--text-muted);min-width:0}}
+.landing-opponent-name{{min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}}
+.landing-opponent .hw{{font-size:8px;padding:0 3px}}
+.landing-dgw{{font:700 8px 'JetBrains Mono',monospace;color:var(--accent);margin-left:3px}}
+.landing-fixture-list .fdr{{min-width:23px;height:21px;flex:0 0 auto}}
+.landing-card-foot{{padding:10px 16px 14px;border-top:1px solid var(--border);margin-top:auto}}
+.landing-cta{{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;background:transparent;border:1px solid var(--border-accent);border-radius:40px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s}}
+.landing-cta:hover{{background:var(--accent);color:var(--text-inverse)}}
+.landing-empty{{padding:24px 10px;color:var(--text-muted);font-size:12px;text-align:center}}
+@media (max-width:1000px){{.landing-grid{{grid-template-columns:repeat(2,minmax(0,1fr))}}.landing-card:last-child{{grid-column:1/-1}}}}
+@media (max-width:650px){{.landing-grid{{grid-template-columns:1fr}}.landing-card:last-child{{grid-column:auto}}.landing-card-body{{min-height:0}}.landing-hero{{margin-top:24px}}.landing-hero h1{{letter-spacing:-1.2px}}}}
+@media (max-width:400px){{
+  /* Strona startowa: gęstsze KPI bez zmiany wspólnego nagłówka i nawigacji. */
+  .shell:has(#v-landing.active) > .kpi-row{{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
+  .shell:has(#v-landing.active) > .kpi-row .kpi{{padding:10px 11px;border-radius:14px}}
+  .shell:has(#v-landing.active) > .kpi-row .kpi-label{{gap:6px;font-size:9px;letter-spacing:.8px}}
+  .shell:has(#v-landing.active) > .kpi-row .kpi-mark{{width:7px;height:7px}}
+  .shell:has(#v-landing.active) > .kpi-row .kpi-val{{font-size:24px;margin-top:4px}}
+  .shell:has(#v-landing.active) > .kpi-row .kpi-sub{{font-size:10px;margin-top:4px}}
+  .shell:has(#v-landing.active) .landing-hero{{margin:12px 0 10px}}
+  .shell:has(#v-landing.active) .landing-kicker{{font-size:9px;letter-spacing:1.2px;margin-bottom:6px}}
+  .shell:has(#v-landing.active) .landing-hero h1{{font-size:26px;letter-spacing:-.9px;line-height:1.04}}
+}}
+@media (max-width:600px){{
+  /* Przesuń tylko KPI za landing: bez display:contents, by zachować landmarki. */
+  .shell:has(#v-landing.active){{display:grid;grid-template-columns:minmax(0,1fr)}}
+  .shell:has(#v-landing.active) > .masthead{{grid-row:1}}
+  .shell:has(#v-landing.active) > .tabbar{{grid-row:2}}
+  .shell:has(#v-landing.active) > main{{grid-row:3}}
+  .shell:has(#v-landing.active) > .kpi-row{{grid-row:4}}
+  .shell:has(#v-landing.active) > .footer{{grid-row:5}}
+}}
 
 /* ===== TERMINARZ ===== */
 .planner-intro{{font-size:14px;color:var(--text-muted);line-height:1.65;max-width:82ch;margin-bottom:18px}}
@@ -714,7 +798,6 @@ select.input{{cursor:pointer;padding-right:26px}}
   .page-title{{letter-spacing:-1px}}
   .sec{{flex-wrap:wrap}}
   .sec .sec-note{{text-align:left}}
-  .fact{{border-right:0;border-bottom:1px solid var(--border)}}
 }}
 
 </style>
@@ -778,68 +861,30 @@ select.input{{cursor:pointer;padding-right:26px}}
 
   <!-- ============ LANDING ============ -->
   <section id="v-landing" class="view active" aria-label="Start">
-    <div class="hero">
-      <div>
-        <div class="hero-kicker">{SEASON_LABEL}{' · kolejka ' + current_round_label if current_round_label else ''} · dane {timestamp}</div>
-        <h1><em>Dashboard ligi Discord Forum CMF.</em><br>Tabele, analizy, prognozy.</h1>
-        <div class="hero-cta">
-          <button class="btn-primary" data-go="players">Wejdź w zawodników →</button>
-          <button class="btn-ghost" data-go="fixtures">Zobacz trudność meczów</button>
-        </div>
-        <div class="fact-strip">
-          {"<div class='fact'><div class='fk'>Ostatnia kolejka</div><div class='fv'>K" + current_round_label + "</div></div>" if current_round_label else ""}
-          {"<div class='fact'><div class='fk'>Gracz kolejki</div><div class='fv'>" + (round_star['name'] if round_star else '') + " · " + (str(round_star['pts']) if round_star else '') + " pkt</div></div>" if round_star else ""}
-          {"<div class='fact'><div class='fk'>Średnia ligi / kol.</div><div class='fv'>" + str(league_avg_round) + " pkt</div></div>" if league_avg_round is not None else ""}
-        </div>
-      </div>
-      <div class="entry-grid" style="grid-template-columns:1fr 1fr;align-content:start">
-        <button class="entry entry-feature" data-go="teams">
-          <span class="e-num">01 · Lider ligi</span>
-          <span class="e-val">{leader_pts}</span>
-          <span class="e-name">{leader_name}</span>
-          <span class="e-desc">Pełna tabela CMF: jesień + wiosna, medale, rozwijane składy i ruchy pozycji.</span>
-          <span class="e-go">Otwórz ligę →</span>
-        </button>
-        <button class="entry" data-go="players">
-          <span class="e-num">02 · Top owned</span>
-          <span class="e-val">{top_owned.get('squad_pct', '—')}</span>
-          <span class="e-name">{top_owned.get('name', '—')}</span>
-          <span class="e-desc">Kto trzyma go w składzie, w jedenastce i kto oddał mu opaskę kapitana.</span>
-          <span class="e-go">Właściciele →</span>
-        </button>
-        <button class="entry" data-go="players">
-          <span class="e-num">03 · Najlepszy PPP</span>
-          <span class="e-val">{best_ppp.get('points_per_price', 0):.1f}</span>
-          <span class="e-name">{best_ppp.get('name', '—')} · {best_ppp.get('price', 0):.1f}M</span>
-          <span class="e-desc">Sortuj po Pkt/Cena i szukaj okazji, zanim zrobi to reszta ligi.</span>
-          <span class="e-go">Szukaj okazji →</span>
-        </button>
-        {"<button class='entry' data-go='teams'><span class='e-num'>04 · Liga</span><span class='e-val'>" + str(league_teams_count) + "</span><span class='e-name'>" + league_label + "</span><span class='e-desc'>Trzydzieści drużyn, jedna tabela i widok duetów obok.</span><span class='e-go'>Zobacz wszystkich →</span></button>" if has_league else ""}
-      </div>
+    <div class="landing-hero">
+      <div class="landing-kicker">{SEASON_LABEL}{' · kolejka ' + current_round_label if current_round_label else ''} · dane {timestamp}</div>
+      <h1><em>Dashboard ligi Discord Forum CMF.</em><br>Tabele, analizy, prognozy.</h1>
     </div>
-
-    <div class="sec"><h2>Wejdź w szczegóły</h2><span class="rule"></span>
-      <span class="sec-note">Dziewięć powodów, żeby zostać na dłużej</span></div>
-    <div class="entry-grid">
-      <button class="entry" data-go="players">
-        <span class="e-num">01 · Zawodnicy</span>
-        <span class="e-name" style="font-size:18px">15 kolumn, wszystkie sortowalne</span>
-        <span class="e-desc">Zakresy Top 10 / Top 100 / Wszystkie / liga, filtry pozycji, wyszukiwarka i forma z ostatnich kolejek.</span>
-        <span class="e-go">Otwórz →</span>
-      </button>
-      {"<button class='entry' data-go='teams'><span class='e-num'>02 · Liga CMF</span><span class='e-name' style='font-size:18px'>Drużyny i duety</span><span class='e-desc'>Jesień, wiosna, suma, zmiana, medale na podium i rozwijany skład drużyny.</span><span class='e-go'>Otwórz →</span></button>" if has_league else ""}
-      {"<button class='entry' data-go='fixtures'><span class='e-num'>03 · Terminarz</span><span class='e-name' style='font-size:18px'>Trudność meczów + Fixture Planner</span><span class='e-desc'>Skala 1–5 dla ataku i obrony, sortowanie po łatwości i para rotacyjna na wybrany zakres kolejek.</span><span class='e-go'>Otwórz →</span></button>" if has_fixtures else ""}
-      {"<button class='entry' data-go='transfers'><span class='e-num'>04 · Transfery</span><span class='e-name' style='font-size:18px'>Kupna i sprzedaże</span><span class='e-desc'>Dwie listy top 15 z liczbą drużyn, udziałem procentowym i paskiem postępu.</span><span class='e-go'>Otwórz →</span></button>" if has_transfers else ""}
-      {"<button class='entry' data-go='predictions'><span class='e-num'>05 · Prognoza</span><span class='e-name' style='font-size:18px'>17 kolumn na K" + str(prediction_round) + "</span><span class='e-desc'>Potencjał z percentyli, użyty FDR, xA/90, xG/90 i pewność prognozy.</span><span class='e-go'>Otwórz →</span></button>" if has_predictions else ""}
-      {"<button class='entry' data-go='accuracy'><span class='e-num'>06 · Trafność</span><span class='e-name' style='font-size:18px'>MAE, hit rate i auto-tuning</span><span class='e-desc'>Karty metryk, wykres trendu MAE, szczegóły kolejki i status auto-tunera.</span><span class='e-go'>Otwórz →</span></button>" if has_accuracy else ""}
-      {"<button class='entry' data-go='season'><span class='e-num'>07 · Sezon</span><span class='e-name' style='font-size:18px'>Historia ligi: pozycje i punkty</span><span class='e-desc'>Pozycje albo punkty łącznie, zakresy Top 5 / Dolne 5 i tabela z trendem.</span><span class='e-go'>Otwórz →</span></button>" if has_season else ""}
-      <button class="entry" data-go="compare">
-        <span class="e-num">08 · Porównanie</span>
-        <span class="e-name" style="font-size:18px">Do trzech zawodników obok siebie</span>
-        <span class="e-desc">Karty, tabela z wygranym w każdym wierszu, forma i FDR najbliższych meczów.</span>
-        <span class="e-go">Otwórz →</span>
-      </button>
-      {"<a class='entry' href='archive/index.html' style='text-decoration:none'><span class='e-num'>09 · Archiwum</span><span class='e-name' style='font-size:18px'>Zamknięte sezony</span><span class='e-desc'>Poprzednie sezony w trybie tylko do odczytu.</span><span class='e-go'>Otwórz →</span></a>" if has_archive else ""}
+    <div class="landing-grid">
+      <article class="landing-card">
+        <header class="landing-card-head"><div><h2>Top 5 · Liga CMF</h2><p>Tabela łączna według punktów</p></div></header>
+        <div class="landing-card-body">{league_landing_content}</div>
+        <footer class="landing-card-foot"><button class="landing-cta" data-go="teams">Pełna tabela ligi →</button></footer>
+      </article>
+      <article class="landing-card">
+        <header class="landing-card-head"><div><h2>Najłatwiejsze mecze</h2><p>{'Kolejka ' + str(landing_gw) if landing_gw is not None else 'Najbliższa kolejka'}</p></div></header>
+        <div class="landing-card-body">
+          <div class="landing-fixture-lists">
+            <section class="landing-fixture-group"><h3>Dla ataku · DEF rywala</h3>{landing_attack_rows}</section>
+            <section class="landing-fixture-group"><h3>Dla obrony · ATK rywala</h3>{landing_defence_rows}</section>
+          </div>
+        </div>
+        <footer class="landing-card-foot"><button class="landing-cta" data-go="fixtures">Cały terminarz →</button></footer>
+      </article>
+      <article class="landing-card">
+        <header class="landing-card-head"><div><h2>Forma</h2><p>Średnia z maks. 5 rozegranych kolejek · min. {MIN_FORM_APPEARANCES} występy</p></div></header>
+        <div class="landing-card-body">{form_landing_content}</div>
+      </article>
     </div>
   </section>
 
