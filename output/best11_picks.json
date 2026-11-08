@@ -101,27 +101,11 @@
         "is_captain": false
       },
       {
-        "position": "DEF",
-        "id": 1319,
-        "name": "Paweł Wszołek",
-        "team": "legia warszawa",
-        "predicted": 7.3,
-        "actual": null,
-        "opponents": [
-          "Wisła Płock"
-        ],
-        "is_home_list": [
-          false
-        ],
-        "fixtures_count": 1,
-        "is_captain": false
-      },
-      {
         "position": "GK",
         "id": 2924,
         "name": "Domen Gril",
         "team": "piast gliwice",
-        "predicted": 5.8,
+        "predicted": 6.3,
         "actual": null,
         "opponents": [
           "Korona Kielce"
@@ -165,6 +149,22 @@
         "is_captain": true
       },
       {
+        "position": "DEF",
+        "id": 1931,
+        "name": "Steve Kapuadi",
+        "team": "widzew łódź",
+        "predicted": 7.7,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
         "position": "FWD",
         "id": 95,
         "name": "Karol Świderski",
@@ -182,8 +182,8 @@
       }
     ],
     "captain": "Jan Grzesik",
-    "predicted_total": 114.0,
-    "saved_at": "2026-11-07T22:39:17+00:00"
+    "predicted_total": 114.9,
+    "saved_at": "2026-11-08T01:02:46+00:00"
   },
   "14": {
     "round": 14,
