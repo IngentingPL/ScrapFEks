@@ -3976,14 +3976,14 @@
     "date": "2026-11-09",
     "mae": 3.2,
     "mae_by_pos": {
-      "BR": 2.5,
+      "BR": 2.1,
       "OBR": 3.6,
-      "POM": 3.4,
-      "NAP": 2.6
+      "POM": 3.5,
+      "NAP": 2.7
     },
-    "top10_mae": 6.3,
-    "hit_rate": 0.53,
-    "sample_size": 80,
+    "top10_mae": 6.4,
+    "hit_rate": 0.52,
+    "sample_size": 79,
     "worst_misses": [
       {
         "name": "Bartosz Nowak",
@@ -3992,22 +3992,22 @@
         "error": 11.1
       },
       {
+        "name": "Filip Koperski",
+        "predicted": 2.6,
+        "actual": 12,
+        "error": -9.4
+      },
+      {
         "name": "Rafał Augustyniak",
         "predicted": 8.0,
         "actual": -1,
         "error": 9.0
       },
       {
-        "name": "Filip Koperski",
-        "predicted": 2.6,
-        "actual": 11,
-        "error": -8.4
-      },
-      {
-        "name": "Domen Gril",
-        "predicted": 2.5,
-        "actual": 10,
-        "error": -7.5
+        "name": "Marcel Reguła",
+        "predicted": 4.9,
+        "actual": 13,
+        "error": -8.1
       },
       {
         "name": "Camilo Mena",
@@ -4284,15 +4284,6 @@
         "error": 1.7
       },
       {
-        "player_id": "1168",
-        "name": "Patryk Makuch",
-        "position": "NAP",
-        "team": "raków częstochowa",
-        "predicted": 5.2,
-        "actual": 7,
-        "error": -1.8
-      },
-      {
         "player_id": "1400",
         "name": "Xavier Dziekoński",
         "position": "BR",
@@ -4374,15 +4365,6 @@
         "error": 2.3
       },
       {
-        "player_id": "95",
-        "name": "Karol Świderski",
-        "position": "NAP",
-        "team": "widzew łódź",
-        "predicted": 4.5,
-        "actual": 7,
-        "error": -2.5
-      },
-      {
         "player_id": "2123",
         "name": "Michał Gurgul",
         "position": "OBR",
@@ -4426,6 +4408,15 @@
         "predicted": 3.7,
         "actual": 1,
         "error": 2.7
+      },
+      {
+        "player_id": "1168",
+        "name": "Patryk Makuch",
+        "position": "NAP",
+        "team": "raków częstochowa",
+        "predicted": 5.2,
+        "actual": 8,
+        "error": -2.8
       },
       {
         "player_id": "303",
@@ -4482,6 +4473,15 @@
         "error": 3.2
       },
       {
+        "player_id": "2945",
+        "name": "Rodrigo Conceicao",
+        "position": "OBR",
+        "team": "jagiellonia białystok",
+        "predicted": 2.7,
+        "actual": 6,
+        "error": -3.3
+      },
+      {
         "player_id": "374",
         "name": "Alan Uryga",
         "position": "OBR",
@@ -4507,6 +4507,15 @@
         "predicted": 6.5,
         "actual": 3,
         "error": 3.5
+      },
+      {
+        "player_id": "95",
+        "name": "Karol Świderski",
+        "position": "NAP",
+        "team": "widzew łódź",
+        "predicted": 4.5,
+        "actual": 8,
+        "error": -3.5
       },
       {
         "player_id": "2490",
@@ -4617,15 +4626,6 @@
         "error": 5.1
       },
       {
-        "player_id": "2945",
-        "name": "Rodrigo Conceicao",
-        "position": "OBR",
-        "team": "jagiellonia białystok",
-        "predicted": 2.7,
-        "actual": 8,
-        "error": -5.3
-      },
-      {
         "player_id": "860",
         "name": "Wiktor Długosz",
         "position": "POM",
@@ -4633,15 +4633,6 @@
         "predicted": 7.5,
         "actual": 2,
         "error": 5.5
-      },
-      {
-        "player_id": "1225",
-        "name": "Jan Grzesik",
-        "position": "OBR",
-        "team": "radomiak radom",
-        "predicted": 10.2,
-        "actual": 16,
-        "error": -5.8
       },
       {
         "player_id": "2781",
@@ -4689,6 +4680,15 @@
         "error": 6.5
       },
       {
+        "player_id": "1225",
+        "name": "Jan Grzesik",
+        "position": "OBR",
+        "team": "radomiak radom",
+        "predicted": 10.2,
+        "actual": 17,
+        "error": -6.8
+      },
+      {
         "player_id": "2747",
         "name": "Hugo Vallejo",
         "position": "POM",
@@ -4696,15 +4696,6 @@
         "predicted": 8.0,
         "actual": 1,
         "error": 7.0
-      },
-      {
-        "player_id": "2477",
-        "name": "Marcel Reguła",
-        "position": "POM",
-        "team": "zagłębie lubin",
-        "predicted": 4.9,
-        "actual": 12,
-        "error": -7.1
       },
       {
         "player_id": "1673",
@@ -4734,22 +4725,13 @@
         "error": 7.5
       },
       {
-        "player_id": "2924",
-        "name": "Domen Gril",
-        "position": "BR",
-        "team": "piast gliwice",
-        "predicted": 2.5,
-        "actual": 10,
-        "error": -7.5
-      },
-      {
-        "player_id": "1635",
-        "name": "Filip Koperski",
-        "position": "OBR",
-        "team": "radomiak radom",
-        "predicted": 2.6,
-        "actual": 11,
-        "error": -8.4
+        "player_id": "2477",
+        "name": "Marcel Reguła",
+        "position": "POM",
+        "team": "zagłębie lubin",
+        "predicted": 4.9,
+        "actual": 13,
+        "error": -8.1
       },
       {
         "player_id": "923",
@@ -4759,6 +4741,15 @@
         "predicted": 8.0,
         "actual": -1,
         "error": 9.0
+      },
+      {
+        "player_id": "1635",
+        "name": "Filip Koperski",
+        "position": "OBR",
+        "team": "radomiak radom",
+        "predicted": 2.6,
+        "actual": 12,
+        "error": -9.4
       },
       {
         "player_id": "480",

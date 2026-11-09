@@ -84,27 +84,11 @@
       "is_captain": false
     },
     {
-      "position": "GK",
-      "id": 2924,
-      "name": "Domen Gril",
-      "team": "piast gliwice",
-      "predicted": 6.3,
-      "actual": null,
-      "opponents": [
-        "Korona Kielce"
-      ],
-      "is_home_list": [
-        true
-      ],
-      "fixtures_count": 1,
-      "is_captain": false
-    },
-    {
       "position": "DEF",
       "id": 1225,
       "name": "Jan Grzesik",
       "team": "radomiak radom",
-      "predicted": 14.2,
+      "predicted": 14.5,
       "actual": null,
       "opponents": [
         "Wisła Kraków"
@@ -120,7 +104,7 @@
       "id": 1168,
       "name": "Patryk Makuch",
       "team": "raków częstochowa",
-      "predicted": 7.4,
+      "predicted": 7.8,
       "actual": null,
       "opponents": [
         "Widzew Łódź"
@@ -152,10 +136,26 @@
       "id": 95,
       "name": "Karol Świderski",
       "team": "widzew łódź",
-      "predicted": 7.6,
+      "predicted": 7.9,
       "actual": null,
       "opponents": [
         "Raków Częstochowa"
+      ],
+      "is_home_list": [
+        false
+      ],
+      "fixtures_count": 1,
+      "is_captain": false
+    },
+    {
+      "position": "GK",
+      "id": 2659,
+      "name": "Marcel Łubik",
+      "team": "wisła kraków",
+      "predicted": 5.1,
+      "actual": null,
+      "opponents": [
+        "Radomiak Radom"
       ],
       "is_home_list": [
         false
@@ -168,7 +168,7 @@
       "id": 2477,
       "name": "Marcel Reguła",
       "team": "zagłębie lubin",
-      "predicted": 8.2,
+      "predicted": 8.5,
       "actual": null,
       "opponents": [
         "Górnik Zabrze"
@@ -181,5 +181,5 @@
     }
   ],
   "captain": "Jan Grzesik",
-  "predicted_total": 106.4
+  "predicted_total": 106.8
 }
