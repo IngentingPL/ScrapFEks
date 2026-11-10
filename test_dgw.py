@@ -56,7 +56,7 @@ def test_dgw_round_points():
         10,
         [{"slug": "team", "display_name": "Team"}],
     )
-    assert captains[0]["cap_pts"] == 25
+    assert captains[0]["cap_pts"] == 25, "Kapitan z DGW powinien mieć 25 pkt"
 
     predictions = [
         {"player_id": p["player_id"], "name": p["name"], "predicted_points": 10}
@@ -64,9 +64,8 @@ def test_dgw_round_points():
     ]
     result = compute_accuracy(predictions, players, 10)
     actuals = {d["player_id"]: d["actual"] for d in result["details"]}
-    assert actuals == {"1": 25, "2": 27, "3": 9}
+    assert actuals == {"1": 25, "2": 27, "3": 9}, "DGW: accuracy powinna sumować punkty z obu meczów"
     print("  analytics=25, accuracy=25, jeden mecz=27, 1 z 2 meczów=9, niegrający pominięty")
-    return True
 
 
 def test_dgw_suma_prognoz():
@@ -137,7 +136,6 @@ def test_dgw_suma_prognoz():
     assert len(combined.get('is_home_list', [])) == 2, "DGW: is_home_list powinno mieć 2 elementy"
     
     print("  ✅ DGW: suma prognoz OK")
-    return True
 
 
 def test_single_match_backward_compat():
@@ -202,7 +200,6 @@ def test_single_match_backward_compat():
     assert combined.get('is_home') == True, "Single: is_home powinno być dostępne"
     
     print("  ✅ Single match: backward compat OK")
-    return True
 
 
 def test_dgw_normalizacja_wejscia():
@@ -247,7 +244,6 @@ def test_dgw_normalizacja_wejscia():
     assert combined.get('fixtures_count') == 1, "Stary format: fixtures_count powinno być 1"
     
     print("  ✅ Normalizacja wejścia OK")
-    return True
 
 
 def test_dgw_wiele_zawodnikow():
@@ -332,7 +328,6 @@ def test_dgw_wiele_zawodnikow():
         f"GKS (DGW, {gks_player['predicted_points']} pkt) powinien mieć wyższą prognozę niż Legia (Single, {legia_player['predicted_points']} pkt)"
     
     print("  ✅ Mieszany test OK")
-    return True
 
 
 def main():
@@ -354,8 +349,8 @@ def main():
     
     for test_func in tests:
         try:
-            if test_func():
-                passed += 1
+            test_func()
+            passed += 1
         except AssertionError as e:
             print(f"  ❌ FAIL: {e}")
             failed += 1
