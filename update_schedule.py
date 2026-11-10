@@ -36,6 +36,24 @@ TRIGGER_DELAY_HOURS = 2.5
 DEFAULT_FIRST_MATCH_HOUR = 21
 DEFAULT_FIRST_MATCH_MINUTE = 0
 
+# Karencja przy czyszczeniu harmonogramu.
+# Slot, którego czas minął mniej niż 48 h temu, zostaje w scrape.yml.
+# Dzięki temu opóźniony bieg GitHub Actions nie traci swojego triggera.
+RETENTION_HOURS = 48
+
+# Zapasowy slot PRE: rano w dniu pierwszego meczu (UTC).
+# Godzina 5:07 UTC daje 6 h zapasu przed wieczornym meczem.
+# Jeśli pierwszy mecz jest wyjątkowo wcześnie, cofamy się o kolejne godziny.
+PRE_BACKUP_HOUR_UTC = 5
+PRE_BACKUP_MINUTE = 7
+PRE_BACKUP_DELAY_HOURS = 6
+
+# Zapasowy slot POST: 16:07 UTC w dniu POST.
+# Główny POST jest około 11:00 UTC, więc zapas jest kilka godzin później,
+# a nawet z opóźnieniem 5 h zdąży przed północą UTC.
+POST_BACKUP_HOUR_UTC = 16
+POST_BACKUP_MINUTE = 7
+
 
 def parse_terminarz(filepath: str) -> tuple[list[dict], dict]:
     """
@@ -229,6 +247,8 @@ def generate_crons(
     2. 2.5h po każdym meczu (pełne odświeżenie)
     3. Dzień przed pierwszym meczem kolejki o 20:00 (Discord pre-round)
     4. Dzień po ostatnim meczu kolejki o 10:00 (Discord post-round)
+    5. Zapasowy pre-round rano w dniu pierwszego meczu (UTC)
+    6. Zapasowy post-round kilka godzin po głównym (UTC)
 
     Deduplikuje identyczne czasy triggerów.
     Zwraca: [(label, match_local, trigger_utc, cron_str, round), ...]
@@ -341,6 +361,72 @@ def generate_crons(
             )
             crons.append(("discord_post", notify_local, trigger_utc, cron, rnd))
 
+    # 5. Zapasowy slot PRE rano w dniu pierwszego meczu (UTC).
+    # Ma wystartować nawet z opóźnieniem 6 h, więc cofamy godzinę,
+    # dopóki trigger + 6 h nie wypadnie przed pierwszym meczem.
+    for rnd, m in sorted(first_per_round.items()):
+        first_match_utc = m["datetime"].astimezone(TZ_UTC)
+        backup_hour = PRE_BACKUP_HOUR_UTC
+        while backup_hour >= 0:
+            backup_utc = datetime(
+                first_match_utc.year,
+                first_match_utc.month,
+                first_match_utc.day,
+                backup_hour,
+                PRE_BACKUP_MINUTE,
+                tzinfo=TZ_UTC,
+            )
+            if backup_utc + timedelta(hours=PRE_BACKUP_DELAY_HOURS) < first_match_utc:
+                break
+            backup_hour -= 1
+        if backup_hour < 0:
+            continue
+        key = (backup_utc.month, backup_utc.day, backup_utc.hour, backup_utc.minute)
+        if key not in seen:
+            seen.add(key)
+            cron = (
+                f"{backup_utc.minute} {backup_utc.hour} "
+                f"{backup_utc.day} {backup_utc.month} *"
+            )
+            crons.append(
+                (
+                    "discord_pre_backup",
+                    backup_utc.astimezone(TZ_WARSAW),
+                    backup_utc,
+                    cron,
+                    rnd,
+                )
+            )
+
+    # 6. Zapasowy slot POST w dniu POST, kilka godzin po głównym.
+    # 16:07 UTC + 5 h opóźnienia = 21:07 UTC, czyli jeszcze przed północą.
+    for rnd, last_day in sorted(last_day_per_round.items()):
+        notify_day = last_day + timedelta(days=1)
+        backup_utc = datetime(
+            notify_day.year,
+            notify_day.month,
+            notify_day.day,
+            POST_BACKUP_HOUR_UTC,
+            POST_BACKUP_MINUTE,
+            tzinfo=TZ_UTC,
+        )
+        key = (backup_utc.month, backup_utc.day, backup_utc.hour, backup_utc.minute)
+        if key not in seen:
+            seen.add(key)
+            cron = (
+                f"{backup_utc.minute} {backup_utc.hour} "
+                f"{backup_utc.day} {backup_utc.month} *"
+            )
+            crons.append(
+                (
+                    "discord_post_backup",
+                    backup_utc.astimezone(TZ_WARSAW),
+                    backup_utc,
+                    cron,
+                    rnd,
+                )
+            )
+
     # Sortuj chronologicznie
     crons.sort(key=lambda x: x[2])
     return crons
@@ -380,94 +466,234 @@ def extract_existing_crons(workflow_path: str) -> dict[int, list[str]]:
     return existing
 
 
+def _parse_cron_fields(cron: str):
+    """Zwraca (minuta, godzina, dzień, miesiąc) z prostego crona."""
+    parts = cron.split()
+    if len(parts) < 5:
+        return None
+    try:
+        return (int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3]))
+    except ValueError:
+        return None
+
+
+def _nearest_trigger_utc(month, day, hour, minute, now_utc):
+    """
+    Cron nie ma roku, więc wybieramy rok, w którym data wypada najbliżej
+    „teraz”. Działa to także na przełomie roku (np. grudzień w styczniu).
+    """
+    candidates = []
+    for year in (now_utc.year - 1, now_utc.year, now_utc.year + 1):
+        try:
+            candidates.append(
+                datetime(year, month, day, hour, minute, tzinfo=TZ_UTC)
+            )
+        except ValueError:
+            continue
+    if not candidates:
+        return None
+    return min(candidates, key=lambda value: abs(value - now_utc))
+
+
+def _parse_existing_cron(line: str, now_utc: datetime):
+    """Zwraca (kolejka, czas UTC, cron) dla linii z bloku AUTO-SCHEDULE."""
+    cron_match = re.search(r"cron:\s*'([^']+)'", line)
+    if not cron_match:
+        return None
+    fields = _parse_cron_fields(cron_match.group(1))
+    if fields is None:
+        return None
+    round_match = re.search(r"#\s*K(\d+)\b", line)
+    if not round_match:
+        return None
+    minute, hour, day, month = fields
+    trigger_utc = _nearest_trigger_utc(month, day, hour, minute, now_utc)
+    if trigger_utc is None:
+        return None
+    return int(round_match.group(1)), trigger_utc, cron_match.group(1)
+
+
+def _retention_end_for_round(round_number: int, round_stats: dict):
+    """
+    Zwraca koniec ochrony kolejki: koniec dnia POST + 1 dzień (UTC).
+
+    POST wypada dzień po ostatnim meczu, więc ochrona trwa do
+    (ostatni mecz + 3 dni) o 00:00 UTC.
+    """
+    stats = round_stats.get(round_number, {})
+    dates = [day for day in stats.get("match_dates", []) if day is not None]
+    if stats.get("all_dates_confirmed", True) and dates:
+        end_day = max(dates) + timedelta(days=3)
+    elif stats.get("start_date"):
+        # Brak potwierdzonych dat — zakładamy 3 dni meczowe i dokładamy POST+1.
+        end_day = stats["start_date"] + timedelta(days=6)
+    elif dates:
+        end_day = max(dates) + timedelta(days=3)
+    else:
+        return None
+    return datetime(end_day.year, end_day.month, end_day.day, tzinfo=TZ_UTC)
+
+
+def _format_generated_cron(entry: dict) -> str:
+    """Formatuje jedną nową linię schedule z komentarzem po polsku."""
+    rnd = entry["round"]
+    label = entry["label"]
+    match_local = entry["match_local"]
+    trigger_utc = entry["trigger"]
+    cron = entry["cron"]
+    tz_name = match_local.strftime("%Z")
+
+    if label == "start":
+        trigger_local = match_local + timedelta(minutes=30)
+        comment = (
+            f"K{rnd} START {match_local.strftime('%d.%m')} "
+            f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
+            f"+30min {trigger_local.strftime('%H:%M')} {tz_name}"
+        )
+    elif label == "discord_pre":
+        comment = (
+            f"K{rnd} DISCORD PRE {match_local.strftime('%d.%m')} "
+            f"20:00 {tz_name} — prognoza przed kolejką"
+        )
+    elif label == "discord_pre_backup":
+        comment = (
+            f"K{rnd} DISCORD PRE ZAPAS {trigger_utc.strftime('%d.%m')} "
+            f"{trigger_utc.strftime('%H:%M')} UTC — zapas przed kolejką"
+        )
+    elif label == "discord_post":
+        comment = (
+            f"K{rnd} DISCORD POST {match_local.strftime('%d.%m')} "
+            f"12:00 {tz_name} — podsumowanie po kolejce"
+        )
+    elif label == "discord_post_backup":
+        comment = (
+            f"K{rnd} DISCORD POST ZAPAS {trigger_utc.strftime('%d.%m')} "
+            f"{trigger_utc.strftime('%H:%M')} UTC — zapas po kolejce"
+        )
+    elif label == "discord_captains":
+        comment = (
+            f"K{rnd} DISCORD CAPTAINS {match_local.strftime('%d.%m')} "
+            f"{match_local.strftime('%H:%M')} {tz_name} — podsumowanie kapitanów"
+        )
+    else:
+        trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
+        comment = (
+            f"K{rnd} {match_local.strftime('%d.%m')} "
+            f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
+            f"+2.5h {trigger_local.strftime('%H:%M')} {tz_name}"
+        )
+    return f"    - cron: '{cron}'  # {comment}"
+
+
 def build_schedule_block(
     crons: list[tuple],
     existing_crons: dict[int, list[str]],
     round_stats: dict,
+    now: datetime | None = None,
 ) -> list[str]:
     """
-    Buduje NOWĄ listę linii schedule w pamięci:
-    - Dla kolejek z godzinami → nowe crony (zastąp stare)
-    - Dla kolejek BEZ godzin w przyszłości → zachowaj istniejące
-    - Kolejki rozegrane → pomijane
+    Buduje NOWĄ listę linii schedule w pamięci.
+
+    Zasady:
+    - nowe crony dotyczą tylko przyszłości (przeszły trigger i tak nie wystartuje),
+    - istniejący slot zostaje, jeśli jego czas minął mniej niż 48 h temu,
+    - przyszły slot kolejki zostaje do końca dnia POST + 1 dzień (UTC),
+      nawet gdy terminarz nie ma już godzin meczów (wyniki są kompletne).
     """
-    today = datetime.now().date()
+    now_utc = (now or datetime.now(TZ_UTC)).astimezone(TZ_UTC)
+    cutoff_utc = now_utc - timedelta(hours=RETENTION_HOURS)
 
-    # Zbiór kolejek z wygenerowanymi cronami (mają godziny)
-    rounds_with_crons = set(rnd for _, _, _, _, rnd in crons)
+    all_rounds = set(round_stats)
+    all_rounds.update(existing_crons)
+    all_rounds.update(rnd for _, _, _, _, rnd in crons)
+    retention_end = {
+        rnd: _retention_end_for_round(rnd, round_stats) for rnd in all_rounds
+    }
 
-    # Zbiór wszystkich kolejek z terminarza (tylko te w przyszłości)
-    future_rounds = set()
-    for round_num, stats in round_stats.items():
-        start_date = stats.get("start_date")
-        if start_date and start_date >= today:
-            future_rounds.add(round_num)
+    entries = []
+    seen = set()
 
-    # Buduj blok schedule
-    lines = [MARKER_START]
-    if crons or (existing_crons and future_rounds):
-        lines.append("  schedule:")
-
-        # Posortuj wszystkie kolejki (zarówno nowe crony, jak i zachowane)
-        all_rounds = rounds_with_crons.copy()
-        for rnd in existing_crons:
-            if rnd in future_rounds and rnd not in rounds_with_crons:
-                all_rounds.add(rnd)
-
-        # Grupuj crony per kolejka dla sortowania chronologicznego
-        round_crons = {}
-        for label, match_local, trigger_utc, cron, rnd in crons:
-            if rnd not in round_crons:
-                round_crons[rnd] = []
-            round_crons[rnd].append((label, match_local, trigger_utc, cron, rnd))
-
-        # Sortuj kolejki wg daty początku (z round_stats)
-        sorted_rounds = sorted(
-            all_rounds,
-            key=lambda r: round_stats.get(r, {}).get("start_date", datetime.max.date())
+    def _cron_key(trigger_utc: datetime):
+        # Bez roku — tak jak dotychczasowa deduplikacja w generatorze.
+        return (
+            trigger_utc.month,
+            trigger_utc.day,
+            trigger_utc.hour,
+            trigger_utc.minute,
         )
 
-        # Generuj linie dla każdej kolejki
-        for rnd in sorted_rounds:
-            if rnd in rounds_with_crons:
-                # Kolejka z godzinami — generuj nowe crony
-                for label, match_local, trigger_utc, cron, _ in round_crons.get(rnd, []):
-                    tz_name = match_local.strftime("%Z")
-                    if label == "start":
-                        trigger_local = match_local + timedelta(minutes=30)
-                        comment = (
-                            f"K{rnd} START {match_local.strftime('%d.%m')} "
-                            f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
-                            f"+30min {trigger_local.strftime('%H:%M')} {tz_name}"
-                        )
-                    elif label == "discord_pre":
-                        comment = (
-                            f"K{rnd} DISCORD PRE {match_local.strftime('%d.%m')} "
-                            f"20:00 {tz_name} — prognoza przed kolejką"
-                        )
-                    elif label == "discord_post":
-                        comment = (
-                            f"K{rnd} DISCORD POST {match_local.strftime('%d.%m')} "
-                            f"12:00 {tz_name} — podsumowanie po kolejce"
-                        )
-                    elif label == "discord_captains":
-                        comment = (
-                            f"K{rnd} DISCORD CAPTAINS {match_local.strftime('%d.%m')} "
-                            f"{match_local.strftime('%H:%M')} {tz_name} — podsumowanie kapitanów"
-                        )
-                    else:
-                        trigger_local = match_local + timedelta(hours=TRIGGER_DELAY_HOURS)
-                        comment = (
-                            f"K{rnd} {match_local.strftime('%d.%m')} "
-                            f"mecz {match_local.strftime('%H:%M')} {tz_name} → "
-                            f"+2.5h {trigger_local.strftime('%H:%M')} {tz_name}"
-                        )
-                    lines.append(f"    - cron: '{cron}'  # {comment}")
-            elif rnd in existing_crons and rnd in future_rounds:
-                # Kolejka bez godzin w przyszłości — zachowaj istniejące
-                for existing_line in existing_crons[rnd]:
-                    lines.append(existing_line)
+    # 1. Nowe crony — tylko przyszłe. Przeszły trigger jest już bezużyteczny.
+    for label, match_local, trigger_utc, cron, rnd in crons:
+        if trigger_utc <= now_utc:
+            continue
+        key = _cron_key(trigger_utc)
+        if key in seen:
+            continue
+        seen.add(key)
+        entries.append(
+            {
+                "round": rnd,
+                "trigger": trigger_utc,
+                "line": None,
+                "label": label,
+                "match_local": match_local,
+                "cron": cron,
+            }
+        )
 
+    # 2. Stare wpisy — karencja 48 h oraz okno kolejki do końca POST+1 (UTC).
+    for rnd, lines in existing_crons.items():
+        for line in lines:
+            parsed = _parse_existing_cron(line, now_utc)
+            if parsed is None:
+                continue
+            line_round, trigger_utc, cron = parsed
+            keep = trigger_utc >= cutoff_utc and (
+                trigger_utc <= now_utc
+                or (
+                    retention_end.get(line_round) is not None
+                    and trigger_utc < retention_end[line_round]
+                )
+            )
+            if not keep:
+                continue
+            key = _cron_key(trigger_utc)
+            if key in seen:
+                continue
+            seen.add(key)
+            entries.append(
+                {
+                    "round": line_round,
+                    "trigger": trigger_utc,
+                    "line": line,
+                    "label": None,
+                    "match_local": None,
+                    "cron": cron,
+                }
+            )
+
+    if not entries:
+        return [MARKER_START, MARKER_END]
+
+    def _round_sort_key(rnd):
+        start_date = round_stats.get(rnd, {}).get("start_date")
+        if start_date is not None:
+            return (0, start_date, rnd)
+        earliest = min(
+            (entry["trigger"] for entry in entries if entry["round"] == rnd),
+            default=now_utc,
+        )
+        return (1, earliest, rnd)
+
+    entries.sort(key=lambda entry: (_round_sort_key(entry["round"]), entry["trigger"]))
+
+    lines = [MARKER_START, "  schedule:"]
+    for entry in entries:
+        if entry["line"] is not None:
+            # Zachowany stary wpis — zostawiamy jego linię bez zmian.
+            lines.append(entry["line"])
+        else:
+            lines.append(_format_generated_cron(entry))
     lines.append(MARKER_END)
     return lines
 
@@ -524,7 +750,8 @@ def check_missing_times(round_stats: dict) -> bool:
             if without_time > 0:
                 print(
                     f"⚠️  Kolejka {round_num} ({stats['dates']}) — "
-                    f"{without_time} z {stats['total']} meczów bez godziny, crony zachowane"
+                    f"{without_time} z {stats['total']} meczów bez godziny, "
+                    f"crony zostaną zachowane w oknie ochrony"
                 )
                 has_warnings = True
 
@@ -545,7 +772,7 @@ def main():
     # Sprawdź mecze bez godziny w kolejkach w ciągu 14 dni (ostrzeżenie, nie błąd)
     has_missing_times = check_missing_times(round_stats)
     if has_missing_times:
-        print("   ℹ️  Brakujące godziny — istniejące crony zostaną zachowane.")
+        print("   ℹ️  Brakujące godziny — istniejące crony zostaną zachowane w oknie ochrony.")
 
     # Krok 1: Wyciągnij istniejące crony z scrape.yml (do zachowania)
     print(f"\n📝 Parsowanie {WORKFLOW_FILE}...")
@@ -586,6 +813,18 @@ def main():
                 print(
                     f"   {tag} K{rnd} {match_local.strftime('%d.%m')} 10:00 {tz_name}"
                     f" ({trigger_utc.strftime('%H:%M')} UTC)"
+                )
+            elif label == "discord_pre_backup":
+                tag = "📣 PRE ZAPAS"
+                print(
+                    f"   {tag} K{rnd} {trigger_utc.strftime('%d.%m')} "
+                    f"{trigger_utc.strftime('%H:%M')} UTC — zapas przed kolejką"
+                )
+            elif label == "discord_post_backup":
+                tag = "📣 POST ZAPAS"
+                print(
+                    f"   {tag} K{rnd} {trigger_utc.strftime('%d.%m')} "
+                    f"{trigger_utc.strftime('%H:%M')} UTC — zapas po kolejce"
                 )
             elif label == "discord_captains":
                 tag = "👑 DISC CAPT "
