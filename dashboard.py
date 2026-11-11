@@ -564,7 +564,7 @@ select.input{{cursor:pointer;padding-right:26px}}
 .landing-card-head p{{font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.4}}
 .landing-card-body{{padding:0 10px;flex:1;min-height:260px}}
 .landing-card .dt{{font-size:12px}}
-.landing-card .dt thead th{{padding:10px 8px;font-size:9px}}
+.landing-card .dt thead th{{padding:10px 8px;font-size:9px;line-height:13px;height:34px}}
 .landing-card .dt td{{padding:10px 8px}}
 .landing-table{{table-layout:fixed}}
 .landing-table th:first-child,.landing-table td:first-child{{width:32px}}
@@ -579,7 +579,7 @@ select.input{{cursor:pointer;padding-right:26px}}
 /* Pas etykiet kafelka "Najłatwiejsze mecze" — wspólny wygląd z pasem tabel (.landing-card .dt thead th):
    tło --surface-inset, padding 10px 8px, mono 9px/700, letter-spacing 1.1px, border-bottom --border */
 .landing-fixture-heads{{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface-inset);border-bottom:1px solid var(--border)}}
-.landing-fixture-head-label{{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--text-muted);padding:10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.landing-fixture-head-label{{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--text-muted);padding:10px 8px;line-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 .landing-fixture-list{{list-style:none;display:flex;flex-direction:column;gap:4px}}
 .landing-fixture-list li{{display:flex;justify-content:space-between;align-items:center;gap:4px;min-height:34px;padding:4px;border-bottom:1px solid var(--border);font-size:11px}}
 .landing-match{{min-width:0;display:flex;flex-direction:column;gap:2px}}
@@ -595,6 +595,20 @@ select.input{{cursor:pointer;padding-right:26px}}
 .landing-empty{{padding:24px 10px;color:var(--text-muted);font-size:12px;text-align:center}}
 @media (max-width:1000px){{.landing-grid{{grid-template-columns:repeat(2,minmax(0,1fr))}}.landing-card:last-child{{grid-column:1/-1}}}}
 @media (max-width:650px){{.landing-grid{{grid-template-columns:1fr}}.landing-card:last-child{{grid-column:auto}}.landing-card-body{{min-height:0}}.landing-hero{{margin-top:24px}}.landing-hero h1{{letter-spacing:-1.2px}}}}
+/* Desktop (3 kolumny): wspólna wysokość wiersza we wszystkich kafelkach.
+   Wartość mieści dwuliniowy wiersz meczu, więc linie wierszy 1-5 leżą naprzeciw
+   siebie w każdym kafelku, a listy sięgają do stopki. Telefon bez zmian. */
+@media (min-width:1000px){{
+  .landing-card{{--landing-row-h:44px}}
+  .landing-card .dt td{{height:var(--landing-row-h)}}
+  .landing-fixture-list li{{min-height:var(--landing-row-h)}}
+  /* długie nazwy w jednym wierszu (z wielokropkiem), żeby wysokość wiersza była stała */
+  .landing-team{{display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}}
+  .landing-opponent-name{{display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}}
+  /* bez górnego odstępu i bez gapu między wierszami: rytm jak w tabelach */
+  .landing-fixture-list{{gap:0}}
+  .landing-fixture-lists{{padding:0 4px}}
+}}
 @media (max-width:400px){{
   /* Strona startowa: gęstsze KPI bez zmiany wspólnego nagłówka i nawigacji. */
   .shell:has(#v-landing.active) > .kpi-row{{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
