@@ -1,15 +1,15 @@
 {
   "90minut_table": {
-    "timestamp": "2026-11-08T20:36:04.788030",
+    "timestamp": "2026-11-11T13:03:54.690918",
     "ttl_hours": 24,
     "data": {
       "Lech Poznań": {
-        "gf": 32,
-        "ga": 11,
-        "mp": 12,
-        "gf_home": 20,
-        "ga_home": 4,
-        "mp_home": 7,
+        "gf": 34,
+        "ga": 13,
+        "mp": 13,
+        "gf_home": 22,
+        "ga_home": 6,
+        "mp_home": 8,
         "gf_away": 12,
         "ga_away": 7,
         "mp_away": 5
@@ -58,6 +58,17 @@
         "ga_away": 14,
         "mp_away": 7
       },
+      "Zagłębie Lubin": {
+        "gf": 18,
+        "ga": 17,
+        "mp": 14,
+        "gf_home": 8,
+        "ga_home": 4,
+        "mp_home": 7,
+        "gf_away": 10,
+        "ga_away": 13,
+        "mp_away": 7
+      },
       "Piast Gliwice": {
         "gf": 24,
         "ga": 20,
@@ -68,17 +79,6 @@
         "gf_away": 7,
         "ga_away": 8,
         "mp_away": 7
-      },
-      "Zagłębie Lubin": {
-        "gf": 16,
-        "ga": 15,
-        "mp": 13,
-        "gf_home": 8,
-        "ga_home": 4,
-        "mp_home": 7,
-        "gf_away": 8,
-        "ga_away": 11,
-        "mp_away": 6
       },
       "GKS Katowice": {
         "gf": 25,

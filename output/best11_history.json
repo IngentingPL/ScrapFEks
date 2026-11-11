@@ -191,5 +191,198 @@
     },
     "zrodlo": "zapisany",
     "difference": -45.0
+  },
+  {
+    "round": 14,
+    "max_z_klubu": 3,
+    "formation": "4-5-1",
+    "players": [
+      {
+        "id": 480,
+        "position": "MID",
+        "name": "Bartosz Nowak",
+        "team": "gks katowice",
+        "predicted": 13.1,
+        "actual": 2.0,
+        "opponents": [
+          "Jagiellonia Białystok"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": true
+      },
+      {
+        "id": 2110,
+        "position": "MID",
+        "name": "Camilo Mena",
+        "team": "korona kielce",
+        "predicted": 9.5,
+        "actual": 2.0,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2717,
+        "position": "MID",
+        "name": "Pablo Rodríguez",
+        "team": "lech poznań",
+        "predicted": 11.9,
+        "actual": 0.0,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2498,
+        "position": "MID",
+        "name": "Patrik Wålemark",
+        "team": "lech poznań",
+        "predicted": 11.1,
+        "actual": 9.0,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2805,
+        "position": "GK",
+        "name": "Otto Hindrich",
+        "team": "legia warszawa",
+        "predicted": 4.2,
+        "actual": 0.0,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 923,
+        "position": "DEF",
+        "name": "Rafał Augustyniak",
+        "team": "legia warszawa",
+        "predicted": 8.0,
+        "actual": -1.0,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 1319,
+        "position": "DEF",
+        "name": "Paweł Wszołek",
+        "team": "legia warszawa",
+        "predicted": 6.5,
+        "actual": 0.0,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2679,
+        "position": "MID",
+        "name": "Paul Mukairu",
+        "team": "pogoń szczecin",
+        "predicted": 8.3,
+        "actual": 2.0,
+        "opponents": [
+          "Widzew Łódź"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 1987,
+        "position": "FWD",
+        "name": "Jordi Sánchez",
+        "team": "pogoń szczecin",
+        "predicted": 6.0,
+        "actual": 2.0,
+        "opponents": [
+          "Widzew Łódź"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 1225,
+        "position": "DEF",
+        "name": "Jan Grzesik",
+        "team": "radomiak radom",
+        "predicted": 10.2,
+        "actual": 17.0,
+        "opponents": [
+          "Korona Kielce"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2869,
+        "position": "DEF",
+        "name": "Jakub Krzyżanowski",
+        "team": "wisła kraków",
+        "predicted": 7.8,
+        "actual": 3.0,
+        "opponents": [
+          "Cracovia"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      }
+    ],
+    "captain": "Bartosz Nowak",
+    "predicted_total": 109.7,
+    "actual_total": 38.0,
+    "best_cmf": {
+      "name": "Widzewbaluty",
+      "slug": "widzewbaluty",
+      "points": 66.0
+    },
+    "zrodlo": "zapisany",
+    "difference": -28.0
   }
 ]

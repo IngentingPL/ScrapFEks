@@ -3973,16 +3973,16 @@
   },
   {
     "round": 14,
-    "date": "2026-11-09",
+    "date": "2026-11-11",
     "mae": 3.2,
     "mae_by_pos": {
-      "BR": 2.1,
+      "BR": 2.0,
       "OBR": 3.6,
       "POM": 3.5,
       "NAP": 2.7
     },
     "top10_mae": 6.4,
-    "hit_rate": 0.52,
+    "hit_rate": 0.53,
     "sample_size": 79,
     "worst_misses": [
       {
@@ -4419,6 +4419,15 @@
         "error": -2.8
       },
       {
+        "player_id": "2659",
+        "name": "Marcel Łubik",
+        "position": "BR",
+        "team": "wisła kraków",
+        "predicted": 4.1,
+        "actual": 7,
+        "error": -2.9
+      },
+      {
         "player_id": "303",
         "name": "Mariusz Stępiński",
         "position": "NAP",
@@ -4525,15 +4534,6 @@
         "predicted": 5.7,
         "actual": 2,
         "error": 3.7
-      },
-      {
-        "player_id": "2659",
-        "name": "Marcel Łubik",
-        "position": "BR",
-        "team": "wisła kraków",
-        "predicted": 4.1,
-        "actual": 8,
-        "error": -3.9
       },
       {
         "player_id": "1795",

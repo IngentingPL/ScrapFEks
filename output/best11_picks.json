@@ -38,22 +38,6 @@
       },
       {
         "position": "MID",
-        "id": 765,
-        "name": "Jesús Imaz",
-        "team": "jagiellonia białystok",
-        "predicted": 7.4,
-        "actual": null,
-        "opponents": [
-          "Cracovia"
-        ],
-        "is_home_list": [
-          false
-        ],
-        "fixtures_count": 1,
-        "is_captain": false
-      },
-      {
-        "position": "MID",
         "id": 2717,
         "name": "Pablo Rodríguez",
         "team": "lech poznań",
@@ -77,6 +61,22 @@
         "actual": null,
         "opponents": [
           "GKS Katowice"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2423,
+        "name": "Mbaye N'Diaye",
+        "team": "motor lublin",
+        "predicted": 7.2,
+        "actual": null,
+        "opponents": [
+          "Wieczysta Kraków"
         ],
         "is_home_list": [
           false
@@ -153,7 +153,7 @@
         "id": 2659,
         "name": "Marcel Łubik",
         "team": "wisła kraków",
-        "predicted": 5.1,
+        "predicted": 4.7,
         "actual": null,
         "opponents": [
           "Radomiak Radom"
@@ -182,8 +182,8 @@
       }
     ],
     "captain": "Jan Grzesik",
-    "predicted_total": 106.8,
-    "saved_at": "2026-11-09T12:09:30+00:00"
+    "predicted_total": 106.2,
+    "saved_at": "2026-11-11T13:04:05+00:00"
   },
   "14": {
     "round": 14,
