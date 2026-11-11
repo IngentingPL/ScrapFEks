@@ -576,7 +576,10 @@ select.input{{cursor:pointer;padding-right:26px}}
 .landing-form-table th:nth-child(5),.landing-form-table th:nth-child(6){{width:46px}}
 .landing-fixture-lists{{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 4px}}
 .landing-fixture-group{{min-width:0}}
-.landing-fixture-group h3{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin:0 0 7px 4px}}
+/* Pas etykiet kafelka "Najłatwiejsze mecze" — wspólny wygląd z pasem tabel (.landing-card .dt thead th):
+   tło --surface-inset, padding 10px 8px, mono 9px/700, letter-spacing 1.1px, border-bottom --border */
+.landing-fixture-heads{{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface-inset);border-bottom:1px solid var(--border)}}
+.landing-fixture-head-label{{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--text-muted);padding:10px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 .landing-fixture-list{{list-style:none;display:flex;flex-direction:column;gap:4px}}
 .landing-fixture-list li{{display:flex;justify-content:space-between;align-items:center;gap:4px;min-height:34px;padding:4px;border-bottom:1px solid var(--border);font-size:11px}}
 .landing-match{{min-width:0;display:flex;flex-direction:column;gap:2px}}
@@ -874,9 +877,14 @@ select.input{{cursor:pointer;padding-right:26px}}
       <article class="landing-card">
         <header class="landing-card-head"><div><h2>Najłatwiejsze mecze</h2><p>{'Kolejka ' + str(landing_gw) if landing_gw is not None else 'Najbliższa kolejka'}</p></div></header>
         <div class="landing-card-body">
+          <!-- Pas etykiet kolumn — te same wartości co .landing-card .dt thead th (tło, wysokość, marginesy, obramowanie, krój) -->
+          <div class="landing-fixture-heads">
+            <div class="landing-fixture-head-label">Dla ataku · DEF rywala</div>
+            <div class="landing-fixture-head-label">Dla obrony · ATK rywala</div>
+          </div>
           <div class="landing-fixture-lists">
-            <section class="landing-fixture-group"><h3>Dla ataku · DEF rywala</h3>{landing_attack_rows}</section>
-            <section class="landing-fixture-group"><h3>Dla obrony · ATK rywala</h3>{landing_defence_rows}</section>
+            <section class="landing-fixture-group">{landing_attack_rows}</section>
+            <section class="landing-fixture-group">{landing_defence_rows}</section>
           </div>
         </div>
         <footer class="landing-card-foot"><button class="landing-cta" data-go="fixtures">Cały terminarz →</button></footer>

@@ -47,8 +47,10 @@ def test_easiest_fixtures_order_top_five_and_dgw():
         inputs["fdr_data"] = {"gameweeks": [12], "teams": teams}
         html = render(inputs)
 
-        attack_section = html.split("Dla ataku · DEF rywala", 1)[1].split("</section>", 1)[0]
-        defence_section = html.split("Dla obrony · ATK rywala", 1)[1].split("</section>", 1)[0]
+        # Etykiety są teraz we wspólnym pasie nad listami, więc sekcje wycinamy po elementach list
+        lists_html = html.split("landing-fixture-lists", 1)[1]
+        attack_section = lists_html.split("</section>", 1)[0]
+        defence_section = lists_html.split("</section>", 1)[1].split("</section>", 1)[0]
         def ratings(section):
             ordered_list = re.search(r"<ol class='landing-fixture-list'>(.*?)</ol>", section, re.S)
             assert ordered_list
