@@ -4,10 +4,10 @@ Szybki test - pobierz dane jednego zawodnika.
 Użyj tego, żeby sprawdzić czy cookies działają.
 
 Użycie:
-    python test_single_player.py [player_id]
+    python manual_single_player.py [player_id]
 
 Przykład:
-    python test_single_player.py 2123
+    python manual_single_player.py 2123
 """
 
 import requests

@@ -51,8 +51,8 @@ ScrapFEks/
 ├── analytics.py                # Wspólne funkcje analityczne (hidden gem, disappointment, kapitanowie)
 ├── league_tracker.py           # Tracker sezonu ligowego
 ├── update_schedule.py          # Aktualizacja terminarza kolejek
-├── test_real_cookie.py          # Testy obsługi prawdziwych ciasteczek
-├── test_potential_value.py      # Testy obliczeń wartości potencjalnej
+├── manual_real_cookie.py        # Ręczny test obsługi prawdziwego cookie sesji (env FANTASY_SESSION_COOKIE)
+├── manual_potential_value.py    # Ręczna diagnostyka obliczeń wartości potencjalnej
 ├── test_empty_guards.py         # Testy zabezpieczeń przed pustymi danymi
 ├── terminarz.txt               # Terminarz kolejek (daty meczów)
 ├── autumn_points.json          # Punkty z rundy jesiennej

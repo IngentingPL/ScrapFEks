@@ -203,7 +203,7 @@ python scraper.py
 Do testowania pobierania danych jednego zawodnika:
 
 ```bash
-python test_single_player.py [player_id]
+python manual_single_player.py [player_id]
 ```
 
 ---
@@ -263,9 +263,9 @@ Przed wygenerowaniem HTML scraper zapisuje wszystkie dane wejściowe dashboardu 
 | `archive.py` | Archiwizacja zakończonego sezonu |
 | `generate_from_cache.py` | Regeneruje dashboard z istniejącego JSON |
 | `update_schedule.py` | Parser terminarza → generuje cron triggery w `scrape.yml` |
-| `test_single_player.py` | Narzędzie do testowania pobierania danych jednego zawodnika |
-| `test_real_cookie.py` | Testy obsługi prawdziwych ciasteczek |
-| `test_potential_value.py` | Testy obliczeń wartości potencjalnej |
+| `manual_single_player.py` | Narzędzie do testowania pobierania danych jednego zawodnika |
+| `manual_real_cookie.py` | Ręczny test obsługi prawdziwego cookie sesji (env `FANTASY_SESSION_COOKIE`) |
+| `manual_potential_value.py` | Ręczna diagnostyka obliczeń wartości potencjalnej |
 | `test_empty_guards.py` | Testy zabezpieczeń przed pustymi danymi |
 | `terminarz.txt` | Terminarz meczów — źródło danych dla fixture tickera i auto-uruchomień |
 | `.github/workflows/scrape.yml` | Workflow GitHub Actions — główny scraper |
