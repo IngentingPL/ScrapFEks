@@ -863,7 +863,7 @@ select.input{{cursor:pointer;padding-right:26px}}
   <section id="v-landing" class="view active" aria-label="Start">
     <div class="landing-hero">
       <div class="landing-kicker">{SEASON_LABEL}{' · kolejka ' + current_round_label if current_round_label else ''} · dane {timestamp}</div>
-      <h1><em>Dashboard ligi Discord Forum CMF.</em><br>Tabele, analizy, prognozy.</h1>
+      <h1><em>Dashboard ligi Discord Forum CMF.</em></h1>
     </div>
     <div class="landing-grid">
       <article class="landing-card">
@@ -884,6 +884,7 @@ select.input{{cursor:pointer;padding-right:26px}}
       <article class="landing-card">
         <header class="landing-card-head"><div><h2>Forma</h2><p>Średnia z maks. 5 rozegranych kolejek · min. {MIN_FORM_APPEARANCES} występy</p></div></header>
         <div class="landing-card-body">{form_landing_content}</div>
+        <footer class="landing-card-foot"><button class="landing-cta" data-go="players">Wszyscy zawodnicy →</button></footer>
       </article>
     </div>
   </section>
