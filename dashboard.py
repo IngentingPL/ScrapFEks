@@ -11,6 +11,30 @@ import json
 SEASON_LABEL = "Sezon 2026/27"
 MIN_FORM_APPEARANCES = 3
 
+# Adres strony "Fantasy Live" — nieoficjalna klasyfikacja ligi CMF na żywo
+# (strona znajomego). Dashboard niczego z niej nie pobiera — to zwykły link,
+# który otwiera się w nowej karcie przeglądarki.
+FANTASY_LIVE_URL = "https://fantasy.szafran.top"
+FANTASY_LIVE_TITLE = "Na żywo – klasyfikacja ligi (Fantasy Live, strona znajomego, otwiera się w nowej karcie)"
+
+
+def fantasy_live_link(extra_class: str = "") -> str:
+    """Zwraca HTML linku 'Na żywo ↗' do klasyfikacji ligi na żywo.
+
+    Link pojawia się w dwóch miejscach (stopka kafelka "Top 5 · Liga CMF"
+    na stronie głównej oraz pasek zakładki Liga CMF), więc budujemy go
+    w jednej funkcji — ewentualna zmiana tekstu czy adresu robiona jest
+    w jednym miejscu. Parametr extra_class pozwala dopasować wygląd
+    do miejsca (np. przycisk kafelka albo styl "ghost-link" jak Archiwum).
+    """
+    classes = "live-link" + ((" " + extra_class) if extra_class else "")
+    return (
+        f'<a class="{classes}" href="{FANTASY_LIVE_URL}" '
+        f'target="_blank" rel="noopener noreferrer" '
+        f'title="{FANTASY_LIVE_TITLE}" aria-label="{FANTASY_LIVE_TITLE}">'
+        '<span class="live-dot" aria-hidden="true"></span>Na żywo ↗</a>'
+    )
+
 def generate_dashboard_html(
     summary_data: list[dict],
     tiers: dict,
@@ -592,6 +616,18 @@ select.input{{cursor:pointer;padding-right:26px}}
 .landing-card-foot{{padding:10px 16px 14px;border-top:1px solid var(--border);margin-top:auto}}
 .landing-cta{{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;background:transparent;border:1px solid var(--border-accent);border-radius:40px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s}}
 .landing-cta:hover{{background:var(--accent);color:var(--text-inverse)}}
+/* Kropka "na żywo" przy linku do klasyfikacji ligi na żywo — pulsuje,
+   żeby zasygnalizować dane aktualizowane w trakcie kolejki. Gdy użytkownik
+   ma włączone w systemie "ogranicz ruch" (prefers-reduced-motion),
+   animacja jest wyłączana — to standard dbania o dostępność. */
+.live-dot{{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--up);margin-right:7px;animation:livePulse 1.6s ease-in-out infinite}}
+@keyframes livePulse{{0%,100%{{opacity:1}}50%{{opacity:.35}}}}
+@media (prefers-reduced-motion: reduce){{.live-dot{{animation:none}}}}
+/* Stopka kafelka "Top 5": dwa przyciski w jednym wierszu; na wąskich
+   ekranach drugi przycisk zawija do nowej linii zamiast się ściskać. */
+.live-foot{{display:flex;flex-wrap:wrap;gap:8px;align-items:center}}
+/* Obrys przerywany = link wychodzi poza nasz dashboard (strona zewnętrzna). */
+.live-cta-dashed{{border-style:dashed}}
 .landing-empty{{padding:24px 10px;color:var(--text-muted);font-size:12px;text-align:center}}
 @media (max-width:1000px){{.landing-grid{{grid-template-columns:repeat(2,minmax(0,1fr))}}.landing-card:last-child{{grid-column:1/-1}}}}
 @media (max-width:650px){{.landing-grid{{grid-template-columns:1fr}}.landing-card:last-child{{grid-column:auto}}.landing-card-body{{min-height:0}}.landing-hero{{margin-top:24px}}.landing-hero h1{{letter-spacing:-1.2px}}}}
@@ -886,7 +922,7 @@ select.input{{cursor:pointer;padding-right:26px}}
       <article class="landing-card">
         <header class="landing-card-head"><div><h2>Top 5 · Liga CMF</h2><p>Tabela łączna według punktów</p></div></header>
         <div class="landing-card-body">{league_landing_content}</div>
-        <footer class="landing-card-foot"><button class="landing-cta" data-go="teams">Pełna tabela ligi →</button></footer>
+        <footer class="landing-card-foot live-foot"><button class="landing-cta" data-go="teams">Pełna tabela ligi →</button>{fantasy_live_link('landing-cta live-cta-dashed')}</footer>
       </article>
       <article class="landing-card">
         <header class="landing-card-head"><div><h2>Najłatwiejsze mecze</h2><p>{'Kolejka ' + str(landing_gw) if landing_gw is not None else 'Najbliższa kolejka'}</p></div></header>
@@ -940,6 +976,7 @@ select.input{{cursor:pointer;padding-right:26px}}
         <button class="seg-btn active" data-lview="teams">Drużyny</button>
         <button class="seg-btn" data-lview="duets">Duety</button>
       </div>
+      {fantasy_live_link('ghost-link')}
       <span class="hint">Kliknij strzałkę przy wierszu, żeby rozwinąć szczegóły.</span>
     </div>
     <div id="tab-teams"></div>
