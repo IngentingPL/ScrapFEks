@@ -225,7 +225,9 @@ def login(session: requests.Session) -> bool:
         if not phpsessid:
             print("   ❌ /login/check-green-sso nie ustawiło PHPSESSID")
             return False
-        print(f"   ✅ Zalogowano! PHPSESSID: {phpsessid[:20]}...")
+        # Nie wypisujemy wartości ciasteczka — stdout trafia do logów CI,
+        # a repo/logi są publiczne (wyciek 20-znakowego prefiksu PHPSESSID).
+        print("   ✅ Zalogowano! (PHPSESSID otrzymany)")
 
         # Cookie wymagany przez serwer do dostępu do stron drużyn
         # Normalnie ustawiany przez JavaScript po zalogowaniu
