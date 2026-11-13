@@ -161,10 +161,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Stash wszystkiego co wygenerował scraper przed rebase
-          git add -A
-          git stash --include-untracked
-          
+          # Add wyłącznie ścieżek bot-commitów (git add -A wciągnąłby śmieci
+          # z root, np. lokalne mockupy — audyt C-03/D-04). Lista z
+          # `git log --stat` bot-commitów: output/, docs/, hockey_prev_ranking.json.
+          git add output/ docs/ hockey_prev_ranking.json
+
+          # Stash zstage'owanych zmian przed rebase (--staged = cały świeży
+          # output bota; nieśledzone pliki z root zostają w working tree,
+          # ale nie trafiają do commita)
+          if git stash push --staged; then
+            STASHED=1
+          else
+            echo "ℹ️  Brak zmian do stasha"
+            STASHED=0
+          fi
+
           # Pull latest changes
           git fetch origin
           if ! git rebase origin/main; then
@@ -172,19 +183,21 @@ jobs:
             git rebase --abort
             exit 1
           fi
-          
+
           # Przywróć wygenerowane pliki
-          if ! git stash pop; then
-            echo "❌ Stash pop ma konflikty - przerywam, żeby nie zepsuć dashboardu"
-            git reset --hard HEAD
-            exit 1
+          if [ "$STASHED" = "1" ]; then
+            if ! git stash pop; then
+              echo "❌ Stash pop ma konflikty - przerywam, żeby nie zepsuć dashboardu"
+              git reset --hard HEAD
+              exit 1
+            fi
           fi
-          
+
           mkdir -p docs
           cp output/dashboard.html docs/index.html
-          
-          # Dodaj wszystko (w tym nowe pliki po stash pop)
-          git add -A
+
+          # Dodaj wygenerowane pliki (tylko te ścieżki, nie git add -A)
+          git add output/ docs/ hockey_prev_ranking.json
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

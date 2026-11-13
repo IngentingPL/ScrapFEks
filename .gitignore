@@ -3,3 +3,12 @@ __pycache__/
 .venv/
 
 .DS_Store
+
+# Śmieci lokalne — scrape.yml robi add konkretnych ścieżek, ale to
+# asekuracja, żeby nic z tego nie wpadło do commita bota (audyt C-03/D-04)
+/--full-page
+/test.html
+/fantasy-ekstraklasa-mockups.zip
+/redesign-mockups/
+/opendesign/
+/.opencode/
