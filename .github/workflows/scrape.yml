@@ -160,50 +160,36 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
+          mkdir -p docs
+          cp output/dashboard.html docs/index.html
+
           # Add wyłącznie ścieżek bot-commitów (git add -A wciągnąłby śmieci
           # z root, np. lokalne mockupy — audyt C-03/D-04). Lista z
           # `git log --stat` bot-commitów: output/, docs/, hockey_prev_ranking.json.
           git add output/ docs/ hockey_prev_ranking.json
 
-          # Stash zstage'owanych zmian przed rebase (--staged = cały świeży
-          # output bota; nieśledzone pliki z root zostają w working tree,
-          # ale nie trafiają do commita)
-          if git stash push --staged; then
-            STASHED=1
-          else
-            echo "ℹ️  Brak zmian do stasha"
-            STASHED=0
+          # Commit lokalnie NAJPIERW (audyt C-01): jeśli rebase niżej zawiedzie,
+          # dane są już w commicie, a output/discord_sent.json (stan wysyłek
+          # Discord, pisany przez scraper PRZED tym krokiem) nie ginie —
+          # to eliminuje podwójne wiadomości na Discordzie przy konfliktach.
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
           fi
+          git commit -m "📊 Dane Fantasy Ekstraklasa - $(date +'%Y-%m-%d %H:%M')"
 
-          # Pull latest changes
+          # Synchronizacja z origin: rebase z -X theirs — świeży output bota
+          # wygrywa konflikty plików (bot jest właścicielem output/ i docs/).
+          # Brak stash/pop = konflikty stash (run 41133086722) nie występują.
           git fetch origin
-          if ! git rebase origin/main; then
-            echo "❌ Rebase nie powiódł się - przerywam, żeby nie zepsuć repo"
+          if ! git rebase -X theirs origin/main; then
+            echo "❌ Rebase -X theirs nie powiódł się - przerywam, żeby nie zepsuć repo"
             git rebase --abort
             exit 1
           fi
 
-          # Przywróć wygenerowane pliki
-          if [ "$STASHED" = "1" ]; then
-            if ! git stash pop; then
-              echo "❌ Stash pop ma konflikty - przerywam, żeby nie zepsuć dashboardu"
-              git reset --hard HEAD
-              exit 1
-            fi
-          fi
-
-          mkdir -p docs
-          cp output/dashboard.html docs/index.html
-
-          # Dodaj wygenerowane pliki (tylko te ścieżki, nie git add -A)
-          git add output/ docs/ hockey_prev_ranking.json
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "📊 Dane Fantasy Ekstraklasa - $(date +'%Y-%m-%d %H:%M')"
-            git push
-          fi
+          git push
 
       - name: Check if continuation needed
         id: check
