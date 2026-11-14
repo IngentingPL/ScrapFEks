@@ -182,14 +182,23 @@ jobs:
           # Synchronizacja z origin: rebase z -X theirs — świeży output bota
           # wygrywa konflikty plików (bot jest właścicielem output/ i docs/).
           # Brak stash/pop = konflikty stash (run 41133086722) nie występują.
-          git fetch origin
-          if ! git rebase -X theirs origin/main; then
-            echo "❌ Rebase -X theirs nie powiódł się - przerywam, żeby nie zepsuć repo"
-            git rebase --abort
-            exit 1
-          fi
-
-          git push
+          # Push z 3 ponowieniami (fetch -> rebase -> push): gdy ktoś lub inny
+          # bot wypchnie coś między naszym fetch a push.
+          for ATTEMPT in 1 2 3; do
+            git fetch origin
+            if ! git rebase -X theirs origin/main; then
+              echo "❌ Rebase -X theirs nie powiódł się - przerywam, żeby nie zepsuć repo"
+              git rebase --abort
+              exit 1
+            fi
+            if git push origin main; then
+              echo "✅ Push OK (próba $ATTEMPT/3)"
+              exit 0
+            fi
+            echo "⚠️  Push odrzucony, ponawiam (próba $ATTEMPT/3)"
+          done
+          echo "❌ Push odrzucony 3 razy - przerywam"
+          exit 1
 
       - name: Check if continuation needed
         id: check
