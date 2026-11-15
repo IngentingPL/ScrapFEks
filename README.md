@@ -253,7 +253,7 @@ Przed wygenerowaniem HTML scraper zapisuje wszystkie dane wejściowe dashboardu 
 | `build_dashboard.py` | Buduje HTML ze snapshotu bez scrapowania, sieci i logowania: `python build_dashboard.py` (domyślnie `/tmp/dashboard_from_snapshot.html`) |
 | `karpinski_client.py` | Statystyki xG, xA, strzały, chances_created, clean_sheet, goals_conceded, goals_prevented i percentyle z API Karpińskiego (ekstraklasa-scouting), cache 24h |
 | `predictor.py` | Logika prognoz punktowych zawodników |
-| `tuner.py` | Auto-tuning parametrów predykcji na podstawie trafności |
+| `tuner.py` | Auto-tuning parametrów predykcji — **obecnie wyłączony** (predictor używa stałego decay=0.85; patrz CLAUDE.md) |
 | `accuracy.py` | Śledzenie trafności prognoz kolejka po kolejce |
 | `analytics.py` | Wspólne funkcje analityczne (hidden gem, disappointment, kapitanowie) |
 | `ai_client.py` | Wspólny klient DeepSeek/Gemini używany przez newsletter i Discord |

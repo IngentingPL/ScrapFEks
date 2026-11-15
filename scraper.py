@@ -53,7 +53,7 @@ def _migrate_best11_picks(output_dir, current_round, finder, picks_path=None, ne
         raw = _prognozy_z_csv(matching_csv, round_number) if matching_csv else []
         if raw:
             zapisz_nastepny_sklad(raw, round_number, path=next_path, picks_path=picks_path)
-from tuner import run_tuning
+# from tuner import run_tuning  # B-01: strojenie wyłączone — przywróć razem z wywołaniem w 8.8c
 from utils import normalize_team_name, _normalize_team, _normalize_name
 from players import fetch_all_players
 from external_stats import fetch_ekstraklasa_table, fetch_extra_player_stats
@@ -766,13 +766,16 @@ def main():
     except Exception as e:
         print(f"  ⚠️  Best11: nie udało się wczytać historii — {e}")
 
-    # 8.8c Auto-tuning parametrów predictora (po zebraniu min. 4 kolejek)
-    # Uruchamiamy PO ewaluacji trafności — dane są już aktualne
-    run_tuning(
-        accuracy_history_path=os.path.join(OUTPUT_DIR, "accuracy_history.json"),
-        output_dir=OUTPUT_DIR,
-        output_path=os.path.join(OUTPUT_DIR, "tuned_params.json"),
-    )
+    # 8.8c Auto-tuning parametrów predictora — WYŁĄCZONY (decyzja B-01).
+    # Tuner zapisuje parametry, których predictor.py od commita 297a87e
+    # nie wczytuje; sekcja "Auto-tuning" w zakładce Trafność też jest
+    # wyłączona. tuner.py i historyczny output/tuned_params.json zostają
+    # w repo — można przywrócić strojenie odkomentowując poniższe.
+    # run_tuning(
+    #     accuracy_history_path=os.path.join(OUTPUT_DIR, "accuracy_history.json"),
+    #     output_dir=OUTPUT_DIR,
+    #     output_path=os.path.join(OUTPUT_DIR, "tuned_params.json"),
+    # )
 
     # 8.9 Oblicz transfery w lidze prywatnej
     transfers_data: dict = {}

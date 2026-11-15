@@ -178,13 +178,13 @@ Jeśli dane wydają się nieaktualne po meczu – to oczekiwane, cache odśwież
 
 ## Trafność prognoz (accuracy.py)
 
-`accuracy_history.json` śledzi trafność prognoz kolejka po kolejce i zasila auto-tuning parametrów (tuner.py).
+`accuracy_history.json` śledzi trafność prognoz kolejka po kolejce. (Auto-tuning parametrów jest wyłączony — patrz niżej.)
 
 Zawiera guard: jeśli plik prognoz (`fantasy_predictions_*.csv`) dotyczy innej kolejki niż ta którą sprawdzamy, porównanie jest pomijane z jasnym komunikatem w logach – zamiast cichego "0 dopasowań".
 
-## Wymóg 4+ kolejek — auto-tuning (tuner.py)
+## Auto-tuning — WYŁĄCZONY (tuner.py)
 
-Auto-tuning parametrów wymaga **4+ kolejek danych** (`MIN_ROUNDS_FOR_TUNING = 4`), zanim tuner.py zacznie działać. Sam accuracy.py nie ma tego wymogu — zapisuje dane od pierwszej kolejki.
+Tuner (tuner.py) i jego plik `output/tuned_params.json` **zostają w repo, ale strojenie jest wyłączone**: scraper nie uruchamia `run_tuning()`, a predictor.py od commita `297a87e` używa **stałego `decay=0.85`** i nie wczytuje parametrów z pliku. Sekcja "Auto-tuning" w zakładce Trafność nie jest renderowana. Przywrócenie strojenia = odkomentowanie bloku 8.8c w scraper.py (i sekcji w dashboard.py).
 
 ---
 
