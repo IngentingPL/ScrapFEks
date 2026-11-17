@@ -100,6 +100,10 @@ Kliknięcie na zawodnika rozwija panel z listą drużyn z Twojej ligi, które go
 - Statystyki per kolejka
 - Śledzenie transferów w lidze prywatnej
 
+**🔮 Prognoza + Najlepsza 11** — predykcje na następną kolejkę (predictor.py) z dwoma widokami (przełącznik u góry):
+- **Tabela** — prognozowane punkty zawodników,
+- **Najlepsza 11** — idealny skład wybrany z prognoz (boisko z kartami zawodników, kapitan ×2) + tabela historyczna: jak "dream team" wypadał na realnych punktach vs najlepsza drużyna ligi CMF (best11.py).
+
 ### Filtry i zakresy
 
 - **Filtr pozycji** — BR / OBR / POM / NAP / Wszyscy
@@ -255,8 +259,9 @@ Przed wygenerowaniem HTML scraper zapisuje wszystkie dane wejściowe dashboardu 
 | `predictor.py` | Logika prognoz punktowych zawodników |
 | `tuner.py` | Auto-tuning parametrów predykcji — **obecnie wyłączony** (predictor używa stałego decay=0.85; patrz CLAUDE.md) |
 | `accuracy.py` | Śledzenie trafności prognoz kolejka po kolejce |
+| `best11.py` | "Najlepsza Jedenastka": idealny skład z prognoz predictora + historia trafności dream teamu (`output/best11_*.json`) — pod-widok zakładki Prognoza |
 | `analytics.py` | Wspólne funkcje analityczne (hidden gem, disappointment, kapitanowie) |
-| `ai_client.py` | Wspólny klient DeepSeek/Gemini używany przez newsletter i Discord |
+| `ai_client.py` | Wspólny klient DeepSeek/Gemini używany przez newsletter |
 | `discord_notify.py` | Wysyłanie powiadomień na Discord |
 | `newsletter.py` | Generowanie newslettera przez AI |
 | `league_tracker.py` | Tracker sezonu ligowego |

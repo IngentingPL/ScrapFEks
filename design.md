@@ -344,3 +344,34 @@ When refining existing screens generated with this design system:
 5. **Audit accent usage.** Mint and ultraviolet should appear as hazard accents — buttons, 1px borders, active underlines, saturated tile fills. If they're appearing as background washes or gradient fades, correct to solid blocks.
 6. **Audit labels.** Every kicker, timestamp, category tag, and button label should be ALL CAPS with 1.1–1.9px letter-spacing. Missing tracking = missing voice.
 7. **Audit link hover.** Every link, regardless of its base color, should hover to `#3860be` deep link blue with no underline. Any other hover color is drift.
+
+---
+
+## 10. Landing v2 — zrealizowana strona startowa (dashboard.py)
+
+Ta sekcja opisuje **faktycznie wdrożoną** stronę startową dashboardu (widok `v-landing` w dashboard.py) — jest prostsza niż system "The Verge" powyżej i korzysta ze zmiennych CSS motywu (`--surface`, `--border`, `--accent`...), więc działa w ciemnym i jasnym motywie.
+
+**Struktura (od góry):**
+
+1. **Hero** — wąska etykieta-kicker (JetBrains Mono, 11px, WERSALIKI, kolor akcentu): sezon + kolejka + data scrapowania; pod nią jeden wielki nagłówek `h1` (clamp 30–52px, 800, ujemny letter-spacing), gdzie wyróżniony fragment jest w kolorze akcentu (`<em>`).
+2. **Siatka trzech kafelków** (`.landing-grid`, 3 kolumny, gap 14px): na ≤1000px → 2 kolumny (ostatni kafelek na całą szerokość), na ≤650px → 1 kolumna.
+3. **Każdy kafelek** (`.landing-card`, radius 18px, obramowanie 1px `--border`) ma trzy warstwy:
+   - **Nagłówek** (min. 68px): tytuł 13px/800 WERSALIKI + podpis 11px w kolorze wyciszonym,
+   - **Treść** (min. 260px): tabela lub listy,
+   - **Stopka**: przycisk-CTA (`.landing-cta`, pigułka radius 40px, mono 10px WERSALIKI, przezroczyste tło + obwódka w kolorze akcentu; hover = pełne tło akcentu).
+
+**Trzy kafelki:**
+
+| Kafelek | Treść | CTA |
+|---|---|---|
+| **Top 5 · Liga CMF** | pierwsze 5 miejsc tabeli łącznej (# / Drużyna / Pkt) | "Pełna tabela ligi →" (widok Liga CMF) |
+| **Najłatwiejsze mecze** | listy meczów najbliższej kolejki o najniższym FDR: kolumna "Dla ataku · DEF rywala" i "Dla obrony · ATK rywala"; pas nagłówków kolumn wygląda jak nagłówek tabeli; badge **DGW** przy drużynie grającej 2 mecze | "Cały terminarz →" (widok Terminarz) |
+| **Forma** | top 5 zawodników wg średniej punktów z maks. 5 rozegranych kolejek (min. 3 występy) | "Wszyscy zawodnicy →" (widok Zawodnicy) |
+
+**Zasady:**
+
+- Kicker i etykiety kolumn "Najłatwiejszych meczów" zawsze mono + WERSALIKI; treść tabel/list to krój podstawowy.
+- Brak cieni — hierarchię budują kolory motywu (tła `--surface` / `--surface-inset`, obramowania `--border`).
+- Wiersze list meczów oddzielone cienką linią `--border`, bez zebra.
+- Puste dane (brak FDR na kolejkę, brak formy) → wytłuszczony komunikat `.landing-empty` zamiast pustego kafelka.
+- Przyciski CTA prowadzą zakładkami (`data-go`), nie otwierają nowych stron; wyjątkiem jest link "na żywo" klasyfikacji obok CTA pierwszego kafelka.

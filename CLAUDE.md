@@ -45,7 +45,8 @@ ScrapFEks/
 ├── build_dashboard.py          # Buduje HTML dashboardu ze snapshotu — bez sieci i logowania (domyślnie /tmp/dashboard_from_snapshot.html)
 ├── tuner.py                    # Optymalizacja parametrów predykcji
 ├── accuracy.py                 # Śledzenie trafności prognoz
-├── ai_client.py                 # Wspólny klient AI (DeepSeek + Gemini) – używany przez discord_notify.py i newsletter.py
+├── best11.py                   # "Najlepsza Jedenastka": idealny skład z prognoz + historia (output/best11_history.json, best11_next.json)
+├── ai_client.py                 # Wspólny klient AI (DeepSeek + Gemini) – używany przez newsletter.py
 ├── discord_notify.py           # Wysyłanie powiadomień Discord (pre-round, post-round, kapitanowie)
 ├── newsletter.py               # Newsletter przez DeepSeek (fallback: Gemini)
 ├── analytics.py                # Wspólne funkcje analityczne (hidden gem, disappointment, kapitanowie)
@@ -188,6 +189,20 @@ Tuner (tuner.py) i jego plik `output/tuned_params.json` **zostają w repo, ale s
 
 ---
 
+## Najlepsza Jedenastka (best11.py)
+
+`best11.py` buduje "dream team" z prognoz predictora i sprawdza, jak by wypadał na prawdziwych punktach:
+
+- `output/best11_next.json` — proponowany skład na **nadchodzącą** kolejkę (z aktualnych prognoz),
+- `output/best11_history.json` — dla każdej **rozegranej** kolejki: skład wybrany po prognozach (przed meczami) + realne punkty tych graczy, porównanie z najlepszą drużyną ligi CMF,
+- `output/best11_picks.json` — zapisane wybory (używane przy migracji starych plików).
+
+Zasady wyboru są **deterministyczne** (te same dane = ten sam wynik): 1 bramkarz + 10 zawodników z pola, na każdej pozycji najwyższa prognoza, formacja daje najwyższą prognozowaną sumę, kapitan = gracz z najwyższą prognozą (jego realne punkty liczą się ×2, jak w grze fantasy).
+
+W dashboardzie to pod-widok zakładki **Prognoza** (przełącznik "Tabela" / "Najlepsza 11"): boisko ze składem na następną kolejkę + tabela historyczna z różnicą względem najlepszej drużyny CMF. Błąd Best11 nie wywraca runu scrapera (tylko ⚠️ w logach).
+
+---
+
 ## Inne nazwane stałe (sesja optymalizacyjna)
 
 | Stała | Plik | Wartość | Co kontroluje |
@@ -235,7 +250,7 @@ Tuner (tuner.py) i jego plik `output/tuned_params.json` **zostają w repo, ale s
 2. **📋 Liga CMF** — tabela sumaryczna jesień+wiosna + widok Duety
 3. **📅 Terminarz** — wszystkie kolejki sezonu
 4. **🔄 Transfery** — historia transferów
-5. **🔮 Prognoza** — predykcje na następną kolejkę (predictor.py)
+5. **🔮 Prognoza** — predykcje na następną kolejkę (predictor.py); przełącznik u góry: widok "Tabela" lub "Najlepsza 11" (idealny skład z prognoz + historia, patrz best11.py)
 6. **📊 Trafność** — accuracy tracker (śledzenie trafności prognoz)
 7. **📈 Sezon** — league tracker sezonu
 8. **⚖️ Porównanie** — porównanie drużyn/zawodników
