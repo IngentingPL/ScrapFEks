@@ -1,0 +1,3 @@
+# Zależności tylko do testów — instalacja: pip install -r requirements-dev.txt
+# requirements.txt (produkcyjne) jest nadal instalowane osobno i nie jest tu ruszane.
+pytest>=9.0.0
