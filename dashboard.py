@@ -259,6 +259,10 @@ def generate_dashboard_html(
             btns += f"<button class='seg-btn scope-btn{active_cls}' data-scope='{key}'>{label}</button>"
         scope_toggle_html = f"<div class='seg' role='group' aria-label='Zakres'><span class='seg-label'>Zakres</span>{btns}</div>"
 
+    # Sekcja "strojenia" (dawniej "Auto-tuning") w zakładce Trafność jest wyłączona:
+    # predictor.py od 2026-04 używa stałego decay=0.85 i nie wczytuje parametrów
+    # z tuned_params.json — tuner nie jest stosowany. Pole tuned_params zostaje
+    # w snapshotie, ale nie jest renderowane w HTML.
     html = f'''<!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -2579,8 +2583,6 @@ function renderAccuracy() {{
 
     h += '</tbody></table></div></div>';
   }}
-
-  // === AUTO-TUNING: sekcja wyłączona (B-01) — predictor używa stałego decay=0.85, tuner nie jest stosowany ===
 
   return h;
 }}
