@@ -12,3 +12,6 @@ __pycache__/
 /redesign-mockups/
 /opendesign/
 /.opencode/
+
+# Stare pliki debugowe drużyn (D-03) — zostają lokalnie, bota nie mają commitować
+/output/debug_team_*.html

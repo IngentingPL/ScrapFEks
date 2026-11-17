@@ -23,7 +23,7 @@ ScrapFEks/
 │   ├── dashboard.html          # Roboczy dashboard
 │   ├── discord_sent.json       # Flagi wysłanych powiadomień Discord
 │   ├── fantasy_captains_*.csv  # Historia kapitanów
-│   └── debug_team_*.html       # Pliki debugowe drużyn
+│   └── debug_team_*.html       # Pliki debugowe drużyn (lokalne — nie są w repo, patrz .gitignore)
 ├── scraper.py                  # GŁÓWNY PLIK – scraping + generowanie HTML
 ├── config.py                   # Globalne stałe: URL-e, nagłówki, zmienne środowiskowe
 ├── auth.py                     # Logowanie do fantasy.ekstraklasa.org (OAuth 2.0 + PKCE)
