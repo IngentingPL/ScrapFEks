@@ -16,29 +16,62 @@ from config import OUTPUT_DIR
 
 def _request_with_retry(method, url, max_retries=3, session=None, **kwargs):
     """
-    Wykonuje request HTTP z retry (exponential backoff: 1s, 2s, 4s).
+    Wykonuje request HTTP z retry (max 3 próby, komunikaty "próba X/3"):
+    - wyjątki sieciowe (Timeout, ConnectionError) — rosnący odstęp 1s, 2s,
+    - HTTP 429 — ponowienia, czeka wg nagłówka Retry-After (max 10s),
+      bez Retry-After: rosnący odstęp 1s, 2s,
+    - HTTP 5xx — ponowienia z rosnącym odstępem 1s, 2s,
+    - 404 i inne 4xx — bez ponowienia (odpowiedź wraca od razu).
     method: requests.get lub requests.post
     Jeśli session podana — używa session.get() / session.post(),
     co zapewnia poprawne zarządzanie cookies (CookieJar).
-    Zwraca response albo None jeśli wszystkie próby zawiodły.
+    Domyślny timeout 30s (można nadpisać przez kwargs["timeout"]).
+    Zwraca response — także gdy wszystkie próby dostawały 429/5xx
+    (wywołujący może zalogować status i treść) — albo None, gdy
+    wszystkie próby zawiodły na wyjątku sieciowym.
     """
+    kwargs.setdefault("timeout", 30)  # ochrona przed "wiszącymi" requestami
+
+    response = None
     for attempt in range(max_retries):
         try:
             if session is not None:
                 # Użyj metody z sesji zamiast modułowej — cookies z CookieJar
                 if method == requests.get:
-                    return session.get(url, **kwargs)
+                    response = session.get(url, **kwargs)
                 elif method == requests.post:
-                    return session.post(url, **kwargs)
-            return method(url, **kwargs)
+                    response = session.post(url, **kwargs)
+                else:
+                    response = method(url, **kwargs)
+            else:
+                response = method(url, **kwargs)
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
             if attempt < max_retries - 1:
                 wait = 2 ** attempt
                 print(f"   ⚠️  Błąd sieci ({e.__class__.__name__}), próba {attempt+1}/{max_retries}, czekam {wait}s...")
                 time.sleep(wait)
-            else:
-                print(f"   ❌ Wszystkie {max_retries} próby nieudane: {url}")
-                return None
+                continue
+            print(f"   ❌ Wszystkie {max_retries} próby nieudane: {url}")
+            return None
+
+        status = response.status_code
+        if status == 429 or 500 <= status < 600:
+            if attempt < max_retries - 1:
+                wait = 2 ** attempt  # 1s, 2s
+                if status == 429:
+                    # Retry-After: sekundy (fallback: rosnący odstęp), max 10s
+                    try:
+                        retry_after = int(float(response.headers.get("Retry-After", "")))
+                        wait = min(max(retry_after, 0), 10)
+                    except (TypeError, ValueError):
+                        pass
+                print(f"   ⚠️  HTTP {status}, próba {attempt+1}/{max_retries}, czekam {wait}s...")
+                time.sleep(wait)
+                continue
+            print(f"   ❌ HTTP {status} po {max_retries} próbach: {url}")
+            return response
+
+        return response  # 2xx oraz 4xx (bez ponowień)
     return None
 
 

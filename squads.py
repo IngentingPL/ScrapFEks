@@ -39,14 +39,21 @@ def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
     for start in range(0, count, batch_size):
         length = min(batch_size, count - start)
         try:
-            resp = session.post(
+            # Retry (429/5xx/timeout) w warstwie network.py
+            resp = _request_with_retry(
+                requests.post,
                 f"{BASE_URL}/ranking-list",
+                session=session,
                 data=f"start={start}&length={length}",
                 headers=RANKING_HEADERS,
-                timeout=30,
             )
+            if resp is None:
+                print(f"   ⚠️  Sieć nieudana przy start={start}")
+                continue
             if resp.status_code != 200:
-                print(f"   ⚠️  Błąd HTTP {resp.status_code} przy start={start}")
+                # Status + fragment treści (nigdy nagłówków ani ciasteczek)
+                body = (resp.text or "")[:200].replace("\n", " ").replace("\r", " ")
+                print(f"   ⚠️  Błąd HTTP {resp.status_code} przy start={start}: {body}")
                 continue
 
             data = resp.json()
@@ -67,6 +74,8 @@ def fetch_ranking_teams(session: requests.Session, count: int) -> list[dict]:
         except Exception as e:
             print(f"   ⚠️  Błąd: {e}")
 
+    summary_flag = "⚠️" if len(teams) < count else "✅"
+    print(f"   {summary_flag} Ranking: pobrano {len(teams)} z {count} drużyn")
     print(f"   ✅ Pobrano {len(teams)} drużyn z rankingu")
     return teams
 
