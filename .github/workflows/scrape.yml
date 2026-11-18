@@ -84,6 +84,8 @@ on:
     - cron: '30 20 12 12 *'  # K18 START 12.12 mecz 21:00 CET → +30min 21:30 CET
     - cron: '0 21 12 12 *'  # K18 DISCORD CAPTAINS 12.12 22:00 CET — podsumowanie kapitanów
     - cron: '0 19 16 12 *'  # K18 16.12 mecz 17:30 CET → +2.5h 20:00 CET
+    - cron: '30 21 16 12 *'  # K18 16.12 mecz 20:00 CET → +2.5h 22:30 CET
+    - cron: '30 21 17 12 *'  # K18 17.12 mecz 20:00 CET → +2.5h 22:30 CET
     - cron: '45 21 17 12 *'  # K18 17.12 mecz 20:15 CET → +2.5h 22:45 CET
     - cron: '0 11 18 12 *'  # K18 DISCORD POST 18.12 12:00 CET — podsumowanie po kolejce
     - cron: '7 16 18 12 *'  # K18 DISCORD POST ZAPAS 18.12 16:07 UTC — zapas po kolejce
