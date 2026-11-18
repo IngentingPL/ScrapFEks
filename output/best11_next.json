@@ -53,22 +53,6 @@
     },
     {
       "position": "MID",
-      "id": 2498,
-      "name": "Patrik Wålemark",
-      "team": "lech poznań",
-      "predicted": 8.2,
-      "actual": null,
-      "opponents": [
-        "GKS Katowice"
-      ],
-      "is_home_list": [
-        false
-      ],
-      "fixtures_count": 1,
-      "is_captain": false
-    },
-    {
-      "position": "MID",
       "id": 2423,
       "name": "Mbaye N'Diaye",
       "team": "motor lublin",
@@ -79,6 +63,22 @@
       ],
       "is_home_list": [
         false
+      ],
+      "fixtures_count": 1,
+      "is_captain": false
+    },
+    {
+      "position": "MID",
+      "id": 2679,
+      "name": "Paul Mukairu",
+      "team": "pogoń szczecin",
+      "predicted": 7.2,
+      "actual": null,
+      "opponents": [
+        "Śląsk Wrocław"
+      ],
+      "is_home_list": [
+        true
       ],
       "fixtures_count": 1,
       "is_captain": false
@@ -181,5 +181,5 @@
     }
   ],
   "captain": "Jan Grzesik",
-  "predicted_total": 106.2
+  "predicted_total": 105.2
 }
