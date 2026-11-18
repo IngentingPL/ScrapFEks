@@ -349,6 +349,7 @@ def main():
     captain_stats = []
     ownership_stats = []
     team_results = []
+    ranking_teams: list = []
     if TEAMS_TO_SCRAPE > 0:
         ranking_teams = fetch_ranking_teams(session, TEAMS_TO_SCRAPE)
 
@@ -1018,7 +1019,9 @@ def main():
     dashboard_inputs = dict(
         summary_data=summary_data,
         tiers=tiers,
-        teams_count=TEAMS_TO_SCRAPE,
+        # Faktyczna liczba pobranych drużyn (ranking bywa ucięty przez API),
+        # nie konfiguracja TEAMS_TO_SCRAPE — zakres "Wszystkie (N)" ma pokazywać prawdę.
+        teams_count=len(ranking_teams),
         league_captain_stats=league_captain_stats,
         league_ownership_stats=league_ownership_stats,
         league_name=LEAGUE_SLUG or "",
