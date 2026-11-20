@@ -189,7 +189,8 @@ def fetch_extra_player_stats() -> dict:
         return {}
 
     print("\n📊 Pobieram rozszerzone statystyki z API ekstraklasy...")
-    print(f"   Token: {EXTRA_API_TOKEN[:20]}...")
+    # Nie wypisujemy nawet fragmentu tokena — logi CI są publiczne.
+    print("   Token API: ustawiony")
     
     all_stats = {
         "xg": {},

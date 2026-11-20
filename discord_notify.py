@@ -109,11 +109,8 @@ def _send_to_discord(webhook_url, payload):
         headers=DISCORD_HEADERS,
         method="POST",
     )
-    url_preview = (
-        webhook_url[:50] + "..." + webhook_url[-10:]
-        if len(webhook_url) > 60 else webhook_url
-    )
-    print(f"  🔍 Discord wysyłam: {url_preview} ({len(data)} B)")
+    # Nie wypisujemy URL-a webhooka — zawiera tajny token w ścieżce.
+    print("  🔍 Discord: wysyłam")
     try:
         with urllib.request.urlopen(req, timeout=WEBHOOK_TIMEOUT) as resp:
             print(f"  🔍 Discord odpowiedź: HTTP {resp.status}")

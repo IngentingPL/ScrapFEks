@@ -59,15 +59,17 @@ def login(session: requests.Session) -> bool:
         location = resp.headers.get("Location", "")
         if not location:
             print(f"   ❌ Brak Location w odpowiedzi (HTTP {resp.status_code})")
-            print(f"   Headers: {dict(resp.headers)}")
+            # Nagłówki mogą zawierać dane sesji — nie logujemy ich.
+            print("   ❌ Szczegóły nagłówków pominięte (dane wrażliwe)")
             return False
 
-        print(f"   Location: {location[:120]}...")
+        # Location niesie parametry PKCE — logujemy tylko fakt otrzymania.
+        print("   ✅ Location otrzymany")
         parsed = urllib.parse.urlparse(location)
         if "id.ekstraklasa.org" not in parsed.netloc:
             print(f"   ❌ Nieoczekiwany redirect (nie id.ekstraklasa.org): "
                   f"{parsed.netloc}")
-            print(f"   Pełny Location: {location}")
+            print("   ❌ Szczegóły redirectu pominięte (dane wrażliwe)")
             return False
 
         qs = urllib.parse.parse_qs(parsed.query)
@@ -88,12 +90,13 @@ def login(session: requests.Session) -> bool:
             print(f"   ❌ Brak parametrów w Location: {missing}")
             return False
 
-        print(f"   ✅ client_id:            {srv_client_id}")
-        print(f"   ✅ code_challenge:       {srv_challenge[:20]}...")
-        print(f"   ✅ code_challenge_method:{srv_challenge_method or '(brak)'}")
-        print(f"   ✅ state:               {srv_state[:20]}...")
-        print(f"   ✅ redirect_uri:        {srv_redirect_uri[:60]}...")
-        print(f"   ✅ scope:               {srv_scope}")
+        # Wartości z nagłówka Location są częścią logowania — bez danych w logach.
+        print("   ✅ client_id: otrzymany")
+        print("   ✅ code_challenge: otrzymany")
+        print("   ✅ code_challenge_method: otrzymany")
+        print("   ✅ state: otrzymany")
+        print("   ✅ redirect_uri: otrzymany")
+        print("   ✅ scope: otrzymany")
     except Exception as e:
         print(f"   ❌ Błąd krok 0: {e}")
         return False
@@ -115,8 +118,8 @@ def login(session: requests.Session) -> bool:
             timeout=15,
         )
         if resp.status_code != 200:
-            print(f"   ❌ Password grant HTTP {resp.status_code}: "
-                  f"{resp.text[:300]}")
+            # Treść błędu może odbić dane uwierzytelniania — nie logujemy jej.
+            print(f"   ❌ Password grant HTTP {resp.status_code}")
             return False
 
         token_data = resp.json()
@@ -125,7 +128,7 @@ def login(session: requests.Session) -> bool:
             print(f"   ❌ Brak access_token w odpowiedzi. Klucze: "
                   f"{list(token_data.keys())}")
             return False
-        print(f"   ✅ access_token: {access_token[:20]}...")
+        print("   ✅ access_token: otrzymany")
     except Exception as e:
         print(f"   ❌ Błąd krok 1: {e}")
         return False
@@ -152,8 +155,8 @@ def login(session: requests.Session) -> bool:
             timeout=15,
         )
         if resp.status_code != 200:
-            print(f"   ❌ Authorization code grant HTTP {resp.status_code}: "
-                  f"{resp.text[:300]}")
+            # Treść błędu może odbić dane uwierzytelniania — nie logujemy jej.
+            print(f"   ❌ Authorization code grant HTTP {resp.status_code}")
             return False
 
         auth_data = resp.json()
@@ -162,7 +165,7 @@ def login(session: requests.Session) -> bool:
             print(f"   ❌ Brak authorization_token. Klucze: "
                   f"{list(auth_data.keys())}")
             return False
-        print(f"   ✅ authorization_token: {authorization_token[:20]}...")
+        print("   ✅ authorization_token: otrzymany")
     except Exception as e:
         print(f"   ❌ Błąd krok 2: {e}")
         return False
@@ -192,7 +195,7 @@ def login(session: requests.Session) -> bool:
         if resp.status_code not in (302, 301) or not location:
             print(f"   ❌ Oczekiwano redirect, dostano HTTP "
                   f"{resp.status_code}")
-            print(f"   Body: {resp.text[:200]}")
+            print(f"   ❌ Treść odpowiedzi pominięta (dane wrażliwe), HTTP {resp.status_code}")
             return False
 
         # Wyciągnij code i state z Location
@@ -202,12 +205,13 @@ def login(session: requests.Session) -> bool:
         returned_state = qs.get("state", [None])[0]
 
         if not code:
-            print(f"   ❌ Brak 'code' w redirect: {location[:200]}")
+            # URL redirectu zawiera code i state — nie logujemy go.
+            print("   ❌ Brak 'code' w redirect")
             return False
         if returned_state != srv_state:
-            print(f"   ❌ State mismatch: {returned_state} != {srv_state}")
+            print("   ❌ State mismatch: otrzymany state nie zgadza się z oczekiwanym")
             return False
-        print(f"   ✅ code: {code[:20]}...")
+        print("   ✅ code: otrzymany")
     except Exception as e:
         print(f"   ❌ Błąd krok 3: {e}")
         return False
