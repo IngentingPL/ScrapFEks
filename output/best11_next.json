@@ -1,20 +1,20 @@
 {
-  "round": 15,
+  "round": 16,
   "max_z_klubu": 3,
-  "formation": "3-5-2",
+  "formation": "4-5-1",
   "players": [
     {
       "position": "MID",
       "id": 480,
       "name": "Bartosz Nowak",
       "team": "gks katowice",
-      "predicted": 7.6,
+      "predicted": 8.8,
       "actual": null,
       "opponents": [
-        "Lech Poznań"
+        "Śląsk Wrocław"
       ],
       "is_home_list": [
-        true
+        false
       ],
       "fixtures_count": 1,
       "is_captain": false
@@ -24,13 +24,29 @@
       "id": 1192,
       "name": "Erik Janža",
       "team": "górnik zabrze",
-      "predicted": 7.8,
+      "predicted": 8.4,
       "actual": null,
       "opponents": [
-        "Zagłębie Lubin"
+        "Wisła Płock"
       ],
       "is_home_list": [
-        false
+        true
+      ],
+      "fixtures_count": 1,
+      "is_captain": false
+    },
+    {
+      "position": "MID",
+      "id": 765,
+      "name": "Jesús Imaz",
+      "team": "jagiellonia białystok",
+      "predicted": 8.7,
+      "actual": null,
+      "opponents": [
+        "Radomiak Radom"
+      ],
+      "is_home_list": [
+        true
       ],
       "fixtures_count": 1,
       "is_captain": false
@@ -40,45 +56,45 @@
       "id": 2717,
       "name": "Pablo Rodríguez",
       "team": "lech poznań",
-      "predicted": 9.8,
+      "predicted": 11.9,
       "actual": null,
       "opponents": [
-        "GKS Katowice"
-      ],
-      "is_home_list": [
-        false
-      ],
-      "fixtures_count": 1,
-      "is_captain": false
-    },
-    {
-      "position": "MID",
-      "id": 2423,
-      "name": "Mbaye N'Diaye",
-      "team": "motor lublin",
-      "predicted": 7.2,
-      "actual": null,
-      "opponents": [
-        "Wieczysta Kraków"
-      ],
-      "is_home_list": [
-        false
-      ],
-      "fixtures_count": 1,
-      "is_captain": false
-    },
-    {
-      "position": "MID",
-      "id": 2679,
-      "name": "Paul Mukairu",
-      "team": "pogoń szczecin",
-      "predicted": 7.2,
-      "actual": null,
-      "opponents": [
-        "Śląsk Wrocław"
+        "Pogoń Szczecin"
       ],
       "is_home_list": [
         true
+      ],
+      "fixtures_count": 1,
+      "is_captain": false
+    },
+    {
+      "position": "GK",
+      "id": 2924,
+      "name": "Domen Gril",
+      "team": "piast gliwice",
+      "predicted": 6.0,
+      "actual": null,
+      "opponents": [
+        "Raków Częstochowa"
+      ],
+      "is_home_list": [
+        false
+      ],
+      "fixtures_count": 1,
+      "is_captain": false
+    },
+    {
+      "position": "MID",
+      "id": 2747,
+      "name": "Hugo Vallejo",
+      "team": "piast gliwice",
+      "predicted": 8.0,
+      "actual": null,
+      "opponents": [
+        "Raków Częstochowa"
+      ],
+      "is_home_list": [
+        false
       ],
       "fixtures_count": 1,
       "is_captain": false
@@ -88,26 +104,26 @@
       "id": 1225,
       "name": "Jan Grzesik",
       "team": "radomiak radom",
-      "predicted": 14.5,
+      "predicted": 16.1,
       "actual": null,
       "opponents": [
-        "Wisła Kraków"
+        "Jagiellonia Białystok"
       ],
       "is_home_list": [
-        true
+        false
       ],
       "fixtures_count": 1,
       "is_captain": true
     },
     {
-      "position": "FWD",
-      "id": 1168,
-      "name": "Patryk Makuch",
+      "position": "DEF",
+      "id": 2325,
+      "name": "Erick Otieno",
       "team": "raków częstochowa",
-      "predicted": 7.8,
+      "predicted": 9.2,
       "actual": null,
       "opponents": [
-        "Widzew Łódź"
+        "Piast Gliwice"
       ],
       "is_home_list": [
         true
@@ -120,13 +136,13 @@
       "id": 1931,
       "name": "Steve Kapuadi",
       "team": "widzew łódź",
-      "predicted": 7.7,
+      "predicted": 8.3,
       "actual": null,
       "opponents": [
-        "Raków Częstochowa"
+        "Zagłębie Lubin"
       ],
       "is_home_list": [
-        false
+        true
       ],
       "fixtures_count": 1,
       "is_captain": false
@@ -139,26 +155,10 @@
       "predicted": 7.9,
       "actual": null,
       "opponents": [
-        "Raków Częstochowa"
+        "Zagłębie Lubin"
       ],
       "is_home_list": [
-        false
-      ],
-      "fixtures_count": 1,
-      "is_captain": false
-    },
-    {
-      "position": "GK",
-      "id": 2659,
-      "name": "Marcel Łubik",
-      "team": "wisła kraków",
-      "predicted": 4.7,
-      "actual": null,
-      "opponents": [
-        "Radomiak Radom"
-      ],
-      "is_home_list": [
-        false
+        true
       ],
       "fixtures_count": 1,
       "is_captain": false
@@ -168,18 +168,18 @@
       "id": 2477,
       "name": "Marcel Reguła",
       "team": "zagłębie lubin",
-      "predicted": 8.5,
+      "predicted": 9.7,
       "actual": null,
       "opponents": [
-        "Górnik Zabrze"
+        "Widzew Łódź"
       ],
       "is_home_list": [
-        true
+        false
       ],
       "fixtures_count": 1,
       "is_captain": false
     }
   ],
   "captain": "Jan Grzesik",
-  "predicted_total": 105.2
+  "predicted_total": 119.1
 }

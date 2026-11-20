@@ -1,4 +1,190 @@
 {
+  "16": {
+    "round": 16,
+    "max_z_klubu": 3,
+    "formation": "4-5-1",
+    "players": [
+      {
+        "position": "MID",
+        "id": 480,
+        "name": "Bartosz Nowak",
+        "team": "gks katowice",
+        "predicted": 8.8,
+        "actual": null,
+        "opponents": [
+          "Śląsk Wrocław"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 1192,
+        "name": "Erik Janža",
+        "team": "górnik zabrze",
+        "predicted": 8.4,
+        "actual": null,
+        "opponents": [
+          "Wisła Płock"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 765,
+        "name": "Jesús Imaz",
+        "team": "jagiellonia białystok",
+        "predicted": 8.7,
+        "actual": null,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2717,
+        "name": "Pablo Rodríguez",
+        "team": "lech poznań",
+        "predicted": 11.9,
+        "actual": null,
+        "opponents": [
+          "Pogoń Szczecin"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "GK",
+        "id": 2924,
+        "name": "Domen Gril",
+        "team": "piast gliwice",
+        "predicted": 6.0,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2747,
+        "name": "Hugo Vallejo",
+        "team": "piast gliwice",
+        "predicted": 8.0,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 1225,
+        "name": "Jan Grzesik",
+        "team": "radomiak radom",
+        "predicted": 16.1,
+        "actual": null,
+        "opponents": [
+          "Jagiellonia Białystok"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": true
+      },
+      {
+        "position": "DEF",
+        "id": 2325,
+        "name": "Erick Otieno",
+        "team": "raków częstochowa",
+        "predicted": 9.2,
+        "actual": null,
+        "opponents": [
+          "Piast Gliwice"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 1931,
+        "name": "Steve Kapuadi",
+        "team": "widzew łódź",
+        "predicted": 8.3,
+        "actual": null,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "FWD",
+        "id": 95,
+        "name": "Karol Świderski",
+        "team": "widzew łódź",
+        "predicted": 7.9,
+        "actual": null,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2477,
+        "name": "Marcel Reguła",
+        "team": "zagłębie lubin",
+        "predicted": 9.7,
+        "actual": null,
+        "opponents": [
+          "Widzew Łódź"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      }
+    ],
+    "captain": "Jan Grzesik",
+    "predicted_total": 119.1,
+    "saved_at": "2026-11-20T23:26:37+00:00"
+  },
   "15": {
     "round": 15,
     "max_z_klubu": 3,
