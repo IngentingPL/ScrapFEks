@@ -69,22 +69,6 @@
         "is_captain": false
       },
       {
-        "position": "GK",
-        "id": 2924,
-        "name": "Domen Gril",
-        "team": "piast gliwice",
-        "predicted": 6.3,
-        "actual": null,
-        "opponents": [
-          "Korona Kielce"
-        ],
-        "is_home_list": [
-          true
-        ],
-        "fixtures_count": 1,
-        "is_captain": false
-      },
-      {
         "position": "MID",
         "id": 2679,
         "name": "Paul Mukairu",
@@ -165,6 +149,22 @@
         "is_captain": false
       },
       {
+        "position": "GK",
+        "id": 2659,
+        "name": "Marcel Łubik",
+        "team": "wisła kraków",
+        "predicted": 4.7,
+        "actual": null,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
         "position": "MID",
         "id": 2477,
         "name": "Marcel Reguła",
@@ -182,8 +182,8 @@
       }
     ],
     "captain": "Jan Grzesik",
-    "predicted_total": 106.8,
-    "saved_at": "2026-11-20T01:21:56+00:00"
+    "predicted_total": 105.2,
+    "saved_at": "2026-11-20T14:05:12+00:00"
   },
   "14": {
     "round": 14,
