@@ -1,7 +1,7 @@
 {
   "round": 16,
   "max_z_klubu": 3,
-  "formation": "4-5-1",
+  "formation": "5-4-1",
   "players": [
     {
       "position": "MID",
@@ -36,14 +36,14 @@
       "is_captain": false
     },
     {
-      "position": "MID",
-      "id": 765,
-      "name": "Jesús Imaz",
-      "team": "jagiellonia białystok",
-      "predicted": 8.7,
+      "position": "DEF",
+      "id": 2123,
+      "name": "Michał Gurgul",
+      "team": "lech poznań",
+      "predicted": 7.7,
       "actual": null,
       "opponents": [
-        "Radomiak Radom"
+        "Pogoń Szczecin"
       ],
       "is_home_list": [
         true
@@ -63,22 +63,6 @@
       ],
       "is_home_list": [
         true
-      ],
-      "fixtures_count": 1,
-      "is_captain": false
-    },
-    {
-      "position": "GK",
-      "id": 2924,
-      "name": "Domen Gril",
-      "team": "piast gliwice",
-      "predicted": 6.0,
-      "actual": null,
-      "opponents": [
-        "Raków Częstochowa"
-      ],
-      "is_home_list": [
-        false
       ],
       "fixtures_count": 1,
       "is_captain": false
@@ -104,7 +88,7 @@
       "id": 1225,
       "name": "Jan Grzesik",
       "team": "radomiak radom",
-      "predicted": 16.1,
+      "predicted": 14.6,
       "actual": null,
       "opponents": [
         "Jagiellonia Białystok"
@@ -164,6 +148,22 @@
       "is_captain": false
     },
     {
+      "position": "GK",
+      "id": 724,
+      "name": "Zlatan Alomerović",
+      "team": "zagłębie lubin",
+      "predicted": 7.5,
+      "actual": null,
+      "opponents": [
+        "Widzew Łódź"
+      ],
+      "is_home_list": [
+        false
+      ],
+      "fixtures_count": 1,
+      "is_captain": false
+    },
+    {
       "position": "MID",
       "id": 2477,
       "name": "Marcel Reguła",
@@ -181,5 +181,5 @@
     }
   ],
   "captain": "Jan Grzesik",
-  "predicted_total": 119.6
+  "predicted_total": 117.1
 }
