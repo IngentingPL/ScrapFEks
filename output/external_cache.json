@@ -1,6 +1,6 @@
 {
   "90minut_table": {
-    "timestamp": "2026-11-20T01:21:22.626843",
+    "timestamp": "2026-11-21T03:10:22.990479",
     "ttl_hours": 24,
     "data": {
       "Lech Poznań": {
@@ -25,6 +25,17 @@
         "ga_away": 4,
         "mp_away": 7
       },
+      "Piast Gliwice": {
+        "gf": 26,
+        "ga": 20,
+        "mp": 15,
+        "gf_home": 19,
+        "ga_home": 12,
+        "mp_home": 8,
+        "gf_away": 7,
+        "ga_away": 8,
+        "mp_away": 7
+      },
       "Legia Warszawa": {
         "gf": 25,
         "ga": 15,
@@ -37,12 +48,12 @@
         "mp_away": 7
       },
       "Pogoń Szczecin": {
-        "gf": 20,
-        "ga": 15,
-        "mp": 13,
-        "gf_home": 14,
-        "ga_home": 8,
-        "mp_home": 7,
+        "gf": 21,
+        "ga": 17,
+        "mp": 14,
+        "gf_home": 15,
+        "ga_home": 10,
+        "mp_home": 8,
         "gf_away": 6,
         "ga_away": 7,
         "mp_away": 6
@@ -67,17 +78,6 @@
         "mp_home": 7,
         "gf_away": 10,
         "ga_away": 13,
-        "mp_away": 7
-      },
-      "Piast Gliwice": {
-        "gf": 24,
-        "ga": 20,
-        "mp": 14,
-        "gf_home": 17,
-        "ga_home": 12,
-        "mp_home": 7,
-        "gf_away": 7,
-        "ga_away": 8,
         "mp_away": 7
       },
       "GKS Katowice": {
@@ -115,14 +115,14 @@
       },
       "Korona Kielce": {
         "gf": 14,
-        "ga": 21,
-        "mp": 14,
+        "ga": 23,
+        "mp": 15,
         "gf_home": 7,
         "ga_home": 9,
         "mp_home": 7,
         "gf_away": 7,
-        "ga_away": 12,
-        "mp_away": 7
+        "ga_away": 14,
+        "mp_away": 8
       },
       "Wisła Płock": {
         "gf": 14,
@@ -157,6 +157,17 @@
         "ga_away": 18,
         "mp_away": 7
       },
+      "Śląsk Wrocław": {
+        "gf": 19,
+        "ga": 26,
+        "mp": 15,
+        "gf_home": 9,
+        "ga_home": 10,
+        "mp_home": 7,
+        "gf_away": 10,
+        "ga_away": 16,
+        "mp_away": 8
+      },
       "Cracovia": {
         "gf": 16,
         "ga": 23,
@@ -177,17 +188,6 @@
         "mp_home": 7,
         "gf_away": 11,
         "ga_away": 13,
-        "mp_away": 7
-      },
-      "Śląsk Wrocław": {
-        "gf": 17,
-        "ga": 25,
-        "mp": 14,
-        "gf_home": 9,
-        "ga_home": 10,
-        "mp_home": 7,
-        "gf_away": 8,
-        "ga_away": 15,
         "mp_away": 7
       },
       "Wieczysta Kraków": {
