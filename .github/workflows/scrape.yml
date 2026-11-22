@@ -34,8 +34,6 @@ on:
 
   # AUTO-SCHEDULE-START
   schedule:
-    - cron: '0 19 19 11 *'  # K15 DISCORD PRE 19.11 20:00 CET — prognoza przed kolejką
-    - cron: '7 5 20 11 *'  # K15 DISCORD PRE ZAPAS 20.11 05:07 UTC — zapas przed kolejką
     - cron: '30 17 20 11 *'  # K15 START 20.11 mecz 18:00 CET → +30min 18:30 CET
     - cron: '0 18 20 11 *'  # K15 DISCORD CAPTAINS 20.11 19:00 CET — podsumowanie kapitanów
     - cron: '30 19 20 11 *'  # K15 20.11 mecz 18:00 CET → +2.5h 20:30 CET
