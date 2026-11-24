@@ -1,6 +1,6 @@
 {
   "90minut_table": {
-    "timestamp": "2026-11-22T20:37:05.846245",
+    "timestamp": "2026-11-24T05:01:33.197919",
     "ttl_hours": 24,
     "data": {
       "Lech Poznań": {
@@ -103,15 +103,15 @@
         "mp_away": 7
       },
       "Motor Lublin": {
-        "gf": 22,
-        "ga": 24,
-        "mp": 14,
+        "gf": 23,
+        "ga": 26,
+        "mp": 15,
         "gf_home": 12,
         "ga_home": 13,
         "mp_home": 8,
-        "gf_away": 10,
-        "ga_away": 11,
-        "mp_away": 6
+        "gf_away": 11,
+        "ga_away": 13,
+        "mp_away": 7
       },
       "Korona Kielce": {
         "gf": 14,
@@ -191,12 +191,12 @@
         "mp_away": 8
       },
       "Wieczysta Kraków": {
-        "gf": 18,
-        "ga": 28,
-        "mp": 14,
-        "gf_home": 7,
-        "ga_home": 8,
-        "mp_home": 5,
+        "gf": 20,
+        "ga": 29,
+        "mp": 15,
+        "gf_home": 9,
+        "ga_home": 9,
+        "mp_home": 6,
         "gf_away": 11,
         "ga_away": 20,
         "mp_away": 9

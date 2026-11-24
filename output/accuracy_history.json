@@ -4369,17 +4369,17 @@
   },
   {
     "round": 15,
-    "date": "2026-11-23",
+    "date": "2026-11-24",
     "mae": 2.7,
     "mae_by_pos": {
-      "BR": 2.3,
+      "BR": 2.2,
       "OBR": 3.1,
       "POM": 2.8,
-      "NAP": 1.9
+      "NAP": 2.0
     },
-    "top10_mae": 4.8,
+    "top10_mae": 5.0,
     "hit_rate": 0.64,
-    "sample_size": 73,
+    "sample_size": 80,
     "worst_misses": [
       {
         "name": "Jan Grzesik",
@@ -4438,9 +4438,9 @@
         "error": -0.1
       },
       {
-        "name": "Xavier Dziekoński",
-        "predicted": 1.8,
-        "actual": 2,
+        "name": "Patryk Makuch",
+        "predicted": 7.8,
+        "actual": 8,
         "error": -0.2
       }
     ],
@@ -4480,6 +4480,15 @@
         "predicted": 1.9,
         "actual": 2,
         "error": -0.1
+      },
+      {
+        "player_id": "1168",
+        "name": "Patryk Makuch",
+        "position": "NAP",
+        "team": "raków częstochowa",
+        "predicted": 7.8,
+        "actual": 8,
+        "error": -0.2
       },
       {
         "player_id": "1400",
@@ -4599,10 +4608,28 @@
         "error": -0.8
       },
       {
+        "player_id": "2901",
+        "name": "Tobias Christensen",
+        "position": "POM",
+        "team": "wieczysta kraków",
+        "predicted": 2.1,
+        "actual": 3,
+        "error": -0.9
+      },
+      {
         "player_id": "1540",
         "name": "Norbert Wojtuszek",
         "position": "OBR",
         "team": "jagiellonia białystok",
+        "predicted": 1.9,
+        "actual": 1,
+        "error": 0.9
+      },
+      {
+        "player_id": "2531",
+        "name": "Gašper Tratnik",
+        "position": "BR",
+        "team": "motor lublin",
         "predicted": 1.9,
         "actual": 1,
         "error": 0.9
@@ -4642,15 +4669,6 @@
         "predicted": 3.1,
         "actual": 2,
         "error": 1.1
-      },
-      {
-        "player_id": "1168",
-        "name": "Patryk Makuch",
-        "position": "NAP",
-        "team": "raków częstochowa",
-        "predicted": 7.8,
-        "actual": 9,
-        "error": -1.2
       },
       {
         "player_id": "2698",
@@ -4707,6 +4725,15 @@
         "error": -1.5
       },
       {
+        "player_id": "2417",
+        "name": "Filip Luberecki",
+        "position": "OBR",
+        "team": "motor lublin",
+        "predicted": 2.5,
+        "actual": 1,
+        "error": 1.5
+      },
+      {
         "player_id": "2939",
         "name": "Nik Prelec",
         "position": "NAP",
@@ -4749,6 +4776,15 @@
         "team": "jagiellonia białystok",
         "predicted": 7.0,
         "actual": 5,
+        "error": 2.0
+      },
+      {
+        "player_id": "2671",
+        "name": "Karol Czubak",
+        "position": "NAP",
+        "team": "motor lublin",
+        "predicted": 6.0,
+        "actual": 4,
         "error": 2.0
       },
       {
@@ -4887,6 +4923,15 @@
         "error": -3.0
       },
       {
+        "player_id": "2953",
+        "name": "Yacine Bourhane",
+        "position": "POM",
+        "team": "motor lublin",
+        "predicted": 5.1,
+        "actual": 2,
+        "error": 3.1
+      },
+      {
         "player_id": "2767",
         "name": "Yannick Agnero",
         "position": "NAP",
@@ -4950,6 +4995,15 @@
         "error": 3.9
       },
       {
+        "player_id": "2214",
+        "name": "Efthýmios Kouloúris",
+        "position": "NAP",
+        "team": "wieczysta kraków",
+        "predicted": 1.9,
+        "actual": 6,
+        "error": -4.1
+      },
+      {
         "player_id": "1507",
         "name": "Łukasz Zjawiński",
         "position": "NAP",
@@ -4984,6 +5038,15 @@
         "predicted": 5.6,
         "actual": 1,
         "error": 4.6
+      },
+      {
+        "player_id": "2423",
+        "name": "Mbaye N'Diaye",
+        "position": "POM",
+        "team": "motor lublin",
+        "predicted": 7.2,
+        "actual": 2,
+        "error": 5.2
       },
       {
         "player_id": "2679",

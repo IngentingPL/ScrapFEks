@@ -2,17 +2,17 @@
   "16": {
     "round": 16,
     "max_z_klubu": 3,
-    "formation": "5-3-2",
+    "formation": "4-4-2",
     "players": [
       {
-        "position": "DEF",
-        "id": 1192,
-        "name": "Erik Janža",
-        "team": "górnik zabrze",
-        "predicted": 7.7,
+        "position": "MID",
+        "id": 765,
+        "name": "Jesús Imaz",
+        "team": "jagiellonia białystok",
+        "predicted": 7.2,
         "actual": null,
         "opponents": [
-          "Wisła Płock"
+          "Radomiak Radom"
         ],
         "is_home_list": [
           true
@@ -121,7 +121,7 @@
         "id": 1168,
         "name": "Patryk Makuch",
         "team": "raków częstochowa",
-        "predicted": 7.8,
+        "predicted": 7.5,
         "actual": null,
         "opponents": [
           "Piast Gliwice"
@@ -182,8 +182,8 @@
       }
     ],
     "captain": "Jan Grzesik",
-    "predicted_total": 113.6,
-    "saved_at": "2026-11-23T00:02:52+00:00"
+    "predicted_total": 112.8,
+    "saved_at": "2026-11-24T05:01:42+00:00"
   },
   "15": {
     "round": 15,
