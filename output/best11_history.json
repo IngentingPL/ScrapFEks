@@ -384,5 +384,198 @@
     },
     "zrodlo": "zapisany",
     "difference": -28.0
+  },
+  {
+    "round": 15,
+    "max_z_klubu": 3,
+    "formation": "3-5-2",
+    "players": [
+      {
+        "id": 480,
+        "position": "MID",
+        "name": "Bartosz Nowak",
+        "team": "gks katowice",
+        "predicted": 7.6,
+        "actual": 2.0,
+        "opponents": [
+          "Lech Poznań"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 1192,
+        "position": "DEF",
+        "name": "Erik Janža",
+        "team": "górnik zabrze",
+        "predicted": 7.8,
+        "actual": 0.0,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2717,
+        "position": "MID",
+        "name": "Pablo Rodríguez",
+        "team": "lech poznań",
+        "predicted": 9.8,
+        "actual": 0.0,
+        "opponents": [
+          "GKS Katowice"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2423,
+        "position": "MID",
+        "name": "Mbaye N'Diaye",
+        "team": "motor lublin",
+        "predicted": 7.2,
+        "actual": 2.0,
+        "opponents": [
+          "Wieczysta Kraków"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2679,
+        "position": "MID",
+        "name": "Paul Mukairu",
+        "team": "pogoń szczecin",
+        "predicted": 7.2,
+        "actual": 2.0,
+        "opponents": [
+          "Śląsk Wrocław"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 1225,
+        "position": "DEF",
+        "name": "Jan Grzesik",
+        "team": "radomiak radom",
+        "predicted": 14.5,
+        "actual": 5.0,
+        "opponents": [
+          "Wisła Kraków"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": true
+      },
+      {
+        "id": 1168,
+        "position": "FWD",
+        "name": "Patryk Makuch",
+        "team": "raków częstochowa",
+        "predicted": 7.8,
+        "actual": 9.0,
+        "opponents": [
+          "Widzew Łódź"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 1931,
+        "position": "DEF",
+        "name": "Steve Kapuadi",
+        "team": "widzew łódź",
+        "predicted": 7.7,
+        "actual": -1.0,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 95,
+        "position": "FWD",
+        "name": "Karol Świderski",
+        "team": "widzew łódź",
+        "predicted": 7.9,
+        "actual": 2.0,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2659,
+        "position": "GK",
+        "name": "Marcel Łubik",
+        "team": "wisła kraków",
+        "predicted": 4.7,
+        "actual": 5.0,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "id": 2477,
+        "position": "MID",
+        "name": "Marcel Reguła",
+        "team": "zagłębie lubin",
+        "predicted": 8.5,
+        "actual": 0.0,
+        "opponents": [
+          "Górnik Zabrze"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      }
+    ],
+    "captain": "Jan Grzesik",
+    "predicted_total": 105.2,
+    "actual_total": 31.0,
+    "best_cmf": {
+      "name": "Vfb Osterode",
+      "slug": "vfb-osterode",
+      "points": 78.0
+    },
+    "zrodlo": "zapisany",
+    "difference": -47.0
   }
 ]

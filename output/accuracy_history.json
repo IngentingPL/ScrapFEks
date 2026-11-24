@@ -4374,7 +4374,7 @@
     "mae_by_pos": {
       "BR": 2.2,
       "OBR": 3.1,
-      "POM": 2.8,
+      "POM": 2.9,
       "NAP": 2.0
     },
     "top10_mae": 5.0,
@@ -4384,8 +4384,8 @@
       {
         "name": "Jan Grzesik",
         "predicted": 14.5,
-        "actual": 4,
-        "error": 10.5
+        "actual": 5,
+        "error": 9.5
       },
       {
         "name": "Steve Kapuadi",
@@ -4438,9 +4438,9 @@
         "error": -0.1
       },
       {
-        "name": "Patryk Makuch",
-        "predicted": 7.8,
-        "actual": 8,
+        "name": "Xavier Dziekoński",
+        "predicted": 1.8,
+        "actual": 2,
         "error": -0.2
       }
     ],
@@ -4482,15 +4482,6 @@
         "error": -0.1
       },
       {
-        "player_id": "1168",
-        "name": "Patryk Makuch",
-        "position": "NAP",
-        "team": "raków częstochowa",
-        "predicted": 7.8,
-        "actual": 8,
-        "error": -0.2
-      },
-      {
         "player_id": "1400",
         "name": "Xavier Dziekoński",
         "position": "BR",
@@ -4498,15 +4489,6 @@
         "predicted": 1.8,
         "actual": 2,
         "error": -0.2
-      },
-      {
-        "player_id": "2481",
-        "name": "Ajdin Hasić",
-        "position": "POM",
-        "team": "cracovia",
-        "predicted": 5.3,
-        "actual": 5,
-        "error": 0.3
       },
       {
         "player_id": "2659",
@@ -4554,15 +4536,6 @@
         "error": -0.5
       },
       {
-        "player_id": "1092",
-        "name": "Piotr Samiec-Talar",
-        "position": "POM",
-        "team": "śląsk wrocław",
-        "predicted": 5.4,
-        "actual": 6,
-        "error": -0.6
-      },
-      {
         "player_id": "2490",
         "name": "Darko Čurlinov",
         "position": "POM",
@@ -4588,6 +4561,15 @@
         "predicted": 2.6,
         "actual": 2,
         "error": 0.6
+      },
+      {
+        "player_id": "2481",
+        "name": "Ajdin Hasić",
+        "position": "POM",
+        "team": "cracovia",
+        "predicted": 5.3,
+        "actual": 6,
+        "error": -0.7
       },
       {
         "player_id": "303",
@@ -4671,6 +4653,15 @@
         "error": 1.1
       },
       {
+        "player_id": "1168",
+        "name": "Patryk Makuch",
+        "position": "NAP",
+        "team": "raków częstochowa",
+        "predicted": 7.8,
+        "actual": 9,
+        "error": -1.2
+      },
+      {
         "player_id": "2698",
         "name": "Leo Bengtsson",
         "position": "POM",
@@ -4732,6 +4723,15 @@
         "predicted": 2.5,
         "actual": 1,
         "error": 1.5
+      },
+      {
+        "player_id": "1092",
+        "name": "Piotr Samiec-Talar",
+        "position": "POM",
+        "team": "śląsk wrocław",
+        "predicted": 5.4,
+        "actual": 7,
+        "error": -1.6
       },
       {
         "player_id": "2939",
@@ -4959,15 +4959,6 @@
         "error": 3.2
       },
       {
-        "player_id": "2123",
-        "name": "Michał Gurgul",
-        "position": "OBR",
-        "team": "lech poznań",
-        "predicted": 4.7,
-        "actual": 8,
-        "error": -3.3
-      },
-      {
         "player_id": "860",
         "name": "Wiktor Długosz",
         "position": "POM",
@@ -5011,6 +5002,15 @@
         "predicted": 2.8,
         "actual": 7,
         "error": -4.2
+      },
+      {
+        "player_id": "2123",
+        "name": "Michał Gurgul",
+        "position": "OBR",
+        "team": "lech poznań",
+        "predicted": 4.7,
+        "actual": 9,
+        "error": -4.3
       },
       {
         "player_id": "1026",
@@ -5162,8 +5162,8 @@
         "position": "OBR",
         "team": "radomiak radom",
         "predicted": 14.5,
-        "actual": 4,
-        "error": 10.5
+        "actual": 5,
+        "error": 9.5
       }
     ],
     "predictions": [
