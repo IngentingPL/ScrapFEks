@@ -310,7 +310,8 @@ def should_send_captains_summary(round_number, fixtures_data):
     """
     Sprawdza czy DZIŚ należy wysłać captains_summary dla podanej kolejki.
 
-    Warunek: dzisiejsza data == dzień pierwszego meczu kolejki.
+    Warunek: dzisiejsza data == dzień pierwszego meczu kolejki
+    albo dzień po (okno ratunkowe dla spóźnionego crona).
     (wysyłane godzinę po rozpoczęciu pierwszego meczu)
 
     Parametry:
@@ -325,7 +326,9 @@ def should_send_captains_summary(round_number, fixtures_data):
     if not first_date:
         return False
     today = date.today()
-    return today == first_date
+    # Dzień po to okno ratunkowe — spóźniony cron nie może pominąć CAPTAINS.
+    # Duplikat blokuje flaga captains_round w send_captains_summary().
+    return first_date <= today <= first_date + timedelta(days=1)
 
 
 # ============================================================

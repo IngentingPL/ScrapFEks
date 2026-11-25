@@ -135,7 +135,7 @@ Powiadomienia są wysyłane przez `discord_notify.py` i zarządzane w `scraper.p
 | Kiedy | Co |
 |---|---|
 | Dzień przed pierwszym meczem | Pre-match: prognoza |
-| Godzinę po pierwszym meczu | Podsumowanie kapitanów |
+| Godzinę po pierwszym meczu | Podsumowanie kapitanów (okno ratunkowe: także następnego dnia UTC, jeśli jeszcze nie wysłano) |
 | Po ostatnim meczu kolejki | Post-match: wyniki |
 
 Każda wiadomość Discord max **2000 znaków** (limit webhooków).

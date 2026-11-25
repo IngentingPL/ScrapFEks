@@ -276,5 +276,75 @@ class DiscordIdempotencyTests(unittest.TestCase):
         send_mock.assert_not_called()
 
 
+class CaptainsWindowTests(unittest.TestCase):
+    """Okno CAPTAINS: dzień meczu + dzień po, ale bez duplikatów."""
+
+    @staticmethod
+    def _fixtures_15():
+        """K15 ma jeden potwierdzony mecz — pierwszy dzień to 20.11."""
+        return {
+            "matches": {
+                "15": [
+                    {
+                        "home": "Drużyna A",
+                        "away": "Drużyna B",
+                        "date": "20.11",
+                        "date_confirmed": True,
+                    }
+                ]
+            }
+        }
+
+    @staticmethod
+    def _ustaw_date(date_mock, dzien):
+        """Podstawia today(), ale pozwala tworzyć prawdziwe daty w parserze."""
+        date_mock.side_effect = lambda *args: date(*args)
+        date_mock.today.return_value = date(datetime.now().year, 11, dzien)
+
+    @patch("discord_notify.date")
+    def test_dzien_przed_nie_wysyla(self, date_mock):
+        self._ustaw_date(date_mock, 19)
+        self.assertFalse(
+            discord_notify.should_send_captains_summary(15, self._fixtures_15())
+        )
+
+    @patch("discord_notify.date")
+    def test_dzien_meczu_wysyla(self, date_mock):
+        self._ustaw_date(date_mock, 20)
+        self.assertTrue(
+            discord_notify.should_send_captains_summary(15, self._fixtures_15())
+        )
+
+    @patch("discord_notify.date")
+    def test_dzien_po_wysyla(self, date_mock):
+        self._ustaw_date(date_mock, 21)
+        self.assertTrue(
+            discord_notify.should_send_captains_summary(15, self._fixtures_15())
+        )
+
+    @patch("discord_notify.date")
+    def test_dwa_dni_po_nie_wysyla(self, date_mock):
+        self._ustaw_date(date_mock, 22)
+        self.assertFalse(
+            discord_notify.should_send_captains_summary(15, self._fixtures_15())
+        )
+
+    @patch(
+        "discord_notify._load_sent_log",
+        return_value={"pre_round": 15, "post_round": 15, "captains_round": 15},
+    )
+    @patch("discord_notify._send_embed")
+    def test_dzien_po_juz_wyslane_nie_duplikuje(self, send_mock, _log_mock):
+        result = discord_notify.send_captains_summary(
+            league_teams_detail=[{}],
+            cmf_standings={},
+            webhook_url="https://example.invalid/webhook",
+            round_number=15,
+        )
+
+        self.assertFalse(result)
+        send_mock.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
