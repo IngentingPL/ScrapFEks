@@ -5,6 +5,7 @@ i zwraca kompletny string HTML. Zero globalnego stanu, zero
 operacji I/O - czysty transform danych → HTML.
 """
 import json
+from html import escape as html_escape
 
 
 def json_for_script(value) -> str:
@@ -139,9 +140,12 @@ def generate_dashboard_html(
 
     # Lider ligi CMF — pierwsza drużyna (dane już posortowane wg total_pts)
     league_leader = league_teams_detail[0] if league_teams_detail else None
-    leader_name = league_leader.get("display_name") or \
-                  league_leader.get("slug", "").replace("-", " ").title() \
-                  if league_leader else "—"
+    # Nazwa drużyny pochodzi od gracza ligi — escapujemy ją przed wklejeniem do HTML.
+    leader_name = html_escape(
+        str(league_leader.get("display_name") or
+            league_leader.get("slug", "").replace("-", " ").title()),
+        quote=False,
+    ) if league_leader else "—"
     leader_pts = league_leader.get("total_pts", 0) if league_leader else 0
 
     # --- Dane pomocnicze dla landing page i KPI (Koncepcja C) ---
@@ -182,8 +186,10 @@ def generate_dashboard_html(
     landing_league_rows = ""
     for rank, team in enumerate(league_teams_detail[:5], 1):
         name = team.get("display_name") or team.get("slug", "").replace("-", " ").title()
+        # Nazwa drużyny z ligi CMF trafia do HTML — bez escape'owania
+        # znaki '<' i '>' mogłyby zmienić strukturę strony.
         landing_league_rows += (
-            f"<tr><td class='rank'>{rank:02d}</td><td class='strong'><span class='clip'>{name}</span></td>"
+            f"<tr><td class='rank'>{rank:02d}</td><td class='strong'><span class='clip'>{html_escape(str(name), quote=False)}</span></td>"
             f"<td class='num strong'>{team.get('total_pts', 0):,}</td></tr>"
         )
     league_landing_content = (
