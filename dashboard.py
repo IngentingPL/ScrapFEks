@@ -6,6 +6,18 @@ operacji I/O - czysty transform danych → HTML.
 """
 import json
 
+
+def json_for_script(value) -> str:
+    """Zwraca JSON bezpieczny do wklejenia do bloku <script>.
+
+    json.dumps zostawia znak '<' nietknięty, więc ciąg '</script>' w nazwie
+    zawodnika lub drużyny zamknąłby skrypt i pozwolił wstrzyknąć kod HTML.
+    Zamiana na '\\u003c' jest niewidoczna dla JavaScriptu (to ten sam znak
+    po sparsowaniu), ale usuwa niebezpieczny sekwens z pliku HTML.
+    """
+    return json.dumps(value, ensure_ascii=False).replace("<", "\\u003c")
+
+
 # Etykieta bieżącego sezonu — pokazywana w mastheadzie i na landing page.
 # Zmienia się raz w roku (sezon piłkarski przecina lata kalendarzowe).
 SEASON_LABEL = "Sezon 2026/27"
@@ -96,21 +108,21 @@ def generate_dashboard_html(
         }
         scope_buttons.append(("league", f"🏅 {league_label}"))
 
-    data_json = json.dumps(scopes_data, ensure_ascii=False)
-    players_json = json.dumps(summary_data, ensure_ascii=False)
-    rosters_json = json.dumps(league_rosters, ensure_ascii=False)
-    teams_detail_json = json.dumps(league_teams_detail, ensure_ascii=False)
-    duets_data_json = json.dumps(duets_data or [], ensure_ascii=False)
-    fixtures_json = json.dumps(fixtures_data, ensure_ascii=False)
-    ekstra_stats_json = json.dumps(ekstra_stats, ensure_ascii=False)
-    fdr_data_json = json.dumps(fdr_data, ensure_ascii=False)
-    transfers_data_json = json.dumps(transfers_data or {}, ensure_ascii=False)
-    predictions_json = json.dumps(predictions_data or [], ensure_ascii=False)
-    accuracy_json = json.dumps(accuracy_history or [], ensure_ascii=False)
-    best11_next_json = json.dumps(best11_next, ensure_ascii=False)
-    best11_history_json = json.dumps(best11_history or [], ensure_ascii=False)
-    tuned_params_json = json.dumps(tuned_params or None, ensure_ascii=False)
-    league_history_json = json.dumps(league_history or {"rounds": []}, ensure_ascii=False)
+    data_json = json_for_script(scopes_data)
+    players_json = json_for_script(summary_data)
+    rosters_json = json_for_script(league_rosters)
+    teams_detail_json = json_for_script(league_teams_detail)
+    duets_data_json = json_for_script(duets_data or [])
+    fixtures_json = json_for_script(fixtures_data)
+    ekstra_stats_json = json_for_script(ekstra_stats)
+    fdr_data_json = json_for_script(fdr_data)
+    transfers_data_json = json_for_script(transfers_data or {})
+    predictions_json = json_for_script(predictions_data or [])
+    accuracy_json = json_for_script(accuracy_history or [])
+    best11_next_json = json_for_script(best11_next)
+    best11_history_json = json_for_script(best11_history or [])
+    tuned_params_json = json_for_script(tuned_params or None)
+    league_history_json = json_for_script(league_history or {"rounds": []})
     # 📖 newsletter_data usunięte — zakładka Newsletter wyłączona
     has_season = len((league_history or {}).get("rounds", [])) > 0
     has_fixtures = len(fixtures_data.get("rounds", [])) > 0
