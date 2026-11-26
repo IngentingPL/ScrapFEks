@@ -1032,6 +1032,11 @@ const BEST11_HISTORY = {best11_history_json};
 const ACCURACY_HISTORY = {accuracy_json};
 const TUNED_PARAMS = {tuned_params_json};
 const LEAGUE_HISTORY = {league_history_json};
+ // Wspólny escape dla tekstów wstawianych do innerHTML — nazwy drużyn
+ // i zawodników pochodzą z zewnątrz, więc muszą być traktowane jako dane.
+ function esc(v) {{
+   return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]));
+ }}
  const POS_MAP = {{BR:'GK',OBR:'DEF',POM:'MID',NAP:'FWD','1':'GK','2':'DEF','3':'MID','4':'FWD'}};
 const POS_ID = {{'1':'BR','2':'OBR','3':'POM','4':'NAP',BR:'BR',OBR:'OBR',POM:'POM',NAP:'NAP',
   Bramkarz:'BR','Obrońca':'OBR',Pomocnik:'POM',Napastnik:'NAP'}};
@@ -1114,8 +1119,8 @@ function sortData(data, tab) {{
 
 // Detail panel — kliknięcie na zawodnika pokazuje drużyny z ligi
 function nameCell(name, pid, style, prefix) {{
-  const attr = pid ? ' data-pid="'+pid+'"' : '';
-  return '<td class="roster-trigger"'+attr+' style="cursor:pointer;'+(style||'')+'"><span class="name-cell">'+( prefix||'')+'<span class="team-name">'+name+'</span><span class="name-caret">▸</span></span></td>';
+  const attr = pid ? ' data-pid="'+esc(pid)+'"' : '';
+  return '<td class="roster-trigger"'+attr+' style="cursor:pointer;'+(style||'')+'"><span class="name-cell">'+( prefix||'')+'<span class="team-name">'+esc(name)+'</span><span class="name-caret">▸</span></span></td>';
 }}
 function attachDetailClicks() {{
   document.querySelectorAll('.roster-trigger').forEach(td => {{
@@ -1180,7 +1185,7 @@ function detailRow(pid, colspan) {{
     else badge = '<span class="rc-badge rc-xi">XI</span>';
     const slug = t.team.replace(/-/g,' ');
     const posLabel = t.pos ? '<span class="rank" style="margin-right:2px">#'+t.pos+'</span>' : '';
-    chips += '<span class="detail-tag">'+posLabel+'<span class="dt-nm">'+slug+'</span> '+badge+'</span>';
+    chips += '<span class="detail-tag">'+posLabel+'<span class="dt-nm">'+esc(slug)+'</span> '+badge+'</span>';
   }});
   let h = '<tr class="detail-row"><td colspan="'+colspan+'"><div class="detail-in">';
   h += '<span class="seg-label" style="margin-right:6px">Drużyny w lidze ('+r.length+')</span>'+chips;
@@ -1252,7 +1257,7 @@ function renderPlayers() {{
     const pk = POS_ID[p.position] || p.position || '';
     h += '<tr><td class="c-muted fw-600">'+(i+1)+'</td>';
     h += nameCell(p.name, p.player_id, 'font-weight:600');
-    h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
+    h += '<td class="c-muted" style="font-size:13px">'+esc(p.team)+'</td>';
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
     h += '<td class="text-right c-muted">'+price.toFixed(1)+'M</td>';
     h += '<td class="text-right fw-700" style="color:'+ptsC+'">'+pts+'</td>';
@@ -1367,8 +1372,8 @@ function renderDuets() {{
 
     h += '<tr style="cursor:pointer" data-duet="'+encodeURIComponent(d.managers)+'">';
     h += '<td class="text-center">'+(pos <= 3 ? '<span class="medal m'+pos+'">'+pos+'</span>' : '<span class="rank">'+pos+'</span>')+'</td>';
-    h += '<td><span class="team-cell"><button class="expand-btn'+(isOpen?' open':'')+'" aria-label="Rozwiń duet">▶</button><span class="team-name">'+d.managers+'</span></span></td>';
-    h += '<td class="text-left c-muted" style="font-size:12px">'+(d.group_name ? d.group_name : '<span class="c-muted">—</span>')+'</td>';
+    h += '<td><span class="team-cell"><button class="expand-btn'+(isOpen?' open':'')+'" aria-label="Rozwiń duet">▶</button><span class="team-name">'+esc(d.managers)+'</span></span></td>';
+    h += '<td class="text-left c-muted" style="font-size:12px">'+(d.group_name ? esc(d.group_name) : '<span class="c-muted">—</span>')+'</td>';
 
     // Pusty stan: brak danych = kreska, nigdy 0
     h += '<td class="text-right fw-700" style="font-size:15px">'+(hasData ? d.points : '—')+'</td>';
@@ -1393,8 +1398,8 @@ function renderDuets() {{
 
     if (isOpen) {{
       h += '<tr class="detail-row"><td colspan="7"><div class="detail-in">';
-      h += '<span class="detail-tag"><span class="dt-nm">'+d.team1_name+'</span></span>';
-      h += '<span class="detail-tag"><span class="dt-nm">'+d.team2_name+'</span></span>';
+      h += '<span class="detail-tag"><span class="dt-nm">'+esc(d.team1_name)+'</span></span>';
+      h += '<span class="detail-tag"><span class="dt-nm">'+esc(d.team2_name)+'</span></span>';
       h += '<span class="detail-tag"><span class="dt-nm">Suma duetu</span><span class="dt-pts">'+(hasData ? d.points + ' pkt' : '—')+'</span></span>';
       h += '<span class="detail-tag"><span class="dt-nm">Poprzednia kolejka</span><span class="dt-pts">'+(hasPrev ? d.prev_points + ' pkt' : '—')+'</span></span>';
       h += '</div></td></tr>';
@@ -1510,9 +1515,9 @@ function renderTeams() {{
     if (dimRow) rowStyle = 'opacity:0.45';
     if (hasPlayers) rowStyle += (rowStyle ? ';' : '') + 'cursor:pointer';
 
-    h += '<tr'+(rowCls ? ' class="'+rowCls+'"' : '')+(rowStyle ? ' style="'+rowStyle+'"' : '')+' data-teamslug="'+t.slug+'">';
+    h += '<tr'+(rowCls ? ' class="'+rowCls+'"' : '')+(rowStyle ? ' style="'+rowStyle+'"' : '')+' data-teamslug="'+esc(t.slug)+'">';
     h += '<td class="text-center">' + (pos <= 3 ? '<span class="medal m'+pos+'">'+pos+'</span>' : '<span class="rank">'+pos+'</span>') + '</td>';
-    h += '<td><span class="team-cell">' + (hasPlayers ? '<button class="expand-btn'+(isOpen?' open':'')+'" aria-label="Rozwiń skład">▶</button>' : '') + '<span class="team-name">' + tName + '</span>' + (dimRow ? ' <span class="c-dim" style="font-size:10px">(nie gra)</span>' : '') + '</span></td>';
+    h += '<td><span class="team-cell">' + (hasPlayers ? '<button class="expand-btn'+(isOpen?' open':'')+'" aria-label="Rozwiń skład">▶</button>' : '') + '<span class="team-name">' + esc(tName) + '</span>' + (dimRow ? ' <span class="c-dim" style="font-size:10px">(nie gra)</span>' : '') + '</span></td>';
     h += '<td class="text-right c-muted">' + (t.autumn_pts||0) + '</td>';
     h += '<td class="text-right c-dim" style="font-size:12px">' + (t.best_gw_autumn > 0 ? t.best_gw_autumn : '—') + '</td>';
     h += '<td class="text-right c-muted">' + (t.spring_pts||0) + '</td>';
@@ -1674,7 +1679,7 @@ function renderFixtures() {{
 
   teams.forEach((team, ti) => {{
     h += '<tr>';
-    h += '<td class="fdr-team-click" data-fdrteam="'+ti+'" style="cursor:pointer"><span class="team-name">'+team.short+'</span></td>';
+    h += '<td class="fdr-team-click" data-fdrteam="'+ti+'" style="cursor:pointer"><span class="team-name">'+esc(team.short)+'</span></td>';
 
     // 📖 Σ ATK/DEF = suma po kolejkach ze średniej z meczów (DGW nie zawyża)
     const gwGroups = groupFixturesByGw(team, gws);
@@ -1698,8 +1703,8 @@ function renderFixtures() {{
         // Pojedynczy mecz — obecny układ
         const f = g.matches[0];
         const ha = f.home ? 'D' : 'W';
-        h += '<td class="text-center" title="'+f.opponent+' ('+(f.home ? 'dom' : 'wyjazd')+') '+f.date+'">';
-        h += '<span class="opp"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span>';
+        h += '<td class="text-center" title="'+esc(f.opponent)+' ('+(f.home ? 'dom' : 'wyjazd')+') '+esc(f.date)+'">';
+        h += '<span class="opp"><span class="o-code"><span class="o-nm">'+esc(f.opponent_short)+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span>';
         h += '<span style="display:flex;gap:3px">';
         h += '<span class="fdr fdr-'+f.atk+'" title="ATK">A'+f.atk+'</span>';
         h += '<span class="fdr fdr-'+f.def+'" title="DEF">D'+f.def+'</span>';
@@ -1710,7 +1715,7 @@ function renderFixtures() {{
         h += '<div style="display:flex;flex-direction:column;gap:3px;align-items:center">';
         g.matches.forEach(f => {{
           const ha = f.home ? 'D' : 'W';
-          h += '<span class="opp" style="font-size:11px"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span>';
+          h += '<span class="opp" style="font-size:11px"><span class="o-code"><span class="o-nm">'+esc(f.opponent_short)+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span>';
           h += '<span style="display:flex;gap:2px">';
           h += '<span class="fdr fdr-'+f.atk+'" title="ATK" style="font-size:10px;padding:1px 3px">A'+f.atk+'</span>';
           h += '<span class="fdr fdr-'+f.def+'" title="DEF" style="font-size:10px;padding:1px 3px">D'+f.def+'</span>';
@@ -1874,7 +1879,7 @@ function renderFixturePlanner() {{
   planData.forEach((team, ti) => {{
     const isSelected = fpSelected.includes(team.name);
     h += '<tr>';
-    h += '<td class="fp-team-cell'+(isSelected ? ' fp-selected' : '')+'" data-fpteam="'+team.name+'" style="cursor:pointer"><span class="team-name">'+team.short+'</span></td>';
+    h += '<td class="fp-team-cell'+(isSelected ? ' fp-selected' : '')+'" data-fpteam="'+esc(team.name)+'" style="cursor:pointer"><span class="team-name">'+esc(team.short)+'</span></td>';
 
     // Kafelki FDR per kolejka
     team.gwGroups.forEach((g, fi) => {{
@@ -1887,8 +1892,8 @@ function renderFixturePlanner() {{
         // Pojedynczy mecz
         const f = g.matches[0];
         const ha = f.home ? 'D' : 'W';
-        h += '<td class="text-center" title="'+f.opponent+' ('+(f.home?'dom':'wyjazd')+') '+f.date+'">';
-        h += '<span class="opp"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span><span class="fdr fdr-'+avgFdr+'">'+avgFdr+'</span></span>';
+        h += '<td class="text-center" title="'+esc(f.opponent)+' ('+(f.home?'dom':'wyjazd')+') '+esc(f.date)+'">';
+        h += '<span class="opp"><span class="o-code"><span class="o-nm">'+esc(f.opponent_short)+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span><span class="fdr fdr-'+avgFdr+'">'+avgFdr+'</span></span>';
         h += '</td>';
       }} else {{
         // DGW: 2 mecze
@@ -1897,7 +1902,7 @@ function renderFixturePlanner() {{
         g.matches.forEach(f => {{
           const ha = f.home ? 'D' : 'W';
           const ffdr = fpGetFdr(f, fpMode);
-          h += '<span class="opp" style="font-size:11px"><span class="o-code"><span class="o-nm">'+f.opponent_short+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span><span class="fdr fdr-'+ffdr+'" style="font-size:10px;padding:1px 3px">'+ffdr+'</span></span>';
+          h += '<span class="opp" style="font-size:11px"><span class="o-code"><span class="o-nm">'+esc(f.opponent_short)+'</span><span class="hw'+(f.home?' d':'')+'">'+ha+'</span></span><span class="fdr fdr-'+ffdr+'" style="font-size:10px;padding:1px 3px">'+ffdr+'</span></span>';
         }});
         h += '</div>';
         h += '<span style="font-size:9px;font-weight:700;color:var(--accent);margin-top:2px">DGW</span>';
@@ -1953,7 +1958,7 @@ function renderFixturePlanner() {{
   }}
 
   const insightList = (list) => list.slice(0,3).map((t, i) =>
-    '<li><span class="ii">0'+(i+1)+'</span>'+t.short+'<span class="iv">'+t.avg.toFixed(1)+'</span></li>'
+    '<li><span class="ii">0'+(i+1)+'</span>'+esc(t.short)+'<span class="iv">'+t.avg.toFixed(1)+'</span></li>'
   ).join('');
 
   h += '<div class="insights">';
@@ -1965,7 +1970,7 @@ function renderFixturePlanner() {{
   h += '<div class="insight"><h4>Najlepsza para rotacyjna</h4>';
   if (bestPair.t1) {{
     const bestPct = selectedGws.length > 0 ? Math.round(bestPair.coverage / selectedGws.length * 100) : 0;
-    h += '<div class="rot-pair">'+bestPair.t1+' <span class="c-dim">+</span> '+bestPair.t2+'<span class="rot-pct">'+bestPct+'%</span></div>';
+    h += '<div class="rot-pair">'+esc(bestPair.t1)+' <span class="c-dim">+</span> '+esc(bestPair.t2)+'<span class="rot-pct">'+bestPct+'%</span></div>';
   }}
   if (fpSelected.length === 2) {{
     const s1 = planData.find(t => t.name === fpSelected[0]);
@@ -1975,7 +1980,7 @@ function renderFixturePlanner() {{
       for (let i = 0; i < selectedGws.length; i++) {{
         if (s1.fdrValues[i] <= 2 || s2.fdrValues[i] <= 2) cov++;
       }}
-      h += '<div class="rot-note">Wybrana para '+s1.short+' + '+s2.short+': pokrycie '+cov+'/'+selectedGws.length+' kolejek.</div>';
+      h += '<div class="rot-note">Wybrana para '+esc(s1.short)+' + '+esc(s2.short)+': pokrycie '+cov+'/'+selectedGws.length+' kolejek.</div>';
     }}
   }} else if (fpSelected.length === 1) {{
     h += '<div class="rot-note">Kliknij drugą drużynę, aby zobaczyć wynik rotacji.</div>';
@@ -2030,9 +2035,9 @@ function renderTransfersTable(list, totalTeams, title, color) {{
     const priceChg = priceChangeHtml(p.price_change);
     h += '<tr>';
     h += '<td class="c-muted fw-600">' + (i + 1) + '</td>';
-    h += '<td class="fw-600">' + p.name + priceChg + '</td>';
+    h += '<td class="fw-600">' + esc(p.name) + priceChg + '</td>';
     h += '<td class="text-center">' + posBadge(pk) + '</td>';
-    h += '<td class="c-muted" style="font-size:12px;max-width:120px;white-space:normal">' + (p.team || '—') + '</td>';
+    h += '<td class="c-muted" style="font-size:12px;max-width:120px;white-space:normal">' + esc(p.team || '—') + '</td>';
     h += '<td class="text-right c-muted">' + (p.price ? p.price.toFixed(1) + 'M' : '—') + '</td>';
     h += '<td><span class="bar"><span class="bar-track" style="width:80px"><span class="bar-fill" style="width:' + barW + '%;background:' + color + '"></span></span>';
     h += '<span class="bar-val">' + p.count + ' (' + pct.toFixed(1) + '%)</span></span></td>';
@@ -2082,7 +2087,7 @@ function renderTransfers() {{
 function renderBest11(viewSwitch) {{
   const next = BEST11_NEXT || {{}};
   const history = Array.isArray(BEST11_HISTORY) ? BEST11_HISTORY.filter(r => r && typeof r === 'object') : [];
-  const esc = v => String(v == null ? '' : v).replace(/[&<>\"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}}[c]));
+  // esc() jest teraz zdefiniowany globalnie na początku skryptu.
   const lookup = p => PREDICTIONS.find(x => (p.id != null && String(x.player_id) === String(p.id)) || normalizeTeamNameJS(x.name) === normalizeTeamNameJS(p.name)) || {{}};
   // Ujednolicenie nazw drużyn z tabelą prognoz na podstawie oficjalnych nazw FDR.
   const teamNameFor = name => (((FDR_DATA.teams || []).find(t => normalizeTeamNameJS(t.name) === normalizeTeamNameJS(name)) || {{name:name || '—'}}).name);
@@ -2252,7 +2257,7 @@ function renderPredictions() {{
    if (dgwTeams.length > 0) {{
      h += '<div class="dgw-banner" style="background:var(--tint-accent);border:1px solid var(--border-accent);border-radius:12px;padding:12px 16px;margin:12px 0 16px;display:flex;align-items:center;gap:10px">';
      h += '<span style="font-size:16px">🎲</span>';
-     h += '<span style="font-size:13px;font-weight:700;color:var(--accent)">DGW w K' + {prediction_round} + ': ' + dgwTeams.join(', ') + '</span>';
+     h += '<span style="font-size:13px;font-weight:700;color:var(--accent)">DGW w K' + {prediction_round} + ': ' + esc(dgwTeams.join(', ')) + '</span>';
      h += '<span style="font-size:12px;color:var(--text-muted);margin-left:auto">Double Gameweek - suma punktów z 2 meczów</span>';
      h += '</div>';
    }}
@@ -2317,9 +2322,9 @@ function renderPredictions() {{
     const rowStyle = isUnavailable ? ' style="opacity:0.55"' : '';
     h += '<tr'+rowStyle+'>';
     h += '<td class="c-muted fw-600">'+(i+1)+'</td>';
-    h += '<td class="fw-600" title="'+detail.replace(/"/g,'&quot;')+'">'+(p.karpinski_slug ? '<a href="https://arturkarpinski.com/ekstraklasa-scouting/#sel='+p.karpinski_slug+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-dim)" title="Profil na ekstraklasa-scouting">'+p.name+'</a>' : p.name)+(isUnavailable ? ' <span style="font-size:11px;color:var(--down)">⛔ '+unavailableReason+'</span>' : '')+'</td>';
+    h += '<td class="fw-600" title="'+esc(detail)+'">'+(p.karpinski_slug ? '<a href="https://arturkarpinski.com/ekstraklasa-scouting/#sel='+p.karpinski_slug+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--text-dim)" title="Profil na ekstraklasa-scouting">'+esc(p.name)+'</a>' : esc(p.name))+(isUnavailable ? ' <span style="font-size:11px;color:var(--down)">⛔ '+esc(unavailableReason)+'</span>' : '')+'</td>';
     h += '<td class="text-center">'+posBadge(pk)+'</td>';
-    h += '<td class="c-muted" style="font-size:13px">'+p.team+'</td>';
+    h += '<td class="c-muted" style="font-size:13px">'+esc(p.team)+'</td>';
 
     // Rywal z FDR kolorem - obsługa DGW (dwa mecze)
     let oppCell = '';
@@ -2334,7 +2339,7 @@ function renderPredictions() {{
         const fdr = Math.max(fix.atk || 3, fix.def || 3);
         const home = fix.home ? 'D' : 'W';
         chipsHtml += '<span class="fdr fdr-'+fdr+'" style="display:inline-flex;align-items:center;gap:4px;margin:2px">';
-        chipsHtml += '<span class="o-nm">'+opp+'</span>';
+        chipsHtml += '<span class="o-nm">'+esc(opp)+'</span>';
         chipsHtml += '<span class="hw '+home.toLowerCase()+'">'+home+'</span>';
         chipsHtml += '</span>';
       }});
@@ -2346,7 +2351,7 @@ function renderPredictions() {{
       // Normalna kolejka - jeden rywal
       const oppName = p.opponent_short || p.next_opponent || '';
       const oppFdr = Math.max(oppFdrAtk, oppFdrDef);
-      oppCell = '<td class="text-center"><span class="opp"><span class="o-code"><span class="o-nm">'+oppName+'</span></span><span class="fdr fdr-'+oppFdr+'">'+oppFdr+'</span></span></td>';
+      oppCell = '<td class="text-center"><span class="opp"><span class="o-code"><span class="o-nm">'+esc(oppName)+'</span></span><span class="fdr fdr-'+oppFdr+'">'+oppFdr+'</span></span></td>';
     }}
     h += oppCell;
 
@@ -2590,9 +2595,9 @@ function renderAccuracy() {{
       else if (absErr < 4) errColor = 'var(--text-muted)';
 
       h += '<tr>';
-      h += '<td class="text-left">' + (d.name || '') + '</td>';
+      h += '<td class="text-left">' + esc(d.name || '') + '</td>';
       h += '<td class="text-center">' + posBadge(d.position || '') + '</td>';
-      h += '<td class="text-left c-muted">' + (d.team || '') + '</td>';
+      h += '<td class="text-left c-muted">' + esc(d.team || '') + '</td>';
       h += '<td class="text-right">' + (d.predicted != null ? d.predicted.toFixed(1) : '—') + '</td>';
       h += '<td class="text-right">' + (d.actual != null ? d.actual : '—') + '</td>';
       h += '<td class="text-right" style="color:' + errColor + ';font-weight:700;">' + absErr.toFixed(1) + '</td>';
@@ -2629,7 +2634,7 @@ function seasonNiceStep(raw) {{
 
 // Bezpieczny tekst w atrybutach HTML/SVG (cudzysłowy w nazwie drużyny)
 function seasonAttr(t) {{
-  return String(t).replace(/"/g, '&quot;');
+  return esc(t);
 }}
 
 // Dostępna szerokość wykresu. Na desktopie cel jak dotychczas (1100 / 1042 px),
@@ -2883,7 +2888,7 @@ function renderSeason() {{
   visibleTeams.forEach(team => {{
     const cls = (seasonHidden[team] ? ' hidden' : '') + (isOwn(team) ? ' is-own' : '');
     h += '<span class="cli season-legend-item' + cls + '" data-steam="' + seasonAttr(team) + '">';
-    h += '<span class="csw" style="background:' + opts.lc(team) + '"></span>' + team;
+    h += '<span class="csw" style="background:' + opts.lc(team) + '"></span>' + esc(team);
     h += '</span>';
   }});
   h += '</div>';
@@ -2946,7 +2951,7 @@ function renderSeason() {{
           : '<span class="chg chg-flat">—</span>';
       const color = teamColor[ts.team] || 'var(--text)';
       h += '<tr>';
-      h += '<td class="text-left" style="color:' + color + ';font-weight:600">' + ts.team + '</td>';
+      h += '<td class="text-left" style="color:' + color + ';font-weight:600">' + esc(ts.team) + '</td>';
       h += '<td class="text-center fw-700">' + ts.position + '</td>';
       h += '<td class="text-right fw-600">' + ts.totalPts + '</td>';
       h += '<td class="text-right">' + ts.avg.toFixed(1) + '</td>';
@@ -3079,8 +3084,8 @@ function renderComparison() {{
       if (!p) return;
       const pk = POS_ID[p.position] || p.position || '';
       h += '<span class="chip" style="border-color:'+CMP_COLORS[i]+'">';
-      h += posBadge(p.position) + '<span>' + p.name + '</span><span class="chip-meta">' + p.team + '</span>';
-      h += '<button class="chip-x" onclick="cmpRemovePlayer('+id+')" aria-label="Usuń ' + p.name + '">✕</button>';
+      h += posBadge(p.position) + '<span>' + esc(p.name) + '</span><span class="chip-meta">' + esc(p.team) + '</span>';
+      h += '<button class="chip-x" onclick="cmpRemovePlayer('+id+')" aria-label="Usuń ' + esc(p.name) + '">✕</button>';
       h += '</span>';
     }});
     h += '</div>';
@@ -3115,7 +3120,7 @@ function renderComparison() {{
     const nextGw = firstRealFix ? firstRealFix.gw : null;
     const roundFixes = nextGw != null ? teamFixes.filter(f => f.gw === nextGw && f.opponent) : [];
     const nextFix = roundFixes[0] || null;
-    const nextOpp = nextFix ? nextFix.opponent_short : (p.next_opponent || '—');
+    const nextOpp = esc(nextFix ? nextFix.opponent_short : (p.next_opponent || '—'));
     // 📖 FDR zależy od pozycji: NAP/POM → DEF rywala, BR/OBR → ATK rywala
     const isAttacker = (pk === 'NAP' || pk === 'POM');
     const mainFdr = nextFix ? (isAttacker ? nextFix.def : nextFix.atk) : (isAttacker ? (p.fdr_def_opponent || 3) : (p.fdr_atk_opponent || 3));
@@ -3123,8 +3128,8 @@ function renderComparison() {{
 
     h += '<div class="cmp-card"><span class="cc-bar" style="background:'+CMP_COLORS[i]+'"></span>';
     h += '<div class="cc-pos">' + posBadge(p.position) + '</div>';
-    h += '<div class="cc-name">' + p.name + '</div>';
-    h += '<div class="cc-team">' + p.team + '</div>';
+    h += '<div class="cc-name">' + esc(p.name) + '</div>';
+    h += '<div class="cc-team">' + esc(p.team) + '</div>';
     h += '<div style="margin-top:14px">';
     h += '<div class="ccmp-stat"><span class="cs-k">Cena</span><span class="cs-v">' + (p.price || 0).toFixed(1) + 'M</span></div>';
     h += '<div class="ccmp-stat"><span class="cs-k">Łączne pkt</span><span class="cs-v">' + (p.total_points || 0) + '</span></div>';
@@ -3137,7 +3142,7 @@ function renderComparison() {{
       roundFixes.forEach(f => {{
         const fMain = isAttacker ? f.def : f.atk;
         rivalHtml += '<span class="fdr fdr-'+fMain+'" style="display:inline-flex;align-items:center;gap:4px">';
-        rivalHtml += '<span class="o-nm">'+f.opponent_short+'</span>';
+        rivalHtml += '<span class="o-nm">'+esc(f.opponent_short)+'</span>';
         rivalHtml += '<span class="hw'+(f.home?' d':'')+'">'+(f.home?'D':'W')+'</span>';
         rivalHtml += '</span>';
       }});
@@ -3166,7 +3171,7 @@ function renderComparison() {{
   ];
 
   h += '<div class="panel" style="padding:0;overflow:hidden;margin-bottom:20px"><div class="tscroll"><table class="dt cmp-table"><thead><tr><th class="text-left">Statystyka</th>';
-  selected.forEach((p,i) => {{ h += '<th class="text-center" style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + '</th>'; }});
+  selected.forEach((p,i) => {{ h += '<th class="text-center" style="color:'+CMP_COLORS[i]+'">' + esc(p.name.split(' ').pop()) + '</th>'; }});
   h += '</tr></thead><tbody>';
 
   rows.forEach(([label, getter, mode]) => {{
@@ -3201,7 +3206,7 @@ function renderComparison() {{
   h += '<div class="chart-card">';
   h += '<div class="chart-legend" style="margin:0 0 14px">';
   selected.forEach((p,i) => {{
-    h += '<span class="cli"><span class="csw" style="background:'+CMP_COLORS[i]+'"></span>' + p.name.split(' ').pop() + '</span>';
+    h += '<span class="cli"><span class="csw" style="background:'+CMP_COLORS[i]+'"></span>' + esc(p.name.split(' ').pop()) + '</span>';
   }});
   h += '</div>';
 
@@ -3274,7 +3279,7 @@ function renderComparison() {{
     h += '<div class="sec"><h2>Trudność najbliższych meczów (FDR)</h2><span class="rule"></span>'
       + '<span class="sec-note">1 = bardzo łatwy · 5 = bardzo trudny</span></div>';
     h += '<div class="panel" style="padding:0;overflow:hidden"><div class="tscroll"><table class="dt"><thead><tr><th class="text-left">Kolejka</th>';
-    selected.forEach((p,i) => {{ h += '<th class="text-center" style="color:'+CMP_COLORS[i]+'">' + p.name.split(' ').pop() + '</th>'; }});
+    selected.forEach((p,i) => {{ h += '<th class="text-center" style="color:'+CMP_COLORS[i]+'">' + esc(p.name.split(' ').pop()) + '</th>'; }});
     h += '</tr></thead><tbody>';
 
     fdrGws.forEach(gw => {{
@@ -3445,8 +3450,8 @@ function render() {{
       let acH = '';
       matches.forEach(p => {{
         acH += '<button type="button" data-cmpid="'+p.player_id+'">';
-        acH += posBadge(p.position) + '<span>' + p.name + '</span>';
-        acH += '<span class="ac-team">' + p.team + ' · ' + (p.price||0).toFixed(1) + 'M · ' + (p.total_points||0) + 'pkt</span>';
+        acH += posBadge(p.position) + '<span>' + esc(p.name) + '</span>';
+        acH += '<span class="ac-team">' + esc(p.team) + ' · ' + (p.price||0).toFixed(1) + 'M · ' + (p.total_points||0) + 'pkt</span>';
         acH += '</button>';
       }});
       cmpAc.innerHTML = acH;
