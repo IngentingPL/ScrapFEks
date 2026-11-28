@@ -1,4 +1,190 @@
 {
+  "17": {
+    "round": 17,
+    "max_z_klubu": 3,
+    "formation": "4-3-3",
+    "players": [
+      {
+        "position": "DEF",
+        "id": 2123,
+        "name": "Michał Gurgul",
+        "team": "lech poznań",
+        "predicted": 7.8,
+        "actual": null,
+        "opponents": [
+          "Motor Lublin"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2717,
+        "name": "Pablo Rodríguez",
+        "team": "lech poznań",
+        "predicted": 12.8,
+        "actual": null,
+        "opponents": [
+          "Motor Lublin"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": true
+      },
+      {
+        "position": "FWD",
+        "id": 2767,
+        "name": "Yannick Agnero",
+        "team": "lech poznań",
+        "predicted": 7.9,
+        "actual": null,
+        "opponents": [
+          "Motor Lublin"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 1225,
+        "name": "Jan Grzesik",
+        "team": "radomiak radom",
+        "predicted": 12.2,
+        "actual": null,
+        "opponents": [
+          "Raków Częstochowa"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 2325,
+        "name": "Erick Otieno",
+        "team": "raków częstochowa",
+        "predicted": 7.6,
+        "actual": null,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "FWD",
+        "id": 1168,
+        "name": "Patryk Makuch",
+        "team": "raków częstochowa",
+        "predicted": 8.1,
+        "actual": null,
+        "opponents": [
+          "Radomiak Radom"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 1092,
+        "name": "Piotr Samiec-Talar",
+        "team": "śląsk wrocław",
+        "predicted": 7.1,
+        "actual": null,
+        "opponents": [
+          "Wisła Płock"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "FWD",
+        "id": 95,
+        "name": "Karol Świderski",
+        "team": "widzew łódź",
+        "predicted": 6.8,
+        "actual": null,
+        "opponents": [
+          "Cracovia"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "DEF",
+        "id": 2869,
+        "name": "Jakub Krzyżanowski",
+        "team": "wisła kraków",
+        "predicted": 7.3,
+        "actual": null,
+        "opponents": [
+          "Zagłębie Lubin"
+        ],
+        "is_home_list": [
+          false
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "GK",
+        "id": 724,
+        "name": "Zlatan Alomerović",
+        "team": "zagłębie lubin",
+        "predicted": 8.1,
+        "actual": null,
+        "opponents": [
+          "Wisła Kraków"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      },
+      {
+        "position": "MID",
+        "id": 2477,
+        "name": "Marcel Reguła",
+        "team": "zagłębie lubin",
+        "predicted": 10.5,
+        "actual": null,
+        "opponents": [
+          "Wisła Kraków"
+        ],
+        "is_home_list": [
+          true
+        ],
+        "fixtures_count": 1,
+        "is_captain": false
+      }
+    ],
+    "captain": "Pablo Rodríguez",
+    "predicted_total": 109.0,
+    "saved_at": "2026-11-28T00:45:11+00:00"
+  },
   "16": {
     "round": 16,
     "max_z_klubu": 3,
